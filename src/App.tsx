@@ -1,9 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import './i18n'
 import './styles/index.css'
+import BuffersTab from '@/features/buffers/BuffersTab'
+import ProtocolsTab from '@/features/protocols/ProtocolsTab'
+import CalcTab from '@/features/calculator/CalcTab'
+import PlateTab from '@/features/plate/PlateTab'
+import InventoryTab from '@/features/inventory/InventoryTab'
+import ToolsTab from '@/features/tools/ToolsTab'
+import RefsTab from '@/features/refs/RefsTab'
+import { checkForUpdates, syncDatabase, getLastSyncTime } from '@/lib/syncService'
 
-type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'tools' | 'refs'
+type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools' | 'refs'
+
+type SyncState = 'idle' | 'checking' | 'syncing' | 'done' | 'error'
 
 function App() {
   const { t, i18n } = useTranslation()
@@ -12,10 +22,19 @@ function App() {
     (localStorage.getItem('labmate_theme') as 'light' | 'dark') || 'light'
   )
 
+  // Sync state
+  const [syncState, setSyncState] = useState<SyncState>('idle')
+  const [syncMsg, setSyncMsg] = useState('')
+  const [lastSync, setLastSync] = useState<string | null>(null)
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('labmate_theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    getLastSyncTime().then(setLastSync)
+  }, [syncState])
 
   const toggleLang = () => {
     const next = i18n.language === 'zh' ? 'en' : 'zh'
@@ -25,14 +44,52 @@ function App() {
 
   const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'))
 
+  const handleSync = useCallback(async () => {
+    setSyncState('checking')
+    setSyncMsg('')
+
+    const available = await checkForUpdates()
+    if (available === null) {
+      setSyncState('idle')
+      setSyncMsg(t('sync.upToDate'))
+      setTimeout(() => setSyncMsg(''), 3000)
+      return
+    }
+
+    setSyncState('syncing')
+    try {
+      const result = await syncDatabase()
+      setSyncState('done')
+      setSyncMsg(t('sync.result', { added: result.added, updated: result.updated }))
+      setTimeout(() => { setSyncState('idle'); setSyncMsg('') }, 5000)
+    } catch {
+      setSyncState('error')
+      setSyncMsg(t('sync.error'))
+      setTimeout(() => { setSyncState('idle'); setSyncMsg('') }, 5000)
+    }
+  }, [t])
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'buffers', label: t('nav.buffers') },
     { key: 'protocols', label: t('nav.protocols') },
     { key: 'calc', label: t('nav.calculator') },
     { key: 'plate', label: t('nav.plate') },
+    { key: 'inventory', label: t('nav.inventory') },
     { key: 'tools', label: t('nav.tools') },
     { key: 'refs', label: t('nav.refs') },
   ]
+
+  const renderTab = () => {
+    switch (tab) {
+      case 'buffers':   return <BuffersTab />
+      case 'protocols': return <ProtocolsTab />
+      case 'calc':      return <CalcTab />
+      case 'plate':     return <PlateTab />
+      case 'inventory': return <InventoryTab />
+      case 'tools':     return <ToolsTab />
+      case 'refs':      return <RefsTab />
+    }
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
@@ -66,6 +123,46 @@ function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Sync indicator */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleSync}
+              disabled={syncState === 'checking' || syncState === 'syncing'}
+              title={lastSync ? `${t('sync.lastSync')}: ${new Date(lastSync).toLocaleDateString()}` : t('sync.check')}
+              className="p-2 rounded-md hover:opacity-80"
+              style={{
+                color: syncState === 'error' ? 'var(--color-error)'
+                  : syncState === 'done' ? 'var(--color-success)'
+                  : 'var(--color-text-secondary)',
+                opacity: (syncState === 'checking' || syncState === 'syncing') ? 0.5 : 1,
+                background: 'none',
+                border: 'none',
+                cursor: (syncState === 'checking' || syncState === 'syncing') ? 'wait' : 'pointer',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                style={{
+                  animation: (syncState === 'checking' || syncState === 'syncing')
+                    ? 'spin 1s linear infinite' : undefined,
+                }}>
+                <path d="M21.5 2v6h-6M2.5 22v-6h6" />
+                <path d="M2.5 11.5a10 10 0 0118.2-4.4L21.5 8M21.5 12.5a10 10 0 01-18.2 4.4L2.5 16" />
+              </svg>
+            </button>
+            {syncMsg && (
+              <span style={{
+                fontSize: 11,
+                color: syncState === 'error' ? 'var(--color-error)'
+                  : syncState === 'done' ? 'var(--color-success)'
+                  : 'var(--color-text-muted)',
+                whiteSpace: 'nowrap',
+              }}>
+                {syncMsg}
+              </span>
+            )}
+          </div>
+
           <button
             onClick={toggleLang}
             className="btn-primary text-sm px-3 py-1"
@@ -117,29 +214,13 @@ function App() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-6">
-        <div
-          className="card p-8 text-center"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-            {t('app.title')} v2.0
-          </h2>
-          <p className="mb-4">
-            Phase 1 — Migrating from single-file prototype to modular React + TypeScript
-          </p>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>
-            Tab: <strong>{tab}</strong> • Lang: <strong>{i18n.language}</strong> • Theme: <strong>{theme}</strong>
-          </p>
-          <div className="mt-6 flex gap-3 justify-center flex-wrap">
-            <span className="tag tag-primary">Vite + React 19</span>
-            <span className="tag tag-primary">TypeScript</span>
-            <span className="tag tag-primary">Tailwind CSS 4</span>
-            <span className="tag tag-primary">Dexie.js (IndexedDB)</span>
-            <span className="tag tag-primary">Web Crypto API</span>
-            <span className="tag">react-i18next (EN/ZH)</span>
-          </div>
-        </div>
+        {renderTab()}
       </main>
+
+      {/* Spin animation for sync icon */}
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }

@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Planning & AI docs (local only)
+CLAUDE.md
+DESIGN_GUIDE.md
+FEASIBILITY.md

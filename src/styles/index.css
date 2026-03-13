@@ -123,3 +123,45 @@ code, pre, .mono {
   background: hsl(168, 55%, 92%);
   color: var(--color-primary-dark);
 }
+
+/* ── Print ── */
+@media print {
+  /* Hide non-printable UI */
+  header, nav, .no-print,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid;
+  }
+
+  /* Force grid cells to show background colors */
+  button[title] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Show full width */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Hide left panel on print — only show box grid */
+  .lg\:col-span-4 {
+    display: none !important;
+  }
+  .lg\:col-span-8 {
+    grid-column: 1 / -1 !important;
+  }
+}
