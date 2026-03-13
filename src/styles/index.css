@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ── BioInfoSpace Design Tokens ── */
+:root {
+  /* Primary: Lab teal */
+  --color-primary: hsl(168, 55%, 26%);
+  --color-primary-light: hsl(168, 45%, 36%);
+  --color-primary-dark: hsl(168, 60%, 18%);
+
+  /* Accent: Scientific coral */
+  --color-accent: #d4552a;
+  --color-accent-light: #e06b44;
+
+  /* Surfaces */
+  --color-bg: #f5f2ec;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #faf8f5;
+  --color-border: #e2ddd5;
+  --color-border-light: #ede9e3;
+
+  /* Text */
+  --color-text: #2c2c2c;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #9a9a9a;
+  --color-text-inverse: #ffffff;
+
+  /* Status */
+  --color-success: #2d8a4e;
+  --color-warning: #c4841d;
+  --color-error: #c53030;
+  --color-info: var(--color-primary);
+
+  /* Typography */
+  --font-heading: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Spacing */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --color-primary: hsl(168, 50%, 40%);
+  --color-primary-light: hsl(168, 45%, 50%);
+  --color-primary-dark: hsl(168, 55%, 30%);
+
+  --color-bg: #1a1a2e;
+  --color-bg-card: #222240;
+  --color-bg-sidebar: #16162a;
+  --color-border: #2a2a4a;
+  --color-border-light: #333358;
+
+  --color-text: #e8e8f0;
+  --color-text-secondary: #a0a0b8;
+  --color-text-muted: #6a6a88;
+}
+
+/* ── Base Styles ── */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-light);
+}
+
+/* ── Tags ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.tag-primary {
+  background: hsl(168, 55%, 92%);
+  color: var(--color-primary-dark);
+}
