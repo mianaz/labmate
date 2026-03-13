@@ -1,6 +1,7 @@
 import { useState, useMemo, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProtocols, toggleFavorite } from '@/hooks/useProtocols'
+import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
 import type { Protocol, StepItem } from '@/lib/db'
 import db from '@/lib/db'
 import RecipeForm from '@/features/shared/RecipeForm'
@@ -13,6 +14,13 @@ function bold(text: string): React.ReactNode {
 }
 
 const bi = (lang: string, obj: { en: string; zh: string }) => (lang === 'zh' ? obj.zh : obj.en)
+
+// Get references for a recipe
+function getReferences(externalId: string) {
+  const refIds = RECIPE_REFS[externalId]
+  if (!refIds?.length) return []
+  return refIds.map(id => REFERENCES.find(r => r.id === id)).filter(Boolean)
+}
 
 // -- Shared style fragments ---------------------------------------------------
 
@@ -62,19 +70,21 @@ function StepList({ steps, lang }: { steps: StepItem[]; lang: string }) {
 // -- ProtocolDetail -----------------------------------------------------------
 
 function ProtocolDetail({
-  protocol, lang, t,
+  protocol, lang, t, onNavigateToBuffer,
 }: {
   protocol: Protocol; lang: string; t: (k: string) => string
+  onNavigateToBuffer?: (bufferId: string) => void
 }) {
   const [detailed, setDetailed] = useState(false)
   const steps = detailed ? protocol.detailedSteps : protocol.briefSteps
   const label = lang === 'zh' ? protocol.nameZh : protocol.name
+  const refs = getReferences(protocol.externalId)
 
   return (
     <div style={{ ...S.col, gap: '16px' }}>
       {/* Name + badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <h2 style={{ ...S.heading, fontSize: '1.25rem', margin: 0 }}>{label}</h2>
+        <h2 style={{ ...S.heading, fontSize: '1.25rem', margin: 0, letterSpacing: '-0.02em' }}>{label}</h2>
         {protocol.source === 'custom' && (
           <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 10px',
             borderRadius: 'var(--radius-sm)', background: 'var(--color-accent-light)', color: '#fff' }}>
@@ -104,7 +114,6 @@ function ProtocolDetail({
           ...S.muted, padding: '4px 10px', borderRadius: 'var(--radius-sm)',
           background: 'var(--color-bg)', alignSelf: 'flex-start',
         }}>
-          {protocol.storage.icon && <span>{protocol.storage.icon}</span>}
           <span>{bi(lang, protocol.storage.label)}</span>
           {protocol.storage.temp !== 'N/A' && (
             <span style={S.mono}>{protocol.storage.temp}</span>
@@ -122,7 +131,19 @@ function ProtocolDetail({
             {protocol.materials.map((m, i) => (
               <li key={i} style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 {m.linkedRecipe ? (
-                  <span style={{ fontWeight: 700, color: 'var(--color-primary)', cursor: 'default' }}>{m.name}</span>
+                  <button
+                    className="crosslink-pill"
+                    onClick={() => onNavigateToBuffer?.(m.linkedRecipe!)}
+                    title={t('protocol.viewRecipe')}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    {m.name}
+                  </button>
                 ) : (
                   <span style={{ color: 'var(--color-text)' }}>{m.name}</span>
                 )}
@@ -137,8 +158,8 @@ function ProtocolDetail({
         </section>
       )}
 
-      {/* Recipe components table */}
-      {protocol.components.length > 0 && (
+      {/* Recipe components table — only for buffer/staining/media, not protocols */}
+      {protocol.category !== 'protocol' && protocol.components.length > 0 && (
         <section>
           <h3 style={{ ...S.heading, fontSize: '0.95rem', margin: '0 0 8px' }}>
             {lang === 'zh' ? 'Recipe 组分' : 'Recipe Components'}
@@ -183,23 +204,51 @@ function ProtocolDetail({
         </section>
       )}
 
-      {/* Reference */}
-      {protocol.reference && (
-        <p style={{ fontSize: '0.75rem', ...S.muted, fontStyle: 'italic', marginTop: 8 }}>
-          Ref: {protocol.reference}
-        </p>
+      {/* References — inline */}
+      {refs.length > 0 && (
+        <section>
+          <h3 style={{ ...S.heading, fontSize: '0.95rem', margin: '0 0 8px' }}>
+            {t('protocol.references')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {refs.map(ref => ref && (
+              <div key={ref.id} className="ref-card">
+                <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>{ref.text}</p>
+                <p style={{ margin: '4px 0 0', fontSize: '0.75rem' }}>
+                  <span style={{ fontStyle: 'italic', color: 'var(--color-primary)' }}>{ref.journal}</span>
+                  {ref.vol && <span style={{ color: 'var(--color-text-muted)' }}> {ref.vol}</span>}
+                  {ref.pages && <span style={{ color: 'var(--color-text-muted)' }}>, {ref.pages}</span>}
+                </p>
+                {ref.doi && (
+                  <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener noreferrer"
+                    style={{ color: 'var(--color-primary)', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
+                    DOI: {ref.doi}
+                  </a>
+                )}
+                <p style={{ margin: '4px 0 0', fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? (REF_NOTES_EN[ref.id] ?? ref.note) : ref.note}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   )
 }
 
-// -- Main component -----------------------------------------------------------
+// -- Props & Main component ---------------------------------------------------
 
-export default function ProtocolsTab() {
+interface ProtocolsTabProps {
+  initialSelectedId?: string | null
+  onNavigate?: (tab: 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools', id?: string) => void
+}
+
+export default function ProtocolsTab({ initialSelectedId, onNavigate }: ProtocolsTabProps) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as 'en' | 'zh'
   const [search, setSearch] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null)
   const [showForm, setShowForm] = useState(false)
   const [editingProtocol, setEditingProtocol] = useState<Protocol | null>(null)
 
@@ -223,6 +272,10 @@ export default function ProtocolsTab() {
       setSelectedId(null)
       setEditingProtocol(null)
     }
+  }
+
+  function handleNavigateToBuffer(bufferId: string) {
+    onNavigate?.('buffers', bufferId)
   }
 
   // Loading state
@@ -255,7 +308,7 @@ export default function ProtocolsTab() {
           className="card"
           style={{
             ...S.col, padding: 12, gap: 8,
-            maxHeight: selectedId ? '40vh' : 'none', overflowY: 'auto',
+            overflowY: 'auto',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -326,7 +379,12 @@ export default function ProtocolsTab() {
         {/* Right panel */}
         {selected ? (
           <div className="card" style={{ padding: 20, overflowY: 'auto' }}>
-            <ProtocolDetail protocol={selected} lang={lang} t={t} />
+            <ProtocolDetail
+              protocol={selected}
+              lang={lang}
+              t={t}
+              onNavigateToBuffer={handleNavigateToBuffer}
+            />
 
             {/* Edit / Delete for custom */}
             {selected.source === 'custom' && (

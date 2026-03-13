@@ -1,6 +1,16 @@
 // Literature references (v1.9.2)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const REFERENCES: any[] = [
+
+export interface Reference {
+  id: number
+  text: string
+  journal: string
+  vol?: string
+  pages?: string
+  doi?: string
+  note: string
+}
+
+export const REFERENCES: Reference[] = [
   { id: 1, text: 'Laemmli, U. K. (1970). Cleavage of structural proteins during the assembly of the head of bacteriophage T4.', journal: 'Nature', vol: '227(5259)', pages: '680–685', doi: '10.1038/227680a0', note: 'SDS-PAGE 奠基文献，Laemmli 不连续电泳系统' },
   { id: 2, text: 'Towbin, H., Staehelin, T., & Gordon, J. (1979). Electrophoretic transfer of proteins from polyacrylamide gels to nitrocellulose sheets: procedure and some applications.', journal: 'PNAS', vol: '76(9)', pages: '4350–4354', doi: '10.1073/pnas.76.9.4350', note: 'Western blot 转膜技术原始论文' },
   { id: 3, text: 'Burnette, W. N. (1981). "Western blotting": electrophoretic transfer of proteins from sodium dodecyl sulfate—polyacrylamide gels to unmodified nitrocellulose and radiographic detection with antibody and radioiodinated protein A.', journal: 'Analytical Biochemistry', vol: '112(2)', pages: '195–203', doi: '10.1016/0003-2697(81)90281-5', note: '"Western blot" 命名起源' },
@@ -27,3 +37,81 @@ export const REFERENCES: any[] = [
   { id: 24, text: 'Mosmann, T. (1983). Rapid colorimetric assay for cellular growth and survival.', journal: 'Journal of Immunological Methods', vol: '65(1-2)', pages: '55–63', doi: '10.1016/0022-1759(83)90303-4', note: 'MTT 细胞活力检测原始文献' },
   { id: 25, text: 'Collas, P. (2010). The current state of chromatin immunoprecipitation.', journal: 'Molecular Biotechnology', vol: '45(1)', pages: '87–100', doi: '10.1007/s12033-009-9239-8', note: 'ChIP 技术综述与优化策略' },
 ];
+
+/** English notes keyed by reference id */
+export const REF_NOTES_EN: Record<number, string> = {
+  1: 'Foundational SDS-PAGE paper — Laemmli discontinuous electrophoresis system',
+  2: 'Original Western blot transfer technique paper',
+  3: 'Origin of the name "Western blot"',
+  4: 'Molecular Cloning lab manual (classic reference), contains all buffer recipes',
+  5: 'Molecular Cloning 4th edition, updated reference manual',
+  6: 'Detailed SDS-PAGE protocol with gel recipes and staining',
+  7: 'Original LB medium paper (Lysogeny Broth)',
+  8: 'SOC medium and high-efficiency transformation protocol',
+  9: 'Ponceau S staining as WB loading control',
+  10: 'Gel recipe and operation standards (industry standard)',
+  11: 'Fast ChIP protocol — Nature Protocols',
+  12: 'Blue Native PAGE for native protein complexes — Nature Protocols',
+  13: 'REAP: rapid nuclear/cytoplasmic fractionation',
+  14: 'TRIzol RNA extraction original paper — >65,000 citations',
+  15: 'CSH Protocols — standard TRIzol operation',
+  16: 'MIQE guidelines: minimum information for qPCR publication',
+  17: 'qPCR 2^(-ΔΔCt) analysis method — >100,000 citations',
+  18: 'Immunofluorescence staining standard protocol',
+  19: 'Flow cytometry gold standard guidelines — 500+ pages',
+  20: 'CRISPR experiment design and analysis review',
+  21: 'CRISPR RNP delivery protocol',
+  22: 'His/GST affinity tag protein purification review',
+  23: 'Complete WB tutorial and troubleshooting',
+  24: 'MTT cell viability assay original paper',
+  25: 'ChIP technology review and optimization strategies',
+};
+
+/** Map recipe/protocol externalId → relevant reference IDs */
+export const RECIPE_REFS: Record<string, number[]> = {
+  // PBS & general buffers
+  pbs_10x: [4, 5], pbs_1x: [4, 5], tbs_10x: [4], tbst: [4, 23],
+  // WB buffers
+  ripa: [4], laemmli_2x: [1, 6], laemmli_4x: [1, 6],
+  running_buffer: [1], running_buffer_10x: [1],
+  transfer_buffer: [2], blocking_milk: [23], blocking_bsa: [23],
+  strip_buffer: [23], loading_buffer_nr: [1], mops_running_buffer: [1],
+  // Staining
+  coomassie_stain: [6], coomassie_destain: [6], ponceau_s: [9],
+  crystal_violet_stain: [4], dapi_staining: [18],
+  // DNA buffers
+  tae_50x: [4], tbe_10x: [4], te: [4], dna_loading_dye_6x: [4],
+  // Media
+  lb: [7], lb_agar: [7], soc: [8], '2yt_media': [4],
+  // IF-related
+  pfa_4: [18], if_permeabilization: [18], if_blocking: [18], perm_buffer_triton: [18],
+  citrate_buffer_ar: [18],
+  // Flow
+  facs_buffer: [19], macs_buffer: [19], edta_trypsin: [4],
+  // ChIP
+  chip_lysis: [11, 25], chip_dilution: [11], chip_wash_low: [11], chip_wash_high: [11],
+  // Co-IP
+  ip_lysis: [4],
+  // Nuclear fractionation
+  nuc_cyt_a: [13], nuc_cyt_b: [13],
+  // PAGE
+  native_page_buffer: [4], bn_page_cathode: [12],
+  // Protein purification
+  his_binding: [22], his_elution: [22], gst_elution: [22],
+  // Cell viability
+  mtt_reagent: [24],
+  // CRISPR
+  crispr_rnp: [20, 21],
+  // RNA
+  depc_water: [14],
+  // Other
+  glycerol_stock: [4], hepes_buffer: [4], ssc_20x: [4],
+  // Protocols
+  trizol_extraction: [14, 15], wb_protocol: [1, 2, 3, 23],
+  if_protocol: [18], chip_protocol: [11, 25], coip_protocol: [4],
+  qpcr_protocol: [16, 17], cell_transfection: [4],
+  flow_cytometry_protocol: [19], colony_pcr: [4],
+  glycerol_stock_protocol: [4], calcium_phosphate_transfection: [4],
+  agarose_gel_electrophoresis: [4], bacterial_transformation: [8],
+  cell_counting: [4],
+};

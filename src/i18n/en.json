@@ -240,5 +240,17 @@
   "sync.lastSync": "Last synced",
   "sync.upToDate": "Up to date",
   "sync.result": "{{added}} new, {{updated}} updated",
-  "sync.error": "Sync failed"
+  "sync.error": "Sync failed",
+
+  "footer.madeBy": "Developed by BioInfoSpace",
+  "footer.github": "GitHub",
+  "icon.customize": "Customize Icon",
+  "icon.templates": "Templates",
+  "icon.labName": "Lab name (1-4 chars)",
+  "icon.upload": "Upload logo",
+  "icon.reset": "Reset",
+  "buffer.usedInProtocols": "Used in Protocols",
+  "buffer.references": "References",
+  "protocol.references": "References",
+  "protocol.viewRecipe": "View Recipe"
 }

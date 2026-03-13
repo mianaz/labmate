@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { useProtocols } from '@/hooks/useProtocols'
 import { toggleFavorite } from '@/hooks/useProtocols'
 import { catColors } from '@/data/recipes'
+import { BUFFER_ENHANCEMENTS } from '@/data/buffer-enhancements'
+import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
 import type { Protocol } from '@/lib/db'
 import db from '@/lib/db'
 import RecipeForm from '@/features/shared/RecipeForm'
@@ -11,15 +13,20 @@ const VISIBLE_CATS = ['buffer', 'staining', 'media'] as const
 const CAT_ORDER: Record<string, number> = { buffer: 0, staining: 1, media: 2 }
 const CAT_LABEL: Record<string, string> = { buffer: 'Buffers', staining: 'Staining', media: 'Media' }
 
-export default function BuffersTab() {
+interface BuffersTabProps {
+  initialSelectedId?: string | null
+  onNavigate?: (tab: 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools', id?: string) => void
+}
+
+export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTabProps) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language as 'en' | 'zh'
 
   const allProtocols = useProtocols([...VISIBLE_CATS])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null)
   const [search, setSearch] = useState('')
   const [targetVolumes, setTargetVolumes] = useState<Record<string, number>>({})
-  const [mobileDetail, setMobileDetail] = useState(false)
+  const [mobileDetail, setMobileDetail] = useState(!!initialSelectedId)
   const [showForm, setShowForm] = useState(false)
   const [editingProtocol, setEditingProtocol] = useState<Protocol | null>(null)
 
@@ -67,6 +74,19 @@ export default function BuffersTab() {
       setSelectedId(null)
       setEditingProtocol(null)
     }
+  }
+
+  // Get related protocols for a buffer
+  function getRelatedProtocols(externalId: string): string[] {
+    const enh = BUFFER_ENHANCEMENTS[externalId]
+    return enh?.relatedProtocols ?? []
+  }
+
+  // Get references for a recipe
+  function getReferences(externalId: string) {
+    const refIds = RECIPE_REFS[externalId]
+    if (!refIds?.length) return []
+    return refIds.map(id => REFERENCES.find(r => r.id === id)).filter(Boolean)
   }
 
   // Loading state
@@ -181,13 +201,16 @@ export default function BuffersTab() {
   )
 
   // ── Detail panel ──
+  const relatedProtos = selected ? getRelatedProtocols(selected.externalId) : []
+  const refs = selected ? getReferences(selected.externalId) : []
+
   const detailPanel = selected ? (
     <div>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: 20, fontWeight: 700,
-            color: 'var(--color-text)', margin: 0 }}>
+            color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>
             {name(selected)}
           </h2>
           <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 10px',
@@ -202,7 +225,6 @@ export default function BuffersTab() {
               {t('db.custom')}
             </span>
           )}
-          {/* Favorite toggle */}
           {selected.id && (
             <button onClick={() => toggleFavorite(selected.id!)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18,
@@ -303,9 +325,61 @@ export default function BuffersTab() {
         </div>
       )}
 
-      {/* Reference */}
-      {selected.reference && (
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Ref: {selected.reference}</p>
+      {/* Used in Protocols — crosslinks */}
+      {relatedProtos.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, fontWeight: 700,
+            color: 'var(--color-text)', marginBottom: 8 }}>{t('buffer.usedInProtocols')}</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {relatedProtos.map(protoId => {
+              // Try to find a human-readable name for the protocol
+              const protoLabel = protoId
+                .replace(/_protocol$/, '')
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, c => c.toUpperCase())
+              return (
+                <button key={protoId} className="crosslink-pill"
+                  onClick={() => onNavigate?.('protocols', protoId)}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  {protoLabel}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* References — inline */}
+      {refs.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 14, fontWeight: 700,
+            color: 'var(--color-text)', marginBottom: 8 }}>{t('buffer.references')}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {refs.map(ref => ref && (
+              <div key={ref.id} className="ref-card">
+                <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>{ref.text}</p>
+                <p style={{ margin: '4px 0 0', fontSize: '0.75rem' }}>
+                  <span style={{ fontStyle: 'italic', color: 'var(--color-primary)' }}>{ref.journal}</span>
+                  {ref.vol && <span style={{ color: 'var(--color-text-muted)' }}> {ref.vol}</span>}
+                  {ref.pages && <span style={{ color: 'var(--color-text-muted)' }}>, {ref.pages}</span>}
+                </p>
+                {ref.doi && (
+                  <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener noreferrer">
+                    DOI: {ref.doi}
+                  </a>
+                )}
+                <p style={{ margin: '4px 0 0', fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? (REF_NOTES_EN[ref.id] ?? ref.note) : ref.note}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Edit / Delete for custom */}

@@ -240,5 +240,17 @@
   "sync.lastSync": "上次同步",
   "sync.upToDate": "已是最新",
   "sync.result": "新增 {{added}} 条，更新 {{updated}} 条",
-  "sync.error": "同步失败"
+  "sync.error": "同步失败",
+
+  "footer.madeBy": "BioInfoSpace 开发",
+  "footer.github": "GitHub",
+  "icon.customize": "自定义图标",
+  "icon.templates": "模板",
+  "icon.labName": "实验室名 (1-4 字符)",
+  "icon.upload": "上传 Logo",
+  "icon.reset": "重置",
+  "buffer.usedInProtocols": "相关实验方案",
+  "buffer.references": "参考文献",
+  "protocol.references": "参考文献",
+  "protocol.viewRecipe": "查看配方"
 }
