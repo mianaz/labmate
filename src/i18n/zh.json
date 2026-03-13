@@ -252,5 +252,31 @@
   "buffer.usedInProtocols": "相关实验方案",
   "buffer.references": "参考文献",
   "protocol.references": "参考文献",
-  "protocol.viewRecipe": "查看配方"
+  "protocol.viewRecipe": "查看配方",
+  "protocol.progress": "进度",
+  "protocol.stepOf": "第 {{current}} 步 / 共 {{total}} 步",
+  "protocol.resetProgress": "重置进度",
+  "protocol.timerStart": "开始",
+  "protocol.timerPause": "暂停",
+  "protocol.timerResume": "继续",
+  "protocol.timerReset": "重置",
+  "protocol.timerDone": "时间到！",
+  "protocol.safeStop": "安全暂停点",
+
+  "search.title": "搜索",
+  "search.noResults": "未找到结果",
+  "search.hint": "搜索配方、实验方案、工具...",
+  "search.recentlyViewed": "最近浏览",
+  "search.buffers": "配方库",
+  "search.protocols": "实验方案",
+  "search.tools": "工具",
+
+  "data.title": "我的数据",
+  "data.export": "导出全部数据",
+  "data.import": "导入数据",
+  "data.exportSuccess": "数据导出成功",
+  "data.importSuccess": "导入成功（共 {{count}} 条记录）",
+  "data.importFailed": "导入失败——文件格式无效",
+  "data.privacy": "您的数据完全私密——所有内容均存储在本地设备上",
+  "data.confirmImport": "导入将与现有数据合并，是否继续？"
 }

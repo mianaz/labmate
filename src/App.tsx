@@ -8,9 +8,10 @@ import CalcTab from '@/features/calculator/CalcTab'
 import PlateTab from '@/features/plate/PlateTab'
 import InventoryTab from '@/features/inventory/InventoryTab'
 import ToolsTab from '@/features/tools/ToolsTab'
+import RefsTab from '@/features/refs/RefsTab'
+import SearchModal from '@/features/search/SearchModal'
 import { checkForUpdates, syncDatabase, getLastSyncTime } from '@/lib/syncService'
-
-type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools'
+type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools' | 'refs'
 
 type SyncState = 'idle' | 'checking' | 'syncing' | 'done' | 'error'
 
@@ -200,6 +201,9 @@ function App() {
   const [iconConfig, setIconConfig] = useState<IconConfig>(getIconConfig)
   const [showIconSettings, setShowIconSettings] = useState(false)
 
+  // Search modal
+  const [searchOpen, setSearchOpen] = useState(false)
+
   // Cross-tab navigation
   const [navigateId, setNavigateId] = useState<string | null>(null)
 
@@ -211,6 +215,18 @@ function App() {
   useEffect(() => {
     getLastSyncTime().then(setLastSync)
   }, [syncState])
+
+  // Cmd+K / Ctrl+K to open search
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(prev => !prev)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const toggleLang = () => {
     const next = i18n.language === 'zh' ? 'en' : 'zh'
@@ -262,6 +278,7 @@ function App() {
     { key: 'plate', label: t('nav.plate') },
     { key: 'inventory', label: t('nav.inventory') },
     { key: 'tools', label: t('nav.tools') },
+    { key: 'refs', label: t('nav.refs') },
   ]
 
   const renderTab = () => {
@@ -272,6 +289,7 @@ function App() {
       case 'plate':     return <PlateTab />
       case 'inventory': return <InventoryTab />
       case 'tools':     return <ToolsTab />
+      case 'refs':      return <RefsTab />
     }
   }
 
@@ -314,6 +332,19 @@ function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Search button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="p-2 rounded-md hover:opacity-80"
+            style={{ color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
+            title="Search (⌘K)"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+            </svg>
+          </button>
+
           {/* Sync indicator */}
           <div className="flex items-center gap-1.5">
             <button
@@ -415,6 +446,17 @@ function App() {
           {t('footer.github')}
         </a>
       </footer>
+
+      {/* Search modal */}
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigate={(targetTab, targetId) => {
+          setTab(targetTab)
+          setNavigateId(targetId ?? null)
+          setSearchOpen(false)
+        }}
+      />
 
       {/* Spin animation for sync icon */}
       <style>{`

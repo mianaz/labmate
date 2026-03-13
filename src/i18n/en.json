@@ -252,5 +252,32 @@
   "buffer.usedInProtocols": "Used in Protocols",
   "buffer.references": "References",
   "protocol.references": "References",
-  "protocol.viewRecipe": "View Recipe"
+  "protocol.viewRecipe": "View Recipe",
+  "protocol.progress": "Progress",
+  "protocol.stepOf": "Step {{current}} of {{total}}",
+  "protocol.resetProgress": "Reset Progress",
+  "protocol.timer": "Timer",
+  "protocol.timerStart": "Start",
+  "protocol.timerPause": "Pause",
+  "protocol.timerResume": "Resume",
+  "protocol.timerReset": "Reset",
+  "protocol.timerDone": "Time's up!",
+  "protocol.safeStop": "Safe stopping point",
+
+  "search.title": "Search",
+  "search.noResults": "No results found",
+  "search.hint": "Search buffers, protocols, tools...",
+  "search.recentlyViewed": "Recently Viewed",
+  "search.buffers": "Buffers & Solutions",
+  "search.protocols": "Protocols",
+  "search.tools": "Tools",
+
+  "data.title": "My Data",
+  "data.export": "Export All Data",
+  "data.import": "Import Data",
+  "data.exportSuccess": "Data exported successfully",
+  "data.importSuccess": "Data imported successfully ({{count}} records)",
+  "data.importFailed": "Import failed — invalid file format",
+  "data.privacy": "Your data stays private — everything is stored locally on this device",
+  "data.confirmImport": "This will merge imported data with existing data. Continue?"
 }

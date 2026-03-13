@@ -1,10 +1,11 @@
-import { useState, useMemo, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProtocols, toggleFavorite } from '@/hooks/useProtocols'
 import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
 import type { Protocol, StepItem } from '@/lib/db'
 import db from '@/lib/db'
 import RecipeForm from '@/features/shared/RecipeForm'
+import { addRecent } from '@/lib/recentlyViewed'
 
 // -- Helpers ------------------------------------------------------------------
 
@@ -40,30 +41,269 @@ const on = (v: boolean): CSSProperties => ({
   color: v ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
 })
 
-// -- StepList -----------------------------------------------------------------
+// -- Timer helpers ------------------------------------------------------------
 
-function StepList({ steps, lang }: { steps: StepItem[]; lang: string }) {
+/** Parse time from step text, e.g. "incubate 5 min", "wash 30 seconds", "1 hour" */
+function parseTime(text: string): number | null {
+  // Match patterns like: 5 min, 30 seconds, 1 hour, 10 s, 2 h, 15min
+  const m = text.match(/(\d+(?:\.\d+)?)\s*(?:min(?:ute)?s?|分钟)/i)
+  if (m) return Math.round(parseFloat(m[1]) * 60)
+  const s = text.match(/(\d+(?:\.\d+)?)\s*(?:sec(?:ond)?s?|秒)/i)
+  if (s) return Math.round(parseFloat(s[1]))
+  const h = text.match(/(\d+(?:\.\d+)?)\s*(?:h(?:our)?s?|小时)/i)
+  if (h) return Math.round(parseFloat(h[1]) * 3600)
+  return null
+}
+
+function formatTimer(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function useTimer() {
+  const [remaining, setRemaining] = useState<number | null>(null)
+  const [running, setRunning] = useState(false)
+  const [total, setTotal] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const start = useCallback((seconds: number) => {
+    setTotal(seconds)
+    setRemaining(seconds)
+    setRunning(true)
+  }, [])
+
+  const pause = useCallback(() => setRunning(false), [])
+  const resume = useCallback(() => setRunning(true), [])
+  const reset = useCallback(() => {
+    setRunning(false)
+    setRemaining(null)
+    setTotal(0)
+  }, [])
+
+  useEffect(() => {
+    if (running && remaining !== null && remaining > 0) {
+      intervalRef.current = setInterval(() => {
+        setRemaining(r => {
+          if (r === null || r <= 1) {
+            setRunning(false)
+            return 0
+          }
+          return r - 1
+        })
+      }, 1000)
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [running, remaining])
+
+  return { remaining, running, total, start, pause, resume, reset }
+}
+
+// -- Progress persistence ---------------------------------------------------
+
+const PROGRESS_KEY = 'labmate_step_progress'
+
+function getProgress(protocolId: string): Set<number> {
+  try {
+    const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}')
+    return new Set(all[protocolId] ?? [])
+  } catch { return new Set() }
+}
+
+function saveProgress(protocolId: string, steps: Set<number>) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}')
+    all[protocolId] = [...steps]
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all))
+  } catch { /* ignore */ }
+}
+
+function clearProgress(protocolId: string) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}')
+    delete all[protocolId]
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all))
+  } catch { /* ignore */ }
+}
+
+// -- StepList with progress + timers -----------------------------------------
+
+function StepList({ steps, lang, protocolId, t }: {
+  steps: StepItem[]; lang: string; protocolId: string; t: (k: string, opts?: Record<string, unknown>) => string
+}) {
+  const [completed, setCompleted] = useState<Set<number>>(() => getProgress(protocolId))
+  const timer = useTimer()
+  const [timerStepIdx, setTimerStepIdx] = useState<number | null>(null)
+
+  // Reset completed when protocol changes
+  useEffect(() => {
+    setCompleted(getProgress(protocolId))
+    timer.reset()
+    setTimerStepIdx(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [protocolId])
+
+  function toggleStep(idx: number) {
+    const next = new Set(completed)
+    if (next.has(idx)) next.delete(idx)
+    else next.add(idx)
+    setCompleted(next)
+    saveProgress(protocolId, next)
+  }
+
+  function handleReset() {
+    setCompleted(new Set())
+    clearProgress(protocolId)
+  }
+
+  function handleStartTimer(idx: number, seconds: number) {
+    setTimerStepIdx(idx)
+    timer.start(seconds)
+  }
+
+  const stepCount = steps.filter(s => !s.isHeader).length
+  const doneCount = completed.size
+
   return (
-    <ol style={{ ...S.col, listStyle: 'none', padding: 0, margin: 0, gap: '6px' }}>
-      {steps.map((step, i) => {
-        const text = bi(lang, step)
-        if (step.isHeader) {
+    <div style={{ ...S.col, gap: 6 }}>
+      {/* Progress bar */}
+      {stepCount > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <div style={{
+            flex: 1, height: 4, borderRadius: 2, background: 'var(--color-border)',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%', borderRadius: 2, background: 'var(--color-primary)',
+              width: `${stepCount ? (doneCount / stepCount) * 100 : 0}%`,
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+          <span style={{ fontSize: '0.75rem', ...S.mono, ...S.muted, flexShrink: 0 }}>
+            {t('protocol.stepOf', { current: doneCount, total: stepCount })}
+          </span>
+          {doneCount > 0 && (
+            <button onClick={handleReset} style={{
+              fontSize: '0.7rem', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-border)', background: 'var(--color-bg-card)',
+              color: 'var(--color-text-muted)', cursor: 'pointer',
+            }}>
+              {t('protocol.resetProgress')}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Timer display */}
+      {timer.remaining !== null && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px',
+          borderRadius: 'var(--radius-sm)', marginBottom: 8,
+          background: timer.remaining === 0 ? 'var(--color-success)' : 'var(--color-bg)',
+          border: '1px solid',
+          borderColor: timer.remaining === 0 ? 'var(--color-success)' : 'var(--color-border)',
+        }}>
+          <span style={{
+            ...S.mono, fontSize: '1.4rem', fontWeight: 700,
+            color: timer.remaining === 0 ? '#fff' : 'var(--color-text)',
+          }}>
+            {timer.remaining === 0 ? t('protocol.timerDone') : formatTimer(timer.remaining)}
+          </span>
+          <div style={{ flex: 1 }} />
+          {timer.remaining > 0 && (
+            <button onClick={timer.running ? timer.pause : timer.resume} style={{
+              padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)',
+              background: 'var(--color-bg-card)', color: 'var(--color-text-secondary)',
+            }}>
+              {timer.running ? t('protocol.timerPause') : t('protocol.timerResume')}
+            </button>
+          )}
+          <button onClick={() => { timer.reset(); setTimerStepIdx(null) }} style={{
+            padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)',
+            background: 'var(--color-bg-card)', color: 'var(--color-text-muted)',
+          }}>
+            {t('protocol.timerReset')}
+          </button>
+        </div>
+      )}
+
+      {/* Steps */}
+      <ol style={{ ...S.col, listStyle: 'none', padding: 0, margin: 0, gap: '6px' }}>
+        {steps.map((step, i) => {
+          const text = bi(lang, step)
+          if (step.isHeader) {
+            return (
+              <li key={i} style={{ ...S.heading, fontSize: '0.95rem', marginTop: i ? '12px' : 0 }}>
+                {bold(text)}
+              </li>
+            )
+          }
+
+          const isDone = completed.has(i)
+          const seconds = parseTime(step.en) ?? parseTime(step.zh)
+          const isTimerActive = timerStepIdx === i
+
           return (
-            <li key={i} style={{ ...S.heading, fontSize: '0.95rem', marginTop: i ? '12px' : 0 }}>
-              {bold(text)}
+            <li key={i} style={{
+              display: 'flex', gap: '8px', fontSize: '0.85rem', lineHeight: 1.55,
+              opacity: isDone ? 0.5 : 1, transition: 'opacity 0.2s',
+            }}>
+              {/* Checkbox */}
+              <button onClick={() => toggleStep(i)} style={{
+                width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 2,
+                border: `2px solid ${isDone ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                background: isDone ? 'var(--color-primary)' : 'transparent',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0,
+              }}>
+                {isDone && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+              <span style={{
+                flex: 1, textDecoration: isDone ? 'line-through' : 'none',
+                color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
+              }}>
+                {bold(text)}
+              </span>
+              {/* Timer button for timed steps */}
+              {seconds != null && !isTimerActive && (
+                <button
+                  onClick={() => handleStartTimer(i, seconds)}
+                  title={formatTimer(seconds)}
+                  style={{
+                    flexShrink: 0, padding: '2px 8px', fontSize: 11, fontWeight: 600,
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-bg)', color: 'var(--color-primary)',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
+                  {formatTimer(seconds)}
+                </button>
+              )}
+              {isTimerActive && timer.running && (
+                <span style={{
+                  flexShrink: 0, padding: '2px 8px', fontSize: 11, fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-primary)', color: '#fff',
+                  fontFamily: 'var(--font-mono)',
+                }}>
+                  {formatTimer(timer.remaining ?? 0)}
+                </span>
+              )}
             </li>
           )
-        }
-        return (
-          <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.85rem', lineHeight: 1.55, ...S.sec }}>
-            <span style={{ ...S.mono, ...S.muted, flexShrink: 0, minWidth: 22, textAlign: 'right' }}>
-              {i + 1}.
-            </span>
-            <span>{bold(text)}</span>
-          </li>
-        )
-      })}
-    </ol>
+        })}
+      </ol>
+    </div>
   )
 }
 
@@ -72,7 +312,7 @@ function StepList({ steps, lang }: { steps: StepItem[]; lang: string }) {
 function ProtocolDetail({
   protocol, lang, t, onNavigateToBuffer,
 }: {
-  protocol: Protocol; lang: string; t: (k: string) => string
+  protocol: Protocol; lang: string; t: (k: string, opts?: Record<string, unknown>) => string
   onNavigateToBuffer?: (bufferId: string) => void
 }) {
   const [detailed, setDetailed] = useState(false)
@@ -200,7 +440,7 @@ function ProtocolDetail({
               {t('protocol.detailed')}
             </button>
           </div>
-          <StepList steps={steps} lang={lang} />
+          <StepList steps={steps} lang={lang} protocolId={protocol.externalId} t={t} />
         </section>
       )}
 
@@ -344,7 +584,7 @@ export default function ProtocolsTab({ initialSelectedId, onNavigate }: Protocol
               return (
                 <button
                   key={proto.externalId}
-                  onClick={() => setSelectedId(active ? null : proto.externalId)}
+                  onClick={() => { setSelectedId(active ? null : proto.externalId); if (!active) addRecent(proto.externalId) }}
                   style={{
                     textAlign: 'left', padding: '8px 10px', borderRadius: 'var(--radius-sm)',
                     border: 'none', cursor: 'pointer', fontSize: '0.85rem',

@@ -8,6 +8,7 @@ import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
 import type { Protocol } from '@/lib/db'
 import db from '@/lib/db'
 import RecipeForm from '@/features/shared/RecipeForm'
+import { addRecent } from '@/lib/recentlyViewed'
 
 const VISIBLE_CATS = ['buffer', 'staining', 'media'] as const
 const CAT_ORDER: Record<string, number> = { buffer: 0, staining: 1, media: 2 }
@@ -53,7 +54,7 @@ export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTab
 
   const selected = recipes.find((r) => r.externalId === selectedId) ?? null
 
-  function handleSelect(r: Protocol) { setSelectedId(r.externalId); setMobileDetail(true) }
+  function handleSelect(r: Protocol) { setSelectedId(r.externalId); setMobileDetail(true); addRecent(r.externalId) }
 
   function getTargetVol(r: Protocol) { return targetVolumes[r.externalId] ?? (r.defaultVolume || 1) }
   function setTargetVol(r: Protocol, v: number) { setTargetVolumes((p) => ({ ...p, [r.externalId]: v })) }

@@ -23,7 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
 # Planning & AI docs (local only)
 CLAUDE.md
 DESIGN_GUIDE.md
 FEASIBILITY.md
+NATIVE_GUIDE.md
+TASK-v1.9.md
