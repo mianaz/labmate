@@ -35,7 +35,7 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
       {/* Header */}
       <header
         className="sticky top-0 z-50 border-b px-6 py-3 flex items-center justify-between"

@@ -1,6 +1,12 @@
 @import "tailwindcss";
 
 /* ── BioInfoSpace Design Tokens ── */
+@theme {
+  /* Make CSS vars available to Tailwind utilities */
+  --color-primary: hsl(168, 55%, 26%);
+  --color-accent: #d4552a;
+}
+
 :root {
   /* Primary: Lab teal */
   --color-primary: hsl(168, 55%, 26%);
@@ -62,23 +68,44 @@
   --color-text: #e8e8f0;
   --color-text-secondary: #a0a0b8;
   --color-text-muted: #6a6a88;
+  --color-text-inverse: #ffffff;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
 }
 
-/* ── Base Styles ── */
-body {
-  font-family: var(--font-body);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
+[data-theme="dark"] .tag-primary {
+  background: hsl(168, 40%, 20%);
+  color: hsl(168, 50%, 65%);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
-}
+/* ── Base Styles ──
+   Use @layer base to ensure these override Tailwind preflight */
+@layer base {
+  html {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text);
+  }
 
-code, pre, .mono {
-  font-family: var(--font-mono);
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+
+  code, pre, .mono {
+    font-family: var(--font-mono);
+  }
 }
 
 /* ── Card ── */
@@ -87,6 +114,7 @@ code, pre, .mono {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease;
 }
 
 .card:hover {
@@ -101,6 +129,8 @@ code, pre, .mono {
   padding: 0.5rem 1rem;
   font-weight: 600;
   transition: background 0.15s;
+  cursor: pointer;
+  border: none;
 }
 
 .btn-primary:hover {
