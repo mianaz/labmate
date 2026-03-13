@@ -1,5 +1,6 @@
-// SDS-PAGE Gel Calculator defaults
-export const GEL_DEFAULTS = {
+// SDS-PAGE Gel Calculator defaults (v1.9.2)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const GEL_DEFAULTS: Record<string, any> = {
   resolving: {
     trisStock: 1.5,    // M, pH 8.8
     trisVolFrac: 0.25, // 25% of total

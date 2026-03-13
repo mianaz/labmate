@@ -1,4 +1,4 @@
-// Buffer enhancement data (usage, storage, preparation steps)
+// Buffer enhancement data (v1.9.2)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type BufferEnhancement = Record<string, any>
 

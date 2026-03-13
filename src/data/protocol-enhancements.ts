@@ -1,4 +1,4 @@
-// Protocol enhancement data (usage, materials, brief/detailed steps)
+// Protocol enhancement data (v1.9.2)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ProtocolEnhancement = Record<string, any>
 

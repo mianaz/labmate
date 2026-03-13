@@ -1,15 +1,6 @@
-// Literature references
-export type Reference = {
-  id: number
-  text: string
-  journal: string
-  vol: string
-  pages: string
-  doi: string
-  note: string
-}
-
-export const REFERENCES = [
+// Literature references (v1.9.2)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const REFERENCES: any[] = [
   { id: 1, text: 'Laemmli, U. K. (1970). Cleavage of structural proteins during the assembly of the head of bacteriophage T4.', journal: 'Nature', vol: '227(5259)', pages: '680–685', doi: '10.1038/227680a0', note: 'SDS-PAGE 奠基文献，Laemmli 不连续电泳系统' },
   { id: 2, text: 'Towbin, H., Staehelin, T., & Gordon, J. (1979). Electrophoretic transfer of proteins from polyacrylamide gels to nitrocellulose sheets: procedure and some applications.', journal: 'PNAS', vol: '76(9)', pages: '4350–4354', doi: '10.1073/pnas.76.9.4350', note: 'Western blot 转膜技术原始论文' },
   { id: 3, text: 'Burnette, W. N. (1981). "Western blotting": electrophoretic transfer of proteins from sodium dodecyl sulfate—polyacrylamide gels to unmodified nitrocellulose and radiographic detection with antibody and radioiodinated protein A.', journal: 'Analytical Biochemistry', vol: '112(2)', pages: '195–203', doi: '10.1016/0003-2697(81)90281-5', note: '"Western blot" 命名起源' },
@@ -36,4 +27,3 @@ export const REFERENCES = [
   { id: 24, text: 'Mosmann, T. (1983). Rapid colorimetric assay for cellular growth and survival.', journal: 'Journal of Immunological Methods', vol: '65(1-2)', pages: '55–63', doi: '10.1016/0022-1759(83)90303-4', note: 'MTT 细胞活力检测原始文献' },
   { id: 25, text: 'Collas, P. (2010). The current state of chromatin immunoprecipitation.', journal: 'Molecular Biotechnology', vol: '45(1)', pages: '87–100', doi: '10.1007/s12033-009-9239-8', note: 'ChIP 技术综述与优化策略' },
 ];
-

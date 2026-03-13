@@ -1,12 +1,6 @@
-// Curated external tools and BioInfoSpace app links
-export type ExternalTool = {
-  name: string
-  url: string
-  desc: { en: string; zh: string }
-  cat: string
-}
-
-export const EXTERNAL_TOOLS = [
+// External tools and BioInfoSpace app links (v1.9.2)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const EXTERNAL_TOOLS: any[] = [
   { cat: 'toolCatBIS', tools: [
     { name: 'ELISA Calculator', icon: '📈', url: 'https://apps.bioinfospace.com/ELISA_calculator/', desc: { en: 'Standard curve fitting & concentration calculation', zh: '标准曲线拟合 & 浓度计算' }},
     { name: 'qPCR Analyzer', icon: '🧬', url: 'https://apps.bioinfospace.com/qpcr-analysis/', desc: { en: 'ΔΔCt analysis & expression plots', zh: 'ΔΔCt 分析 & 表达量图' }},

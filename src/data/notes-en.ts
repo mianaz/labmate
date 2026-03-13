@@ -1,5 +1,9 @@
-// English preparation notes per recipe ID
+// English preparation notes per recipe ID (v1.9.2)
 export const NOTES_EN: Record<string, string> = {
+  pbs_10x:       'Bring to volume with ddH₂O, adjust pH to 7.4 with HCl. Autoclave and store at RT. Dilute 1:10 to prepare 1× PBS.',
+  pbs_1x:        'Bring to 1000 mL with ddH₂O, adjust pH to 7.4. Alternatively, dilute from 10× PBS stock.',
+  tbs_10x:       'Dissolve in ~800 mL ddH₂O, adjust pH to 7.6 with HCl, then bring to 1000 mL.',
+  tbst:          'Prepare fresh. Tween-20 at 0.05–0.1% is acceptable; adjust based on background signal.',
   ripa:          'Add protease inhibitor cocktail (1:100) and phosphatase inhibitors before use. Work on ice, store at 4°C.',
   laemmli_2x:    'Aliquot and store at −20°C. β-mercaptoethanol can be replaced with DTT (200 mM). Heat at 95–100°C for 5 min before loading.',
   laemmli_4x:    'Aliquot and store at −20°C. Dilute 1:4 before use (3 parts sample : 1 part buffer).',
