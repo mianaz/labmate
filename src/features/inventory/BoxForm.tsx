@@ -8,6 +8,8 @@ const BOX_CONFIGS: { type: BoxType; rows: number; cols: number }[] = [
   { type: 'tip', rows: 8, cols: 12 },
   { type: 'slide', rows: 1, cols: 25 },
   { type: 'tube', rows: 4, cols: 6 },
+  { type: 'shelf', rows: 10, cols: 1 },
+  { type: 'box', rows: 10, cols: 1 },
   { type: 'custom', rows: 8, cols: 8 },
 ]
 

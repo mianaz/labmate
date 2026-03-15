@@ -1,12 +1,13 @@
 import { db } from '@/lib/db'
 import type { StorageLocation, SampleBox, Sample, SampleType, BoxType, StorageType } from '@/lib/db'
+import type { ParsedWorkbook } from './parseExcel'
 
 const VALID_SAMPLE_TYPES: SampleType[] = [
   'cell_line', 'plasmid', 'antibody', 'primer',
-  'protein', 'reagent', 'tissue', 'virus', 'other',
+  'protein', 'reagent', 'tissue', 'virus', 'compound', 'other',
 ]
 
-const VALID_BOX_TYPES: BoxType[] = ['cryo_81', 'cryo_100', 'tip', 'slide', 'tube', 'custom']
+const VALID_BOX_TYPES: BoxType[] = ['cryo_81', 'cryo_100', 'tip', 'slide', 'tube', 'shelf', 'box', 'custom']
 // StorageType validated via guessLocationType below
 
 // ── CSV Template ──
@@ -14,19 +15,23 @@ export function generateCsvTemplate() {
   const headers = [
     'Location', 'Temperature', 'Box', 'BoxType', 'Position',
     'Name', 'Name (ZH)', 'Type', 'Quantity', 'Concentration',
-    'Passage', 'Date Stored', 'Expiry Date', 'Owner', 'Tags', 'Description', 'Notes',
+    'Passage', 'Vendor', 'Catalog #', 'Lot #',
+    'Date Stored', 'Expiry Date', 'Owner', 'Tags', 'Description', 'Notes',
   ]
 
   const exampleRows = [
     ['-80 Freezer #1', '-80\u00B0C', 'Box A-1', 'cryo_81', 'A1',
      'HEK293T P12', '', 'cell_line', '1 mL', '',
-     'P12', '2026-01-15', '', 'Miana', 'validated; mycoplasma-free', '', ''],
+     'P12', '', '', '',
+     '2026-01-15', '', 'Miana', 'validated; mycoplasma-free', '', ''],
     ['-80 Freezer #1', '-80\u00B0C', 'Box A-1', 'cryo_81', 'A2',
      'pCMV-GFP', '', 'plasmid', '50 µL', '500 ng/µL',
-     '', '2026-02-01', '2027-02-01', 'Miana', 'cloning', 'GFP expression vector', ''],
+     '', 'Addgene', '#12345', '',
+     '2026-02-01', '2027-02-01', 'Miana', 'cloning', 'GFP expression vector', ''],
     ['-20 Freezer', '-20\u00B0C', 'Antibody Box', 'cryo_81', 'B3',
      'Anti-GAPDH', '抗GAPDH', 'antibody', '100 µL', '1 mg/mL',
-     '', '2025-11-20', '2026-11-20', '', 'WB; IF', 'Mouse monoclonal', 'Lot# 12345'],
+     '', 'CST', '5174S', 'Lot# 12345',
+     '2025-11-20', '2026-11-20', '', 'WB; IF', 'Mouse monoclonal', ''],
   ]
 
   const csv = [
@@ -37,14 +42,196 @@ export function generateCsvTemplate() {
   downloadFile(csv, 'labmate_inventory_template.csv', 'text/csv;charset=utf-8')
 }
 
-// ── Import file (auto-detect CSV or JSON) ──
-export async function importInventoryFile(file: File): Promise<{ message: string; count: number }> {
-  const text = await file.text()
+// ── Import file (auto-detect CSV, JSON, or XLSX) ──
+export type ImportResult = { message: string; count: number }
 
+export async function importInventoryFile(
+  file: File,
+): Promise<ImportResult | { needsWizard: true; workbook: ParsedWorkbook }> {
   if (file.name.endsWith('.json')) {
+    const text = await file.text()
     return importJson(text)
   }
+
+  if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+    const { parseExcelFile } = await import('./parseExcel')
+    const workbook = await parseExcelFile(file)
+    const importableSheets = workbook.sheets.filter(s => s.kind !== 'skip')
+
+    // Single simple sheet → import directly
+    if (importableSheets.length === 1 && importableSheets[0].kind === 'tabular') {
+      return importTabularSheet(importableSheets[0])
+    }
+
+    // Multi-sheet → needs wizard
+    return { needsWizard: true, workbook }
+  }
+
+  const text = await file.text()
   return importCsv(text)
+}
+
+// ── Import a single parsed tabular sheet ──
+async function importTabularSheet(
+  sheet: import('./parseExcel').ParsedSheet,
+  overrideType?: SampleType,
+  defaultOwner?: string,
+): Promise<ImportResult> {
+  const now = Date.now()
+  const sType = overrideType ?? sheet.detectedType
+
+  // Create a default location and box
+  const locationId = await db.storageLocations.add({
+    name: `Imported - ${sheet.name}`,
+    nameZh: '',
+    type: 'shelf' as StorageType,
+    order: 0,
+    createdAt: now,
+    updatedAt: now,
+  }) as number
+
+  const boxId = await db.sampleBoxes.add({
+    name: sheet.name,
+    nameZh: '',
+    locationId,
+    boxType: 'cryo_81',
+    rows: 9,
+    cols: 9,
+    createdAt: now,
+    updatedAt: now,
+  }) as number
+
+  const { col: colFn } = await import('./parseExcel')
+  const headers = sheet.headers
+
+  let count = 0
+  for (const row of sheet.rows) {
+    const get = (field: string) => {
+      const idx = colFn(headers, field)
+      if (idx < 0) return ''
+      const key = headers[idx]
+      return row[key]?.trim() ?? ''
+    }
+
+    const name = get('name')
+    if (!name) continue
+
+    // Auto-assign position
+    const posRow = Math.floor(count / 9)
+    const posCol = count % 9
+    const position = `${String.fromCharCode(65 + posRow)}${posCol + 1}`
+
+    const metadata: Record<string, string> = {}
+    if (sType === 'antibody') {
+      const d = get('dilution'); if (d) metadata.dilution = d
+      const c = get('clone'); if (c) metadata.clone = c
+      const h = get('host'); if (h) metadata.hostSpecies = h
+      const r = get('reactivity'); if (r) metadata.reactivity = r
+      const m = get('mw'); if (m) metadata.mw = m
+      const a = get('application'); if (a) metadata.application = a
+    } else if (sType === 'primer') {
+      const s = get('sequence'); if (s) metadata.sequence = s
+      const t = get('targetGene'); if (t) metadata.targetGene = t
+      const a = get('ampliconSize'); if (a) metadata.ampliconSize = a
+      const sp = get('species'); if (sp) metadata.species = sp
+    } else if (sType === 'compound') {
+      const ct = get('compoundType'); if (ct) metadata.compoundType = ct
+    }
+
+    await db.samples.add({
+      name,
+      boxId,
+      position,
+      sampleType: sType,
+      vendor: get('vendor') || undefined,
+      catalogNumber: get('catalog') || undefined,
+      lotNumber: get('lot') || undefined,
+      quantity: get('quantity') || undefined,
+      concentration: get('concentration') || undefined,
+      owner: get('owner') || defaultOwner || undefined,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      tags: [],
+      notes: get('notes') || undefined,
+      dateStored: now,
+      isFavorite: false,
+      createdAt: now,
+      updatedAt: now,
+    })
+    count++
+  }
+
+  return { message: `${count} samples imported from "${sheet.name}"`, count }
+}
+
+// ── Import selected sheets from wizard ──
+export async function importSelectedSheets(
+  workbook: ParsedWorkbook,
+  selections: Array<{
+    sheetName: string
+    sampleType: SampleType
+    defaultOwner?: string
+  }>,
+): Promise<ImportResult> {
+  let totalCount = 0
+  const messages: string[] = []
+
+  for (const sel of selections) {
+    const sheet = workbook.sheets.find(s => s.name === sel.sheetName)
+    if (!sheet || sheet.kind === 'skip') continue
+
+    if (sheet.kind === 'tabular') {
+      const result = await importTabularSheet(sheet, sel.sampleType, sel.defaultOwner)
+      totalCount += result.count
+      messages.push(result.message)
+    } else if (sheet.kind === 'grid') {
+      const { parseGridSheet, guessBoxDimensions, detectBoxType } = await import('./parseExcel')
+      const gridSamples = parseGridSheet(sheet.gridData!)
+      if (gridSamples.length === 0) continue
+
+      const now = Date.now()
+      const dims = guessBoxDimensions(gridSamples)
+
+      const locationId = await db.storageLocations.add({
+        name: `Imported - ${sheet.name}`,
+        nameZh: '',
+        type: 'freezer' as StorageType,
+        order: 0,
+        createdAt: now,
+        updatedAt: now,
+      }) as number
+
+      const boxId = await db.sampleBoxes.add({
+        name: sheet.name,
+        nameZh: '',
+        locationId,
+        boxType: detectBoxType(dims.rows, dims.cols),
+        rows: dims.rows,
+        cols: dims.cols,
+        createdAt: now,
+        updatedAt: now,
+      }) as number
+
+      for (const gs of gridSamples) {
+        await db.samples.add({
+          name: gs.name,
+          boxId,
+          position: gs.position,
+          sampleType: sel.sampleType,
+          owner: sel.defaultOwner || undefined,
+          tags: [],
+          dateStored: now,
+          isFavorite: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+      }
+
+      totalCount += gridSamples.length
+      messages.push(`${gridSamples.length} samples from "${sheet.name}" (grid)`)
+    }
+  }
+
+  return { message: messages.join('; '), count: totalCount }
 }
 
 // ── Import JSON backup ──
@@ -116,6 +303,10 @@ async function importJson(text: string): Promise<{ message: string; count: numbe
       quantity: sample.quantity,
       concentration: sample.concentration,
       passage: sample.passage,
+      vendor: sample.vendor,
+      catalogNumber: sample.catalogNumber,
+      lotNumber: sample.lotNumber,
+      metadata: sample.metadata,
       dateStored: sample.dateStored || now,
       expiryDate: sample.expiryDate,
       owner: sample.owner,
@@ -162,6 +353,9 @@ async function importCsv(text: string): Promise<{ message: string; count: number
       tags: ['tags'],
       description: ['description', 'desc'],
       notes: ['notes'],
+      vendor: ['vendor', 'supplier', 'company', 'manufacturer'],
+      catalog: ['catalog', 'catalog#', 'cat#', 'cat.#', 'catalogue', 'product#'],
+      lot: ['lot', 'lot#', 'lot number', 'batch'],
     }
     const alts = variants[name] ?? [name]
     for (const alt of alts) {
@@ -281,6 +475,9 @@ async function importCsv(text: string): Promise<{ message: string; count: number
       quantity: get('quantity') || undefined,
       concentration: get('concentration') || undefined,
       passage: get('passage') || undefined,
+      vendor: get('vendor') || undefined,
+      catalogNumber: get('catalog') || undefined,
+      lotNumber: get('lot') || undefined,
       dateStored,
       expiryDate,
       owner: get('owner') || undefined,
@@ -369,6 +566,7 @@ function validateSampleType(raw: string): SampleType {
   // Common aliases
   if (normalized === 'cell' || normalized === 'cells') return 'cell_line'
   if (normalized === 'ab') return 'antibody'
+  if (normalized === 'drug' || normalized === 'inhibitor' || normalized === 'inducer') return 'compound'
   return 'other'
 }
 
@@ -396,6 +594,8 @@ function getBoxDimensions(boxType: BoxType): { rows: number; cols: number } {
     tip: { rows: 8, cols: 12 },
     slide: { rows: 1, cols: 25 },
     tube: { rows: 4, cols: 6 },
+    shelf: { rows: 10, cols: 1 },
+    box: { rows: 10, cols: 1 },
     custom: { rows: 8, cols: 8 },
   }
   return dims[boxType]

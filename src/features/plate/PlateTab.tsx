@@ -647,8 +647,8 @@ export default function PlateTab() {
                         width: config.wellSize,
                         height: config.wellSize,
                         minWidth: config.wellSize,
-                        background: data ? data.color + '30' : '#f9fafb',
-                        borderColor: data ? data.color : '#d1d5db',
+                        background: data ? data.color + '30' : 'var(--color-bg)',
+                        borderColor: data ? data.color : 'var(--color-border)',
                         borderWidth: data ? 2 : 1,
                         borderStyle: 'solid',
                         borderRadius: '50%',
@@ -676,7 +676,7 @@ export default function PlateTab() {
                         </span>
                       )}
                       {plateType <= 48 && !data && (
-                        <span style={{ color: '#d1d5db' }}>{key}</span>
+                        <span style={{ color: 'var(--color-border)' }}>{key}</span>
                       )}
                     </div>
                   )

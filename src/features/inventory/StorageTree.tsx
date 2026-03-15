@@ -14,12 +14,56 @@ interface StorageTreeProps {
   onEditBox: (box: SampleBox) => void
 }
 
-const storageIcons: Record<string, string> = {
-  freezer: 'M12 3v18M5.5 8l13-2M5.5 16l13-2',
-  fridge: 'M5 3h14a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1zM4 12h16',
-  shelf: 'M3 5h18M3 12h18M3 19h18',
-  tank: 'M12 2a8 8 0 018 8v6a8 8 0 01-16 0v-6a8 8 0 018-8z',
-  rack: 'M4 4h16v16H4zM4 9h16M4 14h16M9 4v16M14 4v16',
+/** Location type icons — multi-path SVGs rendered as separate <path> elements */
+const storageIcons: Record<string, string[]> = {
+  // Snowflake — universally recognized for frozen storage
+  freezer: [
+    'M12 2v20', 'M17 5l-5 5-5-5', 'M17 19l-5-5-5 5',
+    'M2 12h20', 'M5 7l5 5-5 5', 'M19 7l-5 5 5 5',
+  ],
+  // Fridge box with door handle
+  fridge: [
+    'M5 2h14a1 1 0 011 1v18a1 1 0 01-1 1H5a1 1 0 01-1-1V3a1 1 0 011-1z',
+    'M4 10h16', 'M15 6v2', 'M15 13v4',
+  ],
+  // Horizontal shelves with vertical supports
+  shelf: [
+    'M4 6h16', 'M4 12h16', 'M4 18h16',
+    'M6 6v12', 'M18 6v12',
+  ],
+  // LN2 dewar: cylindrical with neck
+  tank: [
+    'M8 2h8', 'M9 2v3', 'M15 2v3',
+    'M7 5a1 1 0 00-1 1v13a4 4 0 004 4h4a4 4 0 004-4V6a1 1 0 00-1-1z',
+  ],
+  // Wire rack grid
+  rack: [
+    'M3 5h18', 'M3 12h18', 'M3 19h18',
+    'M6 5v14', 'M12 5v14', 'M18 5v14',
+  ],
+}
+
+/** Box type icons — used in the tree for individual boxes */
+const boxIcons: Record<string, string[]> = {
+  // Grid (default) — cryo box / tip box
+  grid: [
+    'M3 3h18v18H3z', 'M3 9h18', 'M3 15h18', 'M9 3v18', 'M15 3v18',
+  ],
+  // List layout — shelf / general box
+  list: [
+    'M4 6h16', 'M4 10h16', 'M4 14h16', 'M4 18h12',
+  ],
+  // Slide box — long horizontal
+  slide: [
+    'M2 8h20v8H2z', 'M6 8v8', 'M10 8v8', 'M14 8v8', 'M18 8v8',
+  ],
+}
+
+/** Map box type to icon style */
+function boxIconKey(boxType: string): string {
+  if (boxType === 'shelf' || boxType === 'box') return 'list'
+  if (boxType === 'slide') return 'slide'
+  return 'grid'
 }
 
 export default function StorageTree({
@@ -96,7 +140,9 @@ export default function StorageTree({
             stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
             style={{ color: 'var(--color-primary)', flexShrink: 0 }}
           >
-            <path d={storageIcons[loc.type] || storageIcons.shelf} />
+            {(storageIcons[loc.type] || storageIcons.shelf).map((d, i) => (
+              <path key={i} d={d} />
+            ))}
           </svg>
 
           <span className="text-sm font-medium truncate flex-1" style={{ color: 'var(--color-text)' }}>
@@ -168,8 +214,9 @@ export default function StorageTree({
                     stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                     style={{ color: isSelected ? 'var(--color-primary)' : 'var(--color-text-muted)', flexShrink: 0 }}
                   >
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M3 9h18M9 3v18" />
+                    {boxIcons[boxIconKey(box.boxType)].map((d, i) => (
+                      <path key={i} d={d} />
+                    ))}
                   </svg>
 
                   <span

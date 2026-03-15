@@ -4,7 +4,7 @@ import type { Sample, SampleType } from '@/lib/db'
 
 const SAMPLE_TYPES: SampleType[] = [
   'cell_line', 'plasmid', 'antibody', 'primer',
-  'protein', 'reagent', 'tissue', 'virus', 'other',
+  'protein', 'reagent', 'tissue', 'virus', 'compound', 'other',
 ]
 
 interface SampleFormProps {
@@ -34,10 +34,29 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
     if (!existing?.expiryDate) return ''
     return new Date(existing.expiryDate).toISOString().slice(0, 10)
   })
+  const [vendor, setVendor] = useState(existing?.vendor ?? '')
+  const [catalogNumber, setCatalogNumber] = useState(existing?.catalogNumber ?? '')
+  const [lotNumber, setLotNumber] = useState(existing?.lotNumber ?? '')
   const [owner, setOwner] = useState(existing?.owner ?? '')
   const [tagsStr, setTagsStr] = useState(existing?.tags?.join(', ') ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // Type-specific metadata
+  const meta = existing?.metadata ?? {}
+  const [dilution, setDilution] = useState(meta.dilution ?? '')
+  const [clone, setClone] = useState(meta.clone ?? '')
+  const [hostSpecies, setHostSpecies] = useState(meta.hostSpecies ?? '')
+  const [reactivity, setReactivity] = useState(meta.reactivity ?? '')
+  const [mw, setMw] = useState(meta.mw ?? '')
+  const [application, setApplication] = useState(meta.application ?? '')
+  const [sequence, setSequence] = useState(meta.sequence ?? '')
+  const [targetGene, setTargetGene] = useState(meta.targetGene ?? '')
+  const [ampliconSize, setAmpliconSize] = useState(meta.ampliconSize ?? '')
+  const [primerSpecies, setPrimerSpecies] = useState(meta.species ?? '')
+  const [compoundType, setCompoundType] = useState(meta.compoundType ?? '')
+  const [aliquotLocation, setAliquotLocation] = useState(meta.aliquotLocation ?? '')
+  const [stockLocation, setStockLocation] = useState(meta.stockLocation ?? '')
 
   useEffect(() => {
     // Focus name field on mount
@@ -51,6 +70,26 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
 
     const tags = tagsStr.split(',').map(s => s.trim()).filter(Boolean)
 
+    // Build metadata based on sample type
+    const metadata: Record<string, string> = {}
+    if (sampleType === 'antibody') {
+      if (dilution.trim()) metadata.dilution = dilution.trim()
+      if (clone.trim()) metadata.clone = clone.trim()
+      if (hostSpecies.trim()) metadata.hostSpecies = hostSpecies.trim()
+      if (reactivity.trim()) metadata.reactivity = reactivity.trim()
+      if (mw.trim()) metadata.mw = mw.trim()
+      if (application.trim()) metadata.application = application.trim()
+    } else if (sampleType === 'primer') {
+      if (sequence.trim()) metadata.sequence = sequence.trim()
+      if (targetGene.trim()) metadata.targetGene = targetGene.trim()
+      if (ampliconSize.trim()) metadata.ampliconSize = ampliconSize.trim()
+      if (primerSpecies.trim()) metadata.species = primerSpecies.trim()
+    } else if (sampleType === 'compound') {
+      if (compoundType.trim()) metadata.compoundType = compoundType.trim()
+      if (aliquotLocation.trim()) metadata.aliquotLocation = aliquotLocation.trim()
+      if (stockLocation.trim()) metadata.stockLocation = stockLocation.trim()
+    }
+
     onSave({
       name: name.trim(),
       nameZh: nameZh.trim() || undefined,
@@ -61,6 +100,10 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
       quantity: quantity.trim() || undefined,
       concentration: concentration.trim() || undefined,
       passage: passage.trim() || undefined,
+      vendor: vendor.trim() || undefined,
+      catalogNumber: catalogNumber.trim() || undefined,
+      lotNumber: lotNumber.trim() || undefined,
+      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       dateStored: new Date(dateStored).getTime(),
       expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined,
       owner: owner.trim() || undefined,
@@ -184,6 +227,190 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
             placeholder="P15"
             style={inputStyle}
           />
+        </div>
+      )}
+
+      {/* Vendor / Catalog # / Lot # */}
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label style={labelStyle}>{t('inv.vendor')}</label>
+          <input
+            type="text"
+            value={vendor}
+            onChange={e => setVendor(e.target.value)}
+            placeholder="CST, Sigma..."
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={labelStyle}>{t('inv.catalogNumber')}</label>
+          <input
+            type="text"
+            value={catalogNumber}
+            onChange={e => setCatalogNumber(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={labelStyle}>{t('inv.lotNumber')}</label>
+          <input
+            type="text"
+            value={lotNumber}
+            onChange={e => setLotNumber(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
+      </div>
+
+      {/* Antibody-specific metadata */}
+      {sampleType === 'antibody' && (
+        <div className="space-y-3 p-3 rounded-md" style={{ background: 'var(--color-border-light)' }}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>{t('inv.dilution')}</label>
+              <input
+                type="text"
+                value={dilution}
+                onChange={e => setDilution(e.target.value)}
+                placeholder="1:1000"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.clone')}</label>
+              <input
+                type="text"
+                value={clone}
+                onChange={e => setClone(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>{t('inv.hostSpecies')}</label>
+              <input
+                type="text"
+                value={hostSpecies}
+                onChange={e => setHostSpecies(e.target.value)}
+                placeholder="Rabbit, Mouse..."
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.reactivity')}</label>
+              <input
+                type="text"
+                value={reactivity}
+                onChange={e => setReactivity(e.target.value)}
+                placeholder="Human, Mouse..."
+                style={inputStyle}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>{t('inv.mw')}</label>
+              <input
+                type="text"
+                value={mw}
+                onChange={e => setMw(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.application')}</label>
+              <input
+                type="text"
+                value={application}
+                onChange={e => setApplication(e.target.value)}
+                placeholder="WB, IF, IHC..."
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Primer-specific metadata */}
+      {sampleType === 'primer' && (
+        <div className="space-y-3 p-3 rounded-md" style={{ background: 'var(--color-border-light)' }}>
+          <div>
+            <label style={labelStyle}>{t('inv.sequence')}</label>
+            <textarea
+              value={sequence}
+              onChange={e => setSequence(e.target.value)}
+              rows={2}
+              placeholder="ATCGATCG..."
+              style={{ ...inputStyle, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', resize: 'vertical' as const }}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label style={labelStyle}>{t('inv.targetGene')}</label>
+              <input
+                type="text"
+                value={targetGene}
+                onChange={e => setTargetGene(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.ampliconSize')}</label>
+              <input
+                type="text"
+                value={ampliconSize}
+                onChange={e => setAmpliconSize(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.species')}</label>
+              <input
+                type="text"
+                value={primerSpecies}
+                onChange={e => setPrimerSpecies(e.target.value)}
+                placeholder="Human, Mouse..."
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compound-specific metadata */}
+      {sampleType === 'compound' && (
+        <div className="space-y-3 p-3 rounded-md" style={{ background: 'var(--color-border-light)' }}>
+          <div>
+            <label style={labelStyle}>{t('inv.compoundType')}</label>
+            <input
+              type="text"
+              value={compoundType}
+              onChange={e => setCompoundType(e.target.value)}
+              placeholder="Inhibitor, Inducer..."
+              style={inputStyle}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>{t('inv.aliquotLocation')}</label>
+              <input
+                type="text"
+                value={aliquotLocation}
+                onChange={e => setAliquotLocation(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('inv.stockLocation')}</label>
+              <input
+                type="text"
+                value={stockLocation}
+                onChange={e => setStockLocation(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+          </div>
         </div>
       )}
 

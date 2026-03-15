@@ -92,7 +92,7 @@ export interface StorageLocation {
   updatedAt: number
 }
 
-export type BoxType = 'cryo_81' | 'cryo_100' | 'tip' | 'slide' | 'tube' | 'custom'
+export type BoxType = 'cryo_81' | 'cryo_100' | 'tip' | 'slide' | 'tube' | 'shelf' | 'box' | 'custom'
 
 export interface SampleBox {
   id?: number
@@ -109,7 +109,7 @@ export interface SampleBox {
 
 export type SampleType =
   | 'cell_line' | 'plasmid' | 'antibody' | 'primer'
-  | 'protein' | 'reagent' | 'tissue' | 'virus' | 'other'
+  | 'protein' | 'reagent' | 'tissue' | 'virus' | 'compound' | 'other'
 
 export interface Sample {
   id?: number
@@ -122,6 +122,10 @@ export interface Sample {
   quantity?: string            // e.g. '500 µL', '2 vials'
   concentration?: string       // e.g. '1 µg/µL'
   passage?: string             // for cell lines
+  vendor?: string
+  catalogNumber?: string
+  lotNumber?: string
+  metadata?: Record<string, string>  // type-specific key-value pairs
   dateStored: number           // epoch ms
   expiryDate?: number
   owner?: string
@@ -149,6 +153,7 @@ export const sampleTypeColors: Record<SampleType, { bg: string; text: string }> 
   reagent:   { bg: '#f0fdf4', text: '#166534' },
   tissue:    { bg: '#fce7f3', text: '#9d174d' },
   virus:     { bg: '#fef2f2', text: '#991b1b' },
+  compound:  { bg: '#fef9c3', text: '#854d0e' },
   other:     { bg: '#f3f4f6', text: '#374151' },
 }
 
@@ -183,6 +188,15 @@ db.version(3).stores({
   storageLocations: '++id, name, type, parentId',
   sampleBoxes: '++id, name, locationId, boxType',
   samples: '++id, name, boxId, position, sampleType, *tags, dateStored, owner, isFavorite',
+  settings: '++id, &key',
+})
+
+db.version(4).stores({
+  protocols: '++id, externalId, category, *tags, source, isFavorite, lastUsed',
+  experiments: '++id, protocolId, date, outcome',
+  storageLocations: '++id, name, type, parentId',
+  sampleBoxes: '++id, name, locationId, boxType',
+  samples: '++id, name, boxId, position, sampleType, *tags, dateStored, owner, vendor, isFavorite',
   settings: '++id, &key',
 })
 

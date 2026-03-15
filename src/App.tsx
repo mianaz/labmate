@@ -228,6 +228,22 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // Open external links in the system browser (Tauri blocks target="_blank")
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const anchor = (e.target as HTMLElement).closest('a')
+      if (!anchor) return
+      const href = anchor.getAttribute('href')
+      if (!href || !href.startsWith('http')) return
+      e.preventDefault()
+      import('@tauri-apps/plugin-opener').then(m => m.openUrl(href)).catch(() => {
+        window.open(href, '_blank')
+      })
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
+
   const toggleLang = () => {
     const next = i18n.language === 'zh' ? 'en' : 'zh'
     i18n.changeLanguage(next)

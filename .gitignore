@@ -33,3 +33,7 @@ DESIGN_GUIDE.md
 FEASIBILITY.md
 NATIVE_GUIDE.md
 TASK-v1.9.md
+
+# Lab-specific data & scripts
+data/inventory/
+scripts/convert-lab-data.ts

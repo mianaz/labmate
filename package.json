@@ -16,13 +16,15 @@
     "tauri:ios:build": "tauri ios build"
   },
   "dependencies": {
+    "@tauri-apps/plugin-opener": "^2.5.3",
     "dexie": "^4.3.0",
     "dexie-react-hooks": "^4.2.0",
     "i18next": "^25.8.18",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-i18next": "^16.5.8",
-    "react-router-dom": "^7.13.1"
+    "react-router-dom": "^7.13.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

@@ -9,8 +9,10 @@ import BoxGrid from './BoxGrid'
 import SampleForm from './SampleForm'
 import LocationForm from './LocationForm'
 import BoxForm from './BoxForm'
-import { exportBoxCsv, exportAllCsv, exportInventoryJson, printBoxGrid } from './exportInventory'
+import { exportBoxCsv, exportAllCsv, exportAllXlsx, exportInventoryJson, printBoxGrid } from './exportInventory'
 import { importInventoryFile, generateCsvTemplate } from './importInventory'
+import type { ParsedWorkbook } from './parseExcel'
+import ImportWizard from './ImportWizard'
 
 type ModalState =
   | { kind: 'none' }
@@ -20,6 +22,7 @@ type ModalState =
   | { kind: 'editBox'; box: SampleBox }
   | { kind: 'addSample'; boxId: number; position: string }
   | { kind: 'editSample'; sample: Sample }
+  | { kind: 'importWizard'; workbook: ParsedWorkbook }
 
 // Mobile drill-down levels
 type MobileView = 'tree' | 'grid' | 'sample'
@@ -39,6 +42,7 @@ export default function InventoryTab() {
   // UI state
   const [selectedBoxId, setSelectedBoxId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'mine' | 'lab'>('all')
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
   const [mobileView, setMobileView] = useState<MobileView>('tree')
 
@@ -60,6 +64,8 @@ export default function InventoryTab() {
       || s.sampleType.includes(q)
       || (s.owner && s.owner.toLowerCase().includes(q))
       || (s.description && s.description.toLowerCase().includes(q))
+      || (s.vendor && s.vendor.toLowerCase().includes(q))
+      || (s.catalogNumber && s.catalogNumber.toLowerCase().includes(q))
     )
   }, [allSamples, searchQuery])
 
@@ -161,18 +167,28 @@ export default function InventoryTab() {
     setShowExportMenu(false)
   }
 
+  function handleExportXlsx() {
+    exportAllXlsx(locations, boxes, allSamples, getLocationPath)
+    setShowExportMenu(false)
+  }
+
   async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const result = await importInventoryFile(file)
-      setImportStatus({ message: result.message, isError: false })
+      if ('needsWizard' in result) {
+        setModal({ kind: 'importWizard', workbook: result.workbook })
+      } else {
+        setImportStatus({ message: result.message, isError: false })
+        setTimeout(() => setImportStatus(null), 5000)
+      }
     } catch (err) {
       setImportStatus({ message: err instanceof Error ? err.message : 'Import failed', isError: true })
+      setTimeout(() => setImportStatus(null), 5000)
     }
     // Reset file input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = ''
-    setTimeout(() => setImportStatus(null), 5000)
   }
 
   function handleCellClick(position: string, sample?: Sample) {
@@ -264,6 +280,11 @@ export default function InventoryTab() {
                 <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
                   {box ? `${getLocationPath(box.locationId)} > ${getBoxName(box.id!)}` : ''}
                 </p>
+                {(sample.vendor || sample.catalogNumber) && (
+                  <p className="text-[10px] truncate" style={{ color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    {[sample.vendor, sample.catalogNumber].filter(Boolean).join(' · ')}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   <span
                     className="text-[10px] px-1.5 py-0.5 rounded-full"
@@ -475,6 +496,17 @@ export default function InventoryTab() {
             onCancel={() => setModal({ kind: 'none' })}
           />
         )}
+        {modal.kind === 'importWizard' && (
+          <ImportWizard
+            workbook={modal.workbook}
+            onDone={(message, _count) => {
+              setModal({ kind: 'none' })
+              setImportStatus({ message, isError: false })
+              setTimeout(() => setImportStatus(null), 5000)
+            }}
+            onCancel={() => setModal({ kind: 'none' })}
+          />
+        )}
       </div>
     </div>
   )
@@ -486,7 +518,7 @@ export default function InventoryTab() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,.json"
+        accept=".csv,.json,.xlsx,.xls"
         onChange={handleImportFile}
         className="hidden"
       />
@@ -538,6 +570,13 @@ export default function InventoryTab() {
                 </button>
               )}
               <button
+                onClick={handleExportXlsx}
+                className="w-full text-left px-3 py-1.5 text-xs hover:opacity-80"
+                style={{ color: 'var(--color-text)' }}
+              >
+                {t('inv.exportXlsx')}
+              </button>
+              <button
                 onClick={handleExportJson}
                 className="w-full text-left px-3 py-1.5 text-xs hover:opacity-80"
                 style={{ color: 'var(--color-text)' }}
@@ -575,6 +614,23 @@ export default function InventoryTab() {
         </svg>
         {t('inv.import')}
       </button>
+
+      {/* Owner filter pills */}
+      <div className="flex items-center gap-1 ml-auto">
+        {(['all', 'mine', 'lab'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setOwnerFilter(f)}
+            className="text-[10px] px-2 py-0.5 rounded-full transition-colors"
+            style={{
+              background: ownerFilter === f ? 'var(--color-primary)' : 'var(--color-border-light)',
+              color: ownerFilter === f ? 'white' : 'var(--color-text-muted)',
+            }}
+          >
+            {t(`inv.filter${f.charAt(0).toUpperCase() + f.slice(1)}`)}
+          </button>
+        ))}
+      </div>
 
       {/* Import status toast */}
       {importStatus && (
