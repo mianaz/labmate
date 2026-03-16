@@ -89,6 +89,16 @@
   "calc.downloadGel": "下载配胶方案",
   "calc.reagent": "试剂",
   "calc.amount": "用量",
+  "calc.taskConvert": "单位换算",
+  "calc.convertSubtitle": "公制、英制和实验室单位互转",
+  "calc.convertCategory": "类别",
+  "calc.convertFrom": "从",
+  "calc.convertTo": "到",
+  "calc.convertCatVolume": "体积",
+  "calc.convertCatMass": "质量",
+  "calc.convertCatLength": "长度",
+  "calc.convertCatTemp": "温度",
+  "calc.convertCatPressure": "压力",
   "calc.dilution": "稀释母液",
   "calc.mass": "需要称多少粉末？",
   "calc.molarity": "我的溶液浓度是多少？",
@@ -221,7 +231,7 @@
   "guide.protocolsTitle": "实验方案",
   "guide.protocolsBody": "常见实验的分步操作方案（Western blot、ChIP、RNA 提取等）。每个方案包含材料清单，可提前准备。内置计时器——点击含时间的步骤即可开始倒计时。",
   "guide.calcTitle": "计算器",
-  "guide.calcBody": "五种计算模式：(1) 稀释计算 C₁V₁=C₂V₂ 含实际移液指导，(2) 质量计算——根据目标摩尔浓度算称量量，(3) 摩尔浓度——由已知质量求浓度，(4) 百分比溶液——w/v 或 v/v 计算，(5) 配液计算——多样品实验总量（含 Dead Volume 补偿）。",
+  "guide.calcBody": "七种计算模式：(1) 稀释计算 C₁V₁=C₂V₂ 含实际移液指导，(2) 质量计算——根据目标摩尔浓度算称量量，(3) 摩尔浓度——由已知质量求浓度，(4) 百分比溶液——w/v 或 v/v 计算，(5) 配液计算——多样品实验总量（含 Dead Volume 补偿），(6) SDS-PAGE 配胶计算，(7) 单位换算——公制、英制和实验室单位互转。",
   "guide.gelTitle": "SDS-PAGE 配胶计算",
   "guide.gelBody": "位于配方库标签内（点击配胶图标）。选择分离胶和浓缩胶浓度、单胶体积和胶数量，计算器显示丙烯酰胺、缓冲液、水、APS 和 TEMED 的精确用量。附分子量分离范围参考表。",
   "guide.plateTitle": "多孔板设计",
@@ -337,5 +347,16 @@
   "data.importSuccess": "导入成功（共 {{count}} 条记录）",
   "data.importFailed": "导入失败——文件格式无效",
   "data.privacy": "您的数据完全私密——所有内容均存储在本地设备上",
-  "data.confirmImport": "导入将与现有数据合并，是否继续？"
+  "data.confirmImport": "导入将与现有数据合并，是否继续？",
+
+  "timer.start": "开始",
+  "timer.pause": "暂停",
+  "timer.resume": "继续",
+  "timer.reset": "重置",
+  "timer.done": "时间到！",
+  "timer.add": "快速计时",
+  "timer.minutes": "分钟",
+  "timer.labelPlaceholder": "标签（如 封闭）",
+
+  "quickCalc.title": "快速计算器"
 }

@@ -89,6 +89,16 @@
   "calc.downloadGel": "Download Recipe",
   "calc.reagent": "Reagent",
   "calc.amount": "Amount",
+  "calc.taskConvert": "Unit Conversion",
+  "calc.convertSubtitle": "Convert between metric, imperial, and lab units",
+  "calc.convertCategory": "Category",
+  "calc.convertFrom": "From",
+  "calc.convertTo": "To",
+  "calc.convertCatVolume": "Volume",
+  "calc.convertCatMass": "Mass",
+  "calc.convertCatLength": "Length",
+  "calc.convertCatTemp": "Temperature",
+  "calc.convertCatPressure": "Pressure",
   "calc.dilution": "I need to dilute a stock solution",
   "calc.mass": "How much powder to weigh?",
   "calc.molarity": "What is my solution concentration?",
@@ -221,7 +231,7 @@
   "guide.protocolsTitle": "Protocols",
   "guide.protocolsBody": "Step-by-step protocols for common lab procedures (Western blot, ChIP, RNA extraction, etc.). Each protocol includes a materials list so you can prepare everything before starting. Timers are built in — click any timed step to start a countdown.",
   "guide.calcTitle": "Calculator",
-  "guide.calcBody": "Five calculator modes: (1) Dilution — C\u2081V\u2081=C\u2082V\u2082 with practical pipetting instructions, (2) Mass — how much powder to weigh for a target molarity, (3) Molarity — find the concentration from a known mass, (4) % Solution — w/v or v/v percentage calculations, (5) Prep Calculator — total volume with dead-volume compensation for multi-sample experiments.",
+  "guide.calcBody": "Seven calculator modes: (1) Dilution — C\u2081V\u2081=C\u2082V\u2082 with practical pipetting instructions, (2) Mass — how much powder to weigh for a target molarity, (3) Molarity — find the concentration from a known mass, (4) % Solution — w/v or v/v percentage calculations, (5) Prep Calculator — total volume with dead-volume compensation, (6) SDS-PAGE Gel Calculator, (7) Unit Conversion — metric, imperial, and lab units.",
   "guide.gelTitle": "SDS-PAGE Gel Calculator",
   "guide.gelBody": "Found inside the Buffers tab (click the gel icon). Choose resolving and stacking gel percentages, set the volume per gel, and specify how many gels. The calculator shows exact volumes of acrylamide, buffer, water, APS, and TEMED. Includes a MW separation range reference table.",
   "guide.plateTitle": "Plate Designer",
@@ -338,5 +348,16 @@
   "data.importSuccess": "Data imported successfully ({{count}} records)",
   "data.importFailed": "Import failed — invalid file format",
   "data.privacy": "Your data stays private — everything is stored locally on this device",
-  "data.confirmImport": "This will merge imported data with existing data. Continue?"
+  "data.confirmImport": "This will merge imported data with existing data. Continue?",
+
+  "timer.start": "Start",
+  "timer.pause": "Pause",
+  "timer.resume": "Resume",
+  "timer.reset": "Reset",
+  "timer.done": "Time's up!",
+  "timer.add": "Quick Timer",
+  "timer.minutes": "min",
+  "timer.labelPlaceholder": "Label (e.g. Blocking)",
+
+  "quickCalc.title": "Quick Calculator"
 }

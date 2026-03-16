@@ -10,6 +10,9 @@ import InventoryTab from '@/features/inventory/InventoryTab'
 import ToolsTab from '@/features/tools/ToolsTab'
 import RefsTab from '@/features/refs/RefsTab'
 import SearchModal from '@/features/search/SearchModal'
+import ToastProvider from '@/features/shared/ToastProvider'
+import TimerProvider, { TimerBar, QuickTimerButton } from '@/features/shared/TimerProvider'
+import QuickCalculatorButton from '@/features/shared/QuickCalculator'
 import { checkForUpdates, syncDatabase, getLastSyncTime } from '@/lib/syncService'
 type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools' | 'refs'
 
@@ -310,6 +313,8 @@ function App() {
   }
 
   return (
+    <ToastProvider>
+    <TimerProvider>
     <div className="min-h-screen" style={{
       backgroundColor: 'var(--color-bg)', color: 'var(--color-text)',
       display: 'flex', flexDirection: 'column',
@@ -474,11 +479,18 @@ function App() {
         }}
       />
 
+      {/* Floating widgets */}
+      <TimerBar />
+      <QuickTimerButton />
+      <QuickCalculatorButton />
+
       {/* Spin animation for sync icon */}
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </div>
+    </TimerProvider>
+    </ToastProvider>
   )
 }
 

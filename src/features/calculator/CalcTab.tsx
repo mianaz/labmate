@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type CalcMode = 'dilution' | 'mass' | 'molarity' | 'percent' | 'deadvol' | 'gel'
+type CalcMode = 'dilution' | 'mass' | 'molarity' | 'percent' | 'deadvol' | 'gel' | 'convert'
 
 type DilutionSolveFor = 'c1' | 'v1' | 'c2' | 'v2'
 type ConcUnit = 'M' | 'mM' | 'µM' | 'nM' | '%'
@@ -108,6 +108,7 @@ export default function CalcTab() {
     { id: 'percent',  task: t('calc.taskPercent'),  formula: '% (w/v) or (v/v)' },
     { id: 'deadvol',  task: t('calc.taskDeadVol'),  formula: 'V × N × (1 + dead%)' },
     { id: 'gel',      task: t('calc.taskGel'),       formula: 'SDS-PAGE' },
+    { id: 'convert',  task: t('calc.taskConvert'),   formula: 'Unit ↔ Unit' },
   ]
 
   return (
@@ -151,6 +152,7 @@ export default function CalcTab() {
       {mode === 'percent'  && <PercentCalc />}
       {mode === 'deadvol'  && <DeadVolumeCalc />}
       {mode === 'gel'      && <GelCalc />}
+      {mode === 'convert'  && <UnitConversionCalc />}
     </div>
   )
 }
@@ -1224,6 +1226,172 @@ function GelCalc() {
           <p className="text-xs mt-3 italic" style={{ color: 'var(--color-text-muted)' }}>
             Ref: Laemmli (1970) Nature 227:680; Bio-Rad Mini-PROTEAN Manual
           </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Unit Conversion Calculator ─────────────────────────────────────────────
+
+interface ConversionCategory {
+  labelKey: string
+  units: string[]
+  toBase?: Record<string, number>
+  convert?: (val: number, from: string, to: string) => number
+}
+
+const UNIT_CATEGORIES: Record<string, ConversionCategory> = {
+  volume: {
+    labelKey: 'calc.convertCatVolume',
+    units: ['L', 'mL', '\u00B5L', 'nL', 'fl oz', 'cup', 'pt', 'qt', 'gal'],
+    toBase: { L: 1, mL: 1e-3, '\u00B5L': 1e-6, nL: 1e-9, 'fl oz': 0.0295735, cup: 0.236588, pt: 0.473176, qt: 0.946353, gal: 3.78541 },
+  },
+  mass: {
+    labelKey: 'calc.convertCatMass',
+    units: ['kg', 'g', 'mg', '\u00B5g', 'ng', 'lb', 'oz'],
+    toBase: { kg: 1000, g: 1, mg: 1e-3, '\u00B5g': 1e-6, ng: 1e-9, lb: 453.592, oz: 28.3495 },
+  },
+  length: {
+    labelKey: 'calc.convertCatLength',
+    units: ['m', 'cm', 'mm', '\u00B5m', 'nm', 'in', 'ft', 'yd'],
+    toBase: { m: 1, cm: 0.01, mm: 0.001, '\u00B5m': 1e-6, nm: 1e-9, in: 0.0254, ft: 0.3048, yd: 0.9144 },
+  },
+  temperature: {
+    labelKey: 'calc.convertCatTemp',
+    units: ['\u00B0C', '\u00B0F', 'K'],
+    convert: (val, from, to) => {
+      let c: number
+      if (from === '\u00B0C') c = val
+      else if (from === '\u00B0F') c = (val - 32) * 5 / 9
+      else c = val - 273.15
+      if (to === '\u00B0C') return c
+      if (to === '\u00B0F') return c * 9 / 5 + 32
+      return c + 273.15
+    },
+  },
+  pressure: {
+    labelKey: 'calc.convertCatPressure',
+    units: ['atm', 'Pa', 'kPa', 'bar', 'psi', 'mmHg', 'Torr'],
+    toBase: { atm: 1, Pa: 9.8692e-6, kPa: 0.00986923, bar: 0.986923, psi: 0.068046, mmHg: 0.00131579, Torr: 0.00131579 },
+  },
+}
+
+function UnitConversionCalc() {
+  const { t } = useTranslation()
+  const [cat, setCat] = useState('volume')
+  const [fromUnit, setFromUnit] = useState('mL')
+  const [toUnit, setToUnit] = useState('\u00B5L')
+  const [value, setValue] = useState('')
+
+  const catData = UNIT_CATEGORIES[cat]
+  const numVal = parseFloat(value)
+  let result: number | null = null
+  if (!isNaN(numVal) && value !== '') {
+    if (catData.convert) {
+      result = catData.convert(numVal, fromUnit, toUnit)
+    } else if (catData.toBase) {
+      result = numVal * catData.toBase[fromUnit] / catData.toBase[toUnit]
+    }
+  }
+
+  function fmt(n: number | null) {
+    if (n === null || n === undefined) return '\u2014'
+    if (Math.abs(n) < 0.0001 && n !== 0) return n.toExponential(4)
+    if (Math.abs(n) >= 1e7) return n.toExponential(4)
+    return parseFloat(n.toPrecision(8)).toString()
+  }
+
+  return (
+    <div className="fade-in">
+      <div className="card p-5">
+        <h3 className="text-sm font-bold mb-1">{t('calc.taskConvert')}</h3>
+        <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+          {t('calc.convertSubtitle')}
+        </p>
+
+        {/* Category pills */}
+        <div className="mb-4">
+          <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            {t('calc.convertCategory')}
+          </label>
+          <div className="flex gap-1.5 flex-wrap">
+            {Object.keys(UNIT_CATEGORIES).map(k => (
+              <button
+                key={k}
+                onClick={() => { setCat(k); setFromUnit(UNIT_CATEGORIES[k].units[0]); setToUnit(UNIT_CATEGORIES[k].units[1]); setValue('') }}
+                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                style={{
+                  background: cat === k ? 'var(--color-primary)' : 'var(--color-bg-card)',
+                  color: cat === k ? 'white' : 'var(--color-text-muted)',
+                  border: `1px solid ${cat === k ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  cursor: 'pointer',
+                }}
+              >
+                {t(UNIT_CATEGORIES[k].labelKey)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Conversion inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              {t('calc.convertFrom')}
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number" value={value} onChange={e => setValue(e.target.value)}
+                placeholder="0" step="any"
+                className="flex-1"
+                style={{
+                  padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border)', background: 'var(--color-bg)',
+                  color: 'var(--color-text)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem',
+                }}
+              />
+              <select
+                value={fromUnit} onChange={e => setFromUnit(e.target.value)}
+                style={{
+                  width: '4.5rem', flexShrink: 0, padding: '0.5rem',
+                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)',
+                  background: 'var(--color-bg)', color: 'var(--color-text)',
+                  fontFamily: 'var(--font-mono)', fontSize: '0.875rem',
+                }}
+              >
+                {catData.units.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center text-lg" style={{ color: 'var(--color-text-muted)' }}>
+            &rarr;
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              {t('calc.convertTo')}
+            </label>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 p-2 rounded-lg text-center" style={{ background: 'hsl(168, 55%, 92%)', minHeight: '2.5rem' }}>
+                <span className="text-xl font-bold" style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>
+                  {fmt(result)}
+                </span>
+              </div>
+              <select
+                value={toUnit} onChange={e => setToUnit(e.target.value)}
+                style={{
+                  width: '4.5rem', flexShrink: 0, padding: '0.5rem',
+                  borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)',
+                  background: 'var(--color-bg)', color: 'var(--color-text)',
+                  fontFamily: 'var(--font-mono)', fontSize: '0.875rem',
+                }}
+              >
+                {catData.units.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
