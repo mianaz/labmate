@@ -8,7 +8,10 @@ import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
 import type { Protocol } from '@/lib/db'
 import db from '@/lib/db'
 import RecipeForm from '@/features/shared/RecipeForm'
+import GelRecipeDetail from './GelRecipeDetail'
 import { addRecent } from '@/lib/recentlyViewed'
+
+const GEL_ID = '__gel_calculator__'
 
 const VISIBLE_CATS = ['buffer', 'staining', 'media'] as const
 const CAT_ORDER: Record<string, number> = { buffer: 0, staining: 1, media: 2 }
@@ -148,6 +151,34 @@ export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTab
         </button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
+        {/* SDS-PAGE Gel Calculator — pinned entry */}
+        {(!search.trim() || ['gel', 'sds', 'page', 'acrylamide', 'polyacrylamide', '配胶', '电泳'].some(k => search.toLowerCase().includes(k))) && (
+          <button
+            onClick={() => { setSelectedId(GEL_ID); setMobileDetail(true) }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+              padding: '10px 8px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
+              background: selectedId === GEL_ID ? 'var(--color-border-light, var(--color-border))' : 'transparent',
+              transition: 'background 0.12s', marginBottom: 4,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ color: 'var(--color-primary)', flexShrink: 0 }}>
+              <rect x="6" y="2" width="12" height="20" rx="1" />
+              <line x1="6" y1="8" x2="18" y2="8" />
+              <line x1="6" y1="14" x2="18" y2="14" />
+            </svg>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: 0 }}>
+                {t('gel.title')}
+              </p>
+              <p style={{ fontSize: 10, color: 'var(--color-text-muted)', margin: '2px 0 0' }}>
+                {t('gel.subtitle')}
+              </p>
+            </div>
+          </button>
+        )}
         {grouped.length === 0 && (
           <p style={{ textAlign: 'center', padding: 24, color: 'var(--color-text-muted)', fontSize: 14 }}>No results</p>
         )}
@@ -205,7 +236,9 @@ export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTab
   const relatedProtos = selected ? getRelatedProtocols(selected.externalId) : []
   const refs = selected ? getReferences(selected.externalId) : []
 
-  const detailPanel = selected ? (
+  const detailPanel = selectedId === GEL_ID ? (
+    <GelRecipeDetail lang={lang} onNavigate={onNavigate} />
+  ) : selected ? (
     <div>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>

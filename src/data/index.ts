@@ -17,7 +17,5 @@ export { EXTERNAL_TOOLS } from './externalTools'
 export { BUFFER_ENHANCEMENTS } from './buffer-enhancements'
 export type { BufferEnhancement } from './buffer-enhancements'
 
-export { GEL_DEFAULTS } from './gel-defaults'
-
 export { REFERENCES } from './references'
 export type { Reference } from './references'
