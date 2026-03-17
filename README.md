@@ -1,64 +1,63 @@
-# 🧪 BioInfoSpace LabMate
+# LabMate
 
-**Your local-first lab companion — open, private, publication-ready.**
+Local-first lab companion for wet-lab biologists. Part of the [BioInfoSpace](https://bioinfospace.com) ecosystem.
 
-LabMate is a free, open-source lab notebook and protocol management tool built for biologists. All data stays in your browser (IndexedDB) — no account required, no cloud dependency.
+Protocols, buffer recipes, calculators, plate design, sample inventory, and an electronic lab notebook — all running client-side with zero backend dependency.
 
-## Features
+## Platforms
 
-- **Protocol Library** — 80+ buffer recipes and protocols with bilingual UI (EN/ZH)
-- **Volume Scaling** — Scale any recipe to your target volume
-- **SDS-PAGE Gel Calculator** — Quick reference for gel preparation
-- **Solution Calculator** — Dilution (C₁V₁=C₂V₂), mass, molarity, percentage
-- **Multi-well Plate Designer** — Visual plate layout with CSV export
-- **Protocol Timer** — Multi-timer system with audio alerts
-- **External Tools** — Curated links to best-in-class free bioinformatics tools
-- **Dark Mode** — Full light/dark theme support
+| Platform | Tech | Status |
+|----------|------|--------|
+| Web | Vite + React 19 | `main` branch |
+| Desktop | Tauri 2 (macOS/Windows/Linux) | `desktop` branch |
+| Mobile | Capacitor (iOS/Android) | `desktop` branch — in progress |
+
+## Protocol & Recipe Data
+
+Precompiled protocol/recipe database is maintained in a separate repository:
+
+**[github.com/mianaz/labmate-recipe](https://github.com/mianaz/labmate-recipe)**
+
+- Recipes are versioned JSON files (`recipes-v1.json`)
+- The app fetches updates from this repo when connected online
+- Local bundled copy at `public/db/recipes-v1.json` serves as offline fallback
+- Sync is version-aware: only new or updated official entries are pulled; user customizations are never overwritten
+
+### Sync behavior
+
+1. On manual sync (or auto-check), the app fetches the latest `recipes-v1.json` from the recipe repo
+2. Compares remote `version` field against local `dbVersion` stored in IndexedDB
+3. New protocols are inserted; updated official protocols are merged (preserving favorites and usage timestamps)
+4. Custom/user-created protocols are never modified by sync
+
+## Quick Start
+
+```bash
+npm install
+npm run dev          # Web dev server
+npm run build        # Production build (web)
+
+# Desktop (Tauri)
+npm run tauri dev    # Dev mode with hot reload
+npm run tauri build  # Build .app + .dmg
+
+# Generate/update recipe database
+npm run generate-db
+```
 
 ## Tech Stack
 
-- **React 19** + TypeScript
-- **Vite** for fast development
-- **Tailwind CSS 4** with BioInfoSpace design tokens
-- **Dexie.js** (IndexedDB) for local-first storage
-- **Web Crypto API** (AES-256-GCM) for optional encrypted sync
-- **react-i18next** for bilingual UI
-
-## Getting Started
-
-```bash
-git clone https://github.com/mianaz/labmate.git
-cd labmate
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173` in your browser.
-
-## Architecture
-
-```
-src/
-├── components/       # Reusable UI components
-│   ├── layout/       # Header, sidebar, navigation
-│   ├── protocol/     # Protocol card, detail, steps
-│   ├── buffer/       # Buffer/recipe components
-│   ├── calculator/   # Solution calculator modes
-│   ├── plate/        # Plate designer
-│   └── tools/        # External tools links
-├── data/             # Static recipe/protocol data
-├── hooks/            # Custom React hooks
-├── i18n/             # EN/ZH translations
-├── lib/              # Core utilities
-│   ├── db.ts         # Dexie.js schema + database
-│   └── crypto.ts     # Web Crypto encryption
-├── pages/            # Tab/page components
-└── styles/           # CSS with design tokens
-```
+- **UI**: React 19 + TypeScript 5.9 (strict) + Tailwind CSS 4
+- **Local DB**: Dexie.js 4 (IndexedDB)
+- **Desktop**: Tauri 2
+- **Mobile**: Capacitor
+- **i18n**: react-i18next (English + Chinese)
+- **Encryption**: Web Crypto API (AES-256-GCM)
 
 ## Privacy & Security
 
-LabMate follows the **二选一原则 (Either-Or Principle)**:
+LabMate follows the **Either-Or Principle**: operations use at most 2 of 3 capabilities — untrusted input, sensitive data, state mutation. All three together requires explicit user confirmation.
+
 - **Local mode**: Data stays in your browser's IndexedDB. Nothing leaves your machine.
 - **Sync mode**: Data is encrypted (AES-256-GCM) before upload. Cloud providers see only ciphertext.
 
@@ -66,24 +65,12 @@ No analytics. No tracking. No accounts required.
 
 ## Part of BioInfoSpace
 
-LabMate is part of the [BioInfoSpace](https://bioinfospace.com) ecosystem, alongside:
-- [ELISA Calculator](https://apps.bioinfospace.com/ELISA_calculator/)
-- [qPCR Analyzer](https://apps.bioinfospace.com/qpcr-analysis/)
-- [freeCount](https://apps.bioinfospace.com/freeCount/)
-- [crispRdesignR](https://apps.bioinfospace.com/crispRdesignR/)
-
-## License
-
-MIT — free to use, modify, and distribute.
+LabMate is part of the [BioInfoSpace](https://bioinfospace.com) ecosystem, alongside [ELISA Calculator](https://apps.bioinfospace.com/ELISA_calculator/), [qPCR Analyzer](https://apps.bioinfospace.com/qpcr-analysis/), [freeCount](https://apps.bioinfospace.com/freeCount/), and [crispRdesignR](https://apps.bioinfospace.com/crispRdesignR/).
 
 ## Data Sources
 
-Recipes sourced from:
-- Cold Spring Harbor Protocols (public recipes, with DOIs)
-- protocols.io (CC-BY licensed protocols)
-- Sambrook & Russell, *Molecular Cloning*
-- Community contributions
+Recipes sourced from Cold Spring Harbor Protocols (public recipes, with DOIs), protocols.io (CC-BY licensed), Sambrook & Russell (*Molecular Cloning*), and community contributions.
 
----
+## License
 
-*Built with care for the bench scientist.*
+[AGPL-3.0](LICENSE)

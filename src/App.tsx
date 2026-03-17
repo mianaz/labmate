@@ -14,6 +14,7 @@ import ToastProvider from '@/features/shared/ToastProvider'
 import TimerProvider, { TimerBar, QuickTimerButton } from '@/features/shared/TimerProvider'
 import QuickCalculatorButton from '@/features/shared/QuickCalculator'
 import { checkForUpdates, syncDatabase, getLastSyncTime } from '@/lib/syncService'
+import { openExternal, isNative } from '@/lib/platform'
 type Tab = 'buffers' | 'protocols' | 'calc' | 'plate' | 'inventory' | 'tools' | 'refs'
 
 type SyncState = 'idle' | 'checking' | 'syncing' | 'done' | 'error'
@@ -236,17 +237,16 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Open external links in the system browser (Tauri blocks target="_blank")
+  // Open external links in the system browser (native apps block target="_blank")
   useEffect(() => {
+    if (!isNative()) return // web browser handles links natively
     function handleClick(e: MouseEvent) {
       const anchor = (e.target as HTMLElement).closest('a')
       if (!anchor) return
       const href = anchor.getAttribute('href')
       if (!href || !href.startsWith('http')) return
       e.preventDefault()
-      import('@tauri-apps/plugin-opener').then(m => m.openUrl(href)).catch(() => {
-        window.open(href, '_blank')
-      })
+      openExternal(href)
     }
     document.addEventListener('click', handleClick)
     return () => document.removeEventListener('click', handleClick)

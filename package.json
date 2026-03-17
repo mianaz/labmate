@@ -13,9 +13,16 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:ios": "tauri ios dev",
-    "tauri:ios:build": "tauri ios build"
+    "tauri:ios:build": "tauri ios build",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "cap:build": "npm run build && npx cap sync"
   },
   "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0",
     "@tauri-apps/plugin-opener": "^2.5.3",
     "dexie": "^4.3.0",
     "dexie-react-hooks": "^4.2.0",
@@ -27,6 +34,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.2.0",
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.2.1",
     "@tauri-apps/api": "^2.10.1",

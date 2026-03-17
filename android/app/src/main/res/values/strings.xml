@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LabMate</string>
+    <string name="title_activity_main">LabMate</string>
+    <string name="package_name">com.bioinfospace.labmate</string>
+    <string name="custom_url_scheme">com.bioinfospace.labmate</string>
+</resources>
