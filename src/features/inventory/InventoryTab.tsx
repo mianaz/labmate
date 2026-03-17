@@ -98,18 +98,26 @@ export default function InventoryTab() {
   }
 
   async function handleDeleteLocation(id: number) {
-    // Delete all boxes and samples in this location
-    const locBoxes = boxes.filter(b => b.locationId === id)
-    for (const box of locBoxes) {
-      await db.samples.where('boxId').equals(box.id!).delete()
-    }
-    await db.sampleBoxes.where('locationId').equals(id).delete()
-    // Also delete child locations recursively
-    const children = locations.filter(l => l.parentId === id)
-    for (const child of children) {
-      await handleDeleteLocation(child.id!)
-    }
-    await db.storageLocations.delete(id)
+    await db.transaction('rw', db.storageLocations, db.sampleBoxes, db.samples, async () => {
+      const visited = new Set<number>()
+      async function deleteRecursive(locId: number) {
+        if (visited.has(locId)) return
+        visited.add(locId)
+        // Delete all boxes and samples in this location
+        const locBoxes = await db.sampleBoxes.where('locationId').equals(locId).toArray()
+        for (const box of locBoxes) {
+          await db.samples.where('boxId').equals(box.id!).delete()
+        }
+        await db.sampleBoxes.where('locationId').equals(locId).delete()
+        // Also delete child locations recursively
+        const children = await db.storageLocations.where('parentId').equals(locId).toArray()
+        for (const child of children) {
+          await deleteRecursive(child.id!)
+        }
+        await db.storageLocations.delete(locId)
+      }
+      await deleteRecursive(id)
+    })
     setModal({ kind: 'none' })
   }
 
@@ -125,8 +133,10 @@ export default function InventoryTab() {
   }
 
   async function handleDeleteBox(id: number) {
-    await db.samples.where('boxId').equals(id).delete()
-    await db.sampleBoxes.delete(id)
+    await db.transaction('rw', db.sampleBoxes, db.samples, async () => {
+      await db.samples.where('boxId').equals(id).delete()
+      await db.sampleBoxes.delete(id)
+    })
     if (selectedBoxId === id) setSelectedBoxId(null)
     setModal({ kind: 'none' })
   }
@@ -713,7 +723,7 @@ export default function InventoryTab() {
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
-              Back
+              {t('nav.back')}
             </button>
             {rightPanel()}
           </div>

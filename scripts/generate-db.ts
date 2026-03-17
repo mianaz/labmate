@@ -28,6 +28,7 @@ interface SeedProtocol {
   defaultVolume?: number
   unit?: string
   ph?: string
+  estimatedTime?: string
   usage?: { en: string; zh: string }
   briefSteps?: { en: string; zh: string; isHeader?: boolean }[]
   detailedSteps?: { en: string; zh: string; isHeader?: boolean }[]
@@ -72,6 +73,7 @@ function buildProtocols(): SeedProtocol[] {
     }
 
     if (enh) {
+      proto.estimatedTime = enh.estimatedTime
       proto.usage = enh.usage
       proto.briefSteps = enh.briefSteps
       proto.detailedSteps = enh.detailedSteps
@@ -110,6 +112,7 @@ function buildProtocols(): SeedProtocol[] {
       instructions: { en: '', zh: '' },
       source: 'official',
       version: 1,
+      estimatedTime: enh.estimatedTime,
       usage: enh.usage,
       briefSteps: enh.briefSteps,
       detailedSteps: enh.detailedSteps,

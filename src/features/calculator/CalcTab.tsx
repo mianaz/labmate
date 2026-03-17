@@ -28,46 +28,50 @@ export default function CalcTab() {
   ]
 
   return (
-    <div>
-      {/* Mode selector card */}
-      <div className="card p-5 mb-6">
-        <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
-          {t('calc.title')}
-        </h2>
-        <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-          {t('calc.subtitle')}
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div
+        style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}
+        className="md:!grid-cols-[260px_1fr]"
+      >
+        {/* Left sidebar — mode selector */}
+        <div className="card" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', margin: '0 0 8px', color: 'var(--color-text)' }}>
+            {t('calc.title')}
+          </h2>
           {modes.map(m => (
             <button
               key={m.id}
               onClick={() => setMode(m.id)}
-              className="p-3 rounded-lg text-left transition-all"
               style={{
-                background: mode === m.id ? 'var(--color-primary)' : 'var(--color-bg-card)',
+                textAlign: 'left', padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                border: 'none', cursor: 'pointer', transition: 'background 0.15s',
+                background: mode === m.id ? 'var(--color-primary)' : 'transparent',
                 color: mode === m.id ? 'var(--color-text-inverse)' : 'var(--color-text)',
-                border: `1px solid ${mode === m.id ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                boxShadow: mode === m.id ? 'var(--shadow-md)' : 'none',
               }}
             >
-              <span className="text-sm font-semibold block">{m.task}</span>
-              <span
-                className="text-xs block mt-1"
-                style={{ fontFamily: 'var(--font-mono)', opacity: 0.65 }}
-              >
+              <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: mode === m.id ? 600 : 400 }}>
+                {m.task}
+              </span>
+              <span style={{
+                display: 'block', fontSize: '0.7rem', fontFamily: 'var(--font-mono)',
+                marginTop: 2, opacity: 0.65,
+              }}>
                 {m.formula}
               </span>
             </button>
           ))}
         </div>
-      </div>
 
-      {mode === 'dilution' && <DilutionCalc />}
-      {mode === 'mass'     && <MassCalc />}
-      {mode === 'molarity' && <MolarityCalc />}
-      {mode === 'percent'  && <PercentCalc />}
-      {mode === 'deadvol'  && <DeadVolumeCalc />}
-      {mode === 'convert'  && <UnitConversionCalc />}
+        {/* Right panel — calculator */}
+        <div style={{ minWidth: 0 }}>
+          {mode === 'dilution' && <DilutionCalc />}
+          {mode === 'mass'     && <MassCalc />}
+          {mode === 'molarity' && <MolarityCalc />}
+          {mode === 'percent'  && <PercentCalc />}
+          {mode === 'deadvol'  && <DeadVolumeCalc />}
+          {mode === 'convert'  && <UnitConversionCalc />}
+        </div>
+      </div>
     </div>
   )
 }
@@ -76,6 +80,7 @@ export default function CalcTab() {
 
 interface InputRowProps {
   label: string
+  annotation?: string
   value: string
   setValue: (v: string) => void
   unit: string
@@ -84,7 +89,7 @@ interface InputRowProps {
   isSolveTarget: boolean
 }
 
-function InputRow({ label, value, setValue, unit, setUnit, units, isSolveTarget }: InputRowProps) {
+function InputRow({ label, annotation, value, setValue, unit, setUnit, units, isSolveTarget }: InputRowProps) {
   const inputStyle = {
     background: 'var(--color-bg-card)',
     border: '1px solid var(--color-border)',
@@ -107,15 +112,22 @@ function InputRow({ label, value, setValue, unit, setUnit, units, isSolveTarget 
           : '1px solid var(--color-border)',
       }}
     >
-      <span
-        className="text-sm font-bold w-8 text-center"
-        style={{
-          fontFamily: 'var(--font-mono)',
-          color: isSolveTarget ? 'var(--color-primary)' : 'var(--color-text)',
-        }}
-      >
-        {label}
-      </span>
+      <div className="text-center" style={{ width: annotation ? '5rem' : '2rem', flexShrink: 0 }}>
+        <span
+          className="text-sm font-bold"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            color: isSolveTarget ? 'var(--color-primary)' : 'var(--color-text)',
+          }}
+        >
+          {label}
+        </span>
+        {annotation && (
+          <span style={{ display: 'block', fontSize: '0.6rem', color: 'var(--color-text-muted)', lineHeight: 1.2, marginTop: 1 }}>
+            {annotation}
+          </span>
+        )}
+      </div>
       <input
         type="number"
         value={isSolveTarget ? '' : value}
@@ -161,7 +173,16 @@ function DilutionCalc() {
   const concUnits: ConcUnit[] = ['M', 'mM', 'µM', 'nM', '%']
   const volUnits: VolUnit[] = ['L', 'mL', 'µL']
 
+  // Detect mixed unit dimensions (% vs molar)
+  const isMolar = (u: ConcUnit) => u !== '%'
+  const c1IsMolar = isMolar(c1Unit)
+  const c2IsMolar = isMolar(c2Unit)
+  const unitMismatch = (solve === 'v1' || solve === 'v2')
+    ? c1IsMolar !== c2IsMolar
+    : false
+
   function calculate(): { val: number; unit: string; label: string } | null {
+    if (unitMismatch) return null
     const C1 = +c1 * unitFactorsC[c1Unit]
     const V1 = +v1 * unitFactorsV[v1Unit]
     const C2 = +c2 * unitFactorsC[c2Unit]
@@ -201,15 +222,29 @@ function DilutionCalc() {
       </div>
 
       <div className="space-y-3">
-        <InputRow label="C₁" value={c1} setValue={setC1} unit={c1Unit} setUnit={u => setC1Unit(u as ConcUnit)} units={concUnits} isSolveTarget={solve === 'c1'} />
-        <InputRow label="V₁" value={v1} setValue={setV1} unit={v1Unit} setUnit={u => setV1Unit(u as VolUnit)} units={volUnits} isSolveTarget={solve === 'v1'} />
+        <InputRow label="C₁" annotation={t('calc.annotC1')} value={c1} setValue={setC1} unit={c1Unit} setUnit={u => setC1Unit(u as ConcUnit)} units={concUnits} isSolveTarget={solve === 'c1'} />
+        <InputRow label="V₁" annotation={t('calc.annotV1')} value={v1} setValue={setV1} unit={v1Unit} setUnit={u => setV1Unit(u as VolUnit)} units={volUnits} isSolveTarget={solve === 'v1'} />
         <div
           className="text-center text-lg"
           style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-border)' }}
         >=</div>
-        <InputRow label="C₂" value={c2} setValue={setC2} unit={c2Unit} setUnit={u => setC2Unit(u as ConcUnit)} units={concUnits} isSolveTarget={solve === 'c2'} />
-        <InputRow label="V₂" value={v2} setValue={setV2} unit={v2Unit} setUnit={u => setV2Unit(u as VolUnit)} units={volUnits} isSolveTarget={solve === 'v2'} />
+        <InputRow label="C₂" annotation={t('calc.annotC2')} value={c2} setValue={setC2} unit={c2Unit} setUnit={u => setC2Unit(u as ConcUnit)} units={concUnits} isSolveTarget={solve === 'c2'} />
+        <InputRow label="V₂" annotation={t('calc.annotV2')} value={v2} setValue={setV2} unit={v2Unit} setUnit={u => setV2Unit(u as VolUnit)} units={volUnits} isSolveTarget={solve === 'v2'} />
       </div>
+
+      {unitMismatch && (
+        <div
+          className="mt-4 p-4 rounded-lg text-center"
+          style={{
+            background: 'color-mix(in srgb, var(--color-error) 12%, transparent)',
+            border: '2px solid var(--color-error)',
+          }}
+        >
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-error)' }}>
+            {t('calc.unitMismatch')}
+          </p>
+        </div>
+      )}
 
       {result && (
         <div
@@ -227,6 +262,87 @@ function DilutionCalc() {
       )}
     </div>
   )
+}
+
+// ─── Periodic table data (for formula MW calculation) ─────────────────────
+
+const ELEMENTS: Record<string, number> = {
+  H: 1.008, He: 4.003, Li: 6.941, Be: 9.012, B: 10.81, C: 12.011, N: 14.007,
+  O: 15.999, F: 18.998, Ne: 20.180, Na: 22.990, Mg: 24.305, Al: 26.982,
+  Si: 28.086, P: 30.974, S: 32.065, Cl: 35.453, Ar: 39.948, K: 39.098,
+  Ca: 40.078, Sc: 44.956, Ti: 47.867, V: 50.942, Cr: 51.996, Mn: 54.938,
+  Fe: 55.845, Co: 58.933, Ni: 58.693, Cu: 63.546, Zn: 65.38, Ga: 69.723,
+  Ge: 72.630, As: 74.922, Se: 78.971, Br: 79.904, Kr: 83.798, Rb: 85.468,
+  Sr: 87.62, Y: 88.906, Zr: 91.224, Nb: 92.906, Mo: 95.95, Ru: 101.07,
+  Rh: 102.91, Pd: 106.42, Ag: 107.87, Cd: 112.41, In: 114.82, Sn: 118.71,
+  Sb: 121.76, Te: 127.60, I: 126.90, Xe: 131.29, Cs: 132.91, Ba: 137.33,
+  La: 138.91, Ce: 140.12, Pr: 140.91, Nd: 144.24, Sm: 150.36,
+  Eu: 151.96, Gd: 157.25, Tb: 158.93, Dy: 162.50, Ho: 164.93, Er: 167.26,
+  Tm: 168.93, Yb: 173.04, Lu: 174.97, Hf: 178.49, Ta: 180.95, W: 183.84,
+  Re: 186.21, Os: 190.23, Ir: 192.22, Pt: 195.08, Au: 196.97, Hg: 200.59,
+  Tl: 204.38, Pb: 207.2, Bi: 208.98,
+}
+
+const PT_ROWS: string[][] = [
+  ['H', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'He'],
+  ['Li', 'Be', '', '', '', '', '', '', '', '', '', '', 'B', 'C', 'N', 'O', 'F', 'Ne'],
+  ['Na', 'Mg', '', '', '', '', '', '', '', '', '', '', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar'],
+  ['K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr'],
+  ['Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', '', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe'],
+  ['Cs', 'Ba', 'La', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', '', '', ''],
+]
+
+/** Parse chemical formula like "NaCl", "H2O", "Ca(OH)2", "MgSO4·7H2O" */
+function parseFormulaMW(formula: string): number | null {
+  try {
+    const parts = formula.split(/[·.]/)
+    let totalMW = 0
+    for (const part of parts) {
+      const coeffMatch = part.match(/^(\d+)(.+)$/)
+      const coeff = coeffMatch ? parseInt(coeffMatch[1]) : 1
+      const frag = coeffMatch ? coeffMatch[2] : part
+      const mw = parseFragment(frag)
+      if (mw === null) return null
+      totalMW += coeff * mw
+    }
+    return totalMW
+  } catch {
+    return null
+  }
+}
+
+function parseFragment(formula: string): number | null {
+  let mw = 0
+  let i = 0
+  while (i < formula.length) {
+    if (formula[i] === '(') {
+      let depth = 1
+      let j = i + 1
+      while (j < formula.length && depth > 0) {
+        if (formula[j] === '(') depth++
+        if (formula[j] === ')') depth--
+        j++
+      }
+      const innerMW = parseFragment(formula.slice(i + 1, j - 1))
+      if (innerMW === null) return null
+      let numStr = ''
+      while (j < formula.length && /\d/.test(formula[j])) { numStr += formula[j]; j++ }
+      mw += innerMW * (numStr ? parseInt(numStr) : 1)
+      i = j
+    } else if (/[A-Z]/.test(formula[i])) {
+      let sym = formula[i]
+      i++
+      while (i < formula.length && /[a-z]/.test(formula[i])) { sym += formula[i]; i++ }
+      let numStr = ''
+      while (i < formula.length && /\d/.test(formula[i])) { numStr += formula[i]; i++ }
+      const aw = ELEMENTS[sym]
+      if (aw === undefined) return null
+      mw += aw * (numStr ? parseInt(numStr) : 1)
+    } else {
+      return null
+    }
+  }
+  return mw
 }
 
 // ─── Mass Calculator ──────────────────────────────────────────────────────────
@@ -264,6 +380,8 @@ const COMMON_MW = [
 function MassCalc() {
   const { t } = useTranslation()
   const [mw, setMw] = useState('')
+  const [formula, setFormula] = useState('')
+  const [showPT, setShowPT] = useState(false)
   const [conc, setConc] = useState('')
   const [vol, setVol] = useState('')
   const [concUnit, setConcUnit] = useState<'M' | 'mM' | 'µM'>('M')
@@ -272,8 +390,12 @@ function MassCalc() {
   const concFactors: Record<'M' | 'mM' | 'µM', number> = { M: 1, mM: 1e-3, µM: 1e-6 }
   const volFactors: Record<VolUnit, number> = { L: 1, mL: 1e-3, µL: 1e-6 }
 
-  const mass = (+mw && +conc && +vol)
-    ? +mw * (+conc * concFactors[concUnit]) * (+vol * volFactors[volUnit])
+  // Auto-calculate MW from formula
+  const formulaMW = formula ? parseFormulaMW(formula) : null
+  const effectiveMW = formulaMW !== null ? String(formulaMW.toFixed(3)) : mw
+
+  const mass = (+effectiveMW && +conc && +vol)
+    ? +effectiveMW * (+conc * concFactors[concUnit]) * (+vol * volFactors[volUnit])
     : null
 
   function formatMass(g: number): { val: string; unit: string } {
@@ -304,17 +426,89 @@ function MassCalc() {
         </p>
 
         <div className="space-y-4">
+          {/* Chemical formula input */}
           <div>
             <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
-              {t('calc.mwLabel')}
+              {t('calc.formulaLabel')}
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={formula}
+                onChange={e => { setFormula(e.target.value); if (e.target.value) setMw('') }}
+                placeholder="e.g. NaCl, H2O, Ca(OH)2, MgSO4·7H2O"
+                style={inputStyle}
+              />
+              <button
+                onClick={() => setShowPT(!showPT)}
+                title={t('calc.periodicTable')}
+                style={{
+                  flexShrink: 0, padding: '6px 10px', fontSize: 11, fontWeight: 600,
+                  borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                  border: '1px solid var(--color-border)',
+                  background: showPT ? 'var(--color-primary)' : 'var(--color-bg-card)',
+                  color: showPT ? '#fff' : 'var(--color-text-secondary)',
+                }}
+              >
+                Pt
+              </button>
+            </div>
+            {formula && formulaMW !== null && (
+              <p className="text-xs mt-1" style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-mono)' }}>
+                MW = {formulaMW.toFixed(3)} g/mol
+              </p>
+            )}
+            {formula && formulaMW === null && (
+              <p className="text-xs mt-1" style={{ color: 'var(--color-error)' }}>
+                {t('calc.formulaError')}
+              </p>
+            )}
+          </div>
+
+          {/* Periodic table (collapsible) */}
+          {showPT && (
+            <div style={{
+              padding: 8, borderRadius: 'var(--radius-sm)', background: 'var(--color-bg)',
+              border: '1px solid var(--color-border)', overflowX: 'auto',
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(18, 1fr)', gap: 1, minWidth: 540 }}>
+                {PT_ROWS.flatMap((row, ri) =>
+                  row.map((sym, ci) => (
+                    <button
+                      key={`${ri}-${ci}`}
+                      onClick={() => { if (sym) setFormula(f => f + sym) }}
+                      disabled={!sym}
+                      style={{
+                        padding: '2px 0', fontSize: 9, fontWeight: 600,
+                        fontFamily: 'var(--font-mono)', textAlign: 'center',
+                        borderRadius: 2, border: 'none', cursor: sym ? 'pointer' : 'default',
+                        background: sym ? 'var(--color-bg-card)' : 'transparent',
+                        color: sym ? 'var(--color-text)' : 'transparent',
+                        minWidth: 0,
+                      }}
+                      title={sym ? `${sym} — ${ELEMENTS[sym]?.toFixed(3)}` : ''}
+                    >
+                      {sym || '\u00A0'}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* MW direct input */}
+          <div>
+            <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--color-text-muted)' }}>
+              {t('calc.mwLabel')} {formulaMW !== null ? `(${t('calc.fromFormula')})` : ''}
             </label>
             <input
               type="number"
-              value={mw}
-              onChange={e => setMw(e.target.value)}
+              value={formulaMW !== null ? formulaMW.toFixed(3) : mw}
+              onChange={e => { setMw(e.target.value); setFormula('') }}
               placeholder="e.g. 58.44 (NaCl)"
               step="any"
-              style={inputStyle}
+              readOnly={formulaMW !== null}
+              style={{ ...inputStyle, opacity: formulaMW !== null ? 0.6 : 1 }}
             />
           </div>
 
@@ -937,13 +1131,13 @@ function UnitConversionCalc() {
   if (!isNaN(numVal) && value !== '') {
     if (catData.convert) {
       result = catData.convert(numVal, fromUnit, toUnit)
-    } else if (catData.toBase) {
+    } else if (catData.toBase && catData.toBase[fromUnit] != null && catData.toBase[toUnit]) {
       result = numVal * catData.toBase[fromUnit] / catData.toBase[toUnit]
     }
   }
 
   function fmt(n: number | null) {
-    if (n === null || n === undefined) return '\u2014'
+    if (n === null || n === undefined || isNaN(n)) return '\u2014'
     if (Math.abs(n) < 0.0001 && n !== 0) return n.toExponential(4)
     if (Math.abs(n) >= 1e7) return n.toExponential(4)
     return parseFloat(n.toPrecision(8)).toString()

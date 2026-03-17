@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 // ── Timer types ──
@@ -37,10 +37,19 @@ export function useTimers() {
 
 export default function TimerProvider({ children }: { children: React.ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([])
+  const audioCtxRef = useRef<AudioContext | null>(null)
+
+  function getAudioCtx(): AudioContext {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new AudioContext()
+    }
+    return audioCtxRef.current
+  }
 
   const addTimer = (label: string, seconds: number) => {
     const id = Date.now() + Math.random()
-    setTimers(prev => [...prev, { id, label, totalSeconds: seconds, remaining: seconds, running: true }])
+    const s = Math.round(seconds) // guard against floating-point drift
+    setTimers(prev => [...prev, { id, label, totalSeconds: s, remaining: s, running: true }])
     return id
   }
 
@@ -57,7 +66,8 @@ export default function TimerProvider({ children }: { children: React.ReactNode 
         if (next <= 0) {
           // Audio alert — triple beep
           try {
-            const ctx = new AudioContext()
+            const ctx = getAudioCtx()
+            if (ctx.state === 'suspended') ctx.resume()
             ;[0, 0.3, 0.6].forEach(delay => {
               const osc = ctx.createOscillator()
               const gain = ctx.createGain()
@@ -182,6 +192,18 @@ export function QuickTimerButton() {
   const [customMin, setCustomMin] = useState('')
   const [customLabel, setCustomLabel] = useState('')
 
+  // Auto-collapse after 60s of inactivity
+  const lastActivityRef = useRef(0)
+  const touch = useCallback(() => { lastActivityRef.current = Date.now() }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const id = setInterval(() => {
+      if (Date.now() - lastActivityRef.current > 60_000) setOpen(false)
+    }, 5000)
+    return () => clearInterval(id)
+  }, [open])
+
   const quickTimes = [
     { min: 1, label: '1 min' },
     { min: 5, label: '5 min' },
@@ -194,7 +216,7 @@ export function QuickTimerButton() {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { lastActivityRef.current = Date.now(); setOpen(true) }}
         className="fixed bottom-4 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center text-lg transition-transform hover:scale-110"
         style={{ background: 'var(--color-primary)', color: 'white', opacity: 0.85, border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-lg)' }}
         title={t('timer.add')}
@@ -226,7 +248,7 @@ export function QuickTimerButton() {
         {quickTimes.map(qt => (
           <button
             key={qt.min}
-            onClick={() => { addTimer(qt.label, qt.min * 60); setOpen(false) }}
+            onClick={() => { touch(); addTimer(qt.label, qt.min * 60); setOpen(false) }}
             className="px-2 py-2 rounded-lg text-xs font-semibold transition-all hover:scale-105"
             style={{
               background: 'hsl(168, 55%, 92%)', color: 'var(--color-primary)',

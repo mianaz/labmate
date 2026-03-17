@@ -33,11 +33,11 @@ export function calcGel(percentage: number, totalVolume: number, type: GelType =
   const acryVol = (percentage / cfg.acrylamideStock) * totalVolume
   const trisVol = type === 'resolving'
     ? GEL_DEFAULTS.resolving.trisVolFrac * totalVolume
-    : (0.125 / GEL_DEFAULTS.stacking.trisConc) * totalVolume
+    : (GEL_DEFAULTS.stacking.trisVolFrac / GEL_DEFAULTS.stacking.trisConc) * totalVolume
   const sdsVol = cfg.sdsVolFrac * totalVolume
   const apsVol = cfg.apsVolFrac * totalVolume
   const temedVol = cfg.temedPerMl * totalVolume
-  const h2o = totalVolume - acryVol - trisVol - sdsVol - apsVol - temedVol
+  const h2o = Math.max(0, totalVolume - acryVol - trisVol - sdsVol - apsVol - temedVol)
 
   return [
     { name: '30% Acrylamide/Bis', vol: acryVol, unit: 'mL' },

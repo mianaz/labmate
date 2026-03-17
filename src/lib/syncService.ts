@@ -1,6 +1,8 @@
 import db, { type Protocol } from '@/lib/db'
 
-const SYNC_URL = '/db/recipes-v1.json'
+// Primary: local bundled JSON; Fallback: GitHub raw content from labmate-recipe repo
+const SYNC_URL_LOCAL = '/db/recipes-v1.json'
+const SYNC_URL_REMOTE = 'https://raw.githubusercontent.com/mianaz/labmate-recipe/main/recipes-v1.json'
 
 interface SyncPayload {
   version: number
@@ -20,12 +22,34 @@ async function getSetting(key: string): Promise<string | undefined> {
 }
 
 async function putSetting(key: string, value: string): Promise<void> {
+  // Use upsert pattern: try update first, then add if not found
   const existing = await db.settings.where('key').equals(key).first()
   if (existing) {
     await db.settings.update(existing.id!, { value })
   } else {
-    await db.settings.add({ key, value })
+    try {
+      await db.settings.add({ key, value })
+    } catch {
+      // Handle race: another call inserted the key concurrently
+      const retry = await db.settings.where('key').equals(key).first()
+      if (retry) await db.settings.update(retry.id!, { value })
+    }
   }
+}
+
+/** Fetch sync payload — try remote GitHub repo first, fallback to local bundle */
+async function fetchPayload(): Promise<SyncPayload | null> {
+  // Try remote repo first
+  try {
+    const res = await fetch(SYNC_URL_REMOTE, { cache: 'no-cache' })
+    if (res.ok) return await res.json()
+  } catch { /* remote unavailable */ }
+  // Fallback to local bundled JSON
+  try {
+    const res = await fetch(SYNC_URL_LOCAL, { cache: 'no-cache' })
+    if (res.ok) return await res.json()
+  } catch { /* local unavailable */ }
+  return null
 }
 
 /**
@@ -34,10 +58,9 @@ async function putSetting(key: string, value: string): Promise<void> {
  */
 export async function checkForUpdates(): Promise<number | null> {
   try {
-    const res = await fetch(SYNC_URL, { cache: 'no-cache' })
-    if (!res.ok) return null
+    const data = await fetchPayload()
+    if (!data) return null
 
-    const data: SyncPayload = await res.json()
     const localVersion = await getSetting('dbVersion')
     const local = localVersion ? parseInt(localVersion, 10) : 0
 
@@ -54,17 +77,18 @@ export async function checkForUpdates(): Promise<number | null> {
  * - Custom records → never touched
  */
 export async function syncDatabase(): Promise<SyncResult> {
-  const res = await fetch(SYNC_URL, { cache: 'no-cache' })
-  if (!res.ok) throw new Error(`Sync fetch failed: ${res.status}`)
-
-  const data: SyncPayload = await res.json()
+  const data = await fetchPayload()
+  if (!data) throw new Error('Sync fetch failed: no payload available')
   const now = Date.now()
 
   let added = 0
   let updated = 0
 
+  const VALID_CATEGORIES = ['buffer', 'protocol', 'staining', 'media']
+
   await db.transaction('rw', db.protocols, db.settings, async () => {
     for (const remote of data.protocols) {
+      if (!remote.externalId || !remote.name || !VALID_CATEGORIES.includes(remote.category)) continue
       const existing = await db.protocols
         .where('externalId')
         .equals(remote.externalId)

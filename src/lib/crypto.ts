@@ -48,7 +48,7 @@ export async function encrypt(
   const combined = new Uint8Array(iv.length + new Uint8Array(ciphertext).length)
   combined.set(iv)
   combined.set(new Uint8Array(ciphertext), iv.length)
-  return btoa(String.fromCharCode(...combined))
+  return btoa(Array.from(combined, b => String.fromCharCode(b)).join(''))
 }
 
 /** Decrypt a base64 blob (iv + ciphertext) → string */

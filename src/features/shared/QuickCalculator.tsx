@@ -1,25 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export default function QuickCalculatorButton() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+
+  // Auto-collapse after 60s of inactivity
+  const lastActivityRef = useRef(0)
+  const touch = useCallback(() => { lastActivityRef.current = Date.now() }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const id = setInterval(() => {
+      if (Date.now() - lastActivityRef.current > 60_000) setOpen(false)
+    }, 5000)
+    return () => clearInterval(id)
+  }, [open])
   const [display, setDisplay] = useState('0')
   const [prev, setPrev] = useState<number | null>(null)
   const [op, setOp] = useState<string | null>(null)
   const [reset, setReset] = useState(false)
 
   function input(d: string) {
+    touch()
     if (reset) { setDisplay(d); setReset(false); return }
     setDisplay(display === '0' ? d : display + d)
   }
   function decimal() {
+    touch()
     if (reset) { setDisplay('0.'); setReset(false); return }
     if (!display.includes('.')) setDisplay(display + '.')
   }
-  function clear() { setDisplay('0'); setPrev(null); setOp(null); setReset(false) }
-  function toggleSign() { setDisplay(String(-parseFloat(display))) }
-  function percent() { setDisplay(String(parseFloat(display) / 100)) }
+  function clear() { touch(); setDisplay('0'); setPrev(null); setOp(null); setReset(false) }
+  function toggleSign() { touch(); setDisplay(String(-parseFloat(display))) }
+  function percent() { touch(); setDisplay(String(parseFloat(display) / 100)) }
   function operate(nextOp: string) {
     if (prev !== null && op) {
       const result = calc(prev, parseFloat(display), op)
@@ -44,7 +58,7 @@ export default function QuickCalculatorButton() {
     if (op === '+') return a + b
     if (op === '-') return a - b
     if (op === '*') return a * b
-    if (op === '/') return b !== 0 ? a / b : 0
+    if (op === '/') return b !== 0 ? a / b : NaN
     return b
   }
 
@@ -57,7 +71,7 @@ export default function QuickCalculatorButton() {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { lastActivityRef.current = Date.now(); setOpen(true) }}
         className="fixed bottom-20 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110"
         style={{ background: 'var(--color-primary)', color: 'white', opacity: 0.85, border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-lg)' }}
         title={t('quickCalc.title')}
@@ -94,7 +108,7 @@ export default function QuickCalculatorButton() {
         color: 'var(--color-text)', minHeight: '2.5rem', overflow: 'hidden',
         textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
-        {display}
+        {display === 'NaN' ? 'Error' : display}
       </div>
       {/* Buttons */}
       <div className="grid grid-cols-4 gap-1 p-2" style={{ gridAutoRows: '2.2rem' }}>

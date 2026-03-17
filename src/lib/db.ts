@@ -10,6 +10,8 @@ export interface StepItem {
   en: string
   zh: string
   isHeader?: boolean
+  safeStop?: boolean
+  duration?: string           // e.g. '5 min', '1 h', 'overnight'
 }
 
 export interface StorageInfo {
@@ -32,6 +34,7 @@ export interface Protocol {
   briefSteps?: StepItem[]
   detailedSteps?: StepItem[]
   materials?: Material[]
+  estimatedTime?: string        // e.g. '2 h', '30 min', '3–4 h'
   reference?: string
   doi?: string
   source: 'official' | 'custom'

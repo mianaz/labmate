@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, type CSSProperties } from 'react'
+import { useState, useEffect, useMemo, useCallback, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useProtocols, toggleFavorite } from '@/hooks/useProtocols'
 import { REFERENCES, REF_NOTES_EN, RECIPE_REFS } from '@/data/references'
@@ -31,16 +31,7 @@ const S = {
   mono: { fontFamily: 'var(--font-mono)' } as CSSProperties,
   sec: { color: 'var(--color-text-secondary)' } as CSSProperties,
   muted: { color: 'var(--color-text-muted)' } as CSSProperties,
-  pill: {
-    padding: '4px 12px', borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--color-border)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-  } as CSSProperties,
 }
-const on = (v: boolean): CSSProperties => ({
-  background: v ? 'var(--color-primary)' : 'var(--color-bg-card)',
-  color: v ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
-})
-
 // -- Timer helpers ------------------------------------------------------------
 
 /** Parse time from step text, e.g. "incubate 5 min", "wash 30 seconds", "1 hour" */
@@ -67,8 +58,6 @@ function useTimer() {
   const [remaining, setRemaining] = useState<number | null>(null)
   const [running, setRunning] = useState(false)
   const [total, setTotal] = useState(0)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
   const start = useCallback((seconds: number) => {
     setTotal(seconds)
     setRemaining(seconds)
@@ -84,19 +73,18 @@ function useTimer() {
   }, [])
 
   useEffect(() => {
-    if (running && remaining !== null && remaining > 0) {
-      intervalRef.current = setInterval(() => {
-        setRemaining(r => {
-          if (r === null || r <= 1) {
-            setRunning(false)
-            return 0
-          }
-          return r - 1
-        })
-      }, 1000)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [running, remaining])
+    if (!running) return
+    const id = setInterval(() => {
+      setRemaining(r => {
+        if (r === null || r <= 1) {
+          setRunning(false)
+          return 0
+        }
+        return r - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [running])
 
   return { remaining, running, total, start, pause, resume, reset }
 }
@@ -272,6 +260,18 @@ function StepList({ steps, lang, protocolId, t }: {
                 color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
               }}>
                 {bold(text)}
+                {step.safeStop && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                    marginLeft: 6, fontSize: '0.7rem', fontWeight: 600,
+                    color: 'var(--color-success)', verticalAlign: 'middle',
+                  }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/>
+                    </svg>
+                    {t('protocol.safeStop')}
+                  </span>
+                )}
               </span>
               {/* Timer button for timed steps */}
               {seconds != null && !isTimerActive && (
@@ -315,8 +315,7 @@ function ProtocolDetail({
   protocol: Protocol; lang: string; t: (k: string, opts?: Record<string, unknown>) => string
   onNavigateToBuffer?: (bufferId: string) => void
 }) {
-  const [detailed, setDetailed] = useState(false)
-  const steps = detailed ? protocol.detailedSteps : protocol.briefSteps
+  const steps = protocol.detailedSteps ?? protocol.briefSteps
   const label = lang === 'zh' ? protocol.nameZh : protocol.name
   const refs = getReferences(protocol.externalId)
 
@@ -429,17 +428,24 @@ function ProtocolDetail({
         </section>
       )}
 
-      {/* Steps toggle + list */}
+      {/* Estimated time */}
+      {protocol.estimatedTime && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8rem',
+          ...S.muted, padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+          background: 'var(--color-bg)', alignSelf: 'flex-start',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span style={S.mono}>{protocol.estimatedTime}</span>
+        </div>
+      )}
+
+      {/* Steps */}
       {steps && steps.length > 0 && (
         <section>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <button onClick={() => setDetailed(false)} style={{ ...S.pill, ...on(!detailed) }}>
-              {t('protocol.brief')}
-            </button>
-            <button onClick={() => setDetailed(true)} style={{ ...S.pill, ...on(detailed) }}>
-              {t('protocol.detailed')}
-            </button>
-          </div>
           <StepList steps={steps} lang={lang} protocolId={protocol.externalId} t={t} />
         </section>
       )}
@@ -500,7 +506,6 @@ export default function ProtocolsTab({ initialSelectedId, onNavigate }: Protocol
     return protocols.filter(p => {
       const n = (lang === 'zh' ? p.nameZh : p.name).toLowerCase()
       return n.includes(q) || p.name.toLowerCase().includes(q)
-        || p.tags.some(tag => tag.toLowerCase().includes(q))
     })
   }, [protocols, search, lang])
 

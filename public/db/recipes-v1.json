@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-03-13T03:17:51.844Z",
+  "generatedAt": "2026-03-16T23:09:37.321Z",
   "protocols": [
     {
       "externalId": "pbs_10x",
@@ -1837,9 +1837,9 @@
       "version": 1
     },
     {
-      "externalId": "rna_lysis_trizol",
-      "name": "TRIzol RNA Extraction (Protocol)",
-      "nameZh": "TRIzol RNA 提取流程",
+      "externalId": "trizol_extraction",
+      "name": "TRIzol RNA Extraction",
+      "nameZh": "TRIzol RNA 提取",
       "category": "protocol",
       "tags": [
         "RNA",
@@ -1887,7 +1887,124 @@
       "source": "official",
       "defaultVolume": 1,
       "unit": "sample(s)",
-      "version": 1
+      "storage": {
+        "temp": "N/A",
+        "duration": "",
+        "icon": "📋",
+        "label": {
+          "en": "Protocol — RNA stored at -80°C",
+          "zh": "实验方案 — RNA -80°C 保存"
+        }
+      },
+      "version": 1,
+      "estimatedTime": "1–1.5 h",
+      "usage": {
+        "en": "Gold-standard total RNA extraction using phenol-guanidinium. High yield from cells, tissues, bacteria. Compatible with downstream RT-qPCR, RNA-seq, Northern blot.",
+        "zh": "苯酚-异硫氰酸胍法提取总 RNA 的金标准。适用于细胞、组织、细菌。兼容 RT-qPCR、RNA-seq、Northern blot 等下游实验。"
+      },
+      "briefSteps": [
+        {
+          "en": "Lyse cells in TRIzol → add chloroform → centrifuge → collect aqueous phase → isopropanol precipitate → ethanol wash → dissolve RNA",
+          "zh": "TRIzol 裂解 → 加氯仿 → 离心 → 取水相 → 异丙醇沉淀 → 乙醇洗涤 → 溶解 RNA"
+        }
+      ],
+      "detailedSteps": [
+        {
+          "en": "**Cell lysis**: Remove media, add 1 mL TRIzol per 5–10×10⁶ cells (or 50–100 mg tissue). Pipet up/down 10× to lyse completely",
+          "zh": "**细胞裂解**: 去除培养基，每 5–10×10⁶ 细胞加 1 mL TRIzol（或 50–100 mg 组织）。反复吹打 10 次至完全裂解"
+        },
+        {
+          "en": "Incubate 5 min at RT to dissociate nucleoprotein complexes",
+          "zh": "室温静置 5 min，使核蛋白复合物完全解离",
+          "safeStop": true
+        },
+        {
+          "en": "**Phase separation**: Add 0.2 mL chloroform per 1 mL TRIzol. Cap tightly, shake vigorously 15 s (do NOT vortex)",
+          "zh": "**相分离**: 每 1 mL TRIzol 加 0.2 mL 氯仿。盖紧管盖，剧烈摇晃 15 s（不要涡旋）"
+        },
+        {
+          "en": "Incubate 2–3 min at RT. Solution should turn milky pink",
+          "zh": "室温静置 2–3 min。溶液应变为乳白粉红色"
+        },
+        {
+          "en": "Centrifuge 12,000×g, 15 min, 4°C. Three layers form: red organic (bottom), white interphase, clear aqueous (top)",
+          "zh": "4°C 12,000×g 离心 15 min。形成三层：红色有机相（底）、白色中间相、透明水相（顶）"
+        },
+        {
+          "en": "**RNA precipitation**: Carefully transfer upper aqueous phase to new tube (~60% of TRIzol volume). ⚠️ Avoid interphase!",
+          "zh": "**RNA 沉淀**: 小心转移上层水相至新管（约为 TRIzol 体积的 60%）。⚠️ 避免触碰中间相！"
+        },
+        {
+          "en": "Add 0.5 mL isopropanol per 1 mL TRIzol. Mix gently by inversion 6×",
+          "zh": "每 1 mL TRIzol 加 0.5 mL 异丙醇。轻柔颠倒混匀 6 次",
+          "safeStop": true
+        },
+        {
+          "en": "Incubate 10 min RT (or -20°C 1 h for low-abundance samples)",
+          "zh": "室温静置 10 min（低丰度样品可 -20°C 放 1 h）"
+        },
+        {
+          "en": "Centrifuge 12,000×g, 10 min, 4°C. RNA pellet should be visible (white/translucent)",
+          "zh": "4°C 12,000×g 离心 10 min。应可见 RNA 沉淀（白色/半透明）"
+        },
+        {
+          "en": "**Wash**: Discard supernatant. Add 1 mL 75% ethanol (in DEPC-H₂O). Vortex briefly",
+          "zh": "**洗涤**: 弃上清。加 1 mL 75% 乙醇（DEPC 水配制）。短暂涡旋"
+        },
+        {
+          "en": "Centrifuge 7,500×g, 5 min, 4°C. Discard ethanol completely",
+          "zh": "4°C 7,500×g 离心 5 min。完全弃去乙醇"
+        },
+        {
+          "en": "**Dissolve**: Air-dry pellet 5–10 min (do NOT over-dry — pellet becomes hard to dissolve). Dissolve in 20–50 µL RNase-free H₂O",
+          "zh": "**溶解**: 室温风干沉淀 5–10 min（不要过度干燥——会难以溶解）。加 20–50 µL 无 RNase 水溶解"
+        },
+        {
+          "en": "Incubate 55°C, 10 min to aid dissolution. Place on ice",
+          "zh": "55°C 孵育 10 min 促进溶解。然后置于冰上"
+        },
+        {
+          "en": "**QC**: Measure A260/280 (expect ~2.0) and A260/230 (expect >1.7). Run on gel or Bioanalyzer if needed",
+          "zh": "**质检**: 测 A260/280（期望 ~2.0）和 A260/230（期望 >1.7）。必要时跑胶或 Bioanalyzer 检测"
+        }
+      ],
+      "materials": [
+        {
+          "name": "TRIzol Reagent",
+          "note": {
+            "en": "Commercial reagent",
+            "zh": "商品化试剂"
+          }
+        },
+        {
+          "name": "Chloroform",
+          "note": {
+            "en": "ACS grade",
+            "zh": "分析纯"
+          }
+        },
+        {
+          "name": "Isopropanol",
+          "note": {
+            "en": "Molecular biology grade",
+            "zh": "分子生物学级"
+          }
+        },
+        {
+          "name": "75% Ethanol",
+          "note": {
+            "en": "DEPC-H₂O diluted",
+            "zh": "DEPC 水配制"
+          }
+        },
+        {
+          "name": "RNase-free H₂O",
+          "note": {
+            "en": "DEPC-treated or commercial",
+            "zh": "DEPC 处理或商品化"
+          }
+        }
+      ]
     },
     {
       "externalId": "wb_protocol",
@@ -1982,6 +2099,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "8–12 h (2 days typical)",
       "usage": {
         "en": "Detect specific proteins in cell/tissue lysates by separating on SDS-PAGE, transferring to membrane, and probing with antibodies. Quantitative with proper controls.",
         "zh": "通过 SDS-PAGE 分离蛋白，转膜后用抗体探测特定蛋白。适当对照下可实现定量分析。"
@@ -2044,11 +2162,13 @@
         },
         {
           "en": "**Blocking**: 5% milk/TBST or 5% BSA/TBST, 1 h at RT with rocking. ⚠️ Use BSA for phospho-antibodies!",
-          "zh": "**封闭**: 5% 脱脂奶/TBST 或 5% BSA/TBST，室温摇 1 h。⚠️ 磷酸化抗体必须用 BSA！"
+          "zh": "**封闭**: 5% 脱脂奶/TBST 或 5% BSA/TBST，室温摇 1 h。⚠️ 磷酸化抗体必须用 BSA！",
+          "safeStop": true
         },
         {
           "en": "**Primary antibody**: Dilute in blocking buffer (typically 1:500–1:2000). Incubate 4°C overnight with rocking",
-          "zh": "**一抗**: 用封闭液稀释（通常 1:500–1:2000）。4°C 摇孵过夜"
+          "zh": "**一抗**: 用封闭液稀释（通常 1:500–1:2000）。4°C 摇孵过夜",
+          "safeStop": true
         },
         {
           "en": "**Day 2 — Detection**",
@@ -2229,6 +2349,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "4–6 h (overnight primary)",
       "usage": {
         "en": "Visualize protein localization and expression in fixed cells using fluorescent antibodies. Compatible with confocal, epifluorescence, and super-resolution microscopy.",
         "zh": "用荧光抗体观察固定细胞中蛋白的定位和表达。兼容共聚焦、落射荧光和超分辨率显微镜。"
@@ -2258,7 +2379,8 @@
         },
         {
           "en": "Wash 3×5 min PBS",
-          "zh": "PBS 洗 3×5 min"
+          "zh": "PBS 洗 3×5 min",
+          "safeStop": true
         },
         {
           "en": "**Permeabilization**: 0.1–0.5% Triton X-100 / PBS, 10 min RT. (Membrane proteins: skip this step or use 0.05%)",
@@ -2274,7 +2396,8 @@
         },
         {
           "en": "**Primary antibody**: Dilute in blocking buffer (typically 1:50–1:500). Apply 200 µL per coverslip. 4°C overnight in humidified chamber",
-          "zh": "**一抗**: 用封闭液稀释（通常 1:50–1:500）。每片加 200 µL。4°C 湿盒过夜"
+          "zh": "**一抗**: 用封闭液稀释（通常 1:50–1:500）。每片加 200 µL。4°C 湿盒过夜",
+          "safeStop": true
         },
         {
           "en": "💡 Lay parafilm in dish + wet paper towel to make humidity chamber. Place coverslips cell-side DOWN on antibody drops",
@@ -2437,6 +2560,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "2–3 days",
       "usage": {
         "en": "Map protein-DNA interactions genome-wide. Identifies transcription factor binding sites and histone modifications. Combine with qPCR or sequencing (ChIP-seq).",
         "zh": "全基因组水平检测蛋白-DNA 相互作用。鉴定转录因子结合位点和组蛋白修饰。可结合 qPCR 或测序（ChIP-seq）。"
@@ -2479,7 +2603,8 @@
         },
         {
           "en": "Centrifuge 14,000×g, 10 min, 4°C. Transfer supernatant (= sheared chromatin)",
-          "zh": "4°C 14,000×g 离心 10 min。取上清（= 剪切后染色质）"
+          "zh": "4°C 14,000×g 离心 10 min。取上清（= 剪切后染色质）",
+          "safeStop": true
         },
         {
           "en": "**Dilute**: Add 9 volumes ChIP Dilution Buffer (reduces SDS from 1% to 0.1%)",
@@ -2500,7 +2625,8 @@
         },
         {
           "en": "Add antibody (2–5 µg) + 30 µL protein A/G beads. Rotate overnight at 4°C",
-          "zh": "加抗体（2–5 µg）+ 30 µL protein A/G 磁珠。4°C 旋转过夜"
+          "zh": "加抗体（2–5 µg）+ 30 µL protein A/G 磁珠。4°C 旋转过夜",
+          "safeStop": true
         },
         {
           "en": "**Day 2–3 — Washes & Elution**",
@@ -2671,6 +2797,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "6–8 h (overnight incubation)",
       "usage": {
         "en": "Detect protein-protein interactions in native conditions. Pull down a \"bait\" protein with its antibody and detect co-precipitated \"prey\" proteins by WB.",
         "zh": "在天然条件下检测蛋白-蛋白相互作用。用抗体沉淀\"诱饵\"蛋白，通过 WB 检测共沉淀的\"猎物\"蛋白。"
@@ -2859,6 +2986,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "3–4 h",
       "usage": {
         "en": "Quantify gene expression at mRNA level. Combines reverse transcription with real-time PCR. Gold standard for validating RNA-seq hits. Requires proper controls and MIQE compliance.",
         "zh": "在 mRNA 水平定量基因表达。结合逆转录和实时 PCR。验证 RNA-seq 结果的金标准。需要适当对照并符合 MIQE 规范。"
@@ -2884,7 +3012,8 @@
         },
         {
           "en": "RT program: 25°C 5 min → 42–50°C 30–60 min → 85°C 5 min (inactivation). Store cDNA at -20°C",
-          "zh": "RT 程序：25°C 5 min → 42–50°C 30–60 min → 85°C 5 min（灭活）。cDNA -20°C 保存"
+          "zh": "RT 程序：25°C 5 min → 42–50°C 30–60 min → 85°C 5 min（灭活）。cDNA -20°C 保存",
+          "safeStop": true
         },
         {
           "en": "**Dilute cDNA**: 1:5 to 1:20 with nuclease-free H₂O (typically 1:10). Include –RT control (no reverse transcriptase)",
@@ -3046,6 +3175,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "30–60 min (+ 24–48 h incubation)",
       "usage": {
         "en": "Deliver plasmid DNA or siRNA/miRNA into mammalian cells using cationic lipid reagents. Transient expression peaks 24–72h. For stable expression, add selection antibiotics.",
         "zh": "利用阳离子脂质试剂将质粒 DNA 或 siRNA/miRNA 导入哺乳动物细胞。瞬时表达高峰 24–72h。稳定表达需加筛选抗生素。"
@@ -3207,6 +3337,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "2–3 h",
       "usage": {
         "en": "Analyze protein expression on individual cells by fluorescent antibody staining. Enables multi-parameter phenotyping, cell counting, and sorting (FACS).",
         "zh": "通过荧光抗体染色分析单个细胞的蛋白表达。支持多参数表型分析、细胞计数和分选（FACS）。"
@@ -3442,6 +3573,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "2–3 h",
       "usage": {
         "en": "Screen bacterial colonies for correct insert after transformation. Faster than miniprep + restriction digest. Screen 8–16 colonies per construct.",
         "zh": "转化后筛选含正确插入片段的菌落。比提质粒 + 酶切更快。每个构建体筛选 8–16 个菌落。"
@@ -3483,7 +3615,8 @@
         },
         {
           "en": "Run PCR: 95°C 10 min (lyses cells) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → hold 4°C",
-          "zh": "PCR 程序: 95°C 10 min (裂解细菌) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → 4°C 保持"
+          "zh": "PCR 程序: 95°C 10 min (裂解细菌) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → 4°C 保持",
+          "safeStop": true
         },
         {
           "en": "Add 5 µL of 6× loading dye to each 25 µL reaction",
@@ -3709,6 +3842,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "3–4 h (+ overnight)",
       "usage": {
         "en": "Prepare chemically competent E. coli cells for heat-shock transformation. Simple and cheap, yields 10⁶–10⁷ CFU/µg. Sufficient for routine cloning.",
         "zh": "制备化学感受态大肠杆菌用于热激转化。简单便宜，效率 10⁶–10⁷ CFU/µg。足够常规克隆使用。"
@@ -4046,6 +4180,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "10–15 min",
       "usage": {
         "en": "Count cells and determine viability before seeding, passaging, or experiments. Dead cells take up trypan blue (blue), live cells exclude it (clear).",
         "zh": "在接种、传代或实验前计数细胞并判断活力。死细胞摄取台盼蓝（蓝色），活细胞排斥（透明）。"
@@ -4440,6 +4575,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "1–2 h (+ 24–48 h)",
       "usage": {
         "en": "Classic, cost-effective transfection method. Transfect HEK293T, HeLa, and other easily transfectable cell lines. 80–90% efficiency for HEK293T. Widely used for lentivirus packaging.",
         "zh": "经典、低成本的转染方法。适用于 HEK293T、HeLa 等易转染细胞系。HEK293T 效率可达 80–90%。广泛用于慢病毒包装。"
@@ -4619,6 +4755,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "2–3 h (+ overnight)",
       "usage": {
         "en": "Standard method for introducing plasmid DNA into chemically competent E. coli. Used for cloning, protein expression, and library construction. Quick (2 h from thaw to plating).",
         "zh": "将质粒 DNA 导入化学感受态大肠杆菌的标准方法。用于克隆、蛋白表达和文库构建。快速（从解冻到涂板 2 h）。"
@@ -4794,6 +4931,7 @@
         }
       },
       "version": 1,
+      "estimatedTime": "1–2 h",
       "usage": {
         "en": "Separate DNA fragments by size (100 bp – 25 kb). Use 0.8% for large fragments, 2% for small. Standard for PCR product analysis, restriction digests, quality checks, and gel extraction.",
         "zh": "按大小分离 DNA 片段（100 bp – 25 kb）。大片段用 0.8%，小片段用 2%。用于 PCR 产物分析、酶切鉴定、质量检查和胶回收。"
@@ -4827,7 +4965,8 @@
         },
         {
           "en": "Pour molten agarose into tray. Pop any bubbles with a pipette tip. Let solidify 20–30 min at RT",
-          "zh": "将熔化琼脂糖倒入模具，用枪头戳破气泡。室温凝固 20–30 min"
+          "zh": "将熔化琼脂糖倒入模具，用枪头戳破气泡。室温凝固 20–30 min",
+          "safeStop": true
         },
         {
           "en": "Remove comb(s) gently. Place gel in electrophoresis chamber",
@@ -4918,134 +5057,6 @@
           }
         }
       ]
-    },
-    {
-      "externalId": "trizol_extraction",
-      "name": "Trizol Extraction",
-      "nameZh": "Trizol Extraction",
-      "category": "protocol",
-      "tags": [],
-      "components": [],
-      "instructions": {
-        "en": "",
-        "zh": ""
-      },
-      "source": "official",
-      "version": 1,
-      "usage": {
-        "en": "Gold-standard total RNA extraction using phenol-guanidinium. High yield from cells, tissues, bacteria. Compatible with downstream RT-qPCR, RNA-seq, Northern blot.",
-        "zh": "苯酚-异硫氰酸胍法提取总 RNA 的金标准。适用于细胞、组织、细菌。兼容 RT-qPCR、RNA-seq、Northern blot 等下游实验。"
-      },
-      "briefSteps": [
-        {
-          "en": "Lyse cells in TRIzol → add chloroform → centrifuge → collect aqueous phase → isopropanol precipitate → ethanol wash → dissolve RNA",
-          "zh": "TRIzol 裂解 → 加氯仿 → 离心 → 取水相 → 异丙醇沉淀 → 乙醇洗涤 → 溶解 RNA"
-        }
-      ],
-      "detailedSteps": [
-        {
-          "en": "**Cell lysis**: Remove media, add 1 mL TRIzol per 5–10×10⁶ cells (or 50–100 mg tissue). Pipet up/down 10× to lyse completely",
-          "zh": "**细胞裂解**: 去除培养基，每 5–10×10⁶ 细胞加 1 mL TRIzol（或 50–100 mg 组织）。反复吹打 10 次至完全裂解"
-        },
-        {
-          "en": "Incubate 5 min at RT to dissociate nucleoprotein complexes",
-          "zh": "室温静置 5 min，使核蛋白复合物完全解离"
-        },
-        {
-          "en": "**Phase separation**: Add 0.2 mL chloroform per 1 mL TRIzol. Cap tightly, shake vigorously 15 s (do NOT vortex)",
-          "zh": "**相分离**: 每 1 mL TRIzol 加 0.2 mL 氯仿。盖紧管盖，剧烈摇晃 15 s（不要涡旋）"
-        },
-        {
-          "en": "Incubate 2–3 min at RT. Solution should turn milky pink",
-          "zh": "室温静置 2–3 min。溶液应变为乳白粉红色"
-        },
-        {
-          "en": "Centrifuge 12,000×g, 15 min, 4°C. Three layers form: red organic (bottom), white interphase, clear aqueous (top)",
-          "zh": "4°C 12,000×g 离心 15 min。形成三层：红色有机相（底）、白色中间相、透明水相（顶）"
-        },
-        {
-          "en": "**RNA precipitation**: Carefully transfer upper aqueous phase to new tube (~60% of TRIzol volume). ⚠️ Avoid interphase!",
-          "zh": "**RNA 沉淀**: 小心转移上层水相至新管（约为 TRIzol 体积的 60%）。⚠️ 避免触碰中间相！"
-        },
-        {
-          "en": "Add 0.5 mL isopropanol per 1 mL TRIzol. Mix gently by inversion 6×",
-          "zh": "每 1 mL TRIzol 加 0.5 mL 异丙醇。轻柔颠倒混匀 6 次"
-        },
-        {
-          "en": "Incubate 10 min RT (or -20°C 1 h for low-abundance samples)",
-          "zh": "室温静置 10 min（低丰度样品可 -20°C 放 1 h）"
-        },
-        {
-          "en": "Centrifuge 12,000×g, 10 min, 4°C. RNA pellet should be visible (white/translucent)",
-          "zh": "4°C 12,000×g 离心 10 min。应可见 RNA 沉淀（白色/半透明）"
-        },
-        {
-          "en": "**Wash**: Discard supernatant. Add 1 mL 75% ethanol (in DEPC-H₂O). Vortex briefly",
-          "zh": "**洗涤**: 弃上清。加 1 mL 75% 乙醇（DEPC 水配制）。短暂涡旋"
-        },
-        {
-          "en": "Centrifuge 7,500×g, 5 min, 4°C. Discard ethanol completely",
-          "zh": "4°C 7,500×g 离心 5 min。完全弃去乙醇"
-        },
-        {
-          "en": "**Dissolve**: Air-dry pellet 5–10 min (do NOT over-dry — pellet becomes hard to dissolve). Dissolve in 20–50 µL RNase-free H₂O",
-          "zh": "**溶解**: 室温风干沉淀 5–10 min（不要过度干燥——会难以溶解）。加 20–50 µL 无 RNase 水溶解"
-        },
-        {
-          "en": "Incubate 55°C, 10 min to aid dissolution. Place on ice",
-          "zh": "55°C 孵育 10 min 促进溶解。然后置于冰上"
-        },
-        {
-          "en": "**QC**: Measure A260/280 (expect ~2.0) and A260/230 (expect >1.7). Run on gel or Bioanalyzer if needed",
-          "zh": "**质检**: 测 A260/280（期望 ~2.0）和 A260/230（期望 >1.7）。必要时跑胶或 Bioanalyzer 检测"
-        }
-      ],
-      "materials": [
-        {
-          "name": "TRIzol Reagent",
-          "note": {
-            "en": "Commercial reagent",
-            "zh": "商品化试剂"
-          }
-        },
-        {
-          "name": "Chloroform",
-          "note": {
-            "en": "ACS grade",
-            "zh": "分析纯"
-          }
-        },
-        {
-          "name": "Isopropanol",
-          "note": {
-            "en": "Molecular biology grade",
-            "zh": "分子生物学级"
-          }
-        },
-        {
-          "name": "75% Ethanol",
-          "note": {
-            "en": "DEPC-H₂O diluted",
-            "zh": "DEPC 水配制"
-          }
-        },
-        {
-          "name": "RNase-free H₂O",
-          "note": {
-            "en": "DEPC-treated or commercial",
-            "zh": "DEPC 处理或商品化"
-          }
-        }
-      ],
-      "storage": {
-        "temp": "N/A",
-        "duration": "",
-        "icon": "📋",
-        "label": {
-          "en": "Protocol — RNA stored at -80°C",
-          "zh": "实验方案 — RNA -80°C 保存"
-        }
-      }
     }
   ]
 }

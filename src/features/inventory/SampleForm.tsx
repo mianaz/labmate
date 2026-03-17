@@ -16,6 +16,12 @@ interface SampleFormProps {
   onCancel: () => void
 }
 
+/** Parse YYYY-MM-DD as local midnight (not UTC) */
+function localDateToEpoch(dateStr: string): number {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).getTime()
+}
+
 export default function SampleForm({ boxId, position, existing, onSave, onDelete, onCancel }: SampleFormProps) {
   const { t } = useTranslation()
 
@@ -28,11 +34,13 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
   const [passage, setPassage] = useState(existing?.passage ?? '')
   const [dateStored, setDateStored] = useState(() => {
     const d = existing?.dateStored ? new Date(existing.dateStored) : new Date()
-    return d.toISOString().slice(0, 10)
+    // Use local date parts to avoid UTC offset shifting the day
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
   const [expiryDate, setExpiryDate] = useState(() => {
     if (!existing?.expiryDate) return ''
-    return new Date(existing.expiryDate).toISOString().slice(0, 10)
+    const d = new Date(existing.expiryDate)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
   const [vendor, setVendor] = useState(existing?.vendor ?? '')
   const [catalogNumber, setCatalogNumber] = useState(existing?.catalogNumber ?? '')
@@ -104,8 +112,8 @@ export default function SampleForm({ boxId, position, existing, onSave, onDelete
       catalogNumber: catalogNumber.trim() || undefined,
       lotNumber: lotNumber.trim() || undefined,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-      dateStored: new Date(dateStored).getTime(),
-      expiryDate: expiryDate ? new Date(expiryDate).getTime() : undefined,
+      dateStored: localDateToEpoch(dateStored),
+      expiryDate: expiryDate ? localDateToEpoch(expiryDate) : undefined,
       owner: owner.trim() || undefined,
       tags,
       notes: notes.trim() || undefined,

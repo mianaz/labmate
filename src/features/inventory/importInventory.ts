@@ -79,86 +79,97 @@ async function importTabularSheet(
 ): Promise<ImportResult> {
   const now = Date.now()
   const sType = overrideType ?? sheet.detectedType
-
-  // Create a default location and box
-  const locationId = await db.storageLocations.add({
-    name: `Imported - ${sheet.name}`,
-    nameZh: '',
-    type: 'shelf' as StorageType,
-    order: 0,
-    createdAt: now,
-    updatedAt: now,
-  }) as number
-
-  const boxId = await db.sampleBoxes.add({
-    name: sheet.name,
-    nameZh: '',
-    locationId,
-    boxType: 'cryo_81',
-    rows: 9,
-    cols: 9,
-    createdAt: now,
-    updatedAt: now,
-  }) as number
-
   const { col: colFn } = await import('./parseExcel')
-  const headers = sheet.headers
 
   let count = 0
-  for (const row of sheet.rows) {
-    const get = (field: string) => {
-      const idx = colFn(headers, field)
-      if (idx < 0) return ''
-      const key = headers[idx]
-      return row[key]?.trim() ?? ''
-    }
 
-    const name = get('name')
-    if (!name) continue
-
-    // Auto-assign position
-    const posRow = Math.floor(count / 9)
-    const posCol = count % 9
-    const position = `${String.fromCharCode(65 + posRow)}${posCol + 1}`
-
-    const metadata: Record<string, string> = {}
-    if (sType === 'antibody') {
-      const d = get('dilution'); if (d) metadata.dilution = d
-      const c = get('clone'); if (c) metadata.clone = c
-      const h = get('host'); if (h) metadata.hostSpecies = h
-      const r = get('reactivity'); if (r) metadata.reactivity = r
-      const m = get('mw'); if (m) metadata.mw = m
-      const a = get('application'); if (a) metadata.application = a
-    } else if (sType === 'primer') {
-      const s = get('sequence'); if (s) metadata.sequence = s
-      const t = get('targetGene'); if (t) metadata.targetGene = t
-      const a = get('ampliconSize'); if (a) metadata.ampliconSize = a
-      const sp = get('species'); if (sp) metadata.species = sp
-    } else if (sType === 'compound') {
-      const ct = get('compoundType'); if (ct) metadata.compoundType = ct
-    }
-
-    await db.samples.add({
-      name,
-      boxId,
-      position,
-      sampleType: sType,
-      vendor: get('vendor') || undefined,
-      catalogNumber: get('catalog') || undefined,
-      lotNumber: get('lot') || undefined,
-      quantity: get('quantity') || undefined,
-      concentration: get('concentration') || undefined,
-      owner: get('owner') || defaultOwner || undefined,
-      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-      tags: [],
-      notes: get('notes') || undefined,
-      dateStored: now,
-      isFavorite: false,
+  await db.transaction('rw', db.storageLocations, db.sampleBoxes, db.samples, async () => {
+    // Resolve or create location and box (dedup by name)
+    const locName = `Imported - ${sheet.name}`
+    const existingLoc = await db.storageLocations.where('name').equals(locName).first()
+    const locationId = existingLoc?.id ?? await db.storageLocations.add({
+      name: locName,
+      nameZh: '',
+      type: 'shelf' as StorageType,
+      order: 0,
       createdAt: now,
       updatedAt: now,
-    })
-    count++
-  }
+    }) as number
+
+    const existingBox = await db.sampleBoxes.where('name').equals(sheet.name).first()
+    const boxId = (existingBox && existingBox.locationId === locationId)
+      ? existingBox.id!
+      : await db.sampleBoxes.add({
+          name: sheet.name,
+          nameZh: '',
+          locationId,
+          boxType: 'cryo_81',
+          rows: 9,
+          cols: 9,
+          createdAt: now,
+          updatedAt: now,
+        }) as number
+
+    const headers = sheet.headers
+
+    for (const row of sheet.rows) {
+      const get = (field: string) => {
+        const idx = colFn(headers, field)
+        if (idx < 0) return ''
+        const key = headers[idx]
+        return row[key]?.trim() ?? ''
+      }
+
+      const name = get('name')
+      if (!name) continue
+
+      // Auto-assign position (cap to box dimensions)
+      const boxRows = 9
+      const boxCols = 9
+      if (count >= boxRows * boxCols) break // box full
+      const posRow = Math.floor(count / boxCols)
+      const posCol = count % boxCols
+      const position = `${String.fromCharCode(65 + posRow)}${posCol + 1}`
+
+      const metadata: Record<string, string> = {}
+      if (sType === 'antibody') {
+        const d = get('dilution'); if (d) metadata.dilution = d
+        const c = get('clone'); if (c) metadata.clone = c
+        const h = get('host'); if (h) metadata.hostSpecies = h
+        const r = get('reactivity'); if (r) metadata.reactivity = r
+        const m = get('mw'); if (m) metadata.mw = m
+        const a = get('application'); if (a) metadata.application = a
+      } else if (sType === 'primer') {
+        const s = get('sequence'); if (s) metadata.sequence = s
+        const t = get('targetGene'); if (t) metadata.targetGene = t
+        const a = get('ampliconSize'); if (a) metadata.ampliconSize = a
+        const sp = get('species'); if (sp) metadata.species = sp
+      } else if (sType === 'compound') {
+        const ct = get('compoundType'); if (ct) metadata.compoundType = ct
+      }
+
+      await db.samples.add({
+        name,
+        boxId,
+        position,
+        sampleType: sType,
+        vendor: get('vendor') || undefined,
+        catalogNumber: get('catalog') || undefined,
+        lotNumber: get('lot') || undefined,
+        quantity: get('quantity') || undefined,
+        concentration: get('concentration') || undefined,
+        owner: get('owner') || defaultOwner || undefined,
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+        tags: [],
+        notes: get('notes') || undefined,
+        dateStored: now,
+        isFavorite: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      count++
+    }
+  })
 
   return { message: `${count} samples imported from "${sheet.name}"`, count }
 }
@@ -191,40 +202,47 @@ export async function importSelectedSheets(
       const now = Date.now()
       const dims = guessBoxDimensions(gridSamples)
 
-      const locationId = await db.storageLocations.add({
-        name: `Imported - ${sheet.name}`,
-        nameZh: '',
-        type: 'freezer' as StorageType,
-        order: 0,
-        createdAt: now,
-        updatedAt: now,
-      }) as number
-
-      const boxId = await db.sampleBoxes.add({
-        name: sheet.name,
-        nameZh: '',
-        locationId,
-        boxType: detectBoxType(dims.rows, dims.cols),
-        rows: dims.rows,
-        cols: dims.cols,
-        createdAt: now,
-        updatedAt: now,
-      }) as number
-
-      for (const gs of gridSamples) {
-        await db.samples.add({
-          name: gs.name,
-          boxId,
-          position: gs.position,
-          sampleType: sel.sampleType,
-          owner: sel.defaultOwner || undefined,
-          tags: [],
-          dateStored: now,
-          isFavorite: false,
+      await db.transaction('rw', db.storageLocations, db.sampleBoxes, db.samples, async () => {
+        const gridLocName = `Imported - ${sheet.name}`
+        const existingGridLoc = await db.storageLocations.where('name').equals(gridLocName).first()
+        const locationId = existingGridLoc?.id ?? await db.storageLocations.add({
+          name: gridLocName,
+          nameZh: '',
+          type: 'freezer' as StorageType,
+          order: 0,
           createdAt: now,
           updatedAt: now,
-        })
-      }
+        }) as number
+
+        const existingGridBox = await db.sampleBoxes.where('name').equals(sheet.name).first()
+        const boxId = (existingGridBox && existingGridBox.locationId === locationId)
+          ? existingGridBox.id!
+          : await db.sampleBoxes.add({
+              name: sheet.name,
+              nameZh: '',
+              locationId,
+              boxType: detectBoxType(dims.rows, dims.cols),
+              rows: dims.rows,
+              cols: dims.cols,
+              createdAt: now,
+              updatedAt: now,
+            }) as number
+
+        for (const gs of gridSamples) {
+          await db.samples.add({
+            name: gs.name,
+            boxId,
+            position: gs.position,
+            sampleType: sel.sampleType,
+            owner: sel.defaultOwner || undefined,
+            tags: [],
+            dateStored: now,
+            isFavorite: false,
+            createdAt: now,
+            updatedAt: now,
+          })
+        }
+      })
 
       totalCount += gridSamples.length
       messages.push(`${gridSamples.length} samples from "${sheet.name}" (grid)`)
@@ -242,82 +260,125 @@ async function importJson(text: string): Promise<{ message: string; count: numbe
     throw new Error('Invalid LabMate inventory JSON file')
   }
 
-  const { locations, boxes, samples } = payload.data as {
+  const data = payload.data as {
     locations: StorageLocation[]
     boxes: SampleBox[]
     samples: Sample[]
   }
 
-  // Import with ID remapping to avoid conflicts
+  // Validate arrays exist
+  const locations = Array.isArray(data.locations) ? data.locations : []
+  const boxes = Array.isArray(data.boxes) ? data.boxes : []
+  const samples = Array.isArray(data.samples) ? data.samples : []
+
+  const VALID_STORAGE_TYPES: StorageType[] = ['freezer', 'fridge', 'shelf', 'tank', 'rack']
+
+  // Import with ID remapping to avoid conflicts — wrapped in transaction for atomicity
   const now = Date.now()
   const locationIdMap = new Map<number, number>()
   const boxIdMap = new Map<number, number>()
-
-  // Import locations
-  for (const loc of locations) {
-    const oldId = loc.id!
-    const newId = await db.storageLocations.add({
-      name: loc.name,
-      nameZh: loc.nameZh,
-      type: loc.type,
-      temperature: loc.temperature,
-      parentId: loc.parentId ? locationIdMap.get(loc.parentId) : undefined,
-      order: loc.order,
-      createdAt: loc.createdAt || now,
-      updatedAt: now,
-    })
-    locationIdMap.set(oldId, newId as number)
-  }
-
-  // Import boxes
-  for (const box of boxes) {
-    const oldId = box.id!
-    const newLocId = locationIdMap.get(box.locationId)
-    if (!newLocId) continue
-    const newId = await db.sampleBoxes.add({
-      name: box.name,
-      nameZh: box.nameZh,
-      locationId: newLocId,
-      boxType: box.boxType,
-      rows: box.rows,
-      cols: box.cols,
-      color: box.color,
-      createdAt: box.createdAt || now,
-      updatedAt: now,
-    })
-    boxIdMap.set(oldId, newId as number)
-  }
-
-  // Import samples
   let sampleCount = 0
-  for (const sample of samples) {
-    const newBoxId = boxIdMap.get(sample.boxId)
-    if (!newBoxId) continue
-    await db.samples.add({
-      name: sample.name,
-      nameZh: sample.nameZh,
-      boxId: newBoxId,
-      position: sample.position,
-      sampleType: sample.sampleType,
-      description: sample.description,
-      quantity: sample.quantity,
-      concentration: sample.concentration,
-      passage: sample.passage,
-      vendor: sample.vendor,
-      catalogNumber: sample.catalogNumber,
-      lotNumber: sample.lotNumber,
-      metadata: sample.metadata,
-      dateStored: sample.dateStored || now,
-      expiryDate: sample.expiryDate,
-      owner: sample.owner,
-      tags: sample.tags || [],
-      notes: sample.notes,
-      isFavorite: sample.isFavorite,
-      createdAt: sample.createdAt || now,
-      updatedAt: now,
+
+  await db.transaction('rw', db.storageLocations, db.sampleBoxes, db.samples, async () => {
+    // Sort locations so parents come before children (topological order)
+    const sorted = [...locations].sort((a, b) => {
+      if (!a.parentId && b.parentId) return -1
+      if (a.parentId && !b.parentId) return 1
+      return 0
     })
-    sampleCount++
-  }
+
+    // Import locations — two-pass: insert all, then fix parentId references
+    const pendingParents: Array<{ newId: number; oldParentId: number }> = []
+    for (const loc of sorted) {
+      if (!loc.name || typeof loc.id !== 'number') continue
+      const oldId = loc.id
+      const locType = VALID_STORAGE_TYPES.includes(loc.type) ? loc.type : 'shelf'
+      const resolvedParent = loc.parentId ? locationIdMap.get(loc.parentId) : undefined
+      const newId = await db.storageLocations.add({
+        name: String(loc.name),
+        nameZh: String(loc.nameZh ?? ''),
+        type: locType,
+        temperature: loc.temperature ? String(loc.temperature) : undefined,
+        parentId: resolvedParent,
+        order: typeof loc.order === 'number' ? loc.order : 0,
+        createdAt: loc.createdAt || now,
+        updatedAt: now,
+      })
+      locationIdMap.set(oldId, newId as number)
+      // Track unresolved parents for second pass
+      if (loc.parentId && !resolvedParent) {
+        pendingParents.push({ newId: newId as number, oldParentId: loc.parentId })
+      }
+    }
+    // Second pass: fix any parentId that couldn't be resolved on first insert
+    for (const { newId, oldParentId } of pendingParents) {
+      const resolvedParent = locationIdMap.get(oldParentId)
+      if (resolvedParent) {
+        await db.storageLocations.update(newId, { parentId: resolvedParent })
+      }
+    }
+
+    // Import boxes
+    for (const box of boxes) {
+      if (!box.name || typeof box.id !== 'number') continue
+      const oldId = box.id
+      const newLocId = locationIdMap.get(box.locationId)
+      if (!newLocId) continue
+      const boxType = VALID_BOX_TYPES.includes(box.boxType) ? box.boxType : 'cryo_81'
+      const newId = await db.sampleBoxes.add({
+        name: String(box.name),
+        nameZh: String(box.nameZh ?? ''),
+        locationId: newLocId,
+        boxType,
+        rows: typeof box.rows === 'number' ? box.rows : 9,
+        cols: typeof box.cols === 'number' ? box.cols : 9,
+        color: box.color ? String(box.color) : undefined,
+        createdAt: box.createdAt || now,
+        updatedAt: now,
+      })
+      boxIdMap.set(oldId, newId as number)
+    }
+
+    // Import samples
+    for (const sample of samples) {
+      if (!sample.name) continue
+      const newBoxId = boxIdMap.get(sample.boxId)
+      if (!newBoxId) continue
+      const sampleType = VALID_SAMPLE_TYPES.includes(sample.sampleType as SampleType)
+        ? sample.sampleType as SampleType
+        : 'other'
+      await db.samples.add({
+        name: String(sample.name),
+        nameZh: sample.nameZh ? String(sample.nameZh) : undefined,
+        boxId: newBoxId,
+        position: String(sample.position ?? 'A1'),
+        sampleType,
+        description: sample.description ? String(sample.description) : undefined,
+        quantity: sample.quantity ? String(sample.quantity) : undefined,
+        concentration: sample.concentration ? String(sample.concentration) : undefined,
+        passage: sample.passage ? String(sample.passage) : undefined,
+        vendor: sample.vendor ? String(sample.vendor) : undefined,
+        catalogNumber: sample.catalogNumber ? String(sample.catalogNumber) : undefined,
+        lotNumber: sample.lotNumber ? String(sample.lotNumber) : undefined,
+        metadata: sample.metadata && typeof sample.metadata === 'object' && !Array.isArray(sample.metadata)
+          ? Object.fromEntries(
+              Object.entries(sample.metadata)
+                .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
+                .map(([k, v]) => [String(k).slice(0, 100), String(v).slice(0, 500)])
+            )
+          : undefined,
+        dateStored: sample.dateStored || now,
+        expiryDate: sample.expiryDate,
+        owner: sample.owner ? String(sample.owner) : undefined,
+        tags: Array.isArray(sample.tags) ? sample.tags.map(String) : [],
+        notes: sample.notes ? String(sample.notes) : undefined,
+        isFavorite: !!sample.isFavorite,
+        createdAt: sample.createdAt || now,
+        updatedAt: now,
+      })
+      sampleCount++
+    }
+  })
 
   return {
     message: `${locationIdMap.size} locations, ${boxIdMap.size} boxes, ${sampleCount} samples`,
@@ -371,124 +432,126 @@ async function importCsv(text: string): Promise<{ message: string; count: number
 
   let sampleCount = 0
 
-  for (const row of dataRows) {
-    const get = (name: string) => {
-      const idx = col(name)
-      return idx >= 0 && idx < row.length ? row[idx].trim() : ''
-    }
+  await db.transaction('rw', db.storageLocations, db.sampleBoxes, db.samples, async () => {
+    for (const row of dataRows) {
+      const get = (name: string) => {
+        const idx = col(name)
+        return idx >= 0 && idx < row.length ? row[idx].trim() : ''
+      }
 
-    const locationName = get('location')
-    const temperature = get('temperature')
-    const boxName = get('box')
-    const boxTypeRaw = get('boxtype')
-    const position = get('position')
-    const sampleName = get('name')
+      const locationName = get('location')
+      const temperature = get('temperature')
+      const boxName = get('box')
+      const boxTypeRaw = get('boxtype')
+      const position = get('position')
+      const sampleName = get('name')
 
-    if (!sampleName || !position) continue
+      if (!sampleName || !position) continue
 
-    // Resolve or create location
-    let locationId: number
-    const locKey = `${locationName}|${temperature}`
-    if (locationCache.has(locKey)) {
-      locationId = locationCache.get(locKey)!
-    } else if (locationName) {
-      // Check if location already exists
-      const existing = await db.storageLocations.where('name').equals(locationName).first()
-      if (existing) {
-        locationId = existing.id!
+      // Resolve or create location
+      let locationId: number
+      const locKey = `${locationName}|${temperature}`
+      if (locationCache.has(locKey)) {
+        locationId = locationCache.get(locKey)!
+      } else if (locationName) {
+        // Check if location already exists
+        const existing = await db.storageLocations.where('name').equals(locationName).first()
+        if (existing) {
+          locationId = existing.id!
+        } else {
+          locationId = await db.storageLocations.add({
+            name: locationName,
+            nameZh: '',
+            type: guessLocationType(locationName, temperature),
+            temperature: temperature || undefined,
+            order: locationCache.size,
+            createdAt: now,
+            updatedAt: now,
+          }) as number
+        }
+        locationCache.set(locKey, locationId)
       } else {
-        locationId = await db.storageLocations.add({
-          name: locationName,
-          nameZh: '',
-          type: guessLocationType(locationName, temperature),
-          temperature: temperature || undefined,
-          order: locationCache.size,
-          createdAt: now,
-          updatedAt: now,
-        }) as number
+        // Default location
+        const defaultKey = '_default|'
+        if (!locationCache.has(defaultKey)) {
+          const id = await db.storageLocations.add({
+            name: 'Imported',
+            nameZh: '导入',
+            type: 'shelf',
+            order: 0,
+            createdAt: now,
+            updatedAt: now,
+          }) as number
+          locationCache.set(defaultKey, id)
+        }
+        locationId = locationCache.get(defaultKey)!
       }
-      locationCache.set(locKey, locationId)
-    } else {
-      // Default location
-      const defaultKey = '_default|'
-      if (!locationCache.has(defaultKey)) {
-        const id = await db.storageLocations.add({
-          name: 'Imported',
-          nameZh: '导入',
-          type: 'shelf',
-          order: 0,
-          createdAt: now,
-          updatedAt: now,
-        }) as number
-        locationCache.set(defaultKey, id)
-      }
-      locationId = locationCache.get(defaultKey)!
-    }
 
-    // Resolve or create box
-    const boxType = validateBoxType(boxTypeRaw)
-    const boxKey = `${locationId}|${boxName || 'Default Box'}|${boxType}`
-    let boxId: number
-    if (boxCache.has(boxKey)) {
-      boxId = boxCache.get(boxKey)!
-    } else {
-      const resolvedBoxName = boxName || 'Default Box'
-      const existing = await db.sampleBoxes.where('name').equals(resolvedBoxName).first()
-      if (existing && existing.locationId === locationId) {
-        boxId = existing.id!
+      // Resolve or create box
+      const boxType = validateBoxType(boxTypeRaw)
+      const boxKey = `${locationId}|${boxName || 'Default Box'}|${boxType}`
+      let boxId: number
+      if (boxCache.has(boxKey)) {
+        boxId = boxCache.get(boxKey)!
       } else {
-        const dims = getBoxDimensions(boxType)
-        boxId = await db.sampleBoxes.add({
-          name: resolvedBoxName,
-          nameZh: '',
-          locationId,
-          boxType,
-          rows: dims.rows,
-          cols: dims.cols,
-          createdAt: now,
-          updatedAt: now,
-        }) as number
+        const resolvedBoxName = boxName || 'Default Box'
+        const existing = await db.sampleBoxes.where('name').equals(resolvedBoxName).first()
+        if (existing && existing.locationId === locationId) {
+          boxId = existing.id!
+        } else {
+          const dims = getBoxDimensions(boxType)
+          boxId = await db.sampleBoxes.add({
+            name: resolvedBoxName,
+            nameZh: '',
+            locationId,
+            boxType,
+            rows: dims.rows,
+            cols: dims.cols,
+            createdAt: now,
+            updatedAt: now,
+          }) as number
+        }
+        boxCache.set(boxKey, boxId)
       }
-      boxCache.set(boxKey, boxId)
+
+      // Check for existing sample at this position in this box
+      const existingAtPos = await db.samples
+        .where('boxId').equals(boxId)
+        .filter(s => s.position === position)
+        .first()
+      if (existingAtPos) continue // Skip duplicates
+
+      // Create sample
+      const sampleType = validateSampleType(get('type'))
+      const tags = get('tags').split(/[;,]/).map(s => s.trim()).filter(Boolean)
+      const dateStored = parseDate(get('datestored')) ?? now
+      const expiryDate = parseDate(get('expirydate'))
+
+      await db.samples.add({
+        name: sampleName,
+        nameZh: get('namezh') || undefined,
+        boxId,
+        position: position.toUpperCase(),
+        sampleType,
+        description: get('description') || undefined,
+        quantity: get('quantity') || undefined,
+        concentration: get('concentration') || undefined,
+        passage: get('passage') || undefined,
+        vendor: get('vendor') || undefined,
+        catalogNumber: get('catalog') || undefined,
+        lotNumber: get('lot') || undefined,
+        dateStored,
+        expiryDate,
+        owner: get('owner') || undefined,
+        tags,
+        notes: get('notes') || undefined,
+        isFavorite: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      sampleCount++
     }
-
-    // Check for existing sample at this position in this box
-    const existingAtPos = await db.samples
-      .where(['boxId', 'position'])
-      .equals([boxId, position])
-      .first()
-    if (existingAtPos) continue // Skip duplicates
-
-    // Create sample
-    const sampleType = validateSampleType(get('type'))
-    const tags = get('tags').split(/[;,]/).map(s => s.trim()).filter(Boolean)
-    const dateStored = parseDate(get('datestored')) ?? now
-    const expiryDate = parseDate(get('expirydate'))
-
-    await db.samples.add({
-      name: sampleName,
-      nameZh: get('namezh') || undefined,
-      boxId,
-      position: position.toUpperCase(),
-      sampleType,
-      description: get('description') || undefined,
-      quantity: get('quantity') || undefined,
-      concentration: get('concentration') || undefined,
-      passage: get('passage') || undefined,
-      vendor: get('vendor') || undefined,
-      catalogNumber: get('catalog') || undefined,
-      lotNumber: get('lot') || undefined,
-      dateStored,
-      expiryDate,
-      owner: get('owner') || undefined,
-      tags,
-      notes: get('notes') || undefined,
-      isFavorite: false,
-      createdAt: now,
-      updatedAt: now,
-    })
-    sampleCount++
-  }
+  })
 
   return {
     message: `${sampleCount} samples imported`,

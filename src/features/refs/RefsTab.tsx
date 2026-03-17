@@ -91,16 +91,25 @@ export default function RefsTab() {
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!confirm(t('data.importConfirm'))) {
+      if (importRef.current) importRef.current.value = ''
+      return
+    }
     try {
       const text = await file.text()
       const data = JSON.parse(text)
+      const isArr = Array.isArray
+      const isValid = (arr: unknown) => isArr(arr) && (arr as unknown[]).every(v => v && typeof v === 'object')
+
       let count = 0
-      if (data.protocols?.length) { await db.protocols.bulkPut(data.protocols); count += data.protocols.length }
-      if (data.experiments?.length) { await db.experiments.bulkPut(data.experiments); count += data.experiments.length }
-      if (data.settings?.length) { await db.settings.bulkPut(data.settings); count += data.settings.length }
-      if (data.storageLocations?.length) { await db.storageLocations.bulkPut(data.storageLocations); count += data.storageLocations.length }
-      if (data.sampleBoxes?.length) { await db.sampleBoxes.bulkPut(data.sampleBoxes); count += data.sampleBoxes.length }
-      if (data.samples?.length) { await db.samples.bulkPut(data.samples); count += data.samples.length }
+      await db.transaction('rw', [db.protocols, db.experiments, db.settings, db.storageLocations, db.sampleBoxes, db.samples], async () => {
+        if (isValid(data.protocols)) { await db.protocols.bulkPut(data.protocols); count += data.protocols.length }
+        if (isValid(data.experiments)) { await db.experiments.bulkPut(data.experiments); count += data.experiments.length }
+        if (isValid(data.settings)) { await db.settings.bulkPut(data.settings); count += data.settings.length }
+        if (isValid(data.storageLocations)) { await db.storageLocations.bulkPut(data.storageLocations); count += data.storageLocations.length }
+        if (isValid(data.sampleBoxes)) { await db.sampleBoxes.bulkPut(data.sampleBoxes); count += data.sampleBoxes.length }
+        if (isValid(data.samples)) { await db.samples.bulkPut(data.samples); count += data.samples.length }
+      })
       setExportMsg(t('data.importSuccess', { count }))
       setTimeout(() => setExportMsg(''), 3000)
     } catch {

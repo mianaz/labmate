@@ -40,8 +40,7 @@ export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTab
     if (!search.trim()) return recipes
     const q = search.toLowerCase()
     return recipes.filter(
-      (r) => r.name.toLowerCase().includes(q) || r.nameZh.includes(q)
-        || r.tags.some((tag) => tag.toLowerCase().includes(q)),
+      (r) => r.name.toLowerCase().includes(q) || r.nameZh.includes(q),
     )
   }, [recipes, search])
 
@@ -472,7 +471,7 @@ export default function BuffersTab({ initialSelectedId, onNavigate }: BuffersTab
                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
-              Back
+              {t('nav.back')}
             </button>
             {detailPanel}
           </div>

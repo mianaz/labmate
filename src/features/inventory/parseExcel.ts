@@ -217,7 +217,7 @@ export function col(headers: string[], name: string): number {
   }
   // Partial match fallback
   for (const alt of alts) {
-    const idx = headers.findIndex(h => h.includes(alt) || alt.includes(h))
+    const idx = headers.findIndex(h => h.includes(alt))
     if (idx !== -1) return idx
   }
   return -1
@@ -264,7 +264,7 @@ export function parseGridSheet(raw: string[][]): GridSample[] {
   for (let r = startRow; r < raw.length; r++) {
     const row = raw[r]
     const rowLabel = row[0]?.toUpperCase()
-    if (!/^[A-J]$/i.test(rowLabel)) continue
+    if (!/^[A-Z]$/.test(rowLabel)) continue
 
     for (let c = colOffset; c < row.length; c++) {
       const value = row[c]?.trim()

@@ -79,7 +79,7 @@ export default function StorageTree({
 }: StorageTreeProps) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const [expanded, setExpanded] = useState<Set<number>>(() => new Set(locations.map(l => l.id!)))
+  const [expanded, setExpanded] = useState<Set<number>>(() => new Set(locations.map(l => l.id).filter((id): id is number => id !== undefined)))
 
   const topLevel = locations.filter(l => !l.parentId).sort((a, b) => a.order - b.order)
 
@@ -105,6 +105,7 @@ export default function StorageTree({
   }
 
   function renderLocation(loc: StorageLocation, depth: number) {
+    if (depth > 10) return null // guard against circular parentId references
     const children = getChildLocations(loc.id!)
     const locBoxes = getBoxes(loc.id!)
     const isExpanded = expanded.has(loc.id!)

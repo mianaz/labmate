@@ -79,7 +79,7 @@ export function exportAllCsv(
     'Date Stored', 'Expiry Date', 'Owner', 'Tags', 'Description', 'Notes',
   ]
 
-  const sortedSamples = samples.sort((a, b) => {
+  const sortedSamples = [...samples].sort((a, b) => {
     const boxA = boxes.find(bx => bx.id === a.boxId)
     const boxB = boxes.find(bx => bx.id === b.boxId)
     const locCmp = (boxA?.locationId ?? 0) - (boxB?.locationId ?? 0)
@@ -131,7 +131,7 @@ export function exportAllXlsx(
     'Date Stored', 'Expiry Date', 'Owner', 'Tags', 'Description', 'Notes',
   ]
 
-  const sortedSamples = samples.sort((a, b) => {
+  const sortedSamples = [...samples].sort((a, b) => {
     const boxA = boxes.find(bx => bx.id === a.boxId)
     const boxB = boxes.find(bx => bx.id === b.boxId)
     const locCmp = (boxA?.locationId ?? 0) - (boxB?.locationId ?? 0)

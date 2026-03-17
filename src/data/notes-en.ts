@@ -41,7 +41,7 @@ export const NOTES_EN: Record<string, string> = {
   bn_page_cathode:'Do not adjust pH (~7.0). After the gel front has migrated ~1/3, switch to cathode buffer without CBB to reduce background.',
   mtt_reagent:    'Filter-sterilize (0.22 µm). Aliquot and store at −20°C protected from light. Add 10 µL per 100 µL medium. After 37°C 4 h incubation, discard supernatant and solubilize formazan.',
   crispr_rnp:     'sgRNA:Cas9 molar ratio 1.2:1–3:1. Incubate at RT for 10 min to assemble RNP complex. Deliver by electroporation or lipofection.',
-  rna_lysis_trizol: 'Protocol: TRIzol lysis → add chloroform, shake 15 s → 3 min RT → 4°C 12,000×g 15 min → collect upper aqueous phase → isopropanol precipitation.',
+  trizol_extraction: 'Protocol: TRIzol lysis → add chloroform, shake 15 s → 3 min RT → 4°C 12,000×g 15 min → collect upper aqueous phase → isopropanol precipitation.',
   wb_protocol:    'Primary antibody: 1:500–1:2000; HRP secondary: 1:5000–1:10000. Use BSA blocking for phospho-proteins. Semi-dry transfer suitable for proteins <100 kDa.',
   if_protocol:    'Secondary antibody: Alexa Fluor 488/555/647. Protect from light. Tissue sections require antigen retrieval (heat-induced or enzymatic). Confocal: recommend 63× oil immersion.',
   chip_protocol:  'Optimize sonication conditions for each cell line. Positive control: H3 antibody; negative: IgG. Recommend ≥1×10⁶ cells. Express results as % Input or Fold Enrichment.',

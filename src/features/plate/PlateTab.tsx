@@ -454,11 +454,13 @@ export default function PlateTab() {
   function applySerialDilution() {
     const p = templateParams as SerialParams
     if (!p.startConc || !p.factor) return
+    const f = +p.factor
+    if (!isFinite(f) || f <= 0 || f === 1) return
 
     const newData: WellData = {}
     const newGroups: Group[] = []
     let conc = +p.startConc
-    const f = +p.factor
+    if (!isFinite(conc) || conc <= 0) return
 
     if (p.direction === 'row') {
       for (let c = 0; c < config.cols; c++) {
@@ -521,6 +523,9 @@ export default function PlateTab() {
   function applyDoseResponse() {
     const p = templateParams as DoseParams
     if (!p.drugs || !p.startConc || !p.dilFactor) return
+    const dilF = +p.dilFactor
+    if (!isFinite(dilF) || dilF <= 0 || dilF === 1) return
+    if (!isFinite(+p.startConc) || +p.startConc <= 0) return
     const nDrugs = Math.min(+p.drugs, config.rows)
     const newData: WellData = {}
     const newGroups: Group[] = []

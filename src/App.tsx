@@ -45,7 +45,9 @@ function getIconConfig(): IconConfig {
 }
 
 function saveIconConfig(config: IconConfig) {
-  localStorage.setItem('labmate_icon', JSON.stringify(config))
+  try {
+    localStorage.setItem('labmate_icon', JSON.stringify(config))
+  } catch { /* QuotaExceededError — ignore silently */ }
 }
 
 function LabIcon({ config, size = 28 }: { config: IconConfig; size?: number }) {
@@ -106,6 +108,9 @@ function IconSettings({ config, onChange, onClose }: {
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    // Reject SVG and enforce 200KB max
+    if (file.type === 'image/svg+xml') return
+    if (file.size > 200 * 1024) return
     const reader = new FileReader()
     reader.onload = () => {
       const src = reader.result as string
@@ -180,7 +185,7 @@ function IconSettings({ config, onChange, onClose }: {
           {t('icon.reset')}
         </button>
       </div>
-      <input ref={fileRef} type="file" accept="image/png,image/svg+xml,image/jpeg"
+      <input ref={fileRef} type="file" accept="image/png,image/jpeg"
         style={{ display: 'none' }} onChange={handleUpload} />
     </div>
   )
@@ -300,10 +305,22 @@ function App() {
     { key: 'refs', label: t('nav.refs') },
   ]
 
+  // Consume navigateId via ref to avoid setting state during render
+  const navigateIdRef = useRef<string | null>(null)
+  if (navigateId) {
+    navigateIdRef.current = navigateId
+  }
+
+  useEffect(() => {
+    if (navigateId) setNavigateId(null)
+  }, [navigateId])
+
   const renderTab = () => {
+    const navId = navigateIdRef.current
+    navigateIdRef.current = null
     switch (tab) {
-      case 'buffers':   return <BuffersTab initialSelectedId={navigateId} onNavigate={handleNavigate} />
-      case 'protocols': return <ProtocolsTab initialSelectedId={navigateId} onNavigate={handleNavigate} />
+      case 'buffers':   return <BuffersTab initialSelectedId={navId} onNavigate={handleNavigate} />
+      case 'protocols': return <ProtocolsTab initialSelectedId={navId} onNavigate={handleNavigate} />
       case 'calc':      return <CalcTab />
       case 'plate':     return <PlateTab />
       case 'inventory': return <InventoryTab />
@@ -479,10 +496,10 @@ function App() {
         }}
       />
 
-      {/* Floating widgets */}
+      {/* Floating widgets — hide calculator on calc tab, hide timer on protocols tab */}
       <TimerBar />
-      <QuickTimerButton />
-      <QuickCalculatorButton />
+      {tab !== 'protocols' && <QuickTimerButton />}
+      {tab !== 'calc' && <QuickCalculatorButton />}
 
       {/* Spin animation for sync icon */}
       <style>{`

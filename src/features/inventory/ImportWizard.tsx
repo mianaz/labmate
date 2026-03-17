@@ -66,6 +66,12 @@ export default function ImportWizard({ workbook, onDone, onCancel }: ImportWizar
           defaultOwner: defaultOwner.trim() || undefined,
         }))
 
+      if (selected.length === 0) {
+        setError('No sheets selected')
+        setStep('select')
+        return
+      }
+
       const res = await importSelectedSheets(workbook, selected)
       setResult(res)
       setStep('done')

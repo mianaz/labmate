@@ -5,6 +5,7 @@ export type ProtocolEnhancement = Record<string, any>
 export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   trizol_extraction: {
     usage: { en: 'Gold-standard total RNA extraction using phenol-guanidinium. High yield from cells, tissues, bacteria. Compatible with downstream RT-qPCR, RNA-seq, Northern blot.', zh: '苯酚-异硫氰酸胍法提取总 RNA 的金标准。适用于细胞、组织、细菌。兼容 RT-qPCR、RNA-seq、Northern blot 等下游实验。' },
+    estimatedTime: '1–1.5 h',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — RNA stored at -80°C', zh: '实验方案 — RNA -80°C 保存' } },
     materials: [
       { name: 'TRIzol Reagent', note: { en: 'Commercial reagent', zh: '商品化试剂' } },
@@ -18,12 +19,12 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
     ],
     detailedSteps: [
       { en: '**Cell lysis**: Remove media, add 1 mL TRIzol per 5–10×10⁶ cells (or 50–100 mg tissue). Pipet up/down 10× to lyse completely', zh: '**细胞裂解**: 去除培养基，每 5–10×10⁶ 细胞加 1 mL TRIzol（或 50–100 mg 组织）。反复吹打 10 次至完全裂解' },
-      { en: 'Incubate 5 min at RT to dissociate nucleoprotein complexes', zh: '室温静置 5 min，使核蛋白复合物完全解离' },
+      { en: 'Incubate 5 min at RT to dissociate nucleoprotein complexes', zh: '室温静置 5 min，使核蛋白复合物完全解离', safeStop: true },
       { en: '**Phase separation**: Add 0.2 mL chloroform per 1 mL TRIzol. Cap tightly, shake vigorously 15 s (do NOT vortex)', zh: '**相分离**: 每 1 mL TRIzol 加 0.2 mL 氯仿。盖紧管盖，剧烈摇晃 15 s（不要涡旋）' },
       { en: 'Incubate 2–3 min at RT. Solution should turn milky pink', zh: '室温静置 2–3 min。溶液应变为乳白粉红色' },
       { en: 'Centrifuge 12,000×g, 15 min, 4°C. Three layers form: red organic (bottom), white interphase, clear aqueous (top)', zh: '4°C 12,000×g 离心 15 min。形成三层：红色有机相（底）、白色中间相、透明水相（顶）' },
       { en: '**RNA precipitation**: Carefully transfer upper aqueous phase to new tube (~60% of TRIzol volume). ⚠️ Avoid interphase!', zh: '**RNA 沉淀**: 小心转移上层水相至新管（约为 TRIzol 体积的 60%）。⚠️ 避免触碰中间相！' },
-      { en: 'Add 0.5 mL isopropanol per 1 mL TRIzol. Mix gently by inversion 6×', zh: '每 1 mL TRIzol 加 0.5 mL 异丙醇。轻柔颠倒混匀 6 次' },
+      { en: 'Add 0.5 mL isopropanol per 1 mL TRIzol. Mix gently by inversion 6×', zh: '每 1 mL TRIzol 加 0.5 mL 异丙醇。轻柔颠倒混匀 6 次', safeStop: true },
       { en: 'Incubate 10 min RT (or -20°C 1 h for low-abundance samples)', zh: '室温静置 10 min（低丰度样品可 -20°C 放 1 h）' },
       { en: 'Centrifuge 12,000×g, 10 min, 4°C. RNA pellet should be visible (white/translucent)', zh: '4°C 12,000×g 离心 10 min。应可见 RNA 沉淀（白色/半透明）' },
       { en: '**Wash**: Discard supernatant. Add 1 mL 75% ethanol (in DEPC-H₂O). Vortex briefly', zh: '**洗涤**: 弃上清。加 1 mL 75% 乙醇（DEPC 水配制）。短暂涡旋' },
@@ -35,6 +36,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   wb_protocol: {
     usage: { en: 'Detect specific proteins in cell/tissue lysates by separating on SDS-PAGE, transferring to membrane, and probing with antibodies. Quantitative with proper controls.', zh: '通过 SDS-PAGE 分离蛋白，转膜后用抗体探测特定蛋白。适当对照下可实现定量分析。' },
+    estimatedTime: '8–12 h (2 days typical)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2-day experiment', zh: '实验方案 — 2 天实验' } },
     materials: [
       { name: 'RIPA Buffer', linkedRecipe: 'ripa' },
@@ -65,8 +67,8 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: 'Wet transfer: 100V, 60–90 min in cold Transfer Buffer with ice pack. OR semi-dry: 25V, 30 min', zh: '湿转: 冷 Transfer Buffer 中 100V, 60–90 min，加冰块。或半干转: 25V, 30 min' },
       { en: 'For proteins >150 kDa: transfer at 30V overnight at 4°C, reduce methanol to 10%, add 0.01% SDS', zh: '>150 kDa 蛋白: 4°C 30V 过夜转膜，甲醇降至 10%，加 0.01% SDS' },
       { en: '**Verify transfer**: Ponceau S stain membrane 2 min, wash with ddH₂O. Photograph. Destain with TBST', zh: '**验证转膜**: Ponceau S 染膜 2 min，ddH₂O 冲洗。拍照。用 TBST 脱色' },
-      { en: '**Blocking**: 5% milk/TBST or 5% BSA/TBST, 1 h at RT with rocking. ⚠️ Use BSA for phospho-antibodies!', zh: '**封闭**: 5% 脱脂奶/TBST 或 5% BSA/TBST，室温摇 1 h。⚠️ 磷酸化抗体必须用 BSA！' },
-      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:500–1:2000). Incubate 4°C overnight with rocking', zh: '**一抗**: 用封闭液稀释（通常 1:500–1:2000）。4°C 摇孵过夜' },
+      { en: '**Blocking**: 5% milk/TBST or 5% BSA/TBST, 1 h at RT with rocking. ⚠️ Use BSA for phospho-antibodies!', zh: '**封闭**: 5% 脱脂奶/TBST 或 5% BSA/TBST，室温摇 1 h。⚠️ 磷酸化抗体必须用 BSA！', safeStop: true },
+      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:500–1:2000). Incubate 4°C overnight with rocking', zh: '**一抗**: 用封闭液稀释（通常 1:500–1:2000）。4°C 摇孵过夜', safeStop: true },
       { en: '**Day 2 — Detection**', zh: '**第二天 — 检测**', isHeader: true },
       { en: '**Wash**: TBST 3×10 min with rocking. Use generous volume (>10 mL per wash)', zh: '**洗膜**: TBST 3×10 min 摇洗。用量要足（每次 >10 mL）' },
       { en: '**Secondary antibody**: HRP-conjugated anti-mouse/rabbit IgG, dilute 1:5000–1:10,000 in blocking buffer. 1 h RT', zh: '**二抗**: HRP 标记的抗鼠/兔 IgG，封闭液 1:5000–1:10,000 稀释。室温 1 h' },
@@ -77,6 +79,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   if_protocol: {
     usage: { en: 'Visualize protein localization and expression in fixed cells using fluorescent antibodies. Compatible with confocal, epifluorescence, and super-resolution microscopy.', zh: '用荧光抗体观察固定细胞中蛋白的定位和表达。兼容共聚焦、落射荧光和超分辨率显微镜。' },
+    estimatedTime: '4–6 h (overnight primary)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — same day (~5h + overnight)', zh: '实验方案 — 当天完成（~5h + 过夜）' } },
     materials: [
       { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
@@ -95,11 +98,11 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: 'For suspension cells: use poly-L-lysine coated coverslips or cytospin onto slides', zh: '悬浮细胞：使用多聚赖氨酸包被的盖玻片或 cytospin 到载玻片上' },
       { en: '**Fixation**: Aspirate media, wash 2× with RT PBS (gentle!). Add 4% PFA, 15 min RT', zh: '**固定**: 吸除培养基，室温 PBS 轻柔洗 2 次。加 4% PFA，室温固定 15 min' },
       { en: '⚠️ Do NOT fix >20 min — over-fixation masks epitopes. For some antigens, try ice-cold methanol 10 min instead', zh: '⚠️ 不要固定 >20 min——过度固定会遮蔽表位。某些抗原可改用冰冷甲醇固定 10 min' },
-      { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min' },
+      { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min', safeStop: true },
       { en: '**Permeabilization**: 0.1–0.5% Triton X-100 / PBS, 10 min RT. (Membrane proteins: skip this step or use 0.05%)', zh: '**透化**: 0.1–0.5% Triton X-100 / PBS，室温 10 min（膜蛋白：跳过此步或用 0.05%）' },
       { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min' },
       { en: '**Blocking**: 3% BSA + 5% normal serum (same species as secondary Ab) in PBS-T, 1 h RT', zh: '**封闭**: 3% BSA + 5% 正常血清（与二抗同种属）溶于 PBS-T，室温 1 h' },
-      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:50–1:500). Apply 200 µL per coverslip. 4°C overnight in humidified chamber', zh: '**一抗**: 用封闭液稀释（通常 1:50–1:500）。每片加 200 µL。4°C 湿盒过夜' },
+      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:50–1:500). Apply 200 µL per coverslip. 4°C overnight in humidified chamber', zh: '**一抗**: 用封闭液稀释（通常 1:50–1:500）。每片加 200 µL。4°C 湿盒过夜', safeStop: true },
       { en: '💡 Lay parafilm in dish + wet paper towel to make humidity chamber. Place coverslips cell-side DOWN on antibody drops', zh: '💡 用保鲜膜铺在培养皿中 + 湿纸巾做湿盒。盖玻片细胞面朝下放在抗体液滴上' },
       { en: 'Wash 3×5 min PBS (from here on, protect from light!)', zh: 'PBS 洗 3×5 min（从此步起避光操作！）' },
       { en: '**Secondary antibody**: Fluorescent-conjugated (Alexa Fluor 488/555/647), 1:200–1:1000 in blocking buffer, 1 h RT dark', zh: '**荧光二抗**: Alexa Fluor 488/555/647 等，封闭液 1:200–1:1000 稀释，室温避光 1 h' },
@@ -111,6 +114,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   chip_protocol: {
     usage: { en: 'Map protein-DNA interactions genome-wide. Identifies transcription factor binding sites and histone modifications. Combine with qPCR or sequencing (ChIP-seq).', zh: '全基因组水平检测蛋白-DNA 相互作用。鉴定转录因子结合位点和组蛋白修饰。可结合 qPCR 或测序（ChIP-seq）。' },
+    estimatedTime: '2–3 days',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 3-day experiment', zh: '实验方案 — 3 天实验' } },
     materials: [
       { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
@@ -136,12 +140,12 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: '**Lysis**: Resuspend pellet in SDS Lysis Buffer (200 µL per 1×10⁶ cells). Incubate ice 10 min', zh: '**裂解**: 用 SDS Lysis Buffer 重悬沉淀（每 1×10⁶ 细胞 200 µL）。冰上 10 min' },
       { en: '**Sonication**: Shear chromatin to 200–500 bp. ⚠️ Must optimize! (e.g., Bioruptor: 30s on/30s off, 15–25 cycles)', zh: '**超声**: 将染色质剪切至 200–500 bp。⚠️ 必须优化条件！（如 Bioruptor: 30s 开/30s 关，15–25 个循环）' },
       { en: '💡 Check shearing: take 10 µL aliquot, reverse crosslink (65°C + Proteinase K), run on 1.5% agarose gel', zh: '💡 检查剪切效果：取 10 µL，解交联（65°C + Proteinase K），跑 1.5% 琼脂糖凝胶' },
-      { en: 'Centrifuge 14,000×g, 10 min, 4°C. Transfer supernatant (= sheared chromatin)', zh: '4°C 14,000×g 离心 10 min。取上清（= 剪切后染色质）' },
+      { en: 'Centrifuge 14,000×g, 10 min, 4°C. Transfer supernatant (= sheared chromatin)', zh: '4°C 14,000×g 离心 10 min。取上清（= 剪切后染色质）', safeStop: true },
       { en: '**Dilute**: Add 9 volumes ChIP Dilution Buffer (reduces SDS from 1% to 0.1%)', zh: '**稀释**: 加 9 倍体积 ChIP Dilution Buffer（将 SDS 从 1% 降至 0.1%）' },
       { en: '**Save Input**: Remove 1–10% as "Input" control → store at -20°C', zh: '**留 Input**: 取 1–10% 作为 Input 对照 → -20°C 保存' },
       { en: '**Day 1–2 — Immunoprecipitation**', zh: '**第 1–2 天 — 免疫沉淀**', isHeader: true },
       { en: '**Pre-clear** (optional): Add 20 µL protein A/G beads, rotate 1 h at 4°C. Remove beads', zh: '**预清除**（可选）：加 20 µL protein A/G 磁珠，4°C 旋转 1 h。去除磁珠' },
-      { en: 'Add antibody (2–5 µg) + 30 µL protein A/G beads. Rotate overnight at 4°C', zh: '加抗体（2–5 µg）+ 30 µL protein A/G 磁珠。4°C 旋转过夜' },
+      { en: 'Add antibody (2–5 µg) + 30 µL protein A/G beads. Rotate overnight at 4°C', zh: '加抗体（2–5 µg）+ 30 µL protein A/G 磁珠。4°C 旋转过夜', safeStop: true },
       { en: '**Day 2–3 — Washes & Elution**', zh: '**第 2–3 天 — 洗涤与洗脱**', isHeader: true },
       { en: 'Wash sequentially (each 3–5 min, 4°C, rotation): Low-salt → High-salt → LiCl wash → 2× TE buffer', zh: '依次洗涤（每次 3–5 min, 4°C 旋转）：低盐 → 高盐 → LiCl 洗 → 2× TE 缓冲液' },
       { en: '**Elute**: Add 250 µL elution buffer (1% SDS + 0.1 M NaHCO₃), vortex 15 min RT. Repeat. Pool eluates (500 µL total)', zh: '**洗脱**: 加 250 µL 洗脱液（1% SDS + 0.1 M NaHCO₃），室温涡旋 15 min。重复一次。合并洗脱液（共 500 µL）' },
@@ -153,6 +157,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   coip_protocol: {
     usage: { en: 'Detect protein-protein interactions in native conditions. Pull down a "bait" protein with its antibody and detect co-precipitated "prey" proteins by WB.', zh: '在天然条件下检测蛋白-蛋白相互作用。用抗体沉淀"诱饵"蛋白，通过 WB 检测共沉淀的"猎物"蛋白。' },
+    estimatedTime: '6–8 h (overnight incubation)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2-day experiment', zh: '实验方案 — 2 天实验' } },
     materials: [
       { name: 'IP Lysis Buffer', linkedRecipe: 'ip_lysis' },
@@ -180,6 +185,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   qpcr_protocol: {
     usage: { en: 'Quantify gene expression at mRNA level. Combines reverse transcription with real-time PCR. Gold standard for validating RNA-seq hits. Requires proper controls and MIQE compliance.', zh: '在 mRNA 水平定量基因表达。结合逆转录和实时 PCR。验证 RNA-seq 结果的金标准。需要适当对照并符合 MIQE 规范。' },
+    estimatedTime: '3–4 h',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1-day experiment (after RNA extraction)', zh: '实验方案 — 1 天实验（RNA 提取后）' } },
     materials: [
       { name: 'Total RNA', note: { en: 'See TRIzol extraction protocol', zh: '参见 TRIzol 提取方案' }, linkedRecipe: 'trizol_extraction' },
@@ -195,7 +201,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: '**RNA quality check**: Measure A260/280 (should be ~2.0). A260/230 >1.7. Optionally check on agarose gel (28S:18S ~2:1)', zh: '**RNA 质检**: 测 A260/280（应为 ~2.0）。A260/230 >1.7。可选跑琼脂糖凝胶（28S:18S ~2:1）' },
       { en: '**DNase treatment** (recommended): Use TURBO DNase or on-column DNase. Heat-inactivate 75°C 5 min or use DNase removal reagent', zh: '**DNase 处理**（推荐）：用 TURBO DNase 或柱上 DNase。75°C 5 min 热灭活或用 DNase 去除试剂' },
       { en: '**Reverse transcription**: Use 500 ng–2 µg RNA per 20 µL reaction. Use oligo-dT + random hexamer mix for best coverage', zh: '**反转录**: 每 20 µL 反应体系用 500 ng–2 µg RNA。Oligo-dT + 随机六聚体混合引物效果最好' },
-      { en: 'RT program: 25°C 5 min → 42–50°C 30–60 min → 85°C 5 min (inactivation). Store cDNA at -20°C', zh: 'RT 程序：25°C 5 min → 42–50°C 30–60 min → 85°C 5 min（灭活）。cDNA -20°C 保存' },
+      { en: 'RT program: 25°C 5 min → 42–50°C 30–60 min → 85°C 5 min (inactivation). Store cDNA at -20°C', zh: 'RT 程序：25°C 5 min → 42–50°C 30–60 min → 85°C 5 min（灭活）。cDNA -20°C 保存', safeStop: true },
       { en: '**Dilute cDNA**: 1:5 to 1:20 with nuclease-free H₂O (typically 1:10). Include –RT control (no reverse transcriptase)', zh: '**稀释 cDNA**: 用无核酸酶水 1:5 至 1:20 稀释（通常 1:10）。设置 –RT 对照（不加逆转录酶）' },
       { en: '**qPCR setup (20 µL)**: 10 µL 2× SYBR Master Mix + 0.4 µL Fw primer (10 µM) + 0.4 µL Rv primer (10 µM) + 2 µL cDNA + 7.2 µL H₂O', zh: '**qPCR 体系 (20 µL)**: 10 µL 2× SYBR Master Mix + 0.4 µL Fw 引物 (10 µM) + 0.4 µL Rv 引物 (10 µM) + 2 µL cDNA + 7.2 µL H₂O' },
       { en: '⚠️ Set up on ice. Include NTC (no template control) for every primer pair. Technical replicates ≥3', zh: '⚠️ 冰上操作。每对引物设 NTC（无模板对照）。技术重复 ≥3' },
@@ -208,6 +214,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   cell_transfection: {
     usage: { en: 'Deliver plasmid DNA or siRNA/miRNA into mammalian cells using cationic lipid reagents. Transient expression peaks 24–72h. For stable expression, add selection antibiotics.', zh: '利用阳离子脂质试剂将质粒 DNA 或 siRNA/miRNA 导入哺乳动物细胞。瞬时表达高峰 24–72h。稳定表达需加筛选抗生素。' },
+    estimatedTime: '30–60 min (+ 24–48 h incubation)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1h setup + 24–72h expression', zh: '实验方案 — 1h 操作 + 24–72h 表达' } },
     materials: [
       { name: 'Opti-MEM', note: { en: 'Serum-free media for complex formation', zh: '无血清培养基，用于复合物形成' } },
@@ -233,6 +240,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   flow_cytometry_protocol: {
     usage: { en: 'Analyze protein expression on individual cells by fluorescent antibody staining. Enables multi-parameter phenotyping, cell counting, and sorting (FACS).', zh: '通过荧光抗体染色分析单个细胞的蛋白表达。支持多参数表型分析、细胞计数和分选（FACS）。' },
+    estimatedTime: '2–3 h',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~3h', zh: '实验方案 — 约 3 小时' } },
     materials: [
       { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
@@ -265,6 +273,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   // ── v1.9 new protocol enhancements ──
   heat_shock_transformation: {
     usage: { en: 'Standard method for introducing plasmid DNA into chemically competent E. coli. Used for cloning, protein expression, and library construction. Quick (2 h from thaw to plating).', zh: '将质粒 DNA 导入化学感受态大肠杆菌的标准方法。用于克隆、蛋白表达和文库构建。快速（从解冻到涂板 2 h）。' },
+    estimatedTime: '2–3 h (+ overnight)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2 hours + overnight incubation', zh: '实验方案 — 2 小时 + 过夜培养' } },
     materials: [
       { name: 'Competent Cells', linkedRecipe: 'competent_cells_cacl2' },
@@ -294,6 +303,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   // ── v1.8 protocol enhancements ──
   colony_pcr: {
     usage: { en: 'Screen bacterial colonies for correct insert after transformation. Faster than miniprep + restriction digest. Screen 8–16 colonies per construct.', zh: '转化后筛选含正确插入片段的菌落。比提质粒 + 酶切更快。每个构建体筛选 8–16 个菌落。' },
+    estimatedTime: '2–3 h',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~2h', zh: '实验方案 — 约 2h' } },
     materials: [
       { name: '2× Taq Master Mix', note: { en: 'Commercial (e.g., NEB, Takara)', zh: '商品化（如 NEB、Takara）' } },
@@ -316,7 +326,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: '(Recommended) Streak the same tip onto a fresh replica plate. Label to match', zh: '（推荐）用同一枪头在备份平板上划线，标记编号' },
       { en: 'Incubate replica plate at 37°C while PCR runs', zh: 'PCR 运行时将备份板 37°C 培养' },
       { en: 'Include negative control (no colony) and positive control (known template) if available', zh: '设阴性对照（无菌落）和阳性对照（已知模板，如有）' },
-      { en: 'Run PCR: 95°C 10 min (lyses cells) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → hold 4°C', zh: 'PCR 程序: 95°C 10 min (裂解细菌) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → 4°C 保持' },
+      { en: 'Run PCR: 95°C 10 min (lyses cells) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → hold 4°C', zh: 'PCR 程序: 95°C 10 min (裂解细菌) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → 4°C 保持', safeStop: true },
       { en: 'Add 5 µL of 6× loading dye to each 25 µL reaction', zh: '每管加 5 µL 6× loading dye' },
       { en: 'Run on 1% agarose gel alongside DNA ladder. Image: positive clones show band at expected insert size', zh: '1% 琼脂糖凝胶电泳，加 DNA ladder。成像：阳性克隆在预期插入片段大小处有条带' },
       { en: 'Inoculate 2–3 positive clones from replica plate into LB + antibiotic overnight, miniprep, and sequence-verify', zh: '从备份板挑 2–3 个阳性克隆，接种到 LB + 抗生素过夜培养，提质粒，送测序验证' },
@@ -324,6 +334,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   competent_cells_cacl2: {
     usage: { en: 'Prepare chemically competent E. coli cells for heat-shock transformation. Simple and cheap, yields 10⁶–10⁷ CFU/µg. Sufficient for routine cloning.', zh: '制备化学感受态大肠杆菌用于热激转化。简单便宜，效率 10⁶–10⁷ CFU/µg。足够常规克隆使用。' },
+    estimatedTime: '3–4 h (+ overnight)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~4h + O/N culture', zh: '实验方案 — 约 4h + 过夜培养' } },
     materials: [
       { name: 'LB Medium', linkedRecipe: 'lb' },
@@ -350,6 +361,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   trypan_blue_counting: {
     usage: { en: 'Count cells and determine viability before seeding, passaging, or experiments. Dead cells take up trypan blue (blue), live cells exclude it (clear).', zh: '在接种、传代或实验前计数细胞并判断活力。死细胞摄取台盼蓝（蓝色），活细胞排斥（透明）。' },
+    estimatedTime: '10–15 min',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 5 min', zh: '实验方案 — 5 分钟' } },
     materials: [
       { name: 'Cell suspension (trypsinized, single-cell)', note: { en: '', zh: '' } },
@@ -379,6 +391,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   calcium_phosphate_transfection: {
     usage: { en: 'Classic, cost-effective transfection method. Transfect HEK293T, HeLa, and other easily transfectable cell lines. 80–90% efficiency for HEK293T. Widely used for lentivirus packaging.', zh: '经典、低成本的转染方法。适用于 HEK293T、HeLa 等易转染细胞系。HEK293T 效率可达 80–90%。广泛用于慢病毒包装。' },
+    estimatedTime: '1–2 h (+ 24–48 h)',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2–3 day experiment', zh: '实验方案 — 2–3 天实验' } },
     materials: [
       { name: 'Plasmid DNA (high quality, endotoxin-free)', note: { en: 'A260/280 > 1.8', zh: 'A260/280 > 1.8' } },
@@ -407,6 +420,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
   },
   agarose_gel_electrophoresis: {
     usage: { en: 'Separate DNA fragments by size (100 bp – 25 kb). Use 0.8% for large fragments, 2% for small. Standard for PCR product analysis, restriction digests, quality checks, and gel extraction.', zh: '按大小分离 DNA 片段（100 bp – 25 kb）。大片段用 0.8%，小片段用 2%。用于 PCR 产物分析、酶切鉴定、质量检查和胶回收。' },
+    estimatedTime: '1–2 h',
     storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~1.5h', zh: '实验方案 — 约 1.5h' } },
     materials: [
       { name: 'Agarose (molecular biology grade)', note: { en: 'Use low-melt for gel extraction', zh: '胶回收用低熔点琼脂糖' } },
@@ -427,7 +441,7 @@ export const PROTOCOL_ENHANCEMENTS: Record<string, ProtocolEnhancement> = {
       { en: 'Microwave 1–3 min until agarose is completely dissolved. Watch for boiling over. ⚠️ Loosen cap!', zh: '微波 1–3 min 至完全溶解，注意防止沸腾溢出。⚠️ 松开瓶盖！' },
       { en: 'Cool to ~55°C (comfortable to hold). Add DNA stain (0.5 µg/mL EtBr or 1× SYBR Safe). Swirl', zh: '冷至约 55°C（手可握住）。加 DNA 染料（0.5 µg/mL EtBr 或 1× SYBR Safe）。摇匀' },
       { en: 'Seal ends of gel tray with tape or gaskets. Place comb(s)', zh: '用胶带或密封垫密封胶模两端，放置梳子' },
-      { en: 'Pour molten agarose into tray. Pop any bubbles with a pipette tip. Let solidify 20–30 min at RT', zh: '将熔化琼脂糖倒入模具，用枪头戳破气泡。室温凝固 20–30 min' },
+      { en: 'Pour molten agarose into tray. Pop any bubbles with a pipette tip. Let solidify 20–30 min at RT', zh: '将熔化琼脂糖倒入模具，用枪头戳破气泡。室温凝固 20–30 min', safeStop: true },
       { en: 'Remove comb(s) gently. Place gel in electrophoresis chamber', zh: '轻轻拔出梳子，将凝胶放入电泳槽' },
       { en: 'Fill chamber with 1× TAE/TBE until gel is submerged (2–3 mm above gel surface). Use same buffer as gel', zh: '加 1× TAE/TBE 没过凝胶 2–3 mm。必须与制胶用同一缓冲液' },
       { en: 'Mix DNA samples with 6× loading dye (1:5 ratio). Load into wells using a micropipette', zh: '将 DNA 样品与 6× loading dye 1:5 混合。用微量移液器加样' },
