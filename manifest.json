@@ -1,0 +1,12 @@
+{
+  "name": "BioinfoSpace LabMate",
+  "short_name": "LabMate",
+  "description": "Molecular Biology Toolkit",
+  "start_url": "/labmate/",
+  "display": "standalone",
+  "background_color": "#fcfcfa",
+  "theme_color": "#267a6b",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

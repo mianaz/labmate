@@ -8,6 +8,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
 <link rel="icon" href="/favicon.ico" sizes="48x48"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#267a6b">
 <script src="vendor/tailwind.js" integrity="sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K" crossorigin="anonymous"></script>
 <script src="vendor/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
 <script src="vendor/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
@@ -434,6 +436,12 @@ main > div { animation: cardStaggerIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
 @media (max-width: 640px) {
   nav button { padding: 0.75rem 0.85rem !important; font-size: 0.82rem !important; }
 }
+
+/* ── Inventory medium breakpoint ──────────────────────── */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .inv-grid-3col { grid-template-columns: 200px 1fr !important; }
+  .inv-col-3 { display: none !important; }
+}
 </style>
 
 <script>
@@ -604,6 +612,8 @@ const I = {
   darkMode: { en: '🌙', zh: '🌙' },
   lightMode: { en: '☀️', zh: '☀️' },
   langToggle: { en: '中文', zh: 'EN' },
+  refreshRecipes: { en: 'Refresh Recipes', zh: '刷新配方' },
+  recipesUpdated: { en: 'Recipes updated', zh: '配方已更新' },
   // Dilution calc
   dilutionFormula: { en: 'C₁V₁ = C₂V₂ Dilution Formula', zh: 'C₁V₁ = C₂V₂ 稀释公式' },
   // Mass calc
@@ -779,6 +789,21 @@ const I = {
     en: 'Organize lab samples with a hierarchical storage system. Create locations (freezers, fridges, shelves), add boxes (cryo 9×9, 10×10, tip 8×12, etc.), and track samples in a visual grid. Each sample records type, quantity, concentration, passage, dates, owner, and tags. Color-coded by sample type. Export per-box or full inventory as CSV, backup as JSON. All data stored locally in your browser.',
     zh: '使用层级存储系统管理实验室样品。创建存储位置（冰箱、冰柜、架子），添加盒子（冻存盒 9×9、10×10、枪头盒 8×12 等），在可视化网格中追踪样品。每个样品记录类型、数量、浓度、代数、日期、负责人和标签。按样品类型颜色编码。可导出单盒或全部库存为 CSV，备份为 JSON。所有数据存储在浏览器本地。'
   },
+  guideCustomTitle: { en: 'Custom Recipes & Protocols', zh: '自定义配方和实验方案' },
+  guideCustomBody: {
+    en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons in the Buffers and Protocols tabs. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports and cloud backups.',
+    zh: '使用缓冲液和实验方案标签页中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出和云备份中。'
+  },
+  guideCloudTitle: { en: 'Cloud Backup (GitHub Gist)', zh: '云备份 (GitHub Gist)' },
+  guideCloudBody: {
+    en: 'Back up all your data to an encrypted GitHub Gist. In the Tools tab, enter a GitHub Personal Access Token and an encryption passphrase. Your data is encrypted with AES-256 before upload — GitHub cannot read it. The passphrase is never stored. You can restore from any browser by entering the same token and passphrase.',
+    zh: '将所有数据备份到加密的 GitHub Gist。在工具标签页输入 GitHub 个人访问令牌和加密口令。数据在上传前使用 AES-256 加密——GitHub 无法读取。口令不会被存储。在任何浏览器中输入相同的令牌和口令即可恢复数据。'
+  },
+  guideDataSafetyTitle: { en: '⚠️ Data Safety', zh: '⚠️ 数据安全' },
+  guideDataSafetyBody: {
+    en: 'All your data (favorites, inventory, custom recipes, step progress) is stored in your browser\'s localStorage. Clearing browser data, switching browsers, or using private/incognito mode will erase everything. Export your data regularly from the Tools tab, or set up Cloud Backup for automatic protection.',
+    zh: '所有数据（收藏、库存、自定义配方、步骤进度）均存储在浏览器的 localStorage 中。清除浏览器数据、更换浏览器或使用隐私/无痕模式将删除所有数据。请定期从工具标签页导出数据，或设置云备份以自动保护数据。'
+  },
   guideRefsCollapse: { en: 'Literature References', zh: '参考文献' },
   guideRefsCollapseDesc: { en: 'Classic papers and manuals cited in this tool', zh: '本工具所引用的经典论文与手册' },
   guideUsageNotesTitle: { en: 'Usage Notes', zh: '使用说明' },
@@ -869,6 +894,42 @@ const I = {
   invStorageTree: { en: 'Storage', zh: '存储位置' },
   invImportCsv: { en: 'Import CSV', zh: '导入 CSV' },
   invImportJson: { en: 'Import Backup (JSON)', zh: '导入备份 (JSON)' },
+  // Inventory toolbar & bulk ops
+  invSelect: { en: 'Select', zh: '选择' },
+  invCancelSelect: { en: 'x Cancel', zh: 'x 取消' },
+  invSelCount: { en: ' sel', zh: ' 已选' },
+  invEmptyCount: { en: ' empty)', zh: '空)' },
+  invBulkEdit: { en: 'Edit', zh: '编辑' },
+  invBulkDel: { en: 'Del', zh: '删' },
+  invBulkDelConfirm: { en: 'Confirm?', zh: '确认删除?' },
+  invAllSamples: { en: 'All Samples', zh: '全部样品' },
+  invSamples: { en: 'Samples', zh: '样品' },
+  invSamplesCount: { en: ' samples)', zh: ' 个样品)' },
+  invPositionsCount: { en: ' positions)', zh: ' 个位置)' },
+  invResults: { en: ' results', zh: ' 条' },
+  invClearFilters: { en: 'Clear filters', zh: '清除筛选' },
+  invSearchName: { en: 'Search name...', zh: '搜索名称...' },
+  invColName: { en: 'Name', zh: '名称' },
+  invColType: { en: 'Type', zh: '类型' },
+  invColLocation: { en: 'Location', zh: '位置' },
+  invColBox: { en: 'Box', zh: '盒子' },
+  invColPos: { en: 'Pos', zh: '位' },
+  invColQty: { en: 'Qty', zh: '数量' },
+  invColOwner: { en: 'Owner', zh: '负责人' },
+  invColDate: { en: 'Date', zh: '日期' },
+  invBulkEditTitle: { en: 'Bulk Edit', zh: '批量编辑' },
+  invBulkEditHint: { en: 'Only fill in fields you want to change. Leave blank to keep current.', zh: '只填写需要修改的字段，留空则不更改' },
+  invBulkNoChange: { en: '-- No change --', zh: '-- 不更改 --' },
+  invApply: { en: 'Apply', zh: '应用' },
+  invBulkAddTitle: { en: 'Bulk Add Samples', zh: '批量添加样品' },
+  invBulkAddHint: { en: 'This will add the same sample to all selected empty positions', zh: '将在所有选中的空位置添加相同的样品' },
+  invSampleNameReq: { en: 'Sample Name *', zh: '样品名称 *' },
+  invChineseName: { en: 'Chinese Name', zh: '中文名称' },
+  invTagsShort: { en: 'Tags', zh: '标签' },
+  invBulkAddBtn: { en: 'Add', zh: '添加' },
+  invNoSamples: { en: 'No samples yet', zh: '暂无样品' },
+  invSelectABox: { en: 'Select a box', zh: '选择一个盒子' },
+  invDuplicate: { en: 'Duplicate', zh: '复制' },
   // Custom Recipes
   customBadge: { en: 'Custom', zh: '自定义' },
   systemBadge: { en: 'System', zh: '系统' },
@@ -1891,6 +1952,7 @@ const ROW_LABELS = 'ABCDEFGHIJKLMNOP'.split('');
 // DATA: Buffer Enhancements (usage, steps, storage, related protocols)
 // ═══════════════════════════════════════════════
 
+// TODO: Merge into recipes.json — this data (~1600 lines) should be part of the recipe objects
 const BUFFER_ENHANCEMENTS = {
   pbs_10x: {
     usage: { en: 'Universal physiological buffer for cell washing, immunostaining, dilutions. Isotonic at 1× (~150 mM NaCl, ~10 mM phosphate).', zh: '通用生理缓冲液，用于细胞洗涤、免疫染色、试剂稀释。1× 时等渗 (~150 mM NaCl, ~10 mM 磷酸盐)。' },
@@ -3464,7 +3526,7 @@ const REFERENCES = [
 // ═══════════════════════════════════════════════
 
 // --- Header ---
-function Header({ activeTab, setActiveTab, onOpenSearch, lang, setLang, theme, setTheme }) {
+function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, lang, setLang, theme, setTheme }) {
   const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','refs'];
   const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', refs:'tabRefs' };
@@ -3483,6 +3545,11 @@ function Header({ activeTab, setActiveTab, onOpenSearch, lang, setLang, theme, s
             <span className="text-xs hidden sm:inline" style={S_MUTED}>{t('appSubtitle', lang)}</span>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={onRefreshRecipes} title={t('refreshRecipes', lang)}
+              className="px-2 py-1.5 rounded-lg text-sm transition-all border"
+              style={{ borderColor:'var(--border)', background:'var(--card)', color:'var(--text-muted)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
             <button onClick={onOpenSearch}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all border"
               style={{ borderColor:'var(--border)', color:'var(--text-muted)', background:'var(--card)', minWidth: '2.5rem', justifyContent: 'center' }}>
@@ -3505,26 +3572,30 @@ function Header({ activeTab, setActiveTab, onOpenSearch, lang, setLang, theme, s
           </div>
         </div>
         {/* Tab bar */}
-        <div className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections">
-          {tabKeys.map(id => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              role="tab"
-              aria-selected={activeTab === id}
-              aria-controls={`tabpanel-${id}`}
-              id={`tab-${id}`}
-              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${
-                activeTab === id
-                  ? 'font-semibold'
-                  : 'border-transparent'
-              }`}
-              style={{
-                color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
-                borderBottomColor: activeTab === id ? 'var(--primary)' : 'transparent',
-              }}>
-              <span className="mr-1.5"></span>
-              {t(tabLabels[id], lang)}
-            </button>
-          ))}
+        <div style={{ position: 'relative' }}>
+          <div className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
+            onScroll={e => { const h = e.currentTarget.parentElement.querySelector('.tab-scroll-hint'); if (h) h.style.opacity = '0'; }}>
+            {tabKeys.map(id => (
+              <button key={id} onClick={() => setActiveTab(id)}
+                role="tab"
+                aria-selected={activeTab === id}
+                aria-controls={`tabpanel-${id}`}
+                id={`tab-${id}`}
+                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${
+                  activeTab === id
+                    ? 'font-semibold'
+                    : 'border-transparent'
+                }`}
+                style={{
+                  color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
+                  borderBottomColor: activeTab === id ? 'var(--primary)' : 'transparent',
+                }}>
+                <span className="mr-1.5"></span>
+                {t(tabLabels[id], lang)}
+              </button>
+            ))}
+          </div>
+          <div className="tab-scroll-hint md:hidden" style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700, opacity: 0.6, transition: 'opacity 0.3s', background: 'linear-gradient(to right, transparent, var(--nav-bg) 60%)' }}>›</div>
         </div>
       </div>
     </nav>
@@ -6470,6 +6541,9 @@ function RefsTab({ onReplayTour }) {
     { num: '4', titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
     { num: '5', titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
     { num: '6', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
+    { num: '7', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
+    { num: '8', titleKey: 'guideCloudTitle', bodyKey: 'guideCloudBody' },
+    { num: '⚠️', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
   ];
 
   return (
@@ -6917,12 +6991,13 @@ function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedCells, o
                 border: isSelected ? '2px solid var(--primary)' : isExpired ? '2px solid hsl(0,70%,55%)' : sample ? '2px solid ' + colors.text + '33' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: isSelected ? '#fff' : sample ? colors.text : 'var(--text-muted)',
-                fontWeight: sample ? 600 : 400, fontSize: cellSize > 30 ? '9px' : '7px',
+                fontWeight: sample ? 600 : 400, fontSize: cellSize > 30 ? '9px' : '8px',
+                textShadow: sample ? '0 0 2px rgba(255,255,255,0.4)' : 'none',
                 transition: 'transform 0.1s, background 0.1s',
                 position: 'relative',
               },
               onMouseLeave: e => { if (!selectMode) e.currentTarget.style.transform = 'scale(1)'; },
-            }, isSelected ? '✓' : sample ? sample.name.slice(0, 3) : '');
+            }, isSelected ? '✓' : sample ? sample.name.slice(0, cellSize >= 36 ? 5 : 3) : '');
           })
         ]).flat()
       )
@@ -7084,9 +7159,12 @@ function parseCsvImport(text) {
   });
 }
 
+// NOTE: Inventory tab uses React.createElement() instead of JSX for historical reasons.
+// A JSX rewrite would reduce code by ~40% but is deferred to avoid a large diff.
 function InventoryTab() {
   const lang = useLang();
   const toast = useToast();
+  // TODO (future): Inventory statistics dashboard, undo stack for CRUD, drag-to-transfer samples between boxes
   const [data, setData] = useState(getInvData);
   const [selectedBoxId, setSelectedBoxId] = useState(null);
   const [search, setSearch] = useState('');
@@ -7123,6 +7201,10 @@ function InventoryTab() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [showExportMenu, showImportMenu]);
+  // TODO: Future features:
+  // - Inventory statistics dashboard (samples by type, storage utilization, expiry timeline)
+  // - Undo stack for CRUD operations (keep last 10 states)
+  // - Drag-to-transfer samples between boxes/positions
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -7477,7 +7559,7 @@ function InventoryTab() {
     invViewMode === 'list' && React.createElement('button', {
       onClick: () => setInvViewMode('grid'),
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }
-    }, '\u2190 ' + (lang === 'en' ? 'Back' : '\u8fd4\u56de')),
+    }, '\u2190 ' + t('backNav', lang)),
     invViewMode === 'grid' && React.createElement('input', {
       type: 'text', value: search,
       onChange: e => setSearch(e.target.value),
@@ -7502,17 +7584,17 @@ function InventoryTab() {
         React.createElement('button', { onClick: () => jsonInputRef.current && jsonInputRef.current.click(), className: 'block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80', style: { color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' } }, t('invImportJson', lang))
       )
     ),
-    invViewMode === 'grid' && selectedBoxId && React.createElement('button', { onClick: toggleSelectMode, style: { ...(selectMode ? invBtnStyle : invBtnSecStyle), padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' } }, selectMode ? (lang === 'zh' ? 'x \u53d6\u6d88' : 'x Cancel') : (lang === 'zh' ? '\u9009\u62e9' : 'Select')),
+    invViewMode === 'grid' && selectedBoxId && React.createElement('button', { onClick: toggleSelectMode, style: { ...(selectMode ? invBtnStyle : invBtnSecStyle), padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' } }, selectMode ? t('invCancelSelect', lang) : t('invSelect', lang)),
     invViewMode === 'grid' && selectMode && selectedCells.size > 0 && React.createElement(React.Fragment, null,
-      React.createElement('span', { className: 'text-xs font-semibold', style: { color: 'var(--primary)' } }, selectedCells.size + (lang === 'zh' ? ' \u5df2\u9009' : ' sel') + (selectedEmptyCount > 0 ? ' (' + selectedEmptyCount + (lang === 'zh' ? '\u7a7a)' : ' empty)') : '')),
+      React.createElement('span', { className: 'text-xs font-semibold', style: { color: 'var(--primary)' } }, selectedCells.size + t('invSelCount', lang) + (selectedEmptyCount > 0 ? ' (' + selectedEmptyCount + t('invEmptyCount', lang) : '')),
       selectedEmptyCount > 0 && React.createElement('button', { onClick: () => setShowBulkAdd(true), style: { ...invBtnStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' } }, '+ Add'),
-      selectedOccupiedCount > 0 && React.createElement('button', { onClick: () => { setShowBulkEdit(true); setBulkForm({ owner: '', sampleType: '', expiryDate: '', tags: '' }); }, style: { ...invBtnSecStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' } }, lang === 'zh' ? '\u7f16\u8f91' : 'Edit'),
-      selectedOccupiedCount > 0 && React.createElement('button', { onClick: handleBulkDelete, style: { ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: confirmBulkDelete ? '#991b1b' : '#dc2626' } }, confirmBulkDelete ? (lang === 'zh' ? '\u786e\u8ba4\u5220\u9664?' : 'Confirm?') : (lang === 'zh' ? '\u5220' : 'Del'))
+      selectedOccupiedCount > 0 && React.createElement('button', { onClick: () => { setShowBulkEdit(true); setBulkForm({ owner: '', sampleType: '', expiryDate: '', tags: '' }); }, style: { ...invBtnSecStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' } }, t('invBulkEdit', lang)),
+      selectedOccupiedCount > 0 && React.createElement('button', { onClick: handleBulkDelete, style: { ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: confirmBulkDelete ? '#991b1b' : '#dc2626' } }, confirmBulkDelete ? t('invBulkDelConfirm', lang) : t('invBulkDel', lang))
     ),
     invViewMode === 'grid' && React.createElement('button', {
       onClick: () => setInvViewMode('list'),
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', whiteSpace: 'nowrap' }
-    }, '\u2630 ' + (lang === 'en' ? 'All Samples' : '\u5168\u90e8\u6837\u54c1'))
+    }, '\u2630 ' + t('invAllSamples', lang))
   );
 
   // ── All Samples memoized data ──────────────────────────
@@ -7563,31 +7645,31 @@ function InventoryTab() {
 
     return React.createElement('div', { className: 'card p-4', style: { overflowX: 'auto' } },
       React.createElement('div', { className: 'flex items-center gap-3 mb-4 flex-wrap' },
-        React.createElement('h3', { className: 'text-base font-semibold', style: { color: 'var(--text)', fontFamily: 'var(--font-heading)' } }, lang === 'en' ? 'All Samples' : '\u5168\u90e8\u6837\u54c1'),
+        React.createElement('h3', { className: 'text-base font-semibold', style: { color: 'var(--text)', fontFamily: 'var(--font-heading)' } }, t('invAllSamples', lang)),
         React.createElement('span', { className: 'text-xs', style: { color: 'var(--text-muted)' } },
-          filtered.length + (lang === 'en' ? ' results' : ' \u6761') + (filtered.length < allSamples.length ? ' / ' + allSamples.length + ' total' : '')),
+          filtered.length + t('invResults', lang) + (filtered.length < allSamples.length ? ' / ' + allSamples.length + ' total' : '')),
         hasFilters && React.createElement('button', {
           onClick: () => setListFilters({ name: '', type: '', location: '', box: '', owner: '', sort: 'name', dir: 'asc' }),
           style: { fontSize: 11, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }
-        }, lang === 'en' ? 'Clear filters' : '\u6e05\u9664\u7b5b\u9009'),
+        }, t('invClearFilters', lang)),
         React.createElement('input', {
           type: 'text', value: listFilters.name,
           onChange: e => setListFilters(f => ({ ...f, name: e.target.value })),
-          placeholder: (lang === 'en' ? 'Search name...' : '\u641c\u7d22\u540d\u79f0...'),
+          placeholder: t('invSearchName', lang),
           style: { padding: '4px 10px', fontSize: 12, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text)', outline: 'none', marginLeft: 'auto', width: 180 }
         })
       ),
       React.createElement('table', { className: 'w-full text-sm', style: { borderCollapse: 'collapse', minWidth: isMobile ? 400 : 700 } },
         React.createElement('thead', null,
           React.createElement('tr', { style: { borderBottom: '1px solid var(--border)' } },
-            React.createElement('th', { style: thStyle, onClick: () => sortBy('name') }, lang === 'en' ? 'Name' : '\u540d\u79f0', SortArr('name')),
-            React.createElement('th', { style: thStyle, onClick: () => sortBy('sampleType') }, lang === 'en' ? 'Type' : '\u7c7b\u578b', SortArr('sampleType')),
-            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('locName') }, lang === 'en' ? 'Location' : '\u4f4d\u7f6e', SortArr('locName')),
-            React.createElement('th', { style: thStyle, onClick: () => sortBy('boxName') }, lang === 'en' ? 'Box' : '\u76d2\u5b50', SortArr('boxName')),
-            React.createElement('th', { style: thStyle }, lang === 'en' ? 'Pos' : '\u4f4d'),
-            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('quantity') }, lang === 'en' ? 'Qty' : '\u6570\u91cf', SortArr('quantity')),
-            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('owner') }, lang === 'en' ? 'Owner' : '\u8d1f\u8d23\u4eba', SortArr('owner')),
-            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('date') }, lang === 'en' ? 'Date' : '\u65e5\u671f', SortArr('date'))
+            React.createElement('th', { style: thStyle, onClick: () => sortBy('name') }, t('invColName', lang), SortArr('name')),
+            React.createElement('th', { style: thStyle, onClick: () => sortBy('sampleType') }, t('invColType', lang), SortArr('sampleType')),
+            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('locName') }, t('invColLocation', lang), SortArr('locName')),
+            React.createElement('th', { style: thStyle, onClick: () => sortBy('boxName') }, t('invColBox', lang), SortArr('boxName')),
+            React.createElement('th', { style: thStyle }, t('invColPos', lang)),
+            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('quantity') }, t('invColQty', lang), SortArr('quantity')),
+            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('owner') }, t('invColOwner', lang), SortArr('owner')),
+            !isMobile && React.createElement('th', { style: thStyle, onClick: () => sortBy('date') }, t('invColDate', lang), SortArr('date'))
           ),
           React.createElement('tr', { style: { borderBottom: '2px solid var(--border)', background: 'var(--bg-2)' } },
             React.createElement('td', { style: { padding: '4px 8px' } }),
@@ -7647,32 +7729,32 @@ function InventoryTab() {
     React.createElement(LocationForm, { open: showLocForm, onClose: () => { setShowLocForm(false); setEditLoc(null); }, onSave: handleSaveLocation, initial: editLoc, lang }),
     React.createElement(BoxForm, { open: showBoxForm, onClose: () => { setShowBoxForm(false); setEditBox(null); setAddBoxLocId(null); }, onSave: handleSaveBox, initial: editBox, lang }),
     React.createElement(SampleForm, { open: showSampleForm, onClose: () => { setShowSampleForm(false); setEditSample(null); setSamplePos(null); if (isMobile && mobileView !== 'grid') setMobileView('grid'); }, onSave: handleSaveSample, onDelete: handleDeleteSample, onDuplicate: handleDuplicate, initial: editSample, position: samplePos, lang }),
-    React.createElement(InvModal, { open: showBulkEdit, onClose: () => setShowBulkEdit(false), title: lang === 'zh' ? '\u6279\u91cf\u7f16\u8f91 (' + selectedOccupiedCount + ' \u4e2a\u6837\u54c1)' : 'Bulk Edit (' + selectedOccupiedCount + ' samples)' },
-      React.createElement('p', { className: 'text-xs mb-3', style: { color: 'var(--text-muted)' } }, lang === 'zh' ? '\u53ea\u586b\u5199\u9700\u8981\u4fee\u6539\u7684\u5b57\u6bb5\uff0c\u7559\u7a7a\u5219\u4e0d\u66f4\u6539' : 'Only fill in fields you want to change. Leave blank to keep current.'),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u8d1f\u8d23\u4eba' : 'Owner', value: bulkForm.owner, onChange: v => setBulkForm(f => ({ ...f, owner: v })) }),
-      React.createElement(InvSelect, { label: lang === 'zh' ? '\u6837\u54c1\u7c7b\u578b' : 'Sample Type', value: bulkForm.sampleType, onChange: v => setBulkForm(f => ({ ...f, sampleType: v })), options: [{ value: '', label: lang === 'zh' ? '-- \u4e0d\u66f4\u6539 --' : '-- No change --' }, ...Object.entries(SAMPLE_TYPE_LABELS).map(([val, lbl]) => ({ value: val, label: t(lbl, lang) }))] }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u5230\u671f\u65e5' : 'Expiry Date', value: bulkForm.expiryDate, onChange: v => setBulkForm(f => ({ ...f, expiryDate: v })), type: 'date' }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u6807\u7b7e' : 'Tags', value: bulkForm.tags, onChange: v => setBulkForm(f => ({ ...f, tags: v })) }),
+    React.createElement(InvModal, { open: showBulkEdit, onClose: () => setShowBulkEdit(false), title: t('invBulkEditTitle', lang) + ' (' + selectedOccupiedCount + t('invSamplesCount', lang) },
+      React.createElement('p', { className: 'text-xs mb-3', style: { color: 'var(--text-muted)' } }, t('invBulkEditHint', lang)),
+      React.createElement(InvInput, { label: t('invOwner', lang), value: bulkForm.owner, onChange: v => setBulkForm(f => ({ ...f, owner: v })) }),
+      React.createElement(InvSelect, { label: t('invSampleType', lang), value: bulkForm.sampleType, onChange: v => setBulkForm(f => ({ ...f, sampleType: v })), options: [{ value: '', label: t('invBulkNoChange', lang) }, ...Object.entries(SAMPLE_TYPE_LABELS).map(([val, lbl]) => ({ value: val, label: t(lbl, lang) }))] }),
+      React.createElement(InvInput, { label: t('invExpiryDate', lang), value: bulkForm.expiryDate, onChange: v => setBulkForm(f => ({ ...f, expiryDate: v })), type: 'date' }),
+      React.createElement(InvInput, { label: t('invTagsShort', lang), value: bulkForm.tags, onChange: v => setBulkForm(f => ({ ...f, tags: v })) }),
       React.createElement('div', { className: 'flex gap-2 mt-4 justify-end' },
-        React.createElement('button', { style: invBtnSecStyle, onClick: () => setShowBulkEdit(false) }, lang === 'zh' ? '\u53d6\u6d88' : 'Cancel'),
-        React.createElement('button', { style: invBtnStyle, onClick: handleBulkEditApply }, lang === 'zh' ? '\u5e94\u7528' : 'Apply')
+        React.createElement('button', { style: invBtnSecStyle, onClick: () => setShowBulkEdit(false) }, t('invCancel', lang)),
+        React.createElement('button', { style: invBtnStyle, onClick: handleBulkEditApply }, t('invApply', lang))
       )
     ),
-    React.createElement(InvModal, { open: showBulkAdd, onClose: () => setShowBulkAdd(false), title: lang === 'zh' ? '\u6279\u91cf\u6dfb\u52a0\u6837\u54c1 (' + selectedEmptyCount + ' \u4e2a\u4f4d\u7f6e)' : 'Bulk Add Samples (' + selectedEmptyCount + ' positions)' },
-      React.createElement('p', { className: 'text-xs mb-3', style: { color: 'var(--text-muted)' } }, lang === 'zh' ? '\u5c06\u5728\u6240\u6709\u9009\u4e2d\u7684\u7a7a\u4f4d\u7f6e\u6dfb\u52a0\u76f8\u540c\u7684\u6837\u54c1' : 'This will add the same sample to all selected empty positions'),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u6837\u54c1\u540d\u79f0 *' : 'Sample Name *', value: bulkAddForm.name, onChange: v => setBulkAddForm(f => ({ ...f, name: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u4e2d\u6587\u540d\u79f0' : 'Chinese Name', value: bulkAddForm.nameZh, onChange: v => setBulkAddForm(f => ({ ...f, nameZh: v })) }),
-      React.createElement(InvSelect, { label: lang === 'zh' ? '\u6837\u54c1\u7c7b\u578b' : 'Sample Type', value: bulkAddForm.sampleType, onChange: v => setBulkAddForm(f => ({ ...f, sampleType: v })), options: Object.entries(SAMPLE_TYPE_LABELS).map(([val, lbl]) => ({ value: val, label: t(lbl, lang) })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u6570\u91cf' : 'Quantity', value: bulkAddForm.quantity, onChange: v => setBulkAddForm(f => ({ ...f, quantity: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u6d53\u5ea6' : 'Concentration', value: bulkAddForm.concentration, onChange: v => setBulkAddForm(f => ({ ...f, concentration: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u8d1f\u8d23\u4eba' : 'Owner', value: bulkAddForm.owner, onChange: v => setBulkAddForm(f => ({ ...f, owner: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u5230\u671f\u65e5' : 'Expiry Date', value: bulkAddForm.expiryDate, onChange: v => setBulkAddForm(f => ({ ...f, expiryDate: v })), type: 'date' }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u6807\u7b7e' : 'Tags', value: bulkAddForm.tags, onChange: v => setBulkAddForm(f => ({ ...f, tags: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u63cf\u8ff0' : 'Description', value: bulkAddForm.description, onChange: v => setBulkAddForm(f => ({ ...f, description: v })) }),
-      React.createElement(InvInput, { label: lang === 'zh' ? '\u5907\u6ce8' : 'Notes', value: bulkAddForm.notes, onChange: v => setBulkAddForm(f => ({ ...f, notes: v })) }),
+    React.createElement(InvModal, { open: showBulkAdd, onClose: () => setShowBulkAdd(false), title: t('invBulkAddTitle', lang) + ' (' + selectedEmptyCount + t('invPositionsCount', lang) },
+      React.createElement('p', { className: 'text-xs mb-3', style: { color: 'var(--text-muted)' } }, t('invBulkAddHint', lang)),
+      React.createElement(InvInput, { label: t('invSampleNameReq', lang), value: bulkAddForm.name, onChange: v => setBulkAddForm(f => ({ ...f, name: v })) }),
+      React.createElement(InvInput, { label: t('invChineseName', lang), value: bulkAddForm.nameZh, onChange: v => setBulkAddForm(f => ({ ...f, nameZh: v })) }),
+      React.createElement(InvSelect, { label: t('invSampleType', lang), value: bulkAddForm.sampleType, onChange: v => setBulkAddForm(f => ({ ...f, sampleType: v })), options: Object.entries(SAMPLE_TYPE_LABELS).map(([val, lbl]) => ({ value: val, label: t(lbl, lang) })) }),
+      React.createElement(InvInput, { label: t('invQuantity', lang), value: bulkAddForm.quantity, onChange: v => setBulkAddForm(f => ({ ...f, quantity: v })) }),
+      React.createElement(InvInput, { label: t('invConcentration', lang), value: bulkAddForm.concentration, onChange: v => setBulkAddForm(f => ({ ...f, concentration: v })) }),
+      React.createElement(InvInput, { label: t('invOwner', lang), value: bulkAddForm.owner, onChange: v => setBulkAddForm(f => ({ ...f, owner: v })) }),
+      React.createElement(InvInput, { label: t('invExpiryDate', lang), value: bulkAddForm.expiryDate, onChange: v => setBulkAddForm(f => ({ ...f, expiryDate: v })), type: 'date' }),
+      React.createElement(InvInput, { label: t('invTagsShort', lang), value: bulkAddForm.tags, onChange: v => setBulkAddForm(f => ({ ...f, tags: v })) }),
+      React.createElement(InvInput, { label: t('invDescription', lang), value: bulkAddForm.description, onChange: v => setBulkAddForm(f => ({ ...f, description: v })) }),
+      React.createElement(InvInput, { label: t('invNotes', lang), value: bulkAddForm.notes, onChange: v => setBulkAddForm(f => ({ ...f, notes: v })) }),
       React.createElement('div', { className: 'flex gap-2 mt-4 justify-end' },
-        React.createElement('button', { style: invBtnSecStyle, onClick: () => setShowBulkAdd(false) }, lang === 'zh' ? '\u53d6\u6d88' : 'Cancel'),
-        React.createElement('button', { style: invBtnStyle, onClick: handleBulkAdd }, lang === 'zh' ? '\u6dfb\u52a0 ' + selectedEmptyCount + ' \u4e2a' : 'Add ' + selectedEmptyCount)
+        React.createElement('button', { style: invBtnSecStyle, onClick: () => setShowBulkAdd(false) }, t('invCancel', lang)),
+        React.createElement('button', { style: invBtnStyle, onClick: handleBulkAdd }, t('invBulkAddBtn', lang) + ' ' + selectedEmptyCount)
       )
     )
   );
@@ -7680,14 +7762,14 @@ function InventoryTab() {
   // ── Sample list panel (col-3 + mobile) ────────────────────────────────────
   const sampleListPanel = () => {
     if (!selectedBox) return React.createElement('div', { className: 'flex items-center justify-center', style: { minHeight: 200 } },
-      React.createElement('p', { className: 'text-sm text-center', style: { color: 'var(--text-muted)' } }, lang === 'en' ? 'Select a box' : '\u9009\u62e9\u4e00\u4e2a\u76d2\u5b50'));
+      React.createElement('p', { className: 'text-sm text-center', style: { color: 'var(--text-muted)' } }, t('invSelectABox', lang)));
     return React.createElement('div', null,
       React.createElement('div', { className: 'flex items-center justify-between mb-2 pb-2', style: { borderBottom: '1px solid var(--border)' } },
         React.createElement('span', { className: 'text-xs font-semibold', style: { color: 'var(--text)' } }, lang === 'zh' ? (selectedBox.nameZh || selectedBox.name) : selectedBox.name),
         React.createElement('span', { className: 'text-xs font-mono', style: { color: 'var(--text-muted)' } }, boxSamples.length + '/' + (selectedBox.rows * selectedBox.cols))
       ),
       boxSamples.length === 0
-        ? React.createElement('p', { className: 'text-xs text-center py-6', style: { color: 'var(--text-muted)' } }, lang === 'en' ? 'No samples yet' : '\u6682\u65e0\u6837\u54c1')
+        ? React.createElement('p', { className: 'text-xs text-center py-6', style: { color: 'var(--text-muted)' } }, t('invNoSamples', lang))
         : boxSamples.slice().sort((a, b) => (a.position || '').localeCompare(b.position || '')).map(s => {
             const colors = SAMPLE_TYPE_COLORS[s.sampleType] || SAMPLE_TYPE_COLORS.other;
             return React.createElement('div', { key: s.id,
@@ -7755,7 +7837,7 @@ function InventoryTab() {
           React.createElement(BoxGrid, { box: selectedBox, samples: boxSamples, onCellClick: handleCellClick, lang, selectMode, selectedCells, onToggleSelect: toggleSelectCell, onDragSelect: dragSelectCells })
         ),
         boxSamples.length > 0 && React.createElement('div', { className: 'card p-3' },
-          React.createElement('div', { className: 'text-xs font-semibold mb-2', style: { color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' } }, lang === 'en' ? 'Samples' : '\u6837\u54c1'),
+          React.createElement('div', { className: 'text-xs font-semibold mb-2', style: { color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' } }, t('invSamples', lang)),
           sampleListPanel()
         )
       ),
@@ -7785,7 +7867,7 @@ function InventoryTab() {
             );
           })
     ),
-    invViewMode === 'grid' && !searchResults && React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: 12, alignItems: 'start' } },
+    invViewMode === 'grid' && !searchResults && React.createElement('div', { className: 'inv-grid-3col', style: { display: 'grid', gridTemplateColumns: '240px 1fr 280px', gap: 12, alignItems: 'start' } },
       React.createElement('div', { className: 'card card-scroll p-3', style: { maxHeight: 'calc(100vh - 200px)' } },
         React.createElement(StorageTree, {
           data, selectedBoxId,
@@ -7809,7 +7891,7 @@ function InventoryTab() {
             )
           : React.createElement(BoxGrid, { box: selectedBox, samples: boxSamples, onCellClick: handleCellClick, lang, selectMode, selectedCells, onToggleSelect: toggleSelectCell, onDragSelect: dragSelectCells })
       ),
-      React.createElement('div', { className: 'card card-scroll p-3', style: { maxHeight: 'calc(100vh - 200px)' } },
+      React.createElement('div', { className: 'card card-scroll p-3 inv-col-3', style: { maxHeight: 'calc(100vh - 200px)' } },
         sampleListPanel()
       )
     ),
@@ -7829,6 +7911,34 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
   const [calcInitialMode, setCalcInitialMode] = useState(null);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
+  const [recipeVersion, setRecipeVersion] = useState(0);
+  const toast = useToast();
+
+  const refreshRecipes = useCallback(() => {
+    fetch('recipes.json?t=' + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        const oldLen = RECIPES.length;
+        RECIPES.length = 0;
+        data.forEach(r => RECIPES.push(r));
+        // Rebuild derived structures
+        Object.keys(RECIPE_BY_ID).forEach(k => delete RECIPE_BY_ID[k]);
+        RECIPES.forEach(r => { RECIPE_BY_ID[r.id] = r; if (SAFE_STOPS[r.id]) r.safeStops = SAFE_STOPS[r.id]; });
+        BUFFER_RECIPES.length = 0;
+        PROTOCOL_RECIPES.length = 0;
+        RECIPES.filter(r => BUFFER_CATEGORIES.includes(r.category)).forEach(r => BUFFER_RECIPES.push(r));
+        RECIPES.filter(r => r.category === 'protocol').forEach(r => PROTOCOL_RECIPES.push(r));
+        PROTOCOL_RECIPES.forEach(r => {
+          for (const [subcat, ids] of Object.entries(PROTOCOL_SUBCATEGORIES)) {
+            if (ids.includes(r.id)) { PROTOCOL_SUBCAT_BY_ID[r.id] = subcat; break; }
+          }
+        });
+        const newCount = Math.max(0, RECIPES.length - oldLen);
+        setRecipeVersion(v => v + 1);
+        toast.show(t('recipesUpdated', lang) + ` (${RECIPES.length} total${newCount > 0 ? ', ' + newCount + ' new' : ''})`, 'success');
+      })
+      .catch(() => { toast.show('Failed to refresh recipes', 'error'); });
+  }, [lang, toast]);
 
   // Auto-backup reminder: show if no export in last 7 days
   useEffect(() => {
@@ -7915,7 +8025,7 @@ function App() {
     <LangContext.Provider value={lang}>
     <div className="min-h-screen" style={{background:'var(--bg)', color:'var(--text)'}}>
       <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
-        lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
+        onRefreshRecipes={refreshRecipes} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
       <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
         onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
       <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
@@ -7972,6 +8082,8 @@ function App() {
     </ToastProvider>
   );
 }
+
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
