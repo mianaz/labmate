@@ -6567,29 +6567,10 @@ function parseTags(str, sep = ',') {
 }
 
 function loadInventory() {
-  try {
-    const raw = localStorage.getItem(INV_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid inventory data');
-    return parsed;
-  } catch (e) {
-    console.error('loadInventory: corrupted data:', e);
-    alert(navigator.language.startsWith('zh')
-      ? '⚠️ 库存数据已损坏，已重置为空。如有备份文件，请在工具页导入恢复。'
-      : '⚠️ Inventory data was corrupted and has been reset. If you have a backup, import it from the Tools tab.');
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem(INV_KEY) || '{}'); }
+  catch { return {}; }
 }
-function saveInventory(data) {
-  try { localStorage.setItem(INV_KEY, JSON.stringify(data)); }
-  catch (e) {
-    console.error('saveInventory failed:', e);
-    alert(navigator.language.startsWith('zh')
-      ? '⚠️ 存储空间已满，无法保存库存数据。请先在工具页导出备份，然后清理浏览器数据。'
-      : '⚠️ Storage quota exceeded — inventory data could not be saved. Please export a backup from the Tools tab and clear browser data.');
-  }
-}
+function saveInventory(data) { localStorage.setItem(INV_KEY, JSON.stringify(data)); }
 function getInvData() {
   const d = loadInventory();
   if (!d.locations) d.locations = [];
@@ -6646,8 +6627,6 @@ const SAMPLE_TYPE_LABELS = {
   primer: 'invSamplePrimer', protein: 'invSampleProtein', reagent: 'invSampleReagent',
   tissue: 'invSampleTissue', virus: 'invSampleVirus', other: 'invSampleOther',
 };
-const VALID_SAMPLE_TYPES = new Set(Object.keys(SAMPLE_TYPE_LABELS));
-function normalizeSampleType(t) { return VALID_SAMPLE_TYPES.has(t) ? t : 'other'; }
 
 function StorageIcon({ type, size = 16 }) {
   const d = STORAGE_ICONS[type] || STORAGE_ICONS.shelf;
@@ -7381,7 +7360,7 @@ function InventoryTab() {
           const id = nextInvId(d, 'samples');
           d.samples.push({
             id, boxId: selectedBoxId, position: pos, name: r.name,
-            sampleType: normalizeSampleType(r.type || 'other'), quantity: r.quantity || '', concentration: r.concentration || '',
+            sampleType: r.type || 'other', quantity: r.quantity || '', concentration: r.concentration || '',
             passage: r.passage || '',
             dateStored: r.datestored ? new Date(r.datestored).getTime() : Date.now(),
             expiryDate: r.expiry ? new Date(r.expiry).getTime() : null,
@@ -7428,10 +7407,7 @@ function InventoryTab() {
           imported.boxes.forEach(b => {
             const newId = nextInvId(d, 'boxes');
             boxIdMap[b.id] = newId;
-            const resolvedLocId = locIdMap[b.locationId] || b.locationId;
-            // Skip orphan boxes whose location doesn't exist
-            if (!d.locations.some(l => l.id === resolvedLocId)) return;
-            d.boxes.push({ ...b, id: newId, locationId: resolvedLocId });
+            d.boxes.push({ ...b, id: newId, locationId: locIdMap[b.locationId] || b.locationId });
           });
         }
         if (imported.samples) {
