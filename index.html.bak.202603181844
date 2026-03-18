@@ -1511,7 +1511,7 @@ function CustomRecipeFormModal({ isOpen, onClose, onSave, initial, isProtocol })
 
   function handleSave() {
     if (!name.trim()) return;
-    const tagArr = parseTags(tags);
+    const tagArr = tags.split(',').map(s => s.trim()).filter(Boolean);
     const recipe = {
       id: initial?.id || ('custom_' + Date.now()),
       name: name.trim(),
@@ -6562,10 +6562,6 @@ function RefsTab({ onReplayTour }) {
 // ═══════════════════════════════════════════════
 
 const INV_KEY = 'labmate_inventory';
-function parseTags(str, sep = ',') {
-  return str ? str.split(sep).map(s => s.trim()).filter(Boolean) : [];
-}
-
 function loadInventory() {
   try { return JSON.parse(localStorage.getItem(INV_KEY) || '{}'); }
   catch { return {}; }
@@ -6812,7 +6808,7 @@ function SampleForm({ open, onClose, onSave, onDelete, onDuplicate, initial, pos
             ...form,
             dateStored: form.dateStored ? new Date(form.dateStored).getTime() : Date.now(),
             expiryDate: form.expiryDate ? new Date(form.expiryDate).getTime() : null,
-            tags: parseTags(form.tags),
+            tags: form.tags ? form.tags.split(',').map(s => s.trim()).filter(Boolean) : [],
           });
         } }, t('invSave', lang))
       )
@@ -7165,6 +7161,25 @@ function InventoryTab() {
     return map;
   }, [boxSamples]);
 
+  // Bulk duplicate selected (uses memoized boxSampleMap)
+  const handleBulkDuplicate = () => {
+    if (!selectedBoxId || selectedCells.size === 0) return;
+    const d = { ...data, samples: [...data.samples], nextId: { ...data.nextId } };
+    let count = 0;
+    selectedCells.forEach(pos => {
+      const sample = boxSampleMap[pos];
+      if (!sample) return;
+      const newPos = findNextEmpty(selectedBoxId, d.samples.filter(s => s.boxId === selectedBoxId));
+      if (!newPos) return;
+      const id = nextInvId(d, 'samples');
+      d.samples.push({ ...sample, id, position: newPos, dateStored: Date.now() });
+      count++;
+    });
+    persist(d);
+    setSelectedCells(new Set());
+    toast.show(lang === 'zh' ? '已复制 ' + count + ' 个样品' : 'Duplicated ' + count + ' sample(s)');
+  };
+
   // Bulk delete selected (uses memoized boxSampleMap)
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   useEffect(() => { setConfirmBulkDelete(false); }, [selectedCells.size, selectedBoxId]);
@@ -7181,13 +7196,9 @@ function InventoryTab() {
     toast.show(lang === 'zh' ? '已删除 ' + idsToDelete.size + ' 个样品' : 'Deleted ' + idsToDelete.size + ' sample(s)');
   };
 
-  // Count selected cells that are empty vs occupied (memoized — avoids iterating Set on every render)
-  const { selectedEmptyCount, selectedOccupiedCount } = useMemo(() => {
-    if (!selectedBoxId || selectedCells.size === 0) return { selectedEmptyCount: 0, selectedOccupiedCount: 0 };
-    let empty = 0, occupied = 0;
-    selectedCells.forEach(pos => { if (boxSampleMap[pos]) occupied++; else empty++; });
-    return { selectedEmptyCount: empty, selectedOccupiedCount: occupied };
-  }, [selectedBoxId, selectedCells, boxSampleMap]);
+  // Count selected cells that are empty vs occupied
+  const selectedEmptyCount = selectedBoxId ? [...selectedCells].filter(pos => !boxSampleMap[pos]).length : 0;
+  const selectedOccupiedCount = selectedBoxId ? [...selectedCells].filter(pos => !!boxSampleMap[pos]).length : 0;
 
   // Bulk add same sample to multiple empty cells
   const handleBulkAdd = () => {
@@ -7203,7 +7214,7 @@ function InventoryTab() {
         name: bulkAddForm.name, nameZh: bulkAddForm.nameZh,
         sampleType: bulkAddForm.sampleType, quantity: bulkAddForm.quantity,
         concentration: bulkAddForm.concentration, owner: bulkAddForm.owner,
-        tags: parseTags(bulkAddForm.tags),
+        tags: bulkAddForm.tags ? bulkAddForm.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         description: bulkAddForm.description, notes: bulkAddForm.notes,
         dateStored: Date.now(), expiryDate: bulkAddForm.expiryDate ? new Date(bulkAddForm.expiryDate).getTime() : null
       });
@@ -7212,7 +7223,7 @@ function InventoryTab() {
     persist(d);
     setSelectedCells(new Set());
     setShowBulkAdd(false);
-    setBulkAddForm({ name: '', nameZh: '', sampleType: 'reagent', quantity: '', concentration: '', owner: '', tags: '', description: '', notes: '', expiryDate: '' });
+    setBulkAddForm({ name: '', nameZh: '', sampleType: 'reagent', quantity: '', concentration: '', owner: '', tags: '', description: '', notes: '' });
     toast.show(lang === 'zh' ? '已添加 ' + count + ' 个样品' : 'Added ' + count + ' sample(s)');
   };
 
@@ -7228,7 +7239,7 @@ function InventoryTab() {
       if (bulkForm.owner) updated.owner = bulkForm.owner;
       if (bulkForm.sampleType) updated.sampleType = bulkForm.sampleType;
       if (bulkForm.expiryDate) updated.expiryDate = new Date(bulkForm.expiryDate).getTime();
-      if (bulkForm.tags) updated.tags = parseTags(bulkForm.tags);
+      if (bulkForm.tags) updated.tags = bulkForm.tags.split(',').map(t => t.trim()).filter(Boolean);
       return updated;
     });
     persist(d);
@@ -7307,9 +7318,15 @@ function InventoryTab() {
   };
 
   const handleCellClick = (pos, sample) => {
-    setEditSample(sample || null);
-    setSamplePos(pos);
+    if (sample) {
+      setEditSample(sample);
+      setSamplePos(pos);
+    } else {
+      setEditSample(null);
+      setSamplePos(pos);
+    }
     setShowSampleForm(true);
+    // form is a modal — no mobileView change needed
   };
 
   // Search
@@ -7429,7 +7446,7 @@ function InventoryTab() {
   const handlePrint = () => {
     if (!selectedBoxId) return;
     const box = data.boxes.find(b => b.id === selectedBoxId);
-    const samples = boxSamples;
+    const samples = data.samples.filter(s => s.boxId === selectedBoxId);
     const loc = box ? data.locations.find(l => l.id === box.locationId) : null;
     const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     let html = '<html><head><title>' + esc(box ? box.name : 'Box') + '</title><style>body{font-family:sans-serif;padding:20px}table{border-collapse:collapse;margin-top:10px}td,th{border:1px solid #ccc;padding:4px 8px;font-size:12px}th{background:#f0f0f0}</style></head><body>';

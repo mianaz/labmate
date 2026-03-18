@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- FASTA chevron — vertex at center, symmetric -->
+  <path d="M96 106 L296 256 L96 406" fill="none" stroke="#1D9E75" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Three base dots nestled in the chevron mouth -->
+  <circle cx="350" cy="180" r="38" fill="#534AB7"/>
+  <circle cx="390" cy="256" r="38" fill="#D85A30"/>
+  <circle cx="350" cy="332" r="38" fill="#378ADD"/>
+</svg>
