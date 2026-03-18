@@ -182,6 +182,9 @@ nav button:hover { color: var(--text) !important; }
 .card.card-scroll {
   overflow-y: auto !important;
 }
+.card.card-scroll:hover {
+  transform: none !important;
+}
 .card::before {
   content: '' !important;
   position: absolute !important;
@@ -864,6 +867,10 @@ const I = {
   invImportJson: { en: 'Import Backup (JSON)', zh: '导入备份 (JSON)' },
   // Custom Recipes
   customBadge: { en: 'Custom', zh: '自定义' },
+  systemBadge: { en: 'System', zh: '系统' },
+  customFilter: { en: 'My Recipes', zh: '我的配方' },
+  expired: { en: 'Expired', zh: '已过期' },
+  expiringSoon: { en: 'Expiring soon', zh: '即将过期' },
   addCustomRecipe: { en: 'New Recipe', zh: '新建配方' },
   addCustomProtocol: { en: 'New Protocol', zh: '新建方案' },
   editCustom: { en: 'Edit', zh: '编辑' },
@@ -925,6 +932,22 @@ const I = {
   toolCatPathway: { en: 'Pathway & Network', zh: '通路 & 网络' },
   toolCatClinical: { en: 'Clinical & Pharmacology', zh: '临床 & 药理' },
   toolCatSingleCell: { en: 'Single Cell', zh: '单细胞' },
+  // Cloud Backup (Gist sync)
+  cloudBackup: { en: 'Cloud Backup', zh: '云端备份' },
+  cloudBackupDesc: { en: 'Encrypt and sync your data to a private GitHub Gist.', zh: '将数据加密同步到 GitHub Gist（私有）。' },
+  gistToken: { en: 'GitHub Personal Access Token', zh: 'GitHub 个人访问令牌' },
+  encPassphrase: { en: 'Encryption Passphrase', zh: '加密口令' },
+  backupToGist: { en: 'Backup to Gist', zh: '备份到 Gist' },
+  restoreFromGist: { en: 'Restore from Gist', zh: '从 Gist 恢复' },
+  lastSynced: { en: 'Last synced', zh: '上次同步' },
+  cloudSyncSuccess: { en: 'Backup synced to Gist successfully!', zh: '已成功同步备份到 Gist！' },
+  cloudSyncError: { en: 'Sync failed: ', zh: '同步失败：' },
+  cloudRestoreSuccess: { en: 'Restored from Gist. Reloading…', zh: '已从 Gist 恢复，正在重新加载…' },
+  noGistFound: { en: 'No backup Gist found. Please backup first.', zh: '未找到备份 Gist，请先备份。' },
+  // Auto-backup reminder
+  backupReminder: { en: '⚠️ Your data is stored locally in this browser only. Back up regularly to avoid data loss.', zh: '⚠️ 您的数据仅存储在此浏览器中。请定期备份以防数据丢失。' },
+  backupNow: { en: 'Backup Now', zh: '立即备份' },
+  dismissReminder: { en: 'Dismiss', zh: '忽略' },
 };
 
 function t(key, lang) {
@@ -1188,7 +1211,7 @@ function getRecipeNotes(recipe, lang) {
   return '';
 }
 
-function recipeToText(recipe, targetVol) {
+function recipeToText(recipe, targetVol, lang) {
   const scale = targetVol / recipe.defaultVolume;
   let txt = `${'═'.repeat(50)}\n`;
   txt += recipe.name + '\n' + (lang === 'zh' ? recipe.nameCn + '\n' : '');
@@ -1216,7 +1239,7 @@ function allRecipesToText(recipes) {
   txt +=    '║       BioinfoSpace LabMate — Recipe Collection            ║\n';
   txt +=    '║         Generated: ' + new Date().toISOString().slice(0,10) + '                    ║\n';
   txt +=    '╚══════════════════════════════════════════════════╝\n\n';
-  recipes.forEach(r => { txt += recipeToText(r, r.defaultVolume) + '\n'; });
+  recipes.forEach(r => { txt += recipeToText(r, r.defaultVolume, 'en') + '\n'; });
   return txt;
 }
 
@@ -1297,7 +1320,13 @@ function plateToSVG(wellData, config, groups) {
 // ═══════════════════════════════════════════════
 
 function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
+  const lang = useLang();
+
   const [query, setQuery] = useState('');
+  const [cachedCustom] = useState(() => ({
+    recipes: loadCustomRecipes().map(r => ({...r, _isCustom: true})),
+    protocols: loadCustomProtocols().map(r => ({...r, _isCustom: true}))
+  }));
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -1319,9 +1348,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
   const results = useMemo(() => {
     if (!query || query.length < 1) return [];
     const q = query.toLowerCase();
-    const customR = loadCustomRecipes().map(r => ({...r, _isCustom: true}));
-    const customP = loadCustomProtocols().map(r => ({...r, _isCustom: true}));
-    const allRecipes = [...RECIPES, ...customR, ...customP];
+    const allRecipes = [...RECIPES, ...cachedCustom.recipes, ...cachedCustom.protocols];
     return allRecipes.map(r => {
       let score = 0;
       const nameMatch = r.name.toLowerCase().includes(q);
@@ -1350,7 +1377,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-4 border-b" style={S_BORDER}>
                     <input ref={inputRef} type="search" value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="搜索配方、试剂名、标签 … (e.g. Tris, ChIP, 转膜, EDTA)"
+            placeholder={lang === 'en' ? 'Search recipes, reagents, tags...' : '搜索配方、试剂名、标签...'}
             aria-label="Search recipes"
             className="flex-1 text-base border-none outline-none bg-transparent"
             style={{ fontFamily: "'DM Sans', sans-serif", boxShadow: 'none' }} />
@@ -1359,7 +1386,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
 
         <div className="max-h-[50vh] overflow-y-auto p-2">
           {query && results.length === 0 && (
-            <p className="text-center text-gray-400 py-8 text-sm">未找到匹配结果</p>
+            <p className="text-center text-gray-400 py-8 text-sm">{t('noResults', lang)}</p>
           )}
           {results.map(({ recipe: r, compMatch, tagMatch }) => {
             const catColors = {
@@ -1376,6 +1403,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm truncate">{r.name}</span>
                     <span className="text-[10px] font-semibold" style={{ color: cc.text }}>{r.category}</span>
+                    {r._isCustom && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{background:'var(--accent-light)', color:'var(--accent)'}}>{t('customBadge', lang)}</span>}
                   </div>
                   {lang === 'zh' && <p className="text-xs text-gray-500 truncate">{r.nameCn}</p>}
                   {compMatch && (
@@ -1390,7 +1418,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
           })}
           {!query && (
             <div className="text-center py-8 text-gray-400">
-              <p className="text-sm mb-2">输入关键词搜索所有配方和 protocol</p>
+              <p className="text-sm mb-2">{t('searchHint', lang)}</p>
               <div className="flex flex-wrap justify-center gap-2 mt-3">
                 {['PBS', 'Tris', 'ChIP', 'WB', 'CRISPR', 'RNA', '转膜', '蛋白纯化'].map(tag => (
                   <button key={tag} onClick={() => setQuery(tag)}
@@ -1403,9 +1431,9 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
           )}
         </div>
 
-        <div className="p-3 border-t flex items-center justify-between text-[10px] text-gray-400" style={{borderColor:'var(--border)', background:'#faf9f6'}}>
-          <span>共 {RECIPES.length} 个配方/protocol 可供检索</span>
-          <span>按试剂名、标签、中文名、备注检索</span>
+        <div className="p-3 border-t flex items-center justify-between text-[10px] text-gray-400" style={{borderColor:'var(--border)', background:'var(--bg-2)'}}>
+          <span>{RECIPES.length} {t('totalRecipes', lang)}</span>
+          <span>{t('searchBy', lang)}</span>
         </div>
       </div>
     </div>,
@@ -3642,6 +3670,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         <div>
           <h2 className="text-xl font-bold">{recipe.name}</h2>
           {lang === 'zh' && <p className="text-sm" style={S_MUTED}>{recipe.nameCn}</p>}
+          {!recipe._isCustom && <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}}>{t('systemBadge', lang)}</span>}
         </div>
         {recipe._isCustom && onEditCustom && (
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -3931,9 +3960,9 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       </div>}
       <div className="mt-4 pt-3 border-t flex gap-2" style={S_BORDER}>
         <DownloadBtn small label={t('downloadTxt', lang)}
-          onClick={() => { downloadFile(recipe.id + '.txt', recipeToText(recipe, targetVol)); toast.show(t('downloaded', lang)); }} />
+          onClick={() => { downloadFile(recipe.id + '.txt', recipeToText(recipe, targetVol, lang)); toast.show(t('downloaded', lang)); }} />
         <DownloadBtn small label={t('copyClipboard', lang)}
-          onClick={() => { navigator.clipboard.writeText(recipeToText(recipe, targetVol)); toast.show(t('copied', lang)); }} />
+          onClick={() => { navigator.clipboard.writeText(recipeToText(recipe, targetVol, lang)); toast.show(t('copied', lang)); }} />
       </div>
     </div>
   );
@@ -4008,8 +4037,9 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
   const filtered = useMemo(() => {
     const allBuf = [...BUFFER_RECIPES, ...customRecipes.filter(r => BUFFER_CATEGORIES.includes(r.category)).map(r => ({...r, _isCustom: true}))];
     return allBuf.filter(r => {
-      const matchCat = selCat === 'all' || selCat === 'favs'
-        ? (selCat === 'favs' ? favs.includes(r.id) : true)
+      const matchCat = selCat === 'all' ? true
+        : selCat === 'favs' ? favs.includes(r.id)
+        : selCat === 'custom' ? r._isCustom
         : r.category === selCat;
       const q = search.toLowerCase();
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.nameCn || '').includes(q)
@@ -4022,6 +4052,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
   const cats = [
     { id: 'all', label: t('all', lang) },
     { id: 'favs', label: t('favorites', lang) },
+    { id: 'custom', label: t('customFilter', lang) },
     { id: 'buffer', label: t('buffer', lang) },
     { id: 'staining', label: t('staining', lang) },
     { id: 'media', label: t('media', lang) },
@@ -4212,6 +4243,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
   const protoCats = [
     { id: 'all', label: t('all', lang) },
     { id: 'favs', label: t('favorites', lang) },
+    { id: 'custom', label: t('customFilter', lang) },
     { id: 'protein', label: t('catProtein', lang) },
     { id: 'nucleic_acid', label: t('catNucleicAcid', lang) },
     { id: 'cell_culture', label: t('catCellCulture', lang) },
@@ -4225,6 +4257,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
     return allProto.filter(r => {
       const matchCat = selCat === 'all' ? true
         : selCat === 'favs' ? favs.includes(r.id)
+        : selCat === 'custom' ? r._isCustom
         : (PROTOCOL_SUBCATEGORIES[selCat] || []).includes(r.id);
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.nameCn || '').includes(q) || (r.tags || []).some(t => t.includes(q));
       return matchCat && matchSearch;
@@ -5586,7 +5619,7 @@ function ToolsTab() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key.startsWith('labmate_') || key.startsWith('biolab_') || key.startsWith('stepProgress_') || ['favs', 'lang', 'theme'].includes(key)) {
+      if (key.startsWith('labmate_') || key.startsWith('biolab_') || key.startsWith('stepProgress_') || key.startsWith('stepTracker_') || ['favs', 'lang', 'theme'].includes(key)) {
         try { data[key] = JSON.parse(localStorage.getItem(key)); }
         catch { data[key] = localStorage.getItem(key); }
       }
@@ -5598,6 +5631,7 @@ function ToolsTab() {
     a.download = `labmate-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    localStorage.setItem('labmate_lastExport', String(Date.now()));
   }
 
   function handleImport(e) {
@@ -5717,10 +5751,149 @@ function ToolsTab() {
           </button>
         </div>
       </div>
+
+      {/* Cloud Backup (GitHub Gist encrypted sync) */}
+      <CloudBackupCard lang={lang} />
     </div>
   );
 }
 
+
+// ═══════════════════════════════════════════════
+// CLOUD BACKUP — GitHub Gist Encrypted Sync
+// ═══════════════════════════════════════════════
+
+const _gistCryptoSalt = new TextEncoder().encode('labmate-gist-v1');
+
+async function _gistDeriveKey(passphrase) {
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: _gistCryptoSalt, iterations: 310000, hash: 'SHA-256' }, keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+async function _gistEncrypt(plaintext, passphrase) {
+  const key = await _gistDeriveKey(passphrase);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+  const buf = new Uint8Array(iv.length + ct.byteLength);
+  buf.set(iv, 0);
+  buf.set(new Uint8Array(ct), iv.length);
+  return btoa(String.fromCharCode(...buf));
+}
+
+async function _gistDecrypt(base64, passphrase) {
+  const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const iv = raw.slice(0, 12);
+  const ct = raw.slice(12);
+  const key = await _gistDeriveKey(passphrase);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+function _gistCollectData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('labmate_') || key.startsWith('biolab_') || key.startsWith('stepProgress_') || ['favs', 'lang', 'theme'].includes(key)) {
+      try { data[key] = JSON.parse(localStorage.getItem(key)); }
+      catch { data[key] = localStorage.getItem(key); }
+    }
+  }
+  return JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: 'v0.1.0', data });
+}
+
+function CloudBackupCard({ lang }) {
+  const toast = useToast();
+  const [token, setToken] = useState(() => localStorage.getItem('labmate_gistToken') || '');
+  const [passphrase, setPassphrase] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(() => localStorage.getItem('labmate_lastGistSync') || '');
+
+  function saveToken(v) { setToken(v); localStorage.setItem('labmate_gistToken', v); }
+
+  async function handleBackup() {
+    if (!token || !passphrase) return;
+    setSyncing(true);
+    try {
+      const encrypted = await _gistEncrypt(_gistCollectData(), passphrase);
+      const gistId = localStorage.getItem('labmate_gistId');
+      const headers = { Authorization: 'token ' + token, 'Content-Type': 'application/json' };
+      const body = JSON.stringify({ description: 'LabMate Encrypted Backup', public: false, files: { 'labmate-backup.enc': { content: encrypted } } });
+      let res;
+      if (gistId) {
+        res = await fetch('https://api.github.com/gists/' + gistId, { method: 'PATCH', headers, body });
+        if (res.status === 404) {
+          localStorage.removeItem('labmate_gistId');
+          res = await fetch('https://api.github.com/gists', { method: 'POST', headers, body });
+        }
+      } else {
+        res = await fetch('https://api.github.com/gists', { method: 'POST', headers, body });
+      }
+      if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+      const json = await res.json();
+      localStorage.setItem('labmate_gistId', json.id);
+      const now = new Date().toISOString();
+      localStorage.setItem('labmate_lastGistSync', now);
+      localStorage.setItem('labmate_lastExport', String(Date.now()));
+      setLastSync(now);
+      toast.show(t('cloudSyncSuccess', lang), '☁️');
+    } catch (err) {
+      toast.show(t('cloudSyncError', lang) + err.message, '❌');
+    } finally { setSyncing(false); }
+  }
+
+  async function handleRestore() {
+    if (!token || !passphrase) return;
+    const gistId = localStorage.getItem('labmate_gistId');
+    if (!gistId) { toast.show(t('noGistFound', lang), '⚠️'); return; }
+    setSyncing(true);
+    try {
+      const res = await fetch('https://api.github.com/gists/' + gistId, { headers: { Authorization: 'token ' + token } });
+      if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+      const json = await res.json();
+      const fileContent = json.files['labmate-backup.enc']?.content;
+      if (!fileContent) throw new Error('Backup file not found in Gist');
+      const decrypted = await _gistDecrypt(fileContent, passphrase);
+      const parsed = JSON.parse(decrypted);
+      const entries = parsed.data || parsed;
+      Object.entries(entries).forEach(([k, v]) => { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); });
+      toast.show(t('cloudRestoreSuccess', lang), '☁️');
+      setTimeout(() => location.reload(), 1200);
+    } catch (err) {
+      toast.show(t('cloudSyncError', lang) + err.message, '❌');
+    } finally { setSyncing(false); }
+  }
+
+  return (
+    <div className="card p-5 mt-4">
+      <div className="flex items-start gap-3 mb-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        <div>
+          <h3 className="text-sm font-bold">{t('cloudBackup', lang)}</h3>
+          <p className="text-xs mt-1 leading-relaxed" style={S_MUTED}>{t('cloudBackupDesc', lang)}</p>
+        </div>
+      </div>
+      <div className="space-y-2 mb-3">
+        <input type="password" value={token} onChange={e => saveToken(e.target.value)} placeholder={t('gistToken', lang)}
+          className="w-full px-3 py-2 rounded-lg text-sm" style={{background:'var(--bg-2)', border:'1px solid var(--border)', color:'var(--text)'}} />
+        <input type="password" value={passphrase} onChange={e => setPassphrase(e.target.value)} placeholder={t('encPassphrase', lang)}
+          className="w-full px-3 py-2 rounded-lg text-sm" style={{background:'var(--bg-2)', border:'1px solid var(--border)', color:'var(--text)'}} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={handleBackup} disabled={syncing || !token || !passphrase}
+          className="px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+          style={{background:'var(--primary)', color:'white'}}>
+          {syncing ? '…' : t('backupToGist', lang)}
+        </button>
+        <button onClick={handleRestore} disabled={syncing || !token || !passphrase}
+          className="px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+          style={{background:'var(--bg-2)', color:'var(--text)', border:'1px solid var(--border)'}}>
+          {syncing ? '…' : t('restoreFromGist', lang)}
+        </button>
+      </div>
+      {lastSync && <p className="text-xs mt-2 text-center" style={S_MUTED}>{t('lastSynced', lang)}: {new Date(lastSync).toLocaleString()}</p>}
+    </div>
+  );
+}
 // --- Plate Table View (CSV preview within Plate Designer) ---
 function PlateTableView({ wellData, config, lang }) {
   const [showTable, setShowTable] = useState(false);
@@ -6701,17 +6874,18 @@ function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedCells, o
             const sample = sampleMap[pos];
             const colors = sample ? (SAMPLE_TYPE_COLORS[sample.sampleType] || SAMPLE_TYPE_COLORS.other) : null;
             const isSelected = selectMode && selectedCells && selectedCells.has(pos);
+            const isExpired = sample && sample.expiryDate && new Date(sample.expiryDate).getTime() < Date.now();
             return React.createElement('div', {
               key: pos,
               onClick: () => { if (!selectMode) onCellClick(pos, sample); },
               onMouseDown: () => handleMouseDown(r, c),
               onMouseUp: () => handleMouseUp(r, c),
               onMouseEnter: e => handleMouseEnter(e, r, c),
-              title: sample ? (sample.name + ' (' + pos + ')') : pos,
+              title: sample ? (sample.name + ' (' + pos + ')' + (isExpired ? ' ⚠ Expired' : '')) : pos,
               style: {
                 width: cellSize, height: cellSize, borderRadius: 4, cursor: selectMode ? 'crosshair' : 'pointer',
                 background: isSelected ? 'var(--primary)' : sample ? colors.bg : 'var(--bg-2)',
-                border: isSelected ? '2px solid var(--primary)' : sample ? '2px solid ' + colors.text + '33' : '1px solid var(--border)',
+                border: isSelected ? '2px solid var(--primary)' : isExpired ? '2px solid hsl(0,70%,55%)' : sample ? '2px solid ' + colors.text + '33' : '1px solid var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: isSelected ? '#fff' : sample ? colors.text : 'var(--text-muted)',
                 fontWeight: sample ? 600 : 400, fontSize: cellSize > 30 ? '9px' : '7px',
@@ -7330,8 +7504,8 @@ function InventoryTab() {
     }, '\u2630 ' + (lang === 'en' ? 'All Samples' : '\u5168\u90e8\u6837\u54c1'))
   );
 
-  // ── All Samples page (shared mobile + desktop) ──────────────────────────
-  const allSamplesPage = () => {
+  // ── All Samples memoized data ──────────────────────────
+  const { _allSamples, _uniqueTypes, _uniqueLocs, _uniqueBoxes, _uniqueOwners, _filtered } = useMemo(() => {
     const allSamples = data.boxes.flatMap(box => {
       const loc = data.locations.find(l => l.id === box.locationId);
       return data.samples.filter(s => s.boxId === box.id).map(s => ({
@@ -7341,24 +7515,32 @@ function InventoryTab() {
         locTemp: loc ? loc.temperature : ''
       }));
     });
-    const uniqueTypes  = [...new Set(allSamples.map(s => s.sampleType).filter(Boolean))];
-    const uniqueLocs   = [...new Set(allSamples.map(s => s.locName).filter(Boolean))];
-    const uniqueBoxes  = [...new Set(allSamples.map(s => s.boxName).filter(Boolean))];
-    const uniqueOwners = [...new Set(allSamples.map(s => s.owner).filter(Boolean))];
-    const filtered = allSamples.filter(s => {
-      if (listFilters.name     && !(s.name || '').toLowerCase().includes(listFilters.name.toLowerCase())) return false;
-      if (listFilters.type     && s.sampleType !== listFilters.type)    return false;
-      if (listFilters.location && s.locName !== listFilters.location)   return false;
-      if (listFilters.box      && s.boxName !== listFilters.box)        return false;
-      if (listFilters.owner    && (s.owner || '') !== listFilters.owner) return false;
-      return true;
-    }).sort((a, b) => {
-      const field = listFilters.sort || 'name';
-      const av = field === 'date' ? (a.dateStored || 0) : (a[field] || '');
-      const bv = field === 'date' ? (b.dateStored || 0) : (b[field] || '');
-      const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
-      return listFilters.dir === 'desc' ? -cmp : cmp;
-    });
+    return {
+      _allSamples: allSamples,
+      _uniqueTypes:  [...new Set(allSamples.map(s => s.sampleType).filter(Boolean))],
+      _uniqueLocs:   [...new Set(allSamples.map(s => s.locName).filter(Boolean))],
+      _uniqueBoxes:  [...new Set(allSamples.map(s => s.boxName).filter(Boolean))],
+      _uniqueOwners: [...new Set(allSamples.map(s => s.owner).filter(Boolean))],
+      _filtered: allSamples.filter(s => {
+        if (listFilters.name     && !(s.name || '').toLowerCase().includes(listFilters.name.toLowerCase())) return false;
+        if (listFilters.type     && s.sampleType !== listFilters.type)    return false;
+        if (listFilters.location && s.locName !== listFilters.location)   return false;
+        if (listFilters.box      && s.boxName !== listFilters.box)        return false;
+        if (listFilters.owner    && (s.owner || '') !== listFilters.owner) return false;
+        return true;
+      }).sort((a, b) => {
+        const field = listFilters.sort || 'name';
+        const av = field === 'date' ? (a.dateStored || 0) : (a[field] || '');
+        const bv = field === 'date' ? (b.dateStored || 0) : (b[field] || '');
+        const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv));
+        return listFilters.dir === 'desc' ? -cmp : cmp;
+      })
+    };
+  }, [data, lang, listFilters, isMobile]);
+
+  // ── All Samples page (shared mobile + desktop) ──────────────────────────
+  const allSamplesPage = () => {
+    const allSamples = _allSamples, uniqueTypes = _uniqueTypes, uniqueLocs = _uniqueLocs, uniqueBoxes = _uniqueBoxes, uniqueOwners = _uniqueOwners, filtered = _filtered;
     const thStyle = { textAlign: 'left', padding: '6px 8px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' };
     const fiStyle = { width: '100%', padding: '3px 6px', fontSize: 11, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)', outline: 'none' };
     const SortArr = col => listFilters.sort === col
@@ -7509,6 +7691,7 @@ function InventoryTab() {
                 React.createElement('div', { className: 'text-sm font-medium truncate', style: { color: 'var(--text)' } }, s.name),
                 React.createElement('div', { style: { display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' } },
                   React.createElement('span', { style: { fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: colors.bg, color: colors.text } }, t(SAMPLE_TYPE_LABELS[s.sampleType], lang)),
+                  (() => { const du = s.expiryDate ? Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / 86400000) : null; return du !== null && du < 0 ? React.createElement('span', { style: { fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: 'hsla(0,80%,50%,0.15)', color: 'hsl(0,70%,45%)', fontWeight: 600 } }, '\u26a0 ' + t('expired', lang)) : du !== null && du <= 7 ? React.createElement('span', { style: { fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: 'hsla(35,90%,50%,0.15)', color: 'hsl(35,80%,40%)', fontWeight: 600 } }, '\u26a0 ' + du + 'd') : du !== null && du <= 30 ? React.createElement('span', { style: { fontSize: 10, color: 'hsl(35,70%,45%)' } }, du + 'd') : null; })(),
                   s.quantity && React.createElement('span', { style: { fontSize: 10, color: 'var(--text-muted)' } }, s.quantity),
                   s.owner && React.createElement('span', { style: { fontSize: 10, color: 'var(--text-muted)' } }, '\u00b7 ' + s.owner)
                 )
@@ -7634,6 +7817,13 @@ function App() {
   const [theme, setTheme] = useLocalStorage('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
   const [calcInitialMode, setCalcInitialMode] = useState(null);
+  const [showBackupReminder, setShowBackupReminder] = useState(false);
+
+  // Auto-backup reminder: show if no export in last 7 days
+  useEffect(() => {
+    const last = parseInt(localStorage.getItem('labmate_lastExport'), 10);
+    if (!last || Date.now() - last > 7 * 24 * 60 * 60 * 1000) setShowBackupReminder(true);
+  }, []);
 
   // Wait for recipes.json to load
   useEffect(() => {
@@ -7719,6 +7909,17 @@ function App() {
         onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
       <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {showBackupReminder && (
+          <div className="mb-4 px-4 py-3 rounded-lg flex items-center justify-between gap-3 text-sm" style={{background:'hsl(45,90%,94%)', border:'1px solid hsl(45,80%,70%)', color:'hsl(30,60%,30%)'}}>
+            <span>{t('backupReminder', lang)}</span>
+            <div className="flex gap-2 flex-shrink-0">
+              <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
+                className="px-3 py-1 rounded-md text-xs font-semibold" style={{background:'var(--primary)', color:'white'}}>{t('backupNow', lang)}</button>
+              <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); setShowBackupReminder(false); }}
+                className="px-3 py-1 rounded-md text-xs font-semibold" style={{background:'transparent', color:'hsl(30,60%,30%)', border:'1px solid hsl(45,80%,70%)'}}>{t('dismissReminder', lang)}</button>
+            </div>
+          </div>
+        )}
         {navHistory.length > 0 && (
           <button onClick={handleNavBack}
             className="mb-3 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors hover:opacity-80"
