@@ -930,23 +930,6 @@ const I = {
   invNoSamples: { en: 'No samples yet', zh: '暂无样品' },
   invSelectABox: { en: 'Select a box', zh: '选择一个盒子' },
   invDuplicate: { en: 'Duplicate', zh: '复制' },
-  invStats: { en: 'Stats', zh: '统计' },
-  invStatsTitle: { en: 'Inventory Statistics', zh: '库存统计' },
-  invStatsSamples: { en: 'Samples', zh: '样品' },
-  invStatsBoxes: { en: 'Boxes', zh: '盒子' },
-  invStatsLocations: { en: 'Locations', zh: '位置' },
-  invStatsUtilization: { en: 'Storage Utilization', zh: '存储利用率' },
-  invStatsByType: { en: 'Samples by Type', zh: '按类型分类' },
-  invStatsExpiring: { en: 'Expiring Soon', zh: '即将过期' },
-  invStatsRecentlyAdded: { en: 'Recently Added', zh: '最近添加' },
-  invStatsEmpty: { en: 'No inventory data yet', zh: '暂无库存数据' },
-  invStatsDays: { en: 'days', zh: '天' },
-  invStatsOccupied: { en: 'occupied', zh: '已用' },
-  invStatsTotal: { en: 'total', zh: '总计' },
-  invUndo: { en: 'Undo', zh: '撤销' },
-  invUndoLast: { en: 'Undo last action', zh: '撤销上一步操作' },
-  invNoUndo: { en: 'Nothing to undo', zh: '没有可撤销的操作' },
-  invUndone: { en: 'Undone', zh: '已撤销' },
   // Custom Recipes
   customBadge: { en: 'Custom', zh: '自定义' },
   systemBadge: { en: 'System', zh: '系统' },
@@ -1965,6 +1948,1476 @@ const ROW_LABELS = 'ABCDEFGHIJKLMNOP'.split('');
 // DATA: References
 // ═══════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════
+// DATA: Buffer Enhancements (usage, steps, storage, related protocols)
+// ═══════════════════════════════════════════════
+
+// TODO: Merge into recipes.json — this data (~1600 lines) should be part of the recipe objects
+const BUFFER_ENHANCEMENTS = {
+  pbs_10x: {
+    usage: { en: 'Universal physiological buffer for cell washing, immunostaining, dilutions. Isotonic at 1× (~150 mM NaCl, ~10 mM phosphate).', zh: '通用生理缓冲液，用于细胞洗涤、免疫染色、试剂稀释。1× 时等渗 (~150 mM NaCl, ~10 mM 磷酸盐)。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'RT, 12 months (autoclave)', zh: '室温, 12 个月 (高压灭菌后)' } },
+    relatedProtocols: ['wb_protocol', 'if_protocol', 'flow_cytometry_protocol'],
+    steps: [
+      { en: 'Weigh NaCl, KCl, Na₂HPO₄, KH₂PO₄ into a {v:1:L} beaker', zh: '称取 NaCl、KCl、Na₂HPO₄、KH₂PO₄ 于 {v:1:L} 烧杯' },
+      { en: 'Add ~{v:800:mL} ddH₂O, stir until dissolved', zh: '加入约 {v:800:mL} ddH₂O，搅拌至完全溶解' },
+      { en: 'Adjust pH to 7.4 with HCl (usually needs very little)', zh: '用 HCl 调 pH 至 7.4（通常只需极少量）' },
+      { en: 'Top up to {v:1000:mL} with ddH₂O', zh: '用 ddH₂O 定容至 {v:1000:mL}' },
+      { en: 'Autoclave 121°C 20 min. Store at RT', zh: '121°C 高压灭菌 20 min，室温保存' },
+      { en: 'Dilute 1:10 to get 1× PBS before use', zh: '使用前 1:10 稀释得 1× PBS' },
+    ],
+  },
+  pbs_1x: {
+    usage: { en: 'Ready-to-use wash/dilution buffer. Used in WB wash, cell culture rinse, ELISA, immunostaining, flow cytometry.', zh: '即用型洗涤/稀释缓冲液。用于 WB 洗膜、细胞培养洗涤、ELISA、免疫染色、流式细胞术。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'RT, 6 months (autoclave)', zh: '室温, 6 个月 (高压灭菌后)' } },
+    relatedProtocols: ['wb_protocol', 'if_protocol', 'flow_cytometry_protocol', 'transwell_migration', 'mycoplasma_pcr'],
+    steps: [
+      { en: 'Dilute {v:100:mL} 10× PBS into {v:900:mL} ddH₂O', zh: '取 {v:100:mL} 10× PBS 加入 {v:900:mL} ddH₂O' },
+      { en: 'Mix well, check pH (~7.4)', zh: '混匀，检查 pH（应为 ~7.4）' },
+      { en: 'Autoclave or filter-sterilize (0.22 µm) for cell culture use', zh: '若用于细胞培养需高压灭菌或 0.22 µm 过滤除菌' },
+    ],
+  },
+  tbs_10x: {
+    usage: { en: 'WB wash base buffer. Preferred over PBS when probing phospho-proteins (phosphate in PBS interferes with anti-pSer/pThr).', zh: 'WB 洗膜基础液。检测磷酸化蛋白时优先选 TBS（PBS 中的磷酸盐会干扰 anti-pSer/pThr 抗体）。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'RT, 12 months', zh: '室温, 12 个月' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Dissolve Tris base and NaCl in ~{v:800:mL} ddH₂O', zh: '将 Tris base 和 NaCl 溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Adjust pH to 7.6 with concentrated HCl (~{v:15:mL} 12N HCl)', zh: '用浓 HCl 调 pH 至 7.6（约需 {v:15:mL} 12N HCl）' },
+      { en: 'Top up to {v:1000:mL}. Autoclave', zh: '定容至 {v:1000:mL}，高压灭菌' },
+    ],
+  },
+  tbst: {
+    usage: { en: 'Standard WB wash buffer. Tween-20 reduces non-specific antibody binding. Use for all wash steps between primary/secondary antibody.', zh: '标准 WB 洗膜液。Tween-20 降低非特异性抗体结合。用于一抗/二抗之间所有洗涤步骤。' },
+    storage: { temp: 'RT', duration: '1 month', icon: '🏠', label: { en: 'RT, ~1 month (check for precipitate)', zh: '室温, 约 1 个月（注意检查是否有沉淀）' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Dilute {v:100:mL} 10× TBS into {v:900:mL} ddH₂O', zh: '取 {v:100:mL} 10× TBS 加入 {v:900:mL} ddH₂O' },
+      { en: 'Add {v:1:mL} Tween-20 (0.1% final)', zh: '加入 {v:1:mL} Tween-20（终浓度 0.1%）' },
+      { en: 'Mix well. No pH adjustment needed', zh: '充分混匀，无需调 pH' },
+    ],
+  },
+  ripa: {
+    usage: { en: 'Strong lysis buffer for total protein extraction. Denatures most protein-protein interactions. Use for WB when you need high yield. NOT for Co-IP (too harsh).', zh: '强裂解液，用于总蛋白提取。会破坏大部分蛋白-蛋白互作。WB 需要高产量时使用。不适用于 Co-IP（太强）。' },
+    storage: { temp: '4°C', duration: '3 months', icon: '❄️', label: { en: '4°C, 3 months; add inhibitors fresh', zh: '4°C, 3 个月；蛋白酶/磷酸酶抑制剂现用现加' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Prepare stock RIPA without protease inhibitors', zh: '配制不含蛋白酶抑制剂的 RIPA 储备液' },
+      { en: 'Dissolve NaCl, Tris-HCl, NP-40/IGEPAL, sodium deoxycholate, SDS in ddH₂O', zh: '将 NaCl、Tris-HCl、NP-40、脱氧胆酸钠、SDS 溶于 ddH₂O' },
+      { en: 'Adjust pH to 7.4 if needed (usually correct from Tris stock)', zh: '必要时调 pH 至 7.4（通常 Tris 母液 pH 已正确）' },
+      { en: 'Filter-sterilize (0.22 µm), store at 4°C', zh: '0.22 µm 过滤除菌，4°C 保存' },
+      { en: 'Before use: add 1× protease inhibitor cocktail + 1 mM PMSF + phosphatase inhibitors', zh: '使用前加入：1× 蛋白酶抑制剂 cocktail + 1 mM PMSF + 磷酸酶抑制剂' },
+    ],
+  },
+  sds_page_gel: {
+    usage: { en: 'Standard SDS-PAGE gel for protein separation. 10% resolving gel separates 20–80 kDa. Adjust % for your target MW — use the Gel Calculator for custom volumes.', zh: '标准 SDS-PAGE 蛋白分离凝胶。10% 分离胶分辨 20–80 kDa。可根据目标分子量调整浓度——使用配胶计算器自定义体积。' },
+    storage: { temp: 'RT', duration: 'Pour fresh', icon: '⏱️', label: { en: 'Pour immediately — polymerizes in ~30 min', zh: '立即灌胶——约 30 分钟凝固' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Mix ddH₂O, Tris-HCl buffer, and acrylamide stock', zh: '混合 ddH₂O、Tris-HCl 缓冲液和丙烯酰胺母液' },
+      { en: 'Add 10% SDS', zh: '加入 10% SDS' },
+      { en: 'Add 10% APS and TEMED last — mix gently', zh: '最后加入 10% APS 和 TEMED——轻柔混匀' },
+      { en: 'Pour resolving gel, overlay with isopropanol, let polymerize ~30 min', zh: '灌入分离胶，覆盖异丙醇，凝固约 30 分钟' },
+      { en: 'Rinse, pour stacking gel with comb, let polymerize ~15 min', zh: '冲洗后灌入浓缩胶并插入梳子，凝固约 15 分钟' },
+    ],
+  },
+  laemmli_2x: {
+    usage: { en: 'SDS-PAGE loading buffer. Denatures proteins, adds negative charge for separation by MW. Add β-ME/DTT fresh for reducing conditions.', zh: 'SDS-PAGE 上样缓冲液。使蛋白变性，添加负电荷以按分子量分离。还原条件下需现加 β-ME/DTT。' },
+    storage: { temp: '-20°C', duration: '6 months', icon: '🧊', label: { en: '-20°C aliquots, 6 months; add β-ME fresh', zh: '-20°C 分装, 6 个月；β-ME 现用现加' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Mix Tris-HCl pH 6.8, glycerol, SDS, and bromophenol blue', zh: '混合 Tris-HCl pH 6.8、甘油、SDS 和溴酚蓝' },
+      { en: 'Heat gently to dissolve SDS if needed (do NOT boil)', zh: '必要时轻微加热溶解 SDS（不要煮沸）' },
+      { en: 'Aliquot 0.5–1 mL per tube, store at -20°C', zh: '分装 0.5–1 mL/管，-20°C 保存' },
+      { en: 'Before use: add 5% β-mercaptoethanol or 100 mM DTT', zh: '使用前加入 5% β-巯基乙醇或 100 mM DTT' },
+      { en: 'Mix 1:1 with protein sample, boil 95°C × 5 min', zh: '与蛋白样品 1:1 混合，95°C 煮沸 5 min' },
+    ],
+  },
+  laemmli_4x: {
+    usage: { en: '4× concentrated loading buffer — saves sample volume. Mix 1:3 with sample for less dilution.', zh: '4× 浓缩上样缓冲液——节省样品体积。与样品 1:3 混合，稀释更少。' },
+    storage: { temp: '-20°C', duration: '6 months', icon: '🧊', label: { en: '-20°C aliquots, 6 months', zh: '-20°C 分装, 6 个月' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Same as 2× but at double concentration', zh: '同 2× 配法，浓度翻倍' },
+      { en: 'Mix 1 part buffer : 3 parts sample', zh: '1 份缓冲液 : 3 份样品混合' },
+      { en: 'Boil 95°C × 5 min', zh: '95°C 煮沸 5 min' },
+    ],
+  },
+  running_buffer: {
+    usage: { en: 'SDS-PAGE electrophoresis buffer (Laemmli system). Conducts current through gel for protein separation.', zh: 'SDS-PAGE 电泳缓冲液（Laemmli 系统）。在凝胶中导电以分离蛋白。' },
+    storage: { temp: 'RT', duration: '2 weeks', icon: '🏠', label: { en: 'RT, use within 2 weeks (single use recommended)', zh: '室温, 2 周内用完（建议单次使用）' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Dilute {v:100:mL} 10× Running Buffer into {v:900:mL} ddH₂O', zh: '取 {v:100:mL} 10× Running Buffer 加入 {v:900:mL} ddH₂O' },
+      { en: 'Mix well. Do NOT adjust pH', zh: '混匀。不要调 pH' },
+      { en: 'Can reuse 2-3× for mini-gels but fresh is better', zh: 'Mini-gel 可重复使用 2-3 次，但建议用新鲜配的' },
+    ],
+  },
+  running_buffer_10x: {
+    usage: { en: 'Stock for SDS-PAGE running buffer. Dilute 1:10 before use.', zh: 'SDS-PAGE 电泳缓冲液母液。使用前 1:10 稀释。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'RT, 6 months', zh: '室温, 6 个月' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Dissolve Tris, glycine, and SDS in ~{v:800:mL} ddH₂O', zh: '将 Tris、甘氨酸和 SDS 溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Stir until clear. Do NOT adjust pH (should be ~8.3)', zh: '搅拌至透明。不要调 pH（应为 ~8.3）' },
+      { en: 'Top up to {v:1000:mL}', zh: '定容至 {v:1000:mL}' },
+    ],
+  },
+  transfer_buffer: {
+    usage: { en: 'Western blot transfer buffer. Transfers proteins from gel to membrane (PVDF/NC). Methanol aids protein-membrane binding and removes SDS.', zh: 'WB 转膜缓冲液。将蛋白从凝胶转移到膜上（PVDF/NC）。甲醇促进蛋白-膜结合并去除 SDS。' },
+    storage: { temp: '4°C', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh; pre-chill to 4°C', zh: '现配现用；预冷至 4°C' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Dilute 10× Running Buffer 1:10, add methanol to 20%', zh: '将 10× Running Buffer 1:10 稀释，加甲醇至 20%' },
+      { en: 'Pre-chill to 4°C (transfer generates heat)', zh: '预冷至 4°C（转膜过程会产热）' },
+      { en: 'For large proteins (>100 kDa): reduce methanol to 10%, add 0.01% SDS', zh: '大蛋白 (>100 kDa)：甲醇降至 10%，加 0.01% SDS' },
+      { en: 'Do NOT adjust pH', zh: '不要调 pH' },
+    ],
+  },
+  blocking_milk: {
+    usage: { en: 'WB blocking — cheap, effective for most antibodies. Do NOT use with anti-phospho antibodies (casein contains phosphoproteins → high background).', zh: 'WB 封闭——便宜好用，适合大多数抗体。不要用于磷酸化抗体检测（酪蛋白含磷蛋白→背景高）。' },
+    storage: { temp: '4°C', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh daily', zh: '每天现配' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Weigh {v:2.5:g} skim milk powder', zh: '称取 {v:2.5:g} 脱脂奶粉' },
+      { en: 'Add to {v:50:mL} TBST, vortex until dissolved', zh: '加入 {v:50:mL} TBST，涡旋至完全溶解' },
+      { en: 'Use immediately. Discard after use', zh: '立即使用，用后丢弃' },
+    ],
+  },
+  blocking_bsa: {
+    usage: { en: 'WB blocking — required for phospho-protein detection. More expensive than milk. Also used for IF blocking.', zh: 'WB 封闭——磷酸化蛋白检测必须用 BSA。比脱脂奶贵。也可用于 IF 封闭。' },
+    storage: { temp: '4°C', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh; BSA stock at 4°C', zh: '现配；BSA 粉末室温保存' } },
+    relatedProtocols: ['wb_protocol', 'if_protocol'],
+    steps: [
+      { en: 'Weigh {v:2.5:g} BSA (Fraction V or IgG-free)', zh: '称取 {v:2.5:g} BSA（Fraction V 或 IgG-free）' },
+      { en: 'Dissolve in {v:50:mL} TBST. Rock gently, do NOT vortex vigorously', zh: '溶于 {v:50:mL} TBST，轻摇溶解，不要剧烈涡旋' },
+      { en: 'Filter through 0.22 µm if needed', zh: '必要时 0.22 µm 过滤' },
+    ],
+  },
+  tae_50x: {
+    usage: { en: 'DNA agarose gel electrophoresis buffer. Good for routine DNA gels. TAE gives better resolution for large fragments; TBE better for small.', zh: 'DNA 琼脂糖凝胶电泳缓冲液。适合常规 DNA 电泳。TAE 对大片段分辨率好；TBE 对小片段好。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'RT, 12 months', zh: '室温, 12 个月' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve Tris base in ~{v:800:mL} ddH₂O', zh: '将 Tris base 溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Add glacial acetic acid and EDTA stock', zh: '加入冰醋酸和 EDTA 母液' },
+      { en: 'Top up to {v:1000:mL}. No pH adjustment needed (~8.5)', zh: '定容至 {v:1000:mL}。无需调 pH（~8.5）' },
+      { en: 'Dilute 1:50 for working solution', zh: '使用时 1:50 稀释' },
+    ],
+  },
+  tbe_10x: {
+    usage: { en: 'Alternative DNA gel buffer. Higher buffering capacity than TAE — better for long runs. Preferred for small DNA/RNA fragments and polyacrylamide gels.', zh: '替代 DNA 凝胶缓冲液。缓冲能力比 TAE 强——适合长时间电泳。小 DNA/RNA 片段和聚丙烯酰胺凝胶首选。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'RT, 12 months; check for precipitate', zh: '室温, 12 个月；注意检查有无沉淀' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve Tris and boric acid in ~{v:800:mL} ddH₂O', zh: '将 Tris 和硼酸溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Add 0.5 M EDTA pH 8.0 stock', zh: '加入 0.5 M EDTA pH 8.0 母液' },
+      { en: 'Top up to {v:1000:mL}. Dilute 1:10 before use', zh: '定容至 {v:1000:mL}。使用时 1:10 稀释' },
+    ],
+  },
+  te: {
+    usage: { en: 'DNA/RNA storage buffer. Tris maintains pH, EDTA chelates Mg²⁺ to inhibit DNases.', zh: 'DNA/RNA 保存缓冲液。Tris 维持 pH，EDTA 螯合 Mg²⁺ 抑制 DNase。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'RT, 12 months (autoclave)', zh: '室温, 12 个月（高压灭菌后）' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Mix Tris-HCl pH 8.0 stock and EDTA pH 8.0 stock', zh: '混合 Tris-HCl pH 8.0 母液和 EDTA pH 8.0 母液' },
+      { en: 'Dilute to final concentrations with ddH₂O', zh: '用 ddH₂O 稀释至终浓度' },
+      { en: 'Autoclave 121°C 20 min', zh: '121°C 高压灭菌 20 min' },
+    ],
+  },
+  strip_buffer: {
+    usage: { en: 'Removes primary+secondary antibodies from WB membrane for re-probing with a different antibody. Mild conditions preserve most antigens.', zh: '去除 WB 膜上的一抗+二抗，用于更换抗体重新检测。温和条件保留大部分抗原。' },
+    storage: { temp: 'RT', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh each time', zh: '每次现配' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Mix glycine, SDS, Tween-20 in ddH₂O', zh: '将甘氨酸、SDS、Tween-20 溶于 ddH₂O' },
+      { en: 'Adjust pH to 2.2 with HCl', zh: '用 HCl 调 pH 至 2.2' },
+      { en: 'Incubate membrane 2×10 min with stripping buffer', zh: '膜在 stripping buffer 中孵育 2×10 min' },
+      { en: 'Wash 2×10 min with PBS, then 2×5 min with TBST', zh: '用 PBS 洗 2×10 min，再用 TBST 洗 2×5 min' },
+      { en: 'Re-block and probe with new antibody', zh: '重新封闭后加新抗体' },
+    ],
+  },
+  ip_lysis: {
+    usage: { en: 'Co-IP lysis buffer. Milder than RIPA — preserves protein-protein interactions. NP-40 concentration can be tuned (0.1–1%).', zh: 'Co-IP 裂解液。比 RIPA 温和——保留蛋白-蛋白互作。NP-40 浓度可调节（0.1–1%）。' },
+    storage: { temp: '4°C', duration: '3 months', icon: '❄️', label: { en: '4°C stock, 3 months; add inhibitors fresh', zh: '4°C 储备, 3 个月；抑制剂现用现加' } },
+    relatedProtocols: ['coip_protocol'],
+    steps: [
+      { en: 'Dissolve Tris-HCl, NaCl, NP-40, EDTA in ddH₂O', zh: '将 Tris-HCl、NaCl、NP-40、EDTA 溶于 ddH₂O' },
+      { en: 'Adjust pH to 7.4', zh: '调 pH 至 7.4' },
+      { en: 'Filter-sterilize, store at 4°C', zh: '0.22 µm 过滤除菌，4°C 保存' },
+      { en: 'Add protease inhibitors immediately before use', zh: '使用前立即加入蛋白酶抑制剂' },
+    ],
+  },
+  chip_lysis: {
+    usage: { en: 'ChIP lysis + sonication buffer. SDS denatures chromatin for efficient shearing. Used after crosslinking with formaldehyde.', zh: 'ChIP 裂解/超声缓冲液。SDS 使染色质变性以高效剪切。在甲醛交联后使用。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: ['chip_protocol'],
+    steps: [
+      { en: 'Dissolve SDS, EDTA, Tris-HCl in ddH₂O', zh: '将 SDS、EDTA、Tris-HCl 溶于 ddH₂O' },
+      { en: 'pH should be ~8.1 from Tris stock', zh: 'pH 应为 ~8.1（来自 Tris 母液）' },
+      { en: 'Add protease inhibitors before use', zh: '使用前加入蛋白酶抑制剂' },
+    ],
+  },
+  chip_dilution: {
+    usage: { en: 'Dilutes the SDS in lysis buffer to allow antibody binding. Reduces SDS from 1% to ~0.1%.', zh: '稀释裂解液中的 SDS 以允许抗体结合。将 SDS 从 1% 降至 ~0.1%。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: ['chip_protocol'],
+    steps: [
+      { en: 'Mix Triton X-100, EDTA, Tris-HCl, NaCl in ddH₂O', zh: '将 Triton X-100、EDTA、Tris-HCl、NaCl 混合于 ddH₂O' },
+      { en: 'Dilute ChIP lysate ~10-fold with this buffer', zh: '用此缓冲液将 ChIP 裂解物稀释约 10 倍' },
+    ],
+  },
+  chip_wash_low: {
+    usage: { en: 'First stringency wash in ChIP — removes loosely bound chromatin.', zh: 'ChIP 第一步严格洗涤——去除松散结合的染色质。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: ['chip_protocol'],
+    steps: [
+      { en: 'Prepare and use ice-cold', zh: '配制后冰上使用' },
+      { en: 'Wash beads 3–5 min with rotation at 4°C', zh: '4°C 旋转洗珠 3–5 min' },
+    ],
+  },
+  chip_wash_high: {
+    usage: { en: 'Second stringency wash in ChIP — higher NaCl removes most non-specific binding.', zh: 'ChIP 第二步严格洗涤——高盐去除大部分非特异结合。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: ['chip_protocol'],
+    steps: [
+      { en: 'Prepare and use ice-cold', zh: '配制后冰上使用' },
+      { en: 'Wash beads 3–5 min with rotation at 4°C', zh: '4°C 旋转洗珠 3–5 min' },
+    ],
+  },
+  pfa_4: {
+    usage: { en: 'Fixative for immunofluorescence, flow cytometry, tissue processing. Crosslinks proteins to preserve cellular structure.', zh: '固定液，用于免疫荧光、流式细胞术、组织处理。交联蛋白以保持细胞结构。' },
+    storage: { temp: '-20°C', duration: 'Aliquot', icon: '🧊', label: { en: '-20°C aliquots; thaw once only; toxic fumes!', zh: '-20°C 分装；只解冻一次；有毒蒸气！' } },
+    relatedProtocols: ['if_protocol', 'flow_cytometry_protocol'],
+    steps: [
+      { en: '⚠️ Work in fume hood! PFA is toxic', zh: '⚠️ 在通风橱内操作！PFA 有毒' },
+      { en: 'Heat PBS to 60°C (do NOT boil)', zh: '将 PBS 加热至 60°C（不要煮沸）' },
+      { en: 'Add PFA powder, stir until dissolved', zh: '加入 PFA 粉末，搅拌至溶解' },
+      { en: 'Add 1–2 drops 1N NaOH to clear solution', zh: '滴加 1–2 滴 1N NaOH 使溶液变澄清' },
+      { en: 'Cool to RT, adjust pH to 7.2–7.4 with HCl', zh: '冷却至室温，用 HCl 调 pH 至 7.2–7.4' },
+      { en: 'Filter (0.22 µm), aliquot, freeze at -20°C', zh: '0.22 µm 过滤，分装，-20°C 冻存' },
+    ],
+  },
+  if_permeabilization: {
+    usage: { en: 'Makes cell membrane permeable for intracellular antibody access in IF. Triton X-100 creates holes in lipid bilayer.', zh: '使细胞膜通透以便抗体进入细胞内部（IF）。Triton X-100 在脂质双层上打孔。' },
+    storage: { temp: 'RT', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh', zh: '现配现用' } },
+    relatedProtocols: ['if_protocol'],
+    steps: [
+      { en: 'Add 0.1–0.5% Triton X-100 to PBS', zh: '在 PBS 中加入 0.1–0.5% Triton X-100' },
+      { en: 'Incubate cells 10–15 min at RT', zh: '室温孵育细胞 10–15 min' },
+      { en: 'Wash 3× with PBS', zh: '用 PBS 洗 3 次' },
+    ],
+  },
+  if_blocking: {
+    usage: { en: 'IF blocking — BSA + serum reduces non-specific antibody binding to fixed/permeabilized cells.', zh: 'IF 封闭——BSA + 血清降低固定/透化细胞上的非特异抗体结合。' },
+    storage: { temp: '4°C', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh; serum matches secondary host', zh: '现配；血清需与二抗来源种属一致' } },
+    relatedProtocols: ['if_protocol'],
+    steps: [
+      { en: 'Dissolve BSA in PBS, add normal serum (same species as secondary Ab)', zh: '将 BSA 溶于 PBS，加入正常血清（与二抗同种属）' },
+      { en: 'Add 0.1% Tween-20 (optional, reduces background)', zh: '可选加入 0.1% Tween-20（降低背景）' },
+      { en: 'Block cells 1 h at RT or overnight at 4°C', zh: '室温封闭 1 h 或 4°C 过夜' },
+    ],
+  },
+  facs_buffer: {
+    usage: { en: 'Flow cytometry staining/wash buffer. BSA prevents non-specific binding, EDTA prevents cell clumping, azide prevents capping.', zh: '流式细胞术染色/洗涤缓冲液。BSA 防非特异结合，EDTA 防细胞聚团，叠氮钠防抗体封帽。' },
+    storage: { temp: '4°C', duration: '2 weeks', icon: '❄️', label: { en: '4°C, 2 weeks', zh: '4°C, 2 周' } },
+    relatedProtocols: ['flow_cytometry_protocol'],
+    steps: [
+      { en: 'Dissolve BSA and EDTA in PBS', zh: '将 BSA 和 EDTA 溶于 PBS' },
+      { en: 'Optional: add 0.05% sodium azide (NaN₃)', zh: '可选：加入 0.05% 叠氮钠 (NaN₃)' },
+      { en: 'Filter-sterilize (0.22 µm)', zh: '0.22 µm 过滤除菌' },
+      { en: 'Keep at 4°C, use cold', zh: '4°C 保存，冷用' },
+    ],
+  },
+  macs_buffer: {
+    usage: { en: 'Magnetic cell separation buffer. Optimized for MACS column flow. BSA prevents non-specific bead binding.', zh: '磁珠细胞分选缓冲液。为 MACS 柱优化。BSA 防止磁珠非特异结合。' },
+    storage: { temp: '4°C', duration: '1 week', icon: '❄️', label: { en: '4°C, 1 week; degas before use', zh: '4°C, 1 周；使用前脱气' } },
+    relatedProtocols: ['flow_cytometry_protocol'],
+    steps: [
+      { en: 'Dissolve BSA and EDTA in PBS', zh: '将 BSA 和 EDTA 溶于 PBS' },
+      { en: 'Degas buffer (prevents air bubbles in MACS column)', zh: '缓冲液脱气（防止 MACS 柱中产生气泡）' },
+      { en: 'Keep at 4°C', zh: '4°C 保存' },
+    ],
+  },
+  nuc_cyt_a: {
+    usage: { en: 'Hypotonic buffer — swells cells for gentle cytoplasmic lysis. NP-40 permeabilizes plasma membrane while keeping nuclei intact.', zh: '低渗缓冲液——使细胞膨胀以温和裂解胞质。NP-40 透化质膜但保持核完整。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month; add DTT+inhibitors fresh', zh: '4°C, 1 个月；DTT+抑制剂现加' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Prepare without DTT and protease inhibitors', zh: '先配制不含 DTT 和蛋白酶抑制剂的储备液' },
+      { en: 'Before use: add 1 mM DTT + protease inhibitors', zh: '使用前加入 1 mM DTT + 蛋白酶抑制剂' },
+      { en: 'Incubate cells on ice 15 min, then add NP-40 to 0.1%', zh: '冰上孵育细胞 15 min，然后加 NP-40 至 0.1%' },
+      { en: 'Vortex 10 s, centrifuge 3000×g 10 min → supernatant = cytoplasm', zh: '涡旋 10 s，3000×g 离心 10 min → 上清 = 胞质' },
+    ],
+  },
+  nuc_cyt_b: {
+    usage: { en: 'High-salt nuclear extraction buffer — extracts nuclear proteins from the nuclear pellet after cytoplasmic fractionation.', zh: '高盐核提取缓冲液——从胞质分离后的核沉淀中提取核蛋白。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month; add inhibitors fresh', zh: '4°C, 1 个月；抑制剂现加' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Resuspend nuclear pellet in Buffer B', zh: '用 Buffer B 重悬核沉淀' },
+      { en: 'Rotate 30 min at 4°C', zh: '4°C 旋转 30 min' },
+      { en: 'Centrifuge 16,000×g 20 min → supernatant = nuclear extract', zh: '16,000×g 离心 20 min → 上清 = 核提取物' },
+    ],
+  },
+  his_binding: {
+    usage: { en: 'Ni-NTA binding/wash buffer for His-tagged protein purification. Imidazole (10–20 mM) reduces non-specific binding.', zh: 'Ni-NTA 结合/洗涤缓冲液，用于 His 标签蛋白纯化。低浓度咪唑 (10–20 mM) 减少非特异结合。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve NaH₂PO₄, NaCl, imidazole in ddH₂O', zh: '将 NaH₂PO₄、NaCl、咪唑溶于 ddH₂O' },
+      { en: 'Adjust pH to 8.0 with NaOH', zh: '用 NaOH 调 pH 至 8.0' },
+      { en: 'Filter-sterilize', zh: '0.22 µm 过滤除菌' },
+    ],
+  },
+  his_elution: {
+    usage: { en: 'Elutes His-tagged protein from Ni-NTA resin. High imidazole (250 mM) competes with His-tag for Ni²⁺ binding.', zh: '从 Ni-NTA 树脂上洗脱 His 标签蛋白。高浓度咪唑 (250 mM) 竞争 His 标签与 Ni²⁺ 的结合。' },
+    storage: { temp: '4°C', duration: '1 month', icon: '❄️', label: { en: '4°C, 1 month', zh: '4°C, 1 个月' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Same as binding buffer but with 250 mM imidazole', zh: '同结合缓冲液，但咪唑浓度为 250 mM' },
+      { en: 'Adjust pH to 8.0 (imidazole shifts pH)', zh: '调 pH 至 8.0（咪唑会改变 pH）' },
+      { en: 'Collect 1 mL fractions, check by Bradford/SDS-PAGE', zh: '收集 1 mL 组分，Bradford/SDS-PAGE 检测' },
+    ],
+  },
+  gst_elution: {
+    usage: { en: 'Elutes GST-tagged protein from glutathione resin. Reduced glutathione competes with GST-glutathione binding.', zh: '从谷胱甘肽树脂上洗脱 GST 标签蛋白。还原型谷胱甘肽竞争 GST-谷胱甘肽结合。' },
+    storage: { temp: '-20°C', duration: 'Aliquot', icon: '🧊', label: { en: '-20°C aliquots; glutathione oxidizes at RT', zh: '-20°C 分装；谷胱甘肽室温易氧化' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve reduced glutathione in 50 mM Tris-HCl pH 8.0', zh: '将还原型谷胱甘肽溶于 50 mM Tris-HCl pH 8.0' },
+      { en: 'Adjust pH to 8.0 (glutathione is acidic)', zh: '调 pH 至 8.0（谷胱甘肽偏酸性）' },
+      { en: 'Use fresh or thaw from -20°C aliquots', zh: '现配或从 -20°C 分装中解冻使用' },
+    ],
+  },
+  native_page_buffer: {
+    usage: { en: 'Native PAGE — separates proteins by charge and shape WITHOUT denaturing. No SDS. For studying native complexes.', zh: 'Native PAGE——按电荷和形状分离蛋白，不变性。无 SDS。用于研究天然蛋白复合物。' },
+    storage: { temp: 'RT', duration: '1 month', icon: '🏠', label: { en: 'RT, 1 month', zh: '室温, 1 个月' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve Tris and glycine in ddH₂O (NO SDS)', zh: '将 Tris 和甘氨酸溶于 ddH₂O（不加 SDS）' },
+      { en: 'pH should be ~8.3. Do not adjust', zh: 'pH 应为 ~8.3，不要调节' },
+      { en: 'Run gel at 4°C to preserve native structure', zh: '在 4°C 跑胶以保持蛋白天然结构' },
+    ],
+  },
+  bn_page_cathode: {
+    usage: { en: 'Blue Native PAGE cathode buffer — Coomassie G-250 provides charge for migration without SDS denaturation. For membrane protein complexes.', zh: 'Blue Native PAGE 阴极缓冲液——考马斯亮蓝 G-250 提供电荷，无需 SDS 变性。用于膜蛋白复合物。' },
+    storage: { temp: '4°C', duration: '1 week', icon: '❄️', label: { en: '4°C, 1 week; Coomassie precipitates over time', zh: '4°C, 1 周；考马斯蓝会沉淀' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve Tricine and Bis-Tris in ddH₂O', zh: '将 Tricine 和 Bis-Tris 溶于 ddH₂O' },
+      { en: 'Add Coomassie G-250 to 0.02%', zh: '加入考马斯亮蓝 G-250 至 0.02%' },
+      { en: 'Prepare fresh; use cold (4°C)', zh: '现配；冷用 (4°C)' },
+    ],
+  },
+  mtt_reagent: {
+    usage: { en: 'Cell viability assay reagent. MTT is reduced by mitochondria in living cells → purple formazan crystals. Dissolved in DMSO and measured at OD570.', zh: '细胞活力检测试剂。活细胞线粒体将 MTT 还原为紫色甲臜结晶。用 DMSO 溶解后 OD570 检测。' },
+    storage: { temp: '-20°C', duration: '6 months', icon: '🧊', label: { en: '-20°C, light-protected, 6 months', zh: '-20°C 避光保存, 6 个月' } },
+    relatedProtocols: ['mtt_assay'],
+    steps: [
+      { en: 'Dissolve MTT powder in PBS to 5 mg/mL', zh: '将 MTT 粉末溶于 PBS 至 5 mg/mL' },
+      { en: 'Filter-sterilize (0.22 µm)', zh: '0.22 µm 过滤除菌' },
+      { en: 'Aliquot into light-protected tubes, store -20°C', zh: '分装至避光管，-20°C 保存' },
+      { en: 'Add 10 µL per 100 µL culture medium, incubate 2–4 h', zh: '每 100 µL 培养基加 10 µL，孵育 2–4 h' },
+    ],
+  },
+  crispr_rnp: {
+    usage: { en: 'CRISPR Cas9-sgRNA ribonucleoprotein assembly buffer. Low salt, neutral pH for RNP complex formation before electroporation.', zh: 'CRISPR Cas9-sgRNA 核糖核蛋白组装缓冲液。低盐、中性 pH，用于电穿孔前的 RNP 复合物形成。' },
+    storage: { temp: '-20°C', duration: '3 months', icon: '🧊', label: { en: '-20°C, 3 months; RNP should be used within 1h of assembly', zh: '-20°C, 3 个月；RNP 组装后 1h 内使用' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Mix HEPES pH 7.5 + KCl + MgCl₂ in nuclease-free H₂O', zh: '将 HEPES pH 7.5 + KCl + MgCl₂ 混合于无核酸酶水中' },
+      { en: 'Add Cas9 protein + sgRNA (1:1.2 molar ratio)', zh: '加入 Cas9 蛋白 + sgRNA（1:1.2 摩尔比）' },
+      { en: 'Incubate RT 10 min for RNP formation', zh: '室温孵育 10 min 形成 RNP 复合物' },
+      { en: 'Electroporate immediately', zh: '立即电穿孔' },
+    ],
+  },
+  // ── v1.8 new buffer enhancements ──
+  mops_running_buffer: {
+    usage: { en: 'NuPAGE MOPS running buffer for Bis-Tris gels. Best for mid-to-high MW proteins (30–200 kDa). Sharper bands than Tris-glycine for proteins >100 kDa.', zh: 'NuPAGE MOPS 电泳缓冲液，配合 Bis-Tris 凝胶。最适合中-高分子量蛋白 (30–200 kDa)。>100 kDa 蛋白条带比 Tris-glycine 系统更锐利。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'Room temp, 6 months (20× stock)', zh: '室温, 6 个月 (20× 储备液)' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Weigh MOPS, Tris base, SDS, EDTA', zh: '称取 MOPS、Tris base、SDS、EDTA' },
+      { en: 'Dissolve in ~{v:800:mL} ddH₂O. Do NOT adjust pH', zh: '溶于约 {v:800:mL} ddH₂O。不需调 pH' },
+      { en: 'Top up to {v:1000:mL} for 1× working solution', zh: '定容至 {v:1000:mL} 得 1× 工作液' },
+      { en: 'For 20× stock: multiply all amounts by 20, dissolve in {v:1:L}', zh: '配 20× 浓缩液: 所有量 ×20，溶于 {v:1:L}' },
+    ],
+  },
+  dna_loading_dye_6x: {
+    usage: { en: '6× loading dye for agarose gel electrophoresis. Adds density (glycerol) so DNA sinks into wells, plus tracking dyes to monitor migration.', zh: '6× 琼脂糖凝胶电泳上样缓冲液。甘油增加密度使 DNA 沉入加样孔，示踪染料监控电泳进程。' },
+    storage: { temp: '4°C', duration: '12 months', icon: '❄️', label: { en: '4°C or -20°C, 12 months', zh: '4°C 或 -20°C, 12 个月' } },
+    relatedProtocols: ['agarose_gel_electrophoresis'],
+    steps: [
+      { en: 'Dissolve Bromophenol Blue and Xylene Cyanol in ddH₂O', zh: '将溴酚蓝和二甲苯青 FF 溶于 ddH₂O' },
+      { en: 'Add glycerol to 30% final', zh: '加甘油至终浓度 30%' },
+      { en: 'Mix well. Aliquot and store at 4°C or -20°C', zh: '充分混匀。分装后 4°C 或 -20°C 保存' },
+      { en: 'Use 1 µL per 5 µL DNA sample', zh: '每 5 µL DNA 样品加 1 µL' },
+    ],
+  },
+  hepes_buffer: {
+    usage: { en: '1M HEPES stock for cell culture medium supplementation. Maintains pH 7.2–7.6 in CO₂-free conditions (imaging, bench work). Also used in many biochemical buffers.', zh: '1M HEPES 储备液，用于补充细胞培养基。在无 CO₂ 条件下 (成像、台面操作) 维持 pH 7.2–7.6。也广泛用于各种生化缓冲液。' },
+    storage: { temp: '4°C', duration: '12 months', icon: '❄️', label: { en: '4°C, 12 months (filter-sterilized)', zh: '4°C, 12 个月 (过滤除菌后)' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve HEPES in ~{v:80:mL} ddH₂O', zh: '将 HEPES 溶于约 {v:80:mL} ddH₂O' },
+      { en: 'Adjust pH to 7.2–7.6 with NaOH', zh: '用 NaOH 调 pH 至 7.2–7.6' },
+      { en: 'Top up to {v:100:mL}', zh: '定容至 {v:100:mL}' },
+      { en: 'Filter-sterilize (0.22 µm). Store at 4°C protected from light', zh: '0.22 µm 过滤除菌。4°C 避光保存' },
+      { en: 'Add to culture medium at 10–25 mM final concentration', zh: '加入培养基至终浓度 10–25 mM' },
+    ],
+  },
+  ssc_20x: {
+    usage: { en: '20× SSC stock for nucleic acid hybridization (Southern/Northern blot, FISH, ISH). Dilute to various stringencies for wash steps.', zh: '20× SSC 储备液，用于核酸杂交 (Southern/Northern blot, FISH, ISH)。稀释至不同严格度用于洗涤步骤。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'Room temp, 12 months (autoclave)', zh: '室温, 12 个月 (高压灭菌后)' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve NaCl and sodium citrate in ~{v:800:mL} ddH₂O', zh: '将 NaCl 和柠檬酸钠溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Adjust pH to 7.0 with HCl', zh: '用 HCl 调 pH 至 7.0' },
+      { en: 'Top up to {v:1000:mL}. Autoclave 121°C 20 min', zh: '定容至 {v:1000:mL}。121°C 高压灭菌 20 min' },
+      { en: 'Dilute as needed: 6× (hybridization), 2× (mild wash), 0.1× (stringent wash)', zh: '按需稀释: 6×（杂交）、2×（温和洗涤）、0.1×（严格洗涤）' },
+    ],
+  },
+  citrate_buffer_ar: {
+    usage: { en: 'Antigen retrieval buffer for FFPE tissue IHC. Heat-induced epitope retrieval (HIER) unmasks antigens cross-linked during formalin fixation.', zh: '石蜡包埋组织 IHC 的抗原修复液。热诱导表位修复 (HIER) 解除甲醛固定导致的抗原交联。' },
+    storage: { temp: 'RT', duration: '3 months', icon: '🏠', label: { en: 'Room temp, 3 months', zh: '室温, 3 个月' } },
+    relatedProtocols: ['if_protocol'],
+    steps: [
+      { en: 'Dissolve sodium citrate in ddH₂O', zh: '将柠檬酸钠溶于 ddH₂O' },
+      { en: 'Adjust pH to 6.0 with HCl', zh: '用 HCl 调 pH 至 6.0' },
+      { en: 'Add Tween-20 to 0.05%. Top up to {v:1:L}', zh: '加 Tween-20 至 0.05%。定容至 {v:1:L}' },
+      { en: 'For retrieval: submerge slides, microwave to boil then medium power 10–20 min', zh: '修复时: 浸没切片，微波煮沸后中火维持 10–20 min' },
+      { en: 'Cool to RT in buffer (~20 min). Then proceed to IHC staining', zh: '在缓冲液中自然冷却至室温 (~20 min)。然后进行 IHC 染色' },
+    ],
+  },
+  edta_trypsin: {
+    usage: { en: 'Cell dissociation solution for passaging adherent cells. Trypsin cleaves cell-surface proteins; EDTA chelates Ca²⁺ to disrupt cadherin-mediated adhesion.', zh: '贴壁细胞传代用消化液。胰蛋白酶切割细胞表面蛋白；EDTA 螯合 Ca²⁺ 破坏钙黏蛋白介导的粘附。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: '-20°C stock, 4°C working (2 weeks)', zh: '-20°C 储存, 4°C 工作液 (2 周)' } },
+    relatedProtocols: ['flow_cytometry_protocol', 'cell_freezing'],
+    steps: [
+      { en: 'Dissolve trypsin and EDTA·4Na in Ca²⁺/Mg²⁺-free PBS', zh: '将胰蛋白酶和 EDTA·4Na 溶于无 Ca²⁺/Mg²⁺ 的 PBS' },
+      { en: 'Filter-sterilize (0.22 µm)', zh: '0.22 µm 过滤除菌' },
+      { en: 'Aliquot 5–10 mL per tube, store -20°C', zh: '分装 5–10 mL/管，-20°C 保存' },
+      { en: 'Pre-warm to 37°C before use. Add to washed cells for 1–5 min', zh: '使用前预热至 37°C。加至洗过的细胞上消化 1–5 min' },
+      { en: 'Neutralize with equal volume of serum-containing medium', zh: '加等体积含血清培养基中和' },
+    ],
+  },
+  depc_water: {
+    usage: { en: 'RNase-free water for RNA work. DEPC inactivates RNases by covalent modification. Essential for RNA extraction, RT-qPCR, in vitro transcription, and Northern blot.', zh: '用于 RNA 实验的无 RNase 水。DEPC 通过共价修饰灭活 RNase。RNA 提取、RT-qPCR、体外转录、Northern blot 必备。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'Room temp, 6 months (autoclaved)', zh: '室温, 6 个月 (高压灭菌后)' } },
+    relatedProtocols: ['trizol_extraction'],
+    steps: [
+      { en: 'Add {v:1:mL} DEPC per {v:1:L} ddH₂O (0.1% v/v)', zh: '每 {v:1:L} ddH₂O 加 {v:1:mL} DEPC (0.1% v/v)' },
+      { en: 'Shake vigorously to disperse (DEPC is not readily soluble)', zh: '剧烈摇匀分散（DEPC 不易溶解）' },
+      { en: 'Incubate 37°C overnight (12 h) or RT for 2 h', zh: '37°C 过夜（12 h）或室温 2 h' },
+      { en: 'Autoclave 121°C 15 min to decompose residual DEPC → CO₂ + ethanol', zh: '121°C 高压灭菌 15 min 分解残余 DEPC → CO₂ + 乙醇' },
+      { en: '⚠️ Do NOT use DEPC with Tris or other amine-containing buffers (DEPC reacts with primary amines). Prepare those buffers with DEPC-water instead', zh: '⚠️ 不要将 DEPC 直接加入 Tris 或其他含氨基的缓冲液（DEPC 与伯胺反应）。改用 DEPC 水配制这些缓冲液' },
+    ],
+  },
+  loading_buffer_nr: {
+    usage: { en: 'Non-reducing SDS-PAGE loading buffer. Preserves disulfide bonds — use for detecting multimers, IgG heavy/light chain integrity, or ligand-receptor complexes under native-like conditions.', zh: '非还原 SDS-PAGE 上样缓冲液。保留二硫键——用于检测多聚体、IgG 重/轻链完整性、或配体-受体复合物。' },
+    storage: { temp: '-20°C', duration: '6 months', icon: '🧊', label: { en: '-20°C aliquots, 6 months', zh: '-20°C 分装, 6 个月' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Mix Tris-HCl pH 6.8, SDS, glycerol, and bromophenol blue in ddH₂O', zh: '将 Tris-HCl pH 6.8、SDS、甘油、溴酚蓝混合于 ddH₂O 中' },
+      { en: 'Heat gently if needed to dissolve SDS. Do NOT add β-ME or DTT', zh: '必要时轻微加热溶解 SDS。不加 β-ME 或 DTT' },
+      { en: 'Aliquot and store at -20°C', zh: '分装后 -20°C 保存' },
+      { en: 'Mix 1:1 with sample. Heat 70°C 10 min (do NOT boil at 95°C)', zh: '与样品 1:1 混合。70°C 加热 10 min（不要 95°C 煮沸）' },
+    ],
+  },
+  perm_buffer_triton: {
+    usage: { en: 'Permeabilization buffer for immunofluorescence. Triton X-100 creates pores in cell membranes after fixation, allowing antibodies to access intracellular targets.', zh: '免疫荧光用透化缓冲液。Triton X-100 在固定后的细胞膜上形成孔，使抗体能进入胞内。' },
+    storage: { temp: 'RT', duration: '1 month', icon: '🏠', label: { en: 'Room temp, 1 month (prepare fresh preferred)', zh: '室温, 1 个月 (推荐现配)' } },
+    relatedProtocols: ['if_protocol'],
+    steps: [
+      { en: 'Add {v:100:µL} Triton X-100 to {v:100:mL} PBS', zh: '取 {v:100:µL} Triton X-100 加入 {v:100:mL} PBS' },
+      { en: 'Mix gently (avoid foaming)', zh: '轻柔混匀（避免起泡）' },
+      { en: 'Apply to PFA-fixed cells, 10–15 min at RT', zh: '加至 PFA 固定的细胞上，室温 10–15 min' },
+      { en: 'Wash 3× PBS before immunostaining', zh: 'PBS 洗 3 次后进行免疫染色' },
+    ],
+  },
+  glycerol_stock: {
+    usage: { en: 'Long-term preservation of bacterial strains at -80°C. Glycerol prevents ice crystal formation that would kill cells. Essential for maintaining strain collections.', zh: '细菌菌株 -80°C 长期保存。甘油防止冰晶形成杀死细胞。维护菌种库的必备操作。' },
+    storage: { temp: '-80°C', duration: 'Years', icon: '🧊', label: { en: '-80°C, years (do NOT freeze-thaw)', zh: '-80°C, 数年 (切勿反复冻融)' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Grow bacteria to stationary phase (O/N culture)', zh: '培养细菌至稳定期（过夜培养）' },
+      { en: 'Mix 750 µL culture + 250 µL sterile 60% glycerol (final ~15%)', zh: '750 µL 菌液 + 250 µL 无菌 60% 甘油（终浓度 ~15%）' },
+      { en: 'Mix gently by inversion. Do NOT vortex', zh: '轻柔颠倒混匀。不要涡旋' },
+      { en: 'Label tube (strain, plasmid, resistance, date). Snap-freeze in liquid N₂', zh: '标记管子（菌株、质粒、抗性、日期）。液氮速冻' },
+      { en: 'Store at -80°C. To recover: streak directly onto selective plate from frozen stock', zh: '-80°C 保存。复苏时：直接从冻存管划线至选择性平板' },
+    ],
+  },
+  '2yt_media': {
+    usage: { en: 'Nutrient-rich bacterial growth medium, 2× the yeast extract and tryptone of standard LB. Ideal for phage display, high-density protein expression, and M13 phage propagation.', zh: '高营养细菌培养基，酵母提取物和胰蛋白胨含量为标准 LB 的 2 倍。适合噬菌体展示、高密度蛋白表达和 M13 噬菌体扩增。' },
+    storage: { temp: 'RT', duration: '3 months', icon: '🏠', label: { en: 'Room temp, 3 months (autoclaved)', zh: '室温, 3 个月 (高压灭菌后)' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve tryptone, yeast extract, and NaCl in ~{v:800:mL} ddH₂O', zh: '将胰蛋白胨、酵母提取物、NaCl 溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Adjust pH to 7.0 with NaOH', zh: '用 NaOH 调 pH 至 7.0' },
+      { en: 'Top up to {v:1000:mL}. Autoclave 121°C 20 min', zh: '定容至 {v:1000:mL}。121°C 高压灭菌 20 min' },
+      { en: 'Cool to ~55°C before adding antibiotics', zh: '冷却至 ~55°C 后再加抗生素' },
+    ],
+  },
+  crystal_violet_stain: {
+    usage: { en: 'Staining solution for colony formation assays, biofilm quantification, and Gram staining. Crystal violet binds DNA and proteins in fixed cells, producing purple color.', zh: '克隆形成实验、生物膜定量和革兰氏染色用染色液。结晶紫与固定细胞中的 DNA 和蛋白结合，产生紫色。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: 'Room temp, 12 months (keep sealed)', zh: '室温, 12 个月 (密封保存)' } },
+    relatedProtocols: ['transwell_migration'],
+    steps: [
+      { en: 'Dissolve crystal violet in methanol first, then add ddH₂O', zh: '先将结晶紫溶于甲醇，再加 ddH₂O' },
+      { en: 'Mix thoroughly. Store in dark bottle', zh: '充分混匀。避光瓶保存' },
+      { en: 'For colony assay: fix cells (methanol or PFA) → stain 20 min → wash with water → air dry → photograph or quantify', zh: '克隆形成: 固定细胞 (甲醇或 PFA) → 染色 20 min → 水洗 → 晾干 → 拍照或定量' },
+      { en: 'Quantify: dissolve stain in 10% acetic acid, read OD₅₉₅', zh: '定量: 用 10% 冰醋酸溶解染色，测 OD₅₉₅' },
+    ],
+  },
+  dapi_staining: {
+    usage: { en: 'Fluorescent nuclear stain for microscopy and flow cytometry. DAPI binds AT-rich regions of dsDNA. Membrane-impermeant → stains only dead cells when unfixed (viability dye); stains all nuclei after fixation/permeabilization.', zh: '荧光核染料，用于显微镜和流式。DAPI 结合双链 DNA 的 AT 富集区。不透膜——未固定时仅染死细胞（活力染料）；固定透化后染所有细胞核。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: 'Stock -20°C 12 months; working solution prepare fresh', zh: '母液 -20°C 12 个月；工作液现配现用' } },
+    relatedProtocols: ['if_protocol', 'flow_cytometry_protocol'],
+    steps: [
+      { en: 'Prepare 5 mg/mL stock: dissolve 5 mg DAPI in 1 mL ddH₂O. Aliquot, store -20°C light-protected', zh: '配 5 mg/mL 母液: 5 mg DAPI 溶于 1 mL ddH₂O。分装，-20°C 避光保存' },
+      { en: 'Dilute to 1 µg/mL in PBS for working solution (1:5000 from stock)', zh: '用 PBS 稀释至 1 µg/mL 工作液（母液 1:5000）' },
+      { en: 'Apply to fixed/permeabilized cells. Incubate 5–10 min RT in dark', zh: '加至固定/透化的细胞。室温避光 5–10 min' },
+      { en: 'Wash 2× PBS. Mount and image (Ex 358 nm / Em 461 nm = blue)', zh: 'PBS 洗 2 次。封片后成像 (Ex 358 nm / Em 461 nm = 蓝色)' },
+    ],
+  },
+  // ── v2.1 new buffer enhancements ──
+  soc: {
+    usage: { en: 'Super Optimal broth with Catabolite repression. Rich recovery medium for transformed bacteria. Glucose enhances plasmid retention.', zh: 'SOC 培养基。转化后细菌的富营养恢复培养基。葡萄糖增强质粒保留。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: '-20°C aliquots, 12 months', zh: '-20°C 分装, 12 个月' } },
+    relatedProtocols: ['heat_shock_transformation', 'electroporation', 'gibson_assembly', 'site_directed_mutagenesis'],
+    steps: [
+      { en: 'Autoclave Tryptone/Yeast/NaCl/KCl together', zh: '将 Tryptone/Yeast/NaCl/KCl 一起高压灭菌' },
+      { en: 'Cool to <60°C, add sterile MgCl₂ and filter-sterilized glucose', zh: '冷却至 <60°C，加入无菌 MgCl₂ 和过滤除菌的葡萄糖' },
+      { en: 'Aliquot and store at -20°C', zh: '分装 -20°C 保存' },
+    ],
+  },
+  lb_agar: {
+    usage: { en: 'Solid growth medium for plating and selecting bacterial colonies. Add antibiotics after cooling to ~55°C.', zh: '用于细菌涂板和筛选的固体培养基。冷却至约 55°C 后再加抗生素。' },
+    storage: { temp: '4°C', duration: '2 months', icon: '❄️', label: { en: '4°C plates, 2 months (sealed)', zh: '4°C 平板, 2 个月 (密封)' } },
+    relatedProtocols: ['gibson_assembly', 'site_directed_mutagenesis'],
+    steps: [
+      { en: 'Autoclave LB + agar at 121°C for 20 min', zh: '121°C 高压灭菌 LB + 琼脂 20 min' },
+      { en: 'Cool to ~55°C before adding antibiotics', zh: '冷却至 ~55°C 后再加抗生素' },
+      { en: 'Pour ~25 mL per 100 mm dish. Let solidify at RT, then store inverted at 4°C', zh: '每 100 mm 皿倒约 25 mL。室温凝固后倒置 4°C 保存' },
+    ],
+  },
+  mes_running_buffer: {
+    usage: { en: 'Low-MW protein separation on Bis-Tris gels. Better than MOPS for proteins <30 kDa.', zh: '用于 Bis-Tris 凝胶的低分子量蛋白分离。<30 kDa 蛋白效果优于 MOPS。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'Room temp, 6 months (20× stock)', zh: '室温, 6 个月 (20× 储备液)' } },
+    relatedProtocols: ['wb_protocol'],
+    steps: [
+      { en: 'Weigh MES, Tris base, SDS, EDTA', zh: '称取 MES、Tris base、SDS、EDTA' },
+      { en: 'Dissolve in ~{v:800:mL} ddH₂O, bring to {v:1:L}. Do NOT adjust pH', zh: '溶于约 {v:800:mL} ddH₂O，定容至 {v:1:L}。不要调 pH' },
+      { en: 'Dilute 1:20 to 1× before use', zh: '使用前 1:20 稀释至 1×' },
+    ],
+  },
+  np40_lysis: {
+    usage: { en: 'Mild, non-denaturing lysis. Preserves protein complexes for Co-IP and interaction studies. Does not solubilize nuclear proteins.', zh: '温和非变性裂解。保留蛋白复合物，适合 Co-IP 和互作研究。不溶解核蛋白。' },
+    storage: { temp: '4°C', duration: '6 months', icon: '❄️', label: { en: '4°C, 6 months; add protease inhibitors fresh', zh: '4°C, 6 个月；蛋白酶抑制剂现用现加' } },
+    relatedProtocols: ['coip_protocol'],
+    steps: [
+      { en: 'Dissolve Tris-HCl, NaCl, EDTA in ddH₂O', zh: '将 Tris-HCl、NaCl、EDTA 溶于 ddH₂O' },
+      { en: 'Add NP-40 (IGEPAL CA-630) to 1%', zh: '加入 NP-40 (IGEPAL CA-630) 至 1%' },
+      { en: 'Adjust pH to 7.4, bring to volume', zh: '调 pH 至 7.4，定容' },
+      { en: 'Add protease inhibitors fresh before use', zh: '使用前现加蛋白酶抑制剂' },
+    ],
+  },
+  rna_loading_dye: {
+    usage: { en: 'Denaturing loading buffer for RNA agarose gel electrophoresis. Formamide disrupts secondary structure for accurate size determination.', zh: 'RNA 变性琼脂糖凝胶电泳上样缓冲液。甲酰胺破坏二级结构以准确判断大小。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: '-20°C aliquots, 12 months', zh: '-20°C 分装, 12 个月' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Mix deionized formamide with EDTA stock', zh: '将去离子甲酰胺与 EDTA 母液混合' },
+      { en: 'Add bromophenol blue and xylene cyanol', zh: '加入溴酚蓝和二甲苯青' },
+      { en: 'Aliquot and store at -20°C', zh: '分装 -20°C 保存' },
+    ],
+  },
+  acetate_buffer: {
+    usage: { en: 'Buffering range pH 3.6–5.6. Common for enzyme assays, protein purification, and histochemistry at acidic pH.', zh: '缓冲范围 pH 3.6–5.6。常用于酸性 pH 下的酶学实验、蛋白纯化和组化。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'RT, 6 months (autoclave)', zh: '室温, 6 个月（高压灭菌后）' } },
+    relatedProtocols: [],
+    steps: [
+      { en: 'Dissolve sodium acetate trihydrate in ~{v:800:mL} ddH₂O', zh: '将醋酸钠三水合物溶于约 {v:800:mL} ddH₂O' },
+      { en: 'Adjust to target pH with glacial acetic acid', zh: '用冰醋酸调至目标 pH' },
+      { en: 'Bring to final volume, autoclave', zh: '定容，高压灭菌' },
+    ],
+  },
+  miniprep_p1: {
+    usage: { en: 'Resuspension buffer for alkaline lysis miniprep. Tris/EDTA stabilize DNA; RNase A degrades RNA during lysis.', zh: '碱裂解质粒提取重悬液。Tris/EDTA 稳定 DNA；RNase A 在裂解过程中降解 RNA。' },
+    storage: { temp: '4°C', duration: '6 months', icon: '❄️', label: { en: '4°C, 6 months (after adding RNase A)', zh: '4°C, 6 个月（加 RNase A 后）' } },
+    relatedProtocols: ['miniprep_protocol'],
+    steps: [
+      { en: 'Dissolve Tris-HCl and EDTA in ddH₂O', zh: '将 Tris-HCl 和 EDTA 溶于 ddH₂O' },
+      { en: 'Adjust pH to 8.0, autoclave', zh: '调 pH 至 8.0，高压灭菌' },
+      { en: 'Cool to RT, add RNase A (do NOT autoclave RNase A)', zh: '冷却至室温，加入 RNase A（不可高压灭菌 RNase A）' },
+      { en: 'Store at 4°C', zh: '4°C 保存' },
+    ],
+  },
+  miniprep_p2: {
+    usage: { en: 'Lysis buffer for alkaline lysis. NaOH denatures genomic DNA and proteins; SDS solubilizes membranes. Must be mixed gently.', zh: '碱裂解液。NaOH 变性基因组 DNA 和蛋白；SDS 溶解细胞膜。必须轻柔混匀。' },
+    storage: { temp: 'RT', duration: '6 months', icon: '🏠', label: { en: 'RT, 6 months (or prepare fresh)', zh: '室温, 6 个月（或现用现配）' } },
+    relatedProtocols: ['miniprep_protocol'],
+    steps: [
+      { en: 'Dissolve NaOH and SDS in ddH₂O', zh: '将 NaOH 和 SDS 溶于 ddH₂O' },
+      { en: 'Mix gently — do not autoclave', zh: '轻柔混匀——不需要高压灭菌' },
+    ],
+  },
+  miniprep_p3: {
+    usage: { en: 'Neutralization buffer. K⁺ precipitates SDS as KDS, co-precipitating denatured genomic DNA and proteins. Plasmid DNA renatures and stays in solution.', zh: '中和液。K⁺ 使 SDS 沉淀为 KDS，共沉淀变性的基因组 DNA 和蛋白。质粒 DNA 复性后留在溶液中。' },
+    storage: { temp: 'RT', duration: '12 months', icon: '🏠', label: { en: '4°C or RT, 12 months', zh: '4°C 或室温, 12 个月' } },
+    relatedProtocols: ['miniprep_protocol'],
+    steps: [
+      { en: 'Dissolve potassium acetate in ddH₂O', zh: '将醋酸钾溶于 ddH₂O' },
+      { en: 'Adjust pH to 5.5 with glacial acetic acid', zh: '用冰醋酸调 pH 至 5.5' },
+      { en: 'Bring to volume', zh: '定容' },
+    ],
+  },
+  freezing_medium: {
+    usage: { en: 'Standard freezing medium for mammalian cell lines. 90% FBS + 10% DMSO is the most common formulation.', zh: '哺乳动物细胞系的标准冻存液。90% FBS + 10% DMSO 是最常用配方。' },
+    storage: { temp: 'RT', duration: 'Fresh', icon: '⚡', label: { en: 'Prepare fresh; DMSO aliquots at RT', zh: '现用现配；DMSO 分装室温保存' } },
+    relatedProtocols: ['cell_freezing'],
+    steps: [
+      { en: 'Add DMSO to heat-inactivated FBS (90:10 ratio)', zh: '将 DMSO 加入灭活 FBS（90:10 比例）' },
+      { en: 'Mix gently, pre-chill at 4°C before use', zh: '轻柔混匀，使用前 4°C 预冷' },
+    ],
+  },
+  complete_dmem: {
+    usage: { en: 'Standard growth medium for most adherent mammalian cell lines. DMEM high-glucose with 10% FBS, 1% Pen/Strep.', zh: '大多数贴壁哺乳动物细胞系的标准培养基。高糖 DMEM + 10% FBS + 1% 双抗。' },
+    storage: { temp: '4°C', duration: '4 weeks', icon: '❄️', label: { en: '4°C, 4 weeks after adding serum', zh: '4°C, 加血清后 4 周' } },
+    relatedProtocols: ['scratch_assay', 'cell_freezing', 'cell_thawing', 'lentivirus_production'],
+    steps: [
+      { en: 'Under sterile conditions, add FBS and Pen/Strep to DMEM', zh: '无菌条件下，向 DMEM 中加入 FBS 和双抗' },
+      { en: 'Optional: add sodium pyruvate', zh: '可选：加入丙酮酸钠' },
+      { en: 'Mix gently, store at 4°C. Pre-warm to 37°C before use', zh: '轻柔混匀，4°C 保存。使用前预热至 37°C' },
+    ],
+  },
+  complete_rpmi: {
+    usage: { en: 'Standard medium for suspension cells (Jurkat, K562), lymphocytes, PBMCs, and hybridomas.', zh: '悬浮细胞（Jurkat、K562）、淋巴细胞、PBMC 和杂交瘤的标准培养基。' },
+    storage: { temp: '4°C', duration: '4 weeks', icon: '❄️', label: { en: '4°C, 4 weeks after adding serum', zh: '4°C, 加血清后 4 周' } },
+    relatedProtocols: ['cell_freezing', 'cell_thawing'],
+    steps: [
+      { en: 'Under sterile conditions, add FBS and Pen/Strep to RPMI-1640', zh: '无菌条件下，向 RPMI-1640 中加入 FBS 和双抗' },
+      { en: 'Add β-mercaptoethanol for lymphocyte culture', zh: '淋巴细胞培养需加 β-巯基乙醇' },
+      { en: 'Optional: add HEPES for pH stability', zh: '可选：加 HEPES 维持 pH 稳定' },
+      { en: 'Store at 4°C. Pre-warm to 37°C before use', zh: '4°C 保存。使用前预热至 37°C' },
+    ],
+  },
+  // ── batch 2 buffer enhancements ──
+  polybrene_stock: {
+    usage: { en: 'Cationic polymer that enhances retroviral/lentiviral transduction by neutralizing charge repulsion between virions and cell surface.', zh: '阳离子聚合物，通过中和病毒颗粒与细胞表面的电荷排斥增强逆转录/慢病毒转导效率。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: '-20°C aliquots, 12 months', zh: '-20°C 分装, 12 个月' } },
+    relatedProtocols: ['lentivirus_production'],
+    steps: [
+      { en: 'Dissolve {v:100:mg} Polybrene in {v:10:mL} sterile ddH₂O', zh: '将 {v:100:mg} Polybrene 溶于 {v:10:mL} 无菌 ddH₂O' },
+      { en: 'Filter-sterilize through 0.22 µm', zh: '0.22 µm 过滤除菌' },
+      { en: 'Aliquot 100-500 µL per tube. Store at -20°C', zh: '分装 100-500 µL/管。-20°C 保存' },
+    ],
+  },
+  gibson_mastermix: {
+    usage: { en: 'Homemade isothermal assembly master mix. 1/10 cost of commercial kit. T5 exonuclease + Phusion + Taq ligase in optimized buffer.', zh: '自配等温组装反应液。成本约为商业试剂盒的 1/10。T5 外切酶 + Phusion + Taq 连接酶在优化缓冲液中。' },
+    storage: { temp: '-20°C', duration: '12 months', icon: '🧊', label: { en: '-20°C aliquots (15 µL), avoid freeze-thaw', zh: '-20°C 分装 (15 µL), 避免反复冻融' } },
+    relatedProtocols: ['gibson_assembly'],
+    steps: [
+      { en: 'Prepare 5× ISO Buffer: 25% PEG-8000, 500 mM Tris-HCl pH 7.5, 50 mM MgCl₂, 50 mM DTT, 1 mM each dNTP, 5 mM NAD', zh: '配制 5× ISO Buffer: 25% PEG-8000, 500 mM Tris-HCl pH 7.5, 50 mM MgCl₂, 50 mM DTT, 各 1 mM dNTP, 5 mM NAD' },
+      { en: 'Mix ISO Buffer with enzymes and ddH₂O on ice', zh: '冰上混合 ISO Buffer、酶和 ddH₂O' },
+      { en: 'Aliquot 15 µL per tube. Store at -20°C', zh: '分装 15 µL/管。-20°C 保存' },
+    ],
+  },
+  matrigel_coating: {
+    usage: { en: 'Diluted Matrigel for coating Transwell inserts (invasion assay) or culture surfaces (3D culture, organoids).', zh: '稀释的 Matrigel，用于包被 Transwell 膜（侵袭实验）或培养表面（3D 培养、类器官）。' },
+    storage: { temp: '-20°C', duration: 'Prepare fresh', icon: '❄️', label: { en: 'Prepare fresh on ice; stock at -20°C', zh: '冰上现配；母液 -20°C 保存' } },
+    relatedProtocols: ['transwell_migration'],
+    steps: [
+      { en: 'Thaw Matrigel stock overnight at 4°C on ice (NEVER at RT)', zh: '4°C 冰上过夜解冻 Matrigel 母液（绝不在室温解冻）' },
+      { en: 'Dilute 1:8 in ice-cold serum-free medium using pre-chilled tips', zh: '用预冷枪头在冰冷无血清培养基中 1:8 稀释' },
+      { en: 'Apply 50 µL per Transwell insert. Incubate 1-2h at 37°C to solidify', zh: '每个 Transwell 加 50 µL。37°C 孵育 1-2h 凝固' },
+    ],
+  },
+  chloroquine_stock: {
+    usage: { en: 'Lysosomotropic agent that inhibits endosomal acidification, enhancing CaPO₄ and PEI transfection efficiency in lentivirus production.', zh: '溶酶体趋向试剂，抑制内体酸化，提高 CaPO₄ 和 PEI 转染效率，用于慢病毒包装。' },
+    storage: { temp: '-20°C', duration: '6 months', icon: '🧊', label: { en: '-20°C aliquots, 6 months, protect from light', zh: '-20°C 分装, 6 个月, 避光' } },
+    relatedProtocols: ['lentivirus_production'],
+    steps: [
+      { en: 'Dissolve {v:129:mg} chloroquine diphosphate in {v:10:mL} sterile ddH₂O', zh: '将 {v:129:mg} 氯喹二磷酸盐溶于 {v:10:mL} 无菌 ddH₂O' },
+      { en: 'Filter-sterilize through 0.22 µm', zh: '0.22 µm 过滤除菌' },
+      { en: 'Aliquot in amber tubes or wrap in foil. Store at -20°C', zh: '分装至棕色管或锡箔包裹。-20°C 保存' },
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════════
+// DATA: Protocol Enhancements (brief/detailed steps, materials with recipe links)
+// ═══════════════════════════════════════════════
+
+const PROTOCOL_ENHANCEMENTS = {
+  trizol_extraction: {
+    usage: { en: 'Gold-standard total RNA extraction using phenol-guanidinium. High yield from cells, tissues, bacteria. Compatible with downstream RT-qPCR, RNA-seq, Northern blot.', zh: '苯酚-异硫氰酸胍法提取总 RNA 的金标准。适用于细胞、组织、细菌。兼容 RT-qPCR、RNA-seq、Northern blot 等下游实验。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — RNA stored at -80°C', zh: '实验方案 — RNA -80°C 保存' } },
+    materials: [
+      { name: 'TRIzol Reagent', note: { en: 'Commercial reagent', zh: '商品化试剂' } },
+      { name: 'Chloroform', note: { en: 'ACS grade', zh: '分析纯' } },
+      { name: 'Isopropanol', note: { en: 'Molecular biology grade', zh: '分子生物学级' } },
+      { name: '75% Ethanol', note: { en: 'DEPC-H₂O diluted', zh: 'DEPC 水配制' } },
+      { name: 'RNase-free H₂O', note: { en: 'DEPC-treated or commercial', zh: 'DEPC 处理或商品化' } },
+    ],
+    briefSteps: [
+      { en: 'Lyse cells in TRIzol → add chloroform → centrifuge → collect aqueous phase → isopropanol precipitate → ethanol wash → dissolve RNA', zh: 'TRIzol 裂解 → 加氯仿 → 离心 → 取水相 → 异丙醇沉淀 → 乙醇洗涤 → 溶解 RNA' },
+    ],
+    detailedSteps: [
+      { en: '**Cell lysis**: Remove media, add 1 mL TRIzol per 5–10×10⁶ cells (or 50–100 mg tissue). Pipet up/down 10× to lyse completely', zh: '**细胞裂解**: 去除培养基，每 5–10×10⁶ 细胞加 1 mL TRIzol（或 50–100 mg 组织）。反复吹打 10 次至完全裂解' },
+      { en: 'Incubate 5 min at RT to dissociate nucleoprotein complexes', zh: '室温静置 5 min，使核蛋白复合物完全解离' },
+      { en: '**Phase separation**: Add 0.2 mL chloroform per 1 mL TRIzol. Cap tightly, shake vigorously 15 s (do NOT vortex)', zh: '**相分离**: 每 1 mL TRIzol 加 0.2 mL 氯仿。盖紧管盖，剧烈摇晃 15 s（不要涡旋）' },
+      { en: 'Incubate 2–3 min at RT. Solution should turn milky pink', zh: '室温静置 2–3 min。溶液应变为乳白粉红色' },
+      { en: 'Centrifuge 12,000×g, 15 min, 4°C. Three layers form: red organic (bottom), white interphase, clear aqueous (top)', zh: '4°C 12,000×g 离心 15 min。形成三层：红色有机相（底）、白色中间相、透明水相（顶）' },
+      { en: '**RNA precipitation**: Carefully transfer upper aqueous phase to new tube (~60% of TRIzol volume). ⚠️ Avoid interphase!', zh: '**RNA 沉淀**: 小心转移上层水相至新管（约为 TRIzol 体积的 60%）。⚠️ 避免触碰中间相！' },
+      { en: 'Add 0.5 mL isopropanol per 1 mL TRIzol. Mix gently by inversion 6×', zh: '每 1 mL TRIzol 加 0.5 mL 异丙醇。轻柔颠倒混匀 6 次' },
+      { en: 'Incubate 10 min RT (or -20°C 1 h for low-abundance samples)', zh: '室温静置 10 min（低丰度样品可 -20°C 放 1 h）' },
+      { en: 'Centrifuge 12,000×g, 10 min, 4°C. RNA pellet should be visible (white/translucent)', zh: '4°C 12,000×g 离心 10 min。应可见 RNA 沉淀（白色/半透明）' },
+      { en: '**Wash**: Discard supernatant. Add 1 mL 75% ethanol (in DEPC-H₂O). Vortex briefly', zh: '**洗涤**: 弃上清。加 1 mL 75% 乙醇（DEPC 水配制）。短暂涡旋' },
+      { en: 'Centrifuge 7,500×g, 5 min, 4°C. Discard ethanol completely', zh: '4°C 7,500×g 离心 5 min。完全弃去乙醇' },
+      { en: '**Dissolve**: Air-dry pellet 5–10 min (do NOT over-dry — pellet becomes hard to dissolve). Dissolve in 20–50 µL RNase-free H₂O', zh: '**溶解**: 室温风干沉淀 5–10 min（不要过度干燥——会难以溶解）。加 20–50 µL 无 RNase 水溶解' },
+      { en: 'Incubate 55°C, 10 min to aid dissolution. Place on ice', zh: '55°C 孵育 10 min 促进溶解。然后置于冰上' },
+      { en: '**QC**: Measure A260/280 (expect ~2.0) and A260/230 (expect >1.7). Run on gel or Bioanalyzer if needed', zh: '**质检**: 测 A260/280（期望 ~2.0）和 A260/230（期望 >1.7）。必要时跑胶或 Bioanalyzer 检测' },
+    ],
+  },
+  wb_protocol: {
+    usage: { en: 'Detect specific proteins in cell/tissue lysates by separating on SDS-PAGE, transferring to membrane, and probing with antibodies. Quantitative with proper controls.', zh: '通过 SDS-PAGE 分离蛋白，转膜后用抗体探测特定蛋白。适当对照下可实现定量分析。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2-day experiment', zh: '实验方案 — 2 天实验' } },
+    materials: [
+      { name: 'RIPA Buffer', linkedRecipe: 'ripa' },
+      { name: 'Laemmli Buffer (2×)', linkedRecipe: 'laemmli_2x' },
+      { name: 'Running Buffer (1×)', linkedRecipe: 'running_buffer' },
+      { name: 'Transfer Buffer', linkedRecipe: 'transfer_buffer' },
+      { name: 'TBST', linkedRecipe: 'tbst' },
+      { name: '5% Milk Blocking', linkedRecipe: 'blocking_milk' },
+      { name: '5% BSA Blocking', linkedRecipe: 'blocking_bsa' },
+      { name: 'Stripping Buffer', linkedRecipe: 'strip_buffer' },
+      { name: 'PVDF/NC membrane', note: { en: 'PVDF: activate in methanol', zh: 'PVDF: 甲醇活化' } },
+      { name: 'ECL substrate', note: { en: 'Commercial kit', zh: '商品化试剂盒' } },
+      { name: 'Protein ladder', note: { en: 'Pre-stained, 10–250 kDa', zh: '预染 Marker, 10–250 kDa' } },
+    ],
+    briefSteps: [
+      { en: 'Lyse → quantify → SDS-PAGE → transfer → block → primary Ab O/N → wash → secondary Ab 1h → wash → ECL detect', zh: '裂解 → 定量 → SDS-PAGE → 转膜 → 封闭 → 一抗过夜 → 洗 → 二抗 1h → 洗 → ECL 检测' },
+    ],
+    detailedSteps: [
+      { en: '**Day 1 — Sample prep**', zh: '**第一天 — 样品制备**', isHeader: true },
+      { en: '**Lysis**: Aspirate media, wash 1× cold PBS. Add cold RIPA buffer (100–200 µL per well of 6-well plate). Rock on ice 15–30 min', zh: '**裂解**: 吸除培养基，冷 PBS 洗 1 次。加冷 RIPA 裂解液（6 孔板每孔 100–200 µL）。冰上晃动 15–30 min' },
+      { en: 'Scrape cells, transfer to 1.5 mL tube. Centrifuge 14,000×g, 15 min, 4°C. Transfer supernatant (= total protein)', zh: '刮下细胞，转移至 1.5 mL 管。4°C 14,000×g 离心 15 min。取上清（= 总蛋白）' },
+      { en: '**Quantification**: BCA or Bradford assay. Need 20–50 µg protein per lane', zh: '**定量**: BCA 或 Bradford 法。每泳道需 20–50 µg 蛋白' },
+      { en: 'Mix protein sample with equal volume 2× Laemmli buffer (or 1:3 with 4× buffer)', zh: '蛋白样品与等体积 2× Laemmli buffer 混合（或与 4× buffer 1:3 混合）' },
+      { en: 'Boil 95°C, 5 min (or 70°C, 10 min for membrane proteins). Quick-spin, place on ice or store -20°C', zh: '95°C 煮沸 5 min（膜蛋白用 70°C, 10 min）。快速离心，冰上或 -20°C 保存' },
+      { en: '**SDS-PAGE**: Set up gel (choose % based on target MW — see Gel Calculator tab). Load samples + ladder', zh: '**SDS-PAGE**: 装好凝胶（根据目标蛋白分子量选择浓度——参见配胶计算 tab）。上样 + Marker' },
+      { en: 'Run: 80V through stacking gel (~20 min), then 120V through resolving gel (~1–1.5 h). Run until dye front reaches bottom', zh: '电泳: 浓缩胶 80V（约 20 min），分离胶 120V（约 1–1.5 h）。跑至溴酚蓝到达底部' },
+      { en: '**Transfer**: Prepare transfer sandwich — sponge / filter paper / gel / membrane / filter paper / sponge. Remove all air bubbles!', zh: '**转膜**: 组装转膜三明治——海绵 / 滤纸 / 凝胶 / 膜 / 滤纸 / 海绵。去除所有气泡！' },
+      { en: 'Wet transfer: 100V, 60–90 min in cold Transfer Buffer with ice pack. OR semi-dry: 25V, 30 min', zh: '湿转: 冷 Transfer Buffer 中 100V, 60–90 min，加冰块。或半干转: 25V, 30 min' },
+      { en: 'For proteins >150 kDa: transfer at 30V overnight at 4°C, reduce methanol to 10%, add 0.01% SDS', zh: '>150 kDa 蛋白: 4°C 30V 过夜转膜，甲醇降至 10%，加 0.01% SDS' },
+      { en: '**Verify transfer**: Ponceau S stain membrane 2 min, wash with ddH₂O. Photograph. Destain with TBST', zh: '**验证转膜**: Ponceau S 染膜 2 min，ddH₂O 冲洗。拍照。用 TBST 脱色' },
+      { en: '**Blocking**: 5% milk/TBST or 5% BSA/TBST, 1 h at RT with rocking. ⚠️ Use BSA for phospho-antibodies!', zh: '**封闭**: 5% 脱脂奶/TBST 或 5% BSA/TBST，室温摇 1 h。⚠️ 磷酸化抗体必须用 BSA！' },
+      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:500–1:2000). Incubate 4°C overnight with rocking', zh: '**一抗**: 用封闭液稀释（通常 1:500–1:2000）。4°C 摇孵过夜' },
+      { en: '**Day 2 — Detection**', zh: '**第二天 — 检测**', isHeader: true },
+      { en: '**Wash**: TBST 3×10 min with rocking. Use generous volume (>10 mL per wash)', zh: '**洗膜**: TBST 3×10 min 摇洗。用量要足（每次 >10 mL）' },
+      { en: '**Secondary antibody**: HRP-conjugated anti-mouse/rabbit IgG, dilute 1:5000–1:10,000 in blocking buffer. 1 h RT', zh: '**二抗**: HRP 标记的抗鼠/兔 IgG，封闭液 1:5000–1:10,000 稀释。室温 1 h' },
+      { en: '**Wash**: TBST 3×10 min. Final wash with TBS (no Tween) 1×5 min', zh: '**洗膜**: TBST 3×10 min。最后用 TBS（不含 Tween）洗 1×5 min' },
+      { en: '**Detection**: Mix ECL components 1:1, apply to membrane, incubate 1–5 min. Image on ChemiDoc or expose to film', zh: '**检测**: ECL 等比混合，涂于膜上，孵育 1–5 min。用化学发光成像仪或胶片曝光' },
+      { en: '**Analysis**: Quantify band intensity with ImageJ/Image Lab. Normalize to loading control (β-actin, GAPDH, or total protein)', zh: '**分析**: 用 ImageJ/Image Lab 定量条带灰度。以 loading control（β-actin、GAPDH 或总蛋白）归一化' },
+    ],
+  },
+  if_protocol: {
+    usage: { en: 'Visualize protein localization and expression in fixed cells using fluorescent antibodies. Compatible with confocal, epifluorescence, and super-resolution microscopy.', zh: '用荧光抗体观察固定细胞中蛋白的定位和表达。兼容共聚焦、落射荧光和超分辨率显微镜。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — same day (~5h + overnight)', zh: '实验方案 — 当天完成（~5h + 过夜）' } },
+    materials: [
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: '4% PFA', linkedRecipe: 'pfa_4' },
+      { name: 'Permeabilization buffer', linkedRecipe: 'if_permeabilization' },
+      { name: 'Blocking buffer', linkedRecipe: 'if_blocking' },
+      { name: 'DAPI', note: { en: '1 mg/mL stock → 1:1000 in PBS', zh: '1 mg/mL 母液 → PBS 中 1:1000' } },
+      { name: 'Mounting medium', note: { en: 'ProLong Gold / Vectashield', zh: 'ProLong Gold / Vectashield' } },
+      { name: 'Coverslips + slides', note: { en: '#1.5 thickness for confocal', zh: '#1.5 厚度，适合共聚焦' } },
+    ],
+    briefSteps: [
+      { en: 'Culture on coverslips → fix (PFA) → permeabilize → block → primary Ab O/N → wash → fluorescent secondary 1h → DAPI → mount', zh: '盖玻片培养 → 固定 (PFA) → 透化 → 封闭 → 一抗过夜 → 洗 → 荧光二抗 1h → DAPI → 封片' },
+    ],
+    detailedSteps: [
+      { en: '**Cell preparation**: Seed cells on sterile coverslips in 24-well plate (or chamber slides). Culture to 50–70% confluency', zh: '**细胞准备**: 将无菌盖玻片放入 24 孔板（或使用 chamber slides）。培养至 50–70% 汇合度' },
+      { en: 'For suspension cells: use poly-L-lysine coated coverslips or cytospin onto slides', zh: '悬浮细胞：使用多聚赖氨酸包被的盖玻片或 cytospin 到载玻片上' },
+      { en: '**Fixation**: Aspirate media, wash 2× with RT PBS (gentle!). Add 4% PFA, 15 min RT', zh: '**固定**: 吸除培养基，室温 PBS 轻柔洗 2 次。加 4% PFA，室温固定 15 min' },
+      { en: '⚠️ Do NOT fix >20 min — over-fixation masks epitopes. For some antigens, try ice-cold methanol 10 min instead', zh: '⚠️ 不要固定 >20 min——过度固定会遮蔽表位。某些抗原可改用冰冷甲醇固定 10 min' },
+      { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min' },
+      { en: '**Permeabilization**: 0.1–0.5% Triton X-100 / PBS, 10 min RT. (Membrane proteins: skip this step or use 0.05%)', zh: '**透化**: 0.1–0.5% Triton X-100 / PBS，室温 10 min（膜蛋白：跳过此步或用 0.05%）' },
+      { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min' },
+      { en: '**Blocking**: 3% BSA + 5% normal serum (same species as secondary Ab) in PBS-T, 1 h RT', zh: '**封闭**: 3% BSA + 5% 正常血清（与二抗同种属）溶于 PBS-T，室温 1 h' },
+      { en: '**Primary antibody**: Dilute in blocking buffer (typically 1:50–1:500). Apply 200 µL per coverslip. 4°C overnight in humidified chamber', zh: '**一抗**: 用封闭液稀释（通常 1:50–1:500）。每片加 200 µL。4°C 湿盒过夜' },
+      { en: '💡 Lay parafilm in dish + wet paper towel to make humidity chamber. Place coverslips cell-side DOWN on antibody drops', zh: '💡 用保鲜膜铺在培养皿中 + 湿纸巾做湿盒。盖玻片细胞面朝下放在抗体液滴上' },
+      { en: 'Wash 3×5 min PBS (from here on, protect from light!)', zh: 'PBS 洗 3×5 min（从此步起避光操作！）' },
+      { en: '**Secondary antibody**: Fluorescent-conjugated (Alexa Fluor 488/555/647), 1:200–1:1000 in blocking buffer, 1 h RT dark', zh: '**荧光二抗**: Alexa Fluor 488/555/647 等，封闭液 1:200–1:1000 稀释，室温避光 1 h' },
+      { en: 'Wash 3×5 min PBS', zh: 'PBS 洗 3×5 min' },
+      { en: '**DAPI**: 1 µg/mL in PBS, 5 min RT. Wash 2× PBS', zh: '**DAPI 染核**: 1 µg/mL PBS 溶液，室温 5 min。PBS 洗 2 次' },
+      { en: '**Mount**: Add small drop of mounting medium on slide. Place coverslip cell-side down. Avoid bubbles. Seal edges with nail polish', zh: '**封片**: 在载玻片上滴少量封片剂。盖玻片细胞面朝下放置。避免气泡。指甲油封边' },
+      { en: 'Let cure 24 h at RT (or 4°C overnight). Image within 1 week for best signal', zh: '室温固化 24 h（或 4°C 过夜）。1 周内成像信号最佳' },
+    ],
+  },
+  chip_protocol: {
+    usage: { en: 'Map protein-DNA interactions genome-wide. Identifies transcription factor binding sites and histone modifications. Combine with qPCR or sequencing (ChIP-seq).', zh: '全基因组水平检测蛋白-DNA 相互作用。鉴定转录因子结合位点和组蛋白修饰。可结合 qPCR 或测序（ChIP-seq）。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 3-day experiment', zh: '实验方案 — 3 天实验' } },
+    materials: [
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: 'ChIP Lysis Buffer', linkedRecipe: 'chip_lysis' },
+      { name: 'ChIP Dilution Buffer', linkedRecipe: 'chip_dilution' },
+      { name: 'Low-Salt Wash Buffer', linkedRecipe: 'chip_wash_low' },
+      { name: 'High-Salt Wash Buffer', linkedRecipe: 'chip_wash_high' },
+      { name: 'TE Buffer', linkedRecipe: 'te' },
+      { name: '37% Formaldehyde', note: { en: 'Methanol-free preferred', zh: '优选无甲醇型' } },
+      { name: '2.5 M Glycine', note: { en: 'Quench crosslinking', zh: '终止交联反应' } },
+      { name: 'Protein A/G magnetic beads', note: { en: 'Dynabeads or equivalent', zh: 'Dynabeads 或同类产品' } },
+      { name: 'Proteinase K', note: { en: '20 mg/mL stock', zh: '20 mg/mL 母液' } },
+      { name: 'RNase A', note: { en: '10 mg/mL', zh: '10 mg/mL' } },
+    ],
+    briefSteps: [
+      { en: 'Crosslink → lyse → sonicate → IP with antibody+beads → wash → elute → reverse crosslink → purify DNA → qPCR/seq', zh: '交联 → 裂解 → 超声 → 抗体+磁珠 IP → 洗涤 → 洗脱 → 解交联 → 纯化 DNA → qPCR/测序' },
+    ],
+    detailedSteps: [
+      { en: '**Day 1 — Crosslinking & Sonication**', zh: '**第一天 — 交联与超声**', isHeader: true },
+      { en: '**Crosslink**: Add 37% formaldehyde directly to culture media to 1% final (270 µL per 10 mL media). Rock 10 min RT', zh: '**交联**: 向培养基中直接加入 37% 甲醛至终浓度 1%（每 10 mL 培养基加 270 µL）。室温摇 10 min' },
+      { en: '**Quench**: Add 2.5 M glycine to 125 mM final. Rock 5 min RT', zh: '**终止**: 加 2.5 M 甘氨酸至终浓度 125 mM。室温摇 5 min' },
+      { en: 'Wash 2× cold PBS. Scrape cells in PBS + protease inhibitors. Pellet 800×g 5 min 4°C', zh: '冷 PBS 洗 2 次。PBS + 蛋白酶抑制剂中刮下细胞。4°C 800×g 离心 5 min' },
+      { en: '**Lysis**: Resuspend pellet in SDS Lysis Buffer (200 µL per 1×10⁶ cells). Incubate ice 10 min', zh: '**裂解**: 用 SDS Lysis Buffer 重悬沉淀（每 1×10⁶ 细胞 200 µL）。冰上 10 min' },
+      { en: '**Sonication**: Shear chromatin to 200–500 bp. ⚠️ Must optimize! (e.g., Bioruptor: 30s on/30s off, 15–25 cycles)', zh: '**超声**: 将染色质剪切至 200–500 bp。⚠️ 必须优化条件！（如 Bioruptor: 30s 开/30s 关，15–25 个循环）' },
+      { en: '💡 Check shearing: take 10 µL aliquot, reverse crosslink (65°C + Proteinase K), run on 1.5% agarose gel', zh: '💡 检查剪切效果：取 10 µL，解交联（65°C + Proteinase K），跑 1.5% 琼脂糖凝胶' },
+      { en: 'Centrifuge 14,000×g, 10 min, 4°C. Transfer supernatant (= sheared chromatin)', zh: '4°C 14,000×g 离心 10 min。取上清（= 剪切后染色质）' },
+      { en: '**Dilute**: Add 9 volumes ChIP Dilution Buffer (reduces SDS from 1% to 0.1%)', zh: '**稀释**: 加 9 倍体积 ChIP Dilution Buffer（将 SDS 从 1% 降至 0.1%）' },
+      { en: '**Save Input**: Remove 1–10% as "Input" control → store at -20°C', zh: '**留 Input**: 取 1–10% 作为 Input 对照 → -20°C 保存' },
+      { en: '**Day 1–2 — Immunoprecipitation**', zh: '**第 1–2 天 — 免疫沉淀**', isHeader: true },
+      { en: '**Pre-clear** (optional): Add 20 µL protein A/G beads, rotate 1 h at 4°C. Remove beads', zh: '**预清除**（可选）：加 20 µL protein A/G 磁珠，4°C 旋转 1 h。去除磁珠' },
+      { en: 'Add antibody (2–5 µg) + 30 µL protein A/G beads. Rotate overnight at 4°C', zh: '加抗体（2–5 µg）+ 30 µL protein A/G 磁珠。4°C 旋转过夜' },
+      { en: '**Day 2–3 — Washes & Elution**', zh: '**第 2–3 天 — 洗涤与洗脱**', isHeader: true },
+      { en: 'Wash sequentially (each 3–5 min, 4°C, rotation): Low-salt → High-salt → LiCl wash → 2× TE buffer', zh: '依次洗涤（每次 3–5 min, 4°C 旋转）：低盐 → 高盐 → LiCl 洗 → 2× TE 缓冲液' },
+      { en: '**Elute**: Add 250 µL elution buffer (1% SDS + 0.1 M NaHCO₃), vortex 15 min RT. Repeat. Pool eluates (500 µL total)', zh: '**洗脱**: 加 250 µL 洗脱液（1% SDS + 0.1 M NaHCO₃），室温涡旋 15 min。重复一次。合并洗脱液（共 500 µL）' },
+      { en: '**Reverse crosslink**: Add NaCl to 200 mM final. Incubate 65°C overnight (or 65°C 4h). Also reverse-crosslink Input', zh: '**解交联**: 加 NaCl 至终浓度 200 mM。65°C 过夜（或 65°C 4h）。Input 同时解交联' },
+      { en: 'Add Proteinase K (20 µg/mL), 45°C, 1 h. Add RNase A, 37°C, 30 min', zh: '加 Proteinase K（20 µg/mL），45°C 1 h。加 RNase A，37°C 30 min' },
+      { en: '**Purify DNA**: Phenol-chloroform extraction or column purification (MinElute). Elute in 30 µL TE', zh: '**纯化 DNA**: 酚-氯仿抽提或柱纯化（MinElute）。30 µL TE 洗脱' },
+      { en: '**Analysis**: qPCR (% Input method) or library prep for ChIP-seq', zh: '**分析**: qPCR（% Input 法）或建库做 ChIP-seq' },
+    ],
+  },
+  coip_protocol: {
+    usage: { en: 'Detect protein-protein interactions in native conditions. Pull down a "bait" protein with its antibody and detect co-precipitated "prey" proteins by WB.', zh: '在天然条件下检测蛋白-蛋白相互作用。用抗体沉淀"诱饵"蛋白，通过 WB 检测共沉淀的"猎物"蛋白。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2-day experiment', zh: '实验方案 — 2 天实验' } },
+    materials: [
+      { name: 'IP Lysis Buffer', linkedRecipe: 'ip_lysis' },
+      { name: 'Laemmli Buffer (2×)', linkedRecipe: 'laemmli_2x' },
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: 'Protein A/G beads', note: { en: 'Magnetic preferred', zh: '推荐磁珠' } },
+      { name: 'Target antibody', note: { en: '1–5 µg per IP', zh: '每次 IP 1–5 µg' } },
+      { name: 'Normal IgG', note: { en: 'Same species, negative control', zh: '同种属，阴性对照' } },
+    ],
+    briefSteps: [
+      { en: 'Lyse (mild buffer) → quantify → pre-clear → add Ab overnight → beads → wash → elute → WB for bait+prey', zh: '温和裂解 → 定量 → 预清除 → 加抗体过夜 → 磁珠 → 洗涤 → 洗脱 → WB 检测 bait+prey' },
+    ],
+    detailedSteps: [
+      { en: '**Lysis**: Wash cells 1× cold PBS. Add IP Lysis Buffer (500 µL per 10-cm dish). ⚠️ Do NOT use RIPA — SDS disrupts interactions!', zh: '**裂解**: 冷 PBS 洗 1 次。加 IP Lysis Buffer（10 cm 皿每皿 500 µL）。⚠️ 不要用 RIPA——SDS 会破坏蛋白互作！' },
+      { en: 'Incubate on ice 30 min with occasional vortexing. Centrifuge 14,000×g, 15 min, 4°C', zh: '冰上裂解 30 min，偶尔涡旋。4°C 14,000×g 离心 15 min' },
+      { en: '**Quantify**: BCA assay. Use 500 µg – 2 mg total protein per IP. Save 5–10% as Input', zh: '**定量**: BCA 法。每次 IP 用 500 µg – 2 mg 总蛋白。留 5–10% 做 Input' },
+      { en: '**Pre-clear**: Add 20 µL protein A/G beads, rotate 1 h at 4°C. Remove beads (reduces non-specific binding)', zh: '**预清除**: 加 20 µL protein A/G 磁珠，4°C 旋转 1 h。去除磁珠（减少非特异结合）' },
+      { en: '**IP**: Add 1–5 µg target antibody. In parallel, set up IgG control with same amount of normal IgG. Rotate overnight 4°C', zh: '**IP**: 加 1–5 µg 目标抗体。同时设 IgG 对照（同量正常 IgG）。4°C 旋转过夜' },
+      { en: 'Add 30–50 µL protein A/G beads. Rotate 2–4 h at 4°C', zh: '加 30–50 µL protein A/G 磁珠。4°C 旋转 2–4 h' },
+      { en: '**Wash**: 4–6× with cold IP Lysis Buffer. Each wash: add 500 µL, rotate 5 min 4°C, pellet beads', zh: '**洗涤**: 冷 IP Lysis Buffer 洗 4–6 次。每次：加 500 µL，4°C 旋转 5 min，收集磁珠' },
+      { en: '💡 For weak interactions: reduce washes to 3× and use gentler buffer (0.1% NP-40)', zh: '💡 弱相互作用：减少洗涤至 3 次，使用更温和的缓冲液（0.1% NP-40）' },
+      { en: '**Elute**: Add 40 µL 2× Laemmli buffer to beads. Boil 95°C 5 min. Collect supernatant', zh: '**洗脱**: 向磁珠加 40 µL 2× Laemmli buffer。95°C 煮沸 5 min。收集上清' },
+      { en: '**WB**: Load IP eluate, IgG control, and Input. Probe for both bait and prey proteins', zh: '**WB 检测**: 上样 IP 洗脱液、IgG 对照和 Input。分别检测 bait 和 prey 蛋白' },
+    ],
+  },
+  qpcr_protocol: {
+    usage: { en: 'Quantify gene expression at mRNA level. Combines reverse transcription with real-time PCR. Gold standard for validating RNA-seq hits. Requires proper controls and MIQE compliance.', zh: '在 mRNA 水平定量基因表达。结合逆转录和实时 PCR。验证 RNA-seq 结果的金标准。需要适当对照并符合 MIQE 规范。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1-day experiment (after RNA extraction)', zh: '实验方案 — 1 天实验（RNA 提取后）' } },
+    materials: [
+      { name: 'Total RNA', note: { en: 'See TRIzol extraction protocol', zh: '参见 TRIzol 提取方案' }, linkedRecipe: 'trizol_extraction' },
+      { name: 'Reverse Transcriptase Kit', note: { en: 'e.g., SuperScript IV, PrimeScript', zh: '如 SuperScript IV, PrimeScript' } },
+      { name: 'SYBR Green Master Mix', note: { en: 'Or TaqMan probes', zh: '或 TaqMan 探针' } },
+      { name: 'Gene-specific primers', note: { en: 'Tm 58–62°C, product 80–200 bp', zh: 'Tm 58–62°C, 产物 80–200 bp' } },
+      { name: 'Reference gene primers', note: { en: 'GAPDH / ACTB / 18S rRNA', zh: 'GAPDH / ACTB / 18S rRNA' } },
+    ],
+    briefSteps: [
+      { en: 'Extract RNA → DNase → RT → dilute cDNA → qPCR (SYBR) → melt curve → analyze by 2^(-ΔΔCt)', zh: 'RNA 提取 → DNase → 反转录 → 稀释 cDNA → qPCR (SYBR) → 溶解曲线 → 2^(-ΔΔCt) 分析' },
+    ],
+    detailedSteps: [
+      { en: '**RNA quality check**: Measure A260/280 (should be ~2.0). A260/230 >1.7. Optionally check on agarose gel (28S:18S ~2:1)', zh: '**RNA 质检**: 测 A260/280（应为 ~2.0）。A260/230 >1.7。可选跑琼脂糖凝胶（28S:18S ~2:1）' },
+      { en: '**DNase treatment** (recommended): Use TURBO DNase or on-column DNase. Heat-inactivate 75°C 5 min or use DNase removal reagent', zh: '**DNase 处理**（推荐）：用 TURBO DNase 或柱上 DNase。75°C 5 min 热灭活或用 DNase 去除试剂' },
+      { en: '**Reverse transcription**: Use 500 ng–2 µg RNA per 20 µL reaction. Use oligo-dT + random hexamer mix for best coverage', zh: '**反转录**: 每 20 µL 反应体系用 500 ng–2 µg RNA。Oligo-dT + 随机六聚体混合引物效果最好' },
+      { en: 'RT program: 25°C 5 min → 42–50°C 30–60 min → 85°C 5 min (inactivation). Store cDNA at -20°C', zh: 'RT 程序：25°C 5 min → 42–50°C 30–60 min → 85°C 5 min（灭活）。cDNA -20°C 保存' },
+      { en: '**Dilute cDNA**: 1:5 to 1:20 with nuclease-free H₂O (typically 1:10). Include –RT control (no reverse transcriptase)', zh: '**稀释 cDNA**: 用无核酸酶水 1:5 至 1:20 稀释（通常 1:10）。设置 –RT 对照（不加逆转录酶）' },
+      { en: '**qPCR setup (20 µL)**: 10 µL 2× SYBR Master Mix + 0.4 µL Fw primer (10 µM) + 0.4 µL Rv primer (10 µM) + 2 µL cDNA + 7.2 µL H₂O', zh: '**qPCR 体系 (20 µL)**: 10 µL 2× SYBR Master Mix + 0.4 µL Fw 引物 (10 µM) + 0.4 µL Rv 引物 (10 µM) + 2 µL cDNA + 7.2 µL H₂O' },
+      { en: '⚠️ Set up on ice. Include NTC (no template control) for every primer pair. Technical replicates ≥3', zh: '⚠️ 冰上操作。每对引物设 NTC（无模板对照）。技术重复 ≥3' },
+      { en: '**Cycling**: 95°C 10 min (polymerase activation) → [95°C 15 s → 60°C 60 s] × 40 cycles → Melt curve: 60°C→95°C', zh: '**程序**: 95°C 10 min（聚合酶激活）→ [95°C 15 s → 60°C 60 s] × 40 个循环 → 溶解曲线: 60°C→95°C' },
+      { en: '**Melt curve analysis**: Single peak = specific product ✓. Multiple peaks = non-specific or primer dimers ✗', zh: '**溶解曲线分析**: 单峰 = 特异性产物 ✓。多峰 = 非特异或引物二聚体 ✗' },
+      { en: '**Primer efficiency**: Make 5-point serial dilution of cDNA (1:4). Plot Ct vs log(dilution). Slope should be -3.2 to -3.5 (efficiency 90–110%)', zh: '**引物效率**: 做 5 点 cDNA 梯度稀释（1:4）。Ct vs log(稀释) 作图。斜率应为 -3.2 ~ -3.5（效率 90–110%）' },
+      { en: '**Analysis**: ΔCt = Ct(target) – Ct(reference). ΔΔCt = ΔCt(treated) – ΔCt(control). Fold change = 2^(-ΔΔCt)', zh: '**分析**: ΔCt = Ct(目标) – Ct(内参)。ΔΔCt = ΔCt(处理组) – ΔCt(对照组)。倍数变化 = 2^(-ΔΔCt)' },
+      { en: 'Bio reps ≥3. Stats: t-test on ΔCt values (NOT fold changes). Report as mean ± SEM', zh: '生物学重复 ≥3。统计：对 ΔCt 值做 t 检验（不是倍数变化）。报告 mean ± SEM' },
+    ],
+  },
+  cell_transfection: {
+    usage: { en: 'Deliver plasmid DNA or siRNA/miRNA into mammalian cells using cationic lipid reagents. Transient expression peaks 24–72h. For stable expression, add selection antibiotics.', zh: '利用阳离子脂质试剂将质粒 DNA 或 siRNA/miRNA 导入哺乳动物细胞。瞬时表达高峰 24–72h。稳定表达需加筛选抗生素。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1h setup + 24–72h expression', zh: '实验方案 — 1h 操作 + 24–72h 表达' } },
+    materials: [
+      { name: 'Opti-MEM', note: { en: 'Serum-free media for complex formation', zh: '无血清培养基，用于复合物形成' } },
+      { name: 'Lipofectamine 2000/3000', note: { en: 'Or RNAiMAX for siRNA', zh: '或 RNAiMAX（用于 siRNA）' } },
+      { name: 'Plasmid DNA / siRNA', note: { en: 'Endotoxin-free prep', zh: '无内毒素制备' } },
+      { name: 'Complete growth media', note: { en: 'For recovery after transfection', zh: '转染后恢复培养用' } },
+    ],
+    briefSteps: [
+      { en: 'Plate cells → mix DNA/Opti-MEM (tube A) → mix Lipo/Opti-MEM (tube B) → combine A+B → add to cells → replace media 6h → harvest 24–72h', zh: '铺板 → DNA/Opti-MEM 混合(管A) → Lipo/Opti-MEM 混合(管B) → A+B 混合 → 加入细胞 → 6h 换液 → 24–72h 收样' },
+    ],
+    detailedSteps: [
+      { en: '**Day before**: Plate cells to reach 60–80% confluency at transfection. Do NOT use antibiotics in plating media', zh: '**前一天**: 铺板使转染时达到 60–80% 汇合度。铺板培养基不要加抗生素' },
+      { en: '💡 Cell density matters: too sparse = toxicity; too confluent = low efficiency. Optimize for each cell line', zh: '💡 细胞密度很关键：太稀 = 毒性大；太密 = 效率低。每个细胞系需优化' },
+      { en: '**Tube A — DNA mix**: For each well of 6-well plate: 2.5 µg DNA + 125 µL Opti-MEM. Mix gently', zh: '**管 A — DNA 混合**: 6 孔板每孔：2.5 µg DNA + 125 µL Opti-MEM。轻柔混匀' },
+      { en: '**Tube B — Lipid mix**: 7.5 µL Lipofectamine 2000 (or 3.75 µL Lipo 3000 + 5 µL P3000) + 125 µL Opti-MEM', zh: '**管 B — 脂质混合**: 7.5 µL Lipofectamine 2000（或 3.75 µL Lipo 3000 + 5 µL P3000）+ 125 µL Opti-MEM' },
+      { en: 'Incubate each tube 5 min RT', zh: '各管室温孵育 5 min' },
+      { en: '**Combine**: Add tube A into tube B (NOT the reverse). Mix gently. Incubate 15–20 min RT. Solution may become slightly cloudy', zh: '**混合**: 将管 A 加入管 B（不要反过来）。轻柔混匀。室温 15–20 min。溶液可能会轻微浑浊' },
+      { en: 'Add complex dropwise to cells. Rock plate gently to distribute', zh: '将复合物逐滴加入细胞。轻摇培养板使其均匀分布' },
+      { en: '**Replace media**: After 6–8 h, replace with fresh complete media (with serum, optional antibiotics)', zh: '**换液**: 6–8 h 后换新鲜完全培养基（含血清，可选抗生素）' },
+      { en: '**Harvest**: Check expression at 24 h (reporter), 48 h (protein), or 72 h (maximum protein accumulation)', zh: '**收样**: 24 h 检查表达（报告基因），48 h（蛋白），72 h（蛋白积累最大化）' },
+      { en: '💡 **siRNA transfection**: Use Lipofectamine RNAiMAX instead. 25–50 pmol siRNA per 6-well. Knockdown peaks at 48–72 h', zh: '💡 **siRNA 转染**: 改用 Lipofectamine RNAiMAX。6 孔板每孔 25–50 pmol siRNA。敲低高峰在 48–72 h' },
+    ],
+  },
+  flow_cytometry_protocol: {
+    usage: { en: 'Analyze protein expression on individual cells by fluorescent antibody staining. Enables multi-parameter phenotyping, cell counting, and sorting (FACS).', zh: '通过荧光抗体染色分析单个细胞的蛋白表达。支持多参数表型分析、细胞计数和分选（FACS）。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~3h', zh: '实验方案 — 约 3 小时' } },
+    materials: [
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: 'FACS Buffer', linkedRecipe: 'facs_buffer' },
+      { name: '4% PFA', linkedRecipe: 'pfa_4', note: { en: 'For intracellular staining fixation', zh: '用于胞内染色的固定' } },
+      { name: 'Fc Block', note: { en: 'Human TruStain FcX / mouse anti-CD16/32', zh: 'Human TruStain FcX / 小鼠 anti-CD16/32' } },
+      { name: 'Fluorescent antibodies', note: { en: 'Titrate each Ab individually first!', zh: '每个抗体需先单独做滴度实验！' } },
+      { name: 'Viability dye', note: { en: 'DAPI, PI, or fixable Live/Dead', zh: 'DAPI、PI 或可固定 Live/Dead 染料' } },
+    ],
+    briefSteps: [
+      { en: 'Harvest cells → Fc block → surface Ab stain 4°C 30min → wash → (fix → perm → intracellular stain) → viability dye → acquire ≥10K events', zh: '收集细胞 → Fc 封闭 → 表面抗体 4°C 30min → 洗 → (固定 → 透化 → 胞内染色) → 活死染料 → 采集 ≥1 万事件' },
+    ],
+    detailedSteps: [
+      { en: '**Harvest**: Collect cells (trypsinize adherent cells gently, or collect suspension). Count. Use ≥1×10⁵ cells per tube', zh: '**收集**: 收集细胞（贴壁细胞轻柔消化，悬浮细胞直接收集）。计数。每管 ≥1×10⁵ 细胞' },
+      { en: 'Wash 1× PBS (300×g, 5 min). Resuspend in 100 µL FACS buffer', zh: 'PBS 洗 1 次（300×g，5 min）。重悬于 100 µL FACS buffer' },
+      { en: '**Fc Block**: Add Fc receptor blocking reagent. Incubate 4°C 10 min. Do NOT wash', zh: '**Fc 封闭**: 加 Fc 受体封闭试剂。4°C 10 min。不洗' },
+      { en: '**Surface staining**: Add fluorescent antibodies at titrated amounts. Incubate 4°C 20–30 min in the dark', zh: '**表面染色**: 按滴定量加入荧光抗体。4°C 避光孵育 20–30 min' },
+      { en: '⚠️ Antibody titration is ESSENTIAL: test 2-fold dilutions from manufacturer\'s recommendation to find the amount that gives best separation', zh: '⚠️ 抗体滴定是必须的：从厂商推荐量开始做 2 倍梯度稀释，找到分离度最佳的用量' },
+      { en: 'Wash 2× with 1 mL FACS buffer (300×g, 5 min)', zh: '1 mL FACS buffer 洗 2 次（300×g, 5 min）' },
+      { en: '**For surface staining only**: Resuspend in 200–500 µL FACS buffer + viability dye. Go to acquisition', zh: '**仅表面染色**: 重悬于 200–500 µL FACS buffer + 活死染料。直接上机' },
+      { en: '**For intracellular staining** (optional):', zh: '**胞内染色**（可选）:', isHeader: true },
+      { en: 'Fix: 4% PFA 20 min RT. Wash 2× PBS', zh: '固定：4% PFA 室温 20 min。PBS 洗 2 次' },
+      { en: 'Permeabilize: 0.1% saponin or commercial Perm buffer, 15 min RT', zh: '透化：0.1% 皂苷或商品化 Perm buffer，室温 15 min' },
+      { en: 'Stain intracellular targets in Perm buffer. 30 min RT dark. Wash 2×', zh: '在 Perm buffer 中染胞内靶标。室温避光 30 min。洗 2 次' },
+      { en: '**Acquisition**: Resuspend in 200–500 µL FACS buffer. Acquire on flow cytometer', zh: '**上机**: 重悬于 200–500 µL FACS buffer。上流式细胞仪' },
+      { en: 'Acquire ≥10,000 events in live cell gate. For rare populations, acquire ≥100,000', zh: '在活细胞门中采集 ≥10,000 个事件。稀有细胞群需采集 ≥100,000' },
+      { en: '**Controls needed**: Unstained, single-stain (for compensation), FMO (for gating), isotype (optional)', zh: '**所需对照**: 未染色、单染（补偿用）、FMO（门控用）、同型对照（可选）' },
+    ],
+  },
+  // ── v1.9 new protocol enhancements ──
+  heat_shock_transformation: {
+    usage: { en: 'Standard method for introducing plasmid DNA into chemically competent E. coli. Used for cloning, protein expression, and library construction. Quick (2 h from thaw to plating).', zh: '将质粒 DNA 导入化学感受态大肠杆菌的标准方法。用于克隆、蛋白表达和文库构建。快速（从解冻到涂板 2 h）。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2 hours + overnight incubation', zh: '实验方案 — 2 小时 + 过夜培养' } },
+    materials: [
+      { name: 'Competent Cells', linkedRecipe: 'competent_cells_cacl2' },
+      { name: 'SOC Medium', linkedRecipe: 'soc' },
+      { name: 'LB Agar + Antibiotic', linkedRecipe: 'lb_agar' },
+      { name: 'Plasmid DNA', note: { en: 'High purity, 1–50 ng', zh: '高纯度, 1–50 ng' } },
+    ],
+    briefSteps: [
+      { en: 'Thaw cells on ice → add DNA → ice 30 min → 42°C 45 s → ice 2 min → add SOC → 37°C 1 h → plate on selective agar → O/N 37°C', zh: '冰上解冻感受态 → 加 DNA → 冰浴 30 min → 42°C 45 s → 冰浴 2 min → 加 SOC → 37°C 1 h → 涂选择性平板 → 37°C 过夜' },
+    ],
+    detailedSteps: [
+      { en: '**Preparation**: Pre-warm selective LB agar plates at 37°C (at least 30 min to dry surface moisture)', zh: '**准备**: 选择性 LB 琼脂平板 37°C 预热（至少 30 min 烘干表面水分）' },
+      { en: 'Thaw one aliquot of competent cells on ice for 5 min. Do NOT warm with hands', zh: '冰上解冻一管感受态细胞 5 min。不要用手温暖' },
+      { en: '**Add DNA**: Gently pipette 1–5 µL DNA (1–50 ng) directly into cells. Flick tube gently 4–5×. Do NOT vortex or pipet up/down', zh: '**加 DNA**: 轻柔移取 1–5 µL DNA (1–50 ng) 直接加入细胞。轻弹管壁 4–5 次。不要涡旋或反复吹打' },
+      { en: '⚠️ DNA volume must be ≤10% of cell volume (e.g., ≤5 µL into 50 µL cells). Excess volume reduces efficiency dramatically', zh: '⚠️ DNA 体积必须 ≤ 感受态体积的 10%（如 50 µL 细胞中加 ≤5 µL）。过量会严重降低效率' },
+      { en: 'Incubate on ice for 30 min. Do not shake or move the tube', zh: '冰浴 30 min。不要摇动或移动管子' },
+      { en: '**Heat shock**: Transfer tube to 42°C water bath for exactly 45 seconds. Start timer before placing tube', zh: '**热激**: 将管子转移至 42°C 水浴，精确 45 秒。放入前开始计时' },
+      { en: 'Immediately return to ice for 2 min. This step is critical for survival', zh: '立即放回冰上 2 min。此步对细胞存活至关重要' },
+      { en: '**Recovery**: Add 950 µL room-temperature SOC medium (or LB). SOC gives 2–5× better efficiency', zh: '**恢复**: 加入 950 µL 室温 SOC 培养基（或 LB）。SOC 效率高 2–5 倍' },
+      { en: 'Incubate at 37°C, 225 rpm for 1 hour (Amp) or 1.5 hours (Kan/Cm)', zh: '37°C 225 rpm 振荡 1 小时 (Amp) 或 1.5 小时 (Kan/Cm)' },
+      { en: '**Plating**: For routine cloning: plate 100 µL directly + spin down remainder and plate. For ligation: plate everything', zh: '**涂板**: 常规克隆: 直接涂 100 µL + 剩余离心后涂板。连接产物: 全部涂板' },
+      { en: 'Spread evenly with sterile glass beads or spreader. Allow plates to dry 5 min (lid slightly open)', zh: '用无菌玻璃珠或涂布棒均匀涂开。开盖干燥 5 min' },
+      { en: 'Invert plates. Incubate at 37°C for 12–16 hours. Do not exceed 16 h (satellite colonies form)', zh: '倒置平板。37°C 培养 12–16 小时。不要超过 16 h（会出现卫星菌落）' },
+      { en: '**Controls**: Always include: (1) no-DNA negative control, (2) uncut vector positive control, (3) cut-only vector control (background)', zh: '**对照**: 始终设置: (1) 无 DNA 阴性对照, (2) 未切割载体阳性对照, (3) 仅切割载体对照（背景）' },
+    ],
+  },
+  // ── v1.8 protocol enhancements ──
+  colony_pcr: {
+    usage: { en: 'Screen bacterial colonies for correct insert after transformation. Faster than miniprep + restriction digest. Screen 8–16 colonies per construct.', zh: '转化后筛选含正确插入片段的菌落。比提质粒 + 酶切更快。每个构建体筛选 8–16 个菌落。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~2h', zh: '实验方案 — 约 2h' } },
+    materials: [
+      { name: '2× Taq Master Mix', note: { en: 'Commercial (e.g., NEB, Takara)', zh: '商品化（如 NEB、Takara）' } },
+      { name: 'Forward primer (10 µM)', note: { en: 'M13 or gene-specific', zh: 'M13 通用引物或基因特异引物' } },
+      { name: 'Reverse primer (10 µM)', note: { en: 'M13 or gene-specific', zh: 'M13 通用引物或基因特异引物' } },
+      { name: 'Nuclease-free water', note: { en: '', zh: '' } },
+      { name: 'Sterile toothpicks or pipette tips', note: { en: '', zh: '' } },
+      { name: 'DNA Loading Dye (6×)', linkedRecipe: 'dna_loading_dye_6x' },
+      { name: 'Agarose gel + DNA Ladder', note: { en: '1–1.5%', zh: '1–1.5%' } },
+      { name: 'LB + antibiotic replica plate', note: { en: 'For backup streaks', zh: '用于备份划线' } },
+    ],
+    briefSteps: [
+      { en: 'Set up PCR mix (25 µL): master mix + primers + water → pick colony with tip → dip in PCR tube → streak on replica plate → PCR: 95°C 10 min → 30 cycles → agarose gel → sequence positives', zh: '配 PCR 体系 (25 µL): master mix + 引物 + 水 → 枪头挑菌落 → 蘸入 PCR 管 → 划线到备份板 → PCR: 95°C 10 min → 30 个循环 → 琼脂糖凝胶 → 阳性送测序' },
+    ],
+    detailedSteps: [
+      { en: 'Prepare PCR master mix in a 1.5 mL tube: 12.5 µL 2× Taq mix, 1 µL each primer (10 µM), 10.5 µL water per reaction. Make N+1 reactions', zh: '在 1.5 mL 管中配 PCR 体系：12.5 µL 2× Taq mix，各 1 µL 引物（10 µM），10.5 µL 水/反应。配 N+1 个反应' },
+      { en: 'Aliquot 25 µL into each PCR tube. Label tubes to match colony numbers', zh: '每管分装 25 µL，标记与菌落编号对应' },
+      { en: 'Using a sterile pipette tip or toothpick, touch a single colony lightly', zh: '用无菌枪头或牙签轻触单个菌落' },
+      { en: 'Dip the tip into the PCR tube and swirl briefly to release cells', zh: '将枪头在 PCR 管中轻轻搅动释放细菌' },
+      { en: '(Recommended) Streak the same tip onto a fresh replica plate. Label to match', zh: '（推荐）用同一枪头在备份平板上划线，标记编号' },
+      { en: 'Incubate replica plate at 37°C while PCR runs', zh: 'PCR 运行时将备份板 37°C 培养' },
+      { en: 'Include negative control (no colony) and positive control (known template) if available', zh: '设阴性对照（无菌落）和阳性对照（已知模板，如有）' },
+      { en: 'Run PCR: 95°C 10 min (lyses cells) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → hold 4°C', zh: 'PCR 程序: 95°C 10 min (裂解细菌) → (95°C 30s, 55°C 30s, 72°C 1 min/kb) × 30 → 72°C 5 min → 4°C 保持' },
+      { en: 'Add 5 µL of 6× loading dye to each 25 µL reaction', zh: '每管加 5 µL 6× loading dye' },
+      { en: 'Run on 1% agarose gel alongside DNA ladder. Image: positive clones show band at expected insert size', zh: '1% 琼脂糖凝胶电泳，加 DNA ladder。成像：阳性克隆在预期插入片段大小处有条带' },
+      { en: 'Inoculate 2–3 positive clones from replica plate into LB + antibiotic overnight, miniprep, and sequence-verify', zh: '从备份板挑 2–3 个阳性克隆，接种到 LB + 抗生素过夜培养，提质粒，送测序验证' },
+    ],
+  },
+  competent_cells_cacl2: {
+    usage: { en: 'Prepare chemically competent E. coli cells for heat-shock transformation. Simple and cheap, yields 10⁶–10⁷ CFU/µg. Sufficient for routine cloning.', zh: '制备化学感受态大肠杆菌用于热激转化。简单便宜，效率 10⁶–10⁷ CFU/µg。足够常规克隆使用。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~4h + O/N culture', zh: '实验方案 — 约 4h + 过夜培养' } },
+    relatedProtocols: ['gibson_assembly', 'site_directed_mutagenesis'],
+    materials: [
+      { name: 'LB Medium', linkedRecipe: 'lb' },
+      { name: '100 mM CaCl₂ (autoclaved, ice-cold)', note: { en: 'Pre-chill to 4°C', zh: '预冷至 4°C' } },
+      { name: 'Glycerol (60%, sterile)', note: { en: 'For freezing stock', zh: '用于冻存' } },
+      { name: 'Liquid nitrogen', note: { en: 'For snap-freezing', zh: '速冻用' } },
+    ],
+    briefSteps: [
+      { en: 'Grow to OD 0.3–0.5 → ice 15 min → pellet → resuspend in cold CaCl₂ → ice 30 min → pellet → resuspend in CaCl₂ + glycerol → aliquot → snap-freeze', zh: '培养至 OD 0.3–0.5 → 冰浴 15 min → 离心 → 冷 CaCl₂ 重悬 → 冰浴 30 min → 离心 → CaCl₂ + 甘油重悬 → 分装 → 速冻' },
+    ],
+    detailedSteps: [
+      { en: '**Day 0**: Inoculate single colony into 5 mL LB. Grow O/N at 37°C with shaking', zh: '**前一天**: 挑单克隆接种 5 mL LB。37°C 振荡过夜' },
+      { en: '**Day 1**: Dilute O/N culture 1:100 into 50 mL fresh LB in 250 mL flask', zh: '**当天**: 过夜菌液 1:100 接种至 250 mL 锥形瓶中 50 mL 新鲜 LB' },
+      { en: 'Grow at 37°C with vigorous shaking until OD₆₀₀ = 0.3–0.5 (~2–3 h). ⚠️ Do NOT overgrow!', zh: '37°C 剧烈振荡至 OD₆₀₀ = 0.3–0.5（约 2–3 h）。⚠️ 不要过度生长！' },
+      { en: 'Transfer to pre-chilled 50 mL tube. Ice 15 min', zh: '转移至预冷的 50 mL 管。冰浴 15 min' },
+      { en: 'Centrifuge 3000×g, 10 min, 4°C. Decant supernatant completely', zh: '4°C 3000×g 离心 10 min。完全倒掉上清' },
+      { en: 'Gently resuspend pellet in 25 mL ice-cold 100 mM CaCl₂ (pipet gently — do NOT vortex!)', zh: '用 25 mL 冰冷 100 mM CaCl₂ 轻柔重悬沉淀（轻柔吹打——不要涡旋！）' },
+      { en: 'Incubate on ice 30 min', zh: '冰浴 30 min' },
+      { en: 'Centrifuge 3000×g, 10 min, 4°C. Decant carefully', zh: '4°C 3000×g 离心 10 min。小心倒掉上清' },
+      { en: 'Resuspend in 2.5 mL ice-cold 100 mM CaCl₂ + 15% glycerol', zh: '用 2.5 mL 冰冷 100 mM CaCl₂ + 15% 甘油 轻柔重悬' },
+      { en: 'Aliquot 100 µL per pre-chilled 1.5 mL tube. Snap-freeze in liquid N₂. Store -80°C', zh: '分装 100 µL/预冷管。液氮速冻。-80°C 保存' },
+      { en: '**Test efficiency**: Transform 1 ng pUC19, plate on LB + Amp. Count colonies next day', zh: '**效率测试**: 转化 1 ng pUC19，涂 LB + Amp 平板。次日计数菌落' },
+    ],
+  },
+  trypan_blue_counting: {
+    usage: { en: 'Count cells and determine viability before seeding, passaging, or experiments. Dead cells take up trypan blue (blue), live cells exclude it (clear).', zh: '在接种、传代或实验前计数细胞并判断活力。死细胞摄取台盼蓝（蓝色），活细胞排斥（透明）。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 5 min', zh: '实验方案 — 5 分钟' } },
+    materials: [
+      { name: 'Cell suspension (trypsinized, single-cell)', note: { en: '', zh: '' } },
+      { name: '0.4% Trypan Blue', note: { en: 'Commercial solution (Gibco/Sigma)', zh: '商品化溶液（Gibco/Sigma）' } },
+      { name: 'Hemocytometer (Neubauer improved)', note: { en: '+ coverslip', zh: '+ 盖玻片' } },
+      { name: 'Micropipette (10–20 µL)', note: { en: '', zh: '' } },
+      { name: 'Counter (hand tally or app)', note: { en: 'Optional', zh: '可选' } },
+    ],
+    briefSteps: [
+      { en: 'Prepare single-cell suspension → mix 10 µL cells + 10 µL trypan blue → load 10 µL onto hemocytometer → count 4 corner squares (live = clear, dead = blue) → calculate: cells/mL = (count ÷ 4) × 2 × 10⁴', zh: '制备单细胞悬液 → 10 µL 细胞 + 10 µL 台盼蓝 → 取 10 µL 加入计数板 → 数 4 个角大格（活=透明, 死=蓝色）→ 计算: cells/mL = (计数 ÷ 4) × 2 × 10⁴' },
+    ],
+    detailedSteps: [
+      { en: 'Trypsinize adherent cells or resuspend suspension cells. Ensure single-cell suspension (no clumps)', zh: '消化贴壁细胞或重悬悬浮细胞，确保单细胞悬液（无团块）' },
+      { en: 'Transfer cell suspension to a 15 mL tube. Take a 20 µL aliquot for counting', zh: '转移到 15 mL 管，取 20 µL 用于计数' },
+      { en: 'Mix 10 µL of cell suspension with 10 µL of 0.4% trypan blue in a microcentrifuge tube', zh: '在微量离心管中将 10 µL 细胞悬液与 10 µL 0.4% 台盼蓝混匀' },
+      { en: 'Incubate for 1–2 min at RT. Do NOT exceed 5 min (trypan blue becomes toxic to live cells)', zh: '室温孵育 1–2 分钟。不超过 5 分钟（台盼蓝对活细胞有毒性）' },
+      { en: 'Clean hemocytometer and coverslip with 70% ethanol. Dry completely', zh: '用 70% 乙醇清洁血球计数板和盖玻片，完全干燥' },
+      { en: 'Place coverslip on hemocytometer. It should adhere by surface tension (Newton rings visible)', zh: '放置盖玻片，应通过表面张力贴合（可见牛顿环）' },
+      { en: 'Load 10 µL of the trypan blue mixture into one chamber. Let it fill by capillary action', zh: '取 10 µL 台盼蓝混合物加入一侧计数室，利用毛细作用填充' },
+      { en: 'Place on microscope at 10× magnification', zh: '放在显微镜下 10× 观察' },
+      { en: 'Count all four corner squares (each 1 mm × 1 mm). Count live cells (clear/refractile) and dead cells (blue) separately', zh: '计数四个角大格（每个 1 mm × 1 mm）。分别计数活细胞（透明/折光）和死细胞（蓝色）' },
+      { en: 'Follow convention: count cells touching top and left borders, skip bottom and right', zh: '规则：计数触碰上线和左线的细胞，不计下线和右线的' },
+      { en: '**Calculate concentration**: Cells/mL = (total live count ÷ 4 squares) × dilution factor (2) × 10⁴', zh: '**计算浓度**: 细胞/mL = (4 格活细胞总数 ÷ 4) × 稀释倍数 (2) × 10⁴' },
+      { en: '**Calculate viability**: % viable = (live count ÷ total count) × 100. Should be >90% for healthy cultures', zh: '**计算活率**: 活率% = (活细胞数 ÷ 总细胞数) × 100。健康培养 >90%' },
+      { en: '**Calculate seeding volume**: Volume (mL) = desired cell count ÷ concentration (cells/mL)', zh: '**计算接种体积**: 体积 (mL) = 所需细胞数 ÷ 浓度 (cells/mL)' },
+    ],
+  },
+  calcium_phosphate_transfection: {
+    usage: { en: 'Classic, cost-effective transfection method. Transfect HEK293T, HeLa, and other easily transfectable cell lines. 80–90% efficiency for HEK293T. Widely used for lentivirus packaging.', zh: '经典、低成本的转染方法。适用于 HEK293T、HeLa 等易转染细胞系。HEK293T 效率可达 80–90%。广泛用于慢病毒包装。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2–3 day experiment', zh: '实验方案 — 2–3 天实验' } },
+    materials: [
+      { name: 'Plasmid DNA (high quality, endotoxin-free)', note: { en: 'A260/280 > 1.8', zh: 'A260/280 > 1.8' } },
+      { name: '2.5 M CaCl₂ (sterile, 0.22 µm filtered)', note: { en: 'Prepare fresh or store -20°C', zh: '现配或 -20°C 保存' } },
+      { name: '2× HBS (HEPES-buffered saline, pH 7.05 exactly)', note: { en: '⚠️ pH 7.05 ± 0.05 is critical', zh: '⚠️ pH 7.05 ± 0.05 是关键' } },
+      { name: 'Sterile H₂O', note: { en: '', zh: '' } },
+      { name: 'Cells seeded at 50–70% confluence (day before)', note: { en: '', zh: '' } },
+      { name: 'Complete growth medium', note: { en: '', zh: '' } },
+    ],
+    briefSteps: [
+      { en: 'Plate cells → mix DNA + CaCl₂ → drop into 2× HBS while bubbling → incubate 20 min → add to cells → O/N → change media → harvest 48–72h', zh: '铺板 → DNA + CaCl₂ 混合 → 逐滴加入 2× HBS 同时吹泡 → 20 min → 加至细胞 → 过夜 → 换液 → 48–72h 收获' },
+    ],
+    detailedSteps: [
+      { en: '**Day 0**: Plate cells to 50–70% confluency by next morning (e.g., 4×10⁶ HEK293T per 10 cm dish)', zh: '**前一天**: 铺板至次日 50–70% 汇合度（如 HEK293T 4×10⁶/10 cm 皿）' },
+      { en: '**Day 1 — Transfection**:', zh: '**第一天 — 转染**:', isHeader: true },
+      { en: 'Change to fresh medium 1–2 h before transfection. Include 25 µM chloroquine (optional, boosts efficiency 2–3×)', zh: '转染前 1–2 h 换新鲜培养基。可选加 25 µM 氯喹（提高效率 2–3 倍）' },
+      { en: 'Tube A: Mix 20 µg DNA + 50 µL 2.5M CaCl₂ + ddH₂O to 500 µL total', zh: '管 A: 20 µg DNA + 50 µL 2.5M CaCl₂ + ddH₂O 补至 500 µL' },
+      { en: 'Tube B: Add 500 µL 2× HBS. Insert Pasteur pipet connected to pipet-aid, start bubbling air', zh: '管 B: 加 500 µL 2× HBS。插入连接移液器的巴斯德吸管，开始吹泡' },
+      { en: 'Add Tube A dropwise to Tube B while continuously bubbling. This ensures fine precipitate formation', zh: '逐滴将管 A 加入管 B，同时持续吹泡。这确保形成细小沉淀' },
+      { en: 'Incubate at RT 15–20 min. Solution should appear slightly turbid (fine precipitate)', zh: '室温静置 15–20 min。溶液应略显浑浊（细小沉淀）' },
+      { en: '⚠️ If solution is clear → precipitate did not form (check 2× HBS pH!). If chunky/flocculent → precipitate too large (won\'t work)', zh: '⚠️ 如果溶液澄清 → 未形成沉淀（检查 2× HBS pH！）。如果絮状/块状 → 沉淀太大（不会起效）' },
+      { en: 'Add dropwise to dish while swirling gently. Return to 37°C incubator', zh: '边轻柔晃动培养皿边逐滴加入。放回 37°C 培养箱' },
+      { en: '**Day 2**: Replace medium after 12–16 h. Fine granular precipitate on cells is normal and good', zh: '**第二天**: 12–16 h 后换液。细胞上的细颗粒状沉淀是正常的好现象' },
+      { en: '**Day 3**: Harvest protein expression at 48 h or collect virus supernatant at 48–72 h', zh: '**第三天**: 48 h 收获蛋白表达或 48–72 h 收集病毒上清' },
+    ],
+  },
+  agarose_gel_electrophoresis: {
+    usage: { en: 'Separate DNA fragments by size (100 bp – 25 kb). Use 0.8% for large fragments, 2% for small. Standard for PCR product analysis, restriction digests, quality checks, and gel extraction.', zh: '按大小分离 DNA 片段（100 bp – 25 kb）。大片段用 0.8%，小片段用 2%。用于 PCR 产物分析、酶切鉴定、质量检查和胶回收。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~1.5h', zh: '实验方案 — 约 1.5h' } },
+    materials: [
+      { name: 'Agarose (molecular biology grade)', note: { en: 'Use low-melt for gel extraction', zh: '胶回收用低熔点琼脂糖' } },
+      { name: 'TAE (1×) or TBE (1×)', linkedRecipe: 'tae_50x' },
+      { name: 'DNA stain (EtBr or SYBR Safe)', note: { en: '0.5 µg/mL EtBr or 1× SYBR Safe', zh: '0.5 µg/mL EtBr 或 1× SYBR Safe' } },
+      { name: 'DNA Loading Dye (6×)', linkedRecipe: 'dna_loading_dye_6x' },
+      { name: 'DNA Ladder (100 bp or 1 kb)', note: { en: 'Match expected fragment sizes', zh: '与目标片段大小匹配' } },
+      { name: 'Gel casting tray + comb', note: { en: '', zh: '' } },
+      { name: 'Electrophoresis chamber + power supply', note: { en: '', zh: '' } },
+      { name: 'UV transilluminator or blue light imager', note: { en: '', zh: '' } },
+    ],
+    briefSteps: [
+      { en: 'Dissolve agarose in buffer → microwave → cool to 55°C → add stain → pour gel → insert comb → solidify 20–30 min → load samples + ladder → run 80–120V 30–60 min → image under UV/blue light', zh: '溶解琼脂糖 → 微波 → 冷至 55°C → 加染料 → 倒胶 → 插梳 → 凝固 20–30 min → 上样 + Ladder → 80–120V 电泳 30–60 min → UV/蓝光成像' },
+    ],
+    detailedSteps: [
+      { en: '**Choose agarose %**: 0.8% for >1 kb, 1% for 0.5–7 kb, 1.5% for 0.2–3 kb, 2% for <500 bp', zh: '**选择琼脂糖浓度**: 0.8% 适合 >1 kb, 1% 适合 0.5–7 kb, 1.5% 适合 0.2–3 kb, 2% 适合 <500 bp' },
+      { en: 'Weigh agarose powder (e.g. 1 g per 100 mL for 1% gel) into an Erlenmeyer flask. Add 1× TAE or TBE buffer. Swirl', zh: '称取琼脂糖粉末（如 1% 胶：1 g / 100 mL）放入锥形瓶。加 1× TAE 或 TBE 缓冲液，摇匀' },
+      { en: 'Microwave 1–3 min until agarose is completely dissolved. Watch for boiling over. ⚠️ Loosen cap!', zh: '微波 1–3 min 至完全溶解，注意防止沸腾溢出。⚠️ 松开瓶盖！' },
+      { en: 'Cool to ~55°C (comfortable to hold). Add DNA stain (0.5 µg/mL EtBr or 1× SYBR Safe). Swirl', zh: '冷至约 55°C（手可握住）。加 DNA 染料（0.5 µg/mL EtBr 或 1× SYBR Safe）。摇匀' },
+      { en: 'Seal ends of gel tray with tape or gaskets. Place comb(s)', zh: '用胶带或密封垫密封胶模两端，放置梳子' },
+      { en: 'Pour molten agarose into tray. Pop any bubbles with a pipette tip. Let solidify 20–30 min at RT', zh: '将熔化琼脂糖倒入模具，用枪头戳破气泡。室温凝固 20–30 min' },
+      { en: 'Remove comb(s) gently. Place gel in electrophoresis chamber', zh: '轻轻拔出梳子，将凝胶放入电泳槽' },
+      { en: 'Fill chamber with 1× TAE/TBE until gel is submerged (2–3 mm above gel surface). Use same buffer as gel', zh: '加 1× TAE/TBE 没过凝胶 2–3 mm。必须与制胶用同一缓冲液' },
+      { en: 'Mix DNA samples with 6× loading dye (1:5 ratio). Load into wells using a micropipette', zh: '将 DNA 样品与 6× loading dye 1:5 混合。用微量移液器加样' },
+      { en: 'Load DNA ladder in the first and/or last well', zh: '在第一和/或最后一个孔加入 DNA ladder' },
+      { en: 'Connect power supply. Run at 5–8 V/cm (e.g., 100–120V for standard mini gel) for 30–60 min', zh: '连接电源。5–8 V/cm 电泳（标准小胶用 100–120V），30–60 min' },
+      { en: 'Monitor: loading dye should travel ⅔–¾ of gel length. Dye migrates toward + (red) electrode', zh: '观察：loading dye 应跑到凝胶 ⅔–¾ 处。染料向阳极（红色）迁移' },
+      { en: 'Turn off power. Remove gel from tray', zh: '关闭电源，取出凝胶' },
+      { en: 'Image on UV transilluminator (254/302 nm for EtBr) or blue light (for SYBR Safe). Photograph and document', zh: '紫外透射仪（EtBr：254/302 nm）或蓝光（SYBR Safe）下成像。拍照记录' },
+      { en: 'Compare band sizes to ladder. **For gel extraction**: use blue light (less DNA damage), cut band with clean scalpel, purify with gel extraction kit', zh: '对照 ladder 比较条带大小。**胶回收时**: 使用蓝光（减少 DNA 损伤），用干净手术刀切下条带，用胶回收试剂盒纯化' },
+    ],
+  },
+  // ── v2.1 new protocol enhancements ──
+  miniprep_protocol: {
+    usage: { en: 'Classic method for extracting plasmid DNA from E. coli. Yields 5–20 µg from 3 mL overnight culture. Quick and inexpensive. For higher purity, use commercial spin columns.', zh: '从大肠杆菌提取质粒 DNA 的经典方法。3 mL 过夜培养物可获得 5–20 µg。快速、经济。如需更高纯度，可使用商业柱提试剂盒。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — DNA stored at -20°C', zh: '实验方案 — DNA -20°C 保存' } },
+    materials: [
+      { name: 'Buffer P1 (Resuspension)', linkedRecipe: 'miniprep_p1' },
+      { name: 'Buffer P2 (Lysis)', linkedRecipe: 'miniprep_p2' },
+      { name: 'Buffer P3 (Neutralization)', linkedRecipe: 'miniprep_p3' },
+      { name: 'Isopropanol', note: { en: 'For DNA precipitation', zh: '用于 DNA 沉淀' } },
+      { name: '70% Ethanol', note: { en: 'For wash', zh: '洗涤用' } },
+      { name: 'TE Buffer or ddH₂O', linkedRecipe: 'te', note: { en: 'For elution', zh: '用于洗脱' } },
+    ],
+    briefSteps: [
+      { en: 'Pellet bacteria → resuspend in P1 → lyse with P2 → neutralize with P3 → centrifuge → precipitate DNA with isopropanol → wash with 70% ethanol → dissolve in TE/H₂O', zh: '离心收菌 → P1 重悬 → P2 裂解 → P3 中和 → 离心 → 异丙醇沉淀 DNA → 70% 乙醇洗涤 → TE/水溶解' },
+    ],
+    detailedSteps: [
+      { en: '**Harvest**: Centrifuge 1.5–3 mL overnight culture at 6,000 × g for 2 min. Discard supernatant', zh: '**收菌**: 1.5–3 mL 过夜培养物 6,000 × g 离心 2 min，弃上清' },
+      { en: '**Resuspend**: Add 250 µL Buffer P1. Pipet up and down until no clumps remain', zh: '**重悬**: 加 250 µL Buffer P1，反复吹打至无团块' },
+      { en: '**Lyse**: Add 250 µL Buffer P2. Mix by inverting 6–8 times. **Do NOT vortex.** Solution should become clear and viscous (≤5 min)', zh: '**裂解**: 加 250 µL Buffer P2，颠倒混匀 6–8 次。**不可涡旋！** 溶液应变透明粘稠（≤5 min）' },
+      { en: '**Neutralize**: Add 350 µL ice-cold Buffer P3. Mix immediately by inverting 6–8 times. White precipitate forms', zh: '**中和**: 加 350 µL 冰冷 Buffer P3，立即颠倒混匀 6–8 次。形成白色沉淀' },
+      { en: 'Centrifuge at 13,000 × g for 10 min at room temperature', zh: '室温 13,000 × g 离心 10 min' },
+      { en: 'Transfer supernatant (~800 µL) to a clean tube. **Avoid the white pellet**', zh: '转移上清（约 800 µL）至新管。**避免吸到白色沉淀**' },
+      { en: '**Precipitate**: Add 0.7 volumes (~560 µL) isopropanol. Mix by inversion', zh: '**沉淀**: 加 0.7 倍体积（约 560 µL）异丙醇，颠倒混匀' },
+      { en: 'Centrifuge at 13,000 × g for 15 min. DNA pellet may be visible', zh: '13,000 × g 离心 15 min。DNA 沉淀可能可见' },
+      { en: 'Carefully remove supernatant without disturbing the pellet', zh: '小心去除上清，勿触碰沉淀' },
+      { en: '**Wash**: Add 500 µL 70% ethanol. Centrifuge 5 min at 13,000 × g', zh: '**洗涤**: 加 500 µL 70% 乙醇，13,000 × g 离心 5 min' },
+      { en: 'Remove ethanol completely. Air-dry pellet 5–10 min (do not over-dry)', zh: '完全去除乙醇。风干沉淀 5–10 min（不要过度干燥）' },
+      { en: '**Dissolve**: Add 30–50 µL TE buffer or ddH₂O to pellet', zh: '**溶解**: 加 30–50 µL TE 缓冲液或 ddH₂O 溶解沉淀' },
+      { en: '**QC**: Measure concentration by NanoDrop. A260/280 should be 1.8–2.0', zh: '**质检**: NanoDrop 测浓度。A260/280 应为 1.8–2.0' },
+      { en: 'Store at -20°C', zh: '-20°C 保存' },
+    ],
+  },
+  mtt_assay: {
+    usage: { en: 'Colorimetric assay measuring cell metabolic activity as proxy for viability and proliferation. MTT (yellow) is reduced by mitochondrial reductases to formazan crystals (purple). OD570 is proportional to viable cell number.', zh: '比色法，以细胞代谢活性反映活力和增殖。MTT（黄色）被线粒体还原酶还原为甲臜结晶（紫色）。OD570 与活细胞数成正比。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 3–5 day experiment', zh: '实验方案 — 3–5 天实验' } },
+    materials: [
+      { name: 'MTT Reagent (5 mg/mL in PBS)', linkedRecipe: 'mtt_reagent' },
+      { name: 'DMSO (cell culture grade)', note: { en: 'Solubilization', zh: '溶解结晶用' } },
+      { name: '96-well plate with cells', note: { en: 'Seeded 24h prior', zh: '提前 24h 接种' } },
+      { name: 'Complete medium', note: { en: '', zh: '' } },
+      { name: 'Microplate reader', note: { en: '570 nm', zh: '570 nm 波长' } },
+    ],
+    briefSteps: [
+      { en: 'Seed cells → treat → add MTT → incubate 2–4h → remove medium → add DMSO → shake → read OD570', zh: '接种细胞 → 处理 → 加 MTT → 孵育 2–4h → 去培养基 → 加 DMSO → 振荡 → 读 OD570' },
+    ],
+    detailedSteps: [
+      { en: 'Seed cells in 96-well plate at 5,000–10,000 cells/well in 100 µL medium. Include blank wells (medium only)', zh: '96 孔板接种细胞，每孔 5,000–10,000 个/100 µL。设空白孔（仅培养基）' },
+      { en: 'Incubate 24h at 37°C, 5% CO₂ to allow attachment', zh: '37°C, 5% CO₂ 孵育 24h 使细胞贴壁' },
+      { en: 'Add drug/treatment at desired concentrations. Include vehicle control', zh: '加入药物/处理至目标浓度。设溶剂对照' },
+      { en: 'Incubate for treatment duration (24–72h)', zh: '孵育处理时间（24–72h）' },
+      { en: 'Add 10 µL MTT solution (5 mg/mL) to each well (final 0.5 mg/mL)', zh: '每孔加 10 µL MTT 溶液（5 mg/mL），终浓度 0.5 mg/mL' },
+      { en: 'Incubate at 37°C for 2–4h. Purple formazan crystals should be visible under microscope', zh: '37°C 孵育 2–4h。显微镜下应可见紫色甲臜结晶' },
+      { en: 'Carefully remove medium from each well (aspirate or invert plate onto paper towel)', zh: '小心去除各孔培养基（吸除或倒扣于纸巾上）' },
+      { en: 'Add 100 µL DMSO to each well to dissolve formazan crystals', zh: '每孔加 100 µL DMSO 溶解甲臜结晶' },
+      { en: 'Shake plate gently for 10 min (or orbital shaker) until crystals are fully dissolved', zh: '轻柔振荡 10 min（或摇床）至结晶完全溶解' },
+      { en: 'Read absorbance at 570 nm (reference 690 nm). Calculate viability: % = (OD_treated / OD_control) × 100', zh: '570 nm 读数（参考 690 nm）。计算活力: % = (OD处理 / OD对照) × 100' },
+    ],
+  },
+  scratch_assay: {
+    usage: { en: 'Simple, inexpensive assay to study cell migration and wound closure in vitro. Create a scratch in a confluent monolayer, then image gap closure over time. Use serum-free medium to isolate migration from proliferation effects.', zh: '简单、经济的体外细胞迁移和伤口愈合实验。在融合单层细胞上划痕，随时间观察间隙闭合。使用无血清培养基区分迁移和增殖效应。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1–3 day experiment', zh: '实验方案 — 1–3 天实验' } },
+    materials: [
+      { name: 'Complete DMEM', linkedRecipe: 'complete_dmem' },
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: '200 µL pipette tip (sterile)', note: { en: 'For scratch', zh: '用于划痕' } },
+      { name: 'Ruler or wound healing insert', note: { en: 'For consistent scratch width', zh: '控制划痕宽度一致' } },
+      { name: 'Serum-free or low-serum medium', note: { en: 'To inhibit proliferation', zh: '抑制增殖' } },
+    ],
+    briefSteps: [
+      { en: 'Grow to confluence → scratch with 200 µL tip → wash → add serum-free medium ± treatment → image at intervals → analyze wound closure', zh: '培养至融合 → 200 µL 枪头划痕 → 洗涤 → 加无血清培养基 ± 处理 → 定时拍照 → 分析愈合率' },
+    ],
+    detailedSteps: [
+      { en: 'Seed cells in 6-well or 12-well plate. Grow to >95% confluence (usually 24–48h)', zh: '在 6 孔或 12 孔板中接种细胞。培养至 >95% 融合（通常 24–48h）' },
+      { en: 'Optional: Pre-treat with mitomycin C (10 µg/mL, 2h) to inhibit proliferation if measuring migration only', zh: '可选：丝裂霉素 C（10 µg/mL, 2h）预处理抑制增殖（仅测迁移时）' },
+      { en: 'Using a sterile 200 µL pipette tip, draw a straight line through the cell monolayer. Use a ruler as guide', zh: '用无菌 200 µL 枪头在细胞单层上划一条直线。用尺子导引' },
+      { en: 'Make 2–3 parallel scratches per well. Mark reference lines on plate bottom perpendicular to scratches', zh: '每孔划 2–3 条平行线。在板底标记与划痕垂直的参考线' },
+      { en: 'Wash gently 2× with PBS to remove detached cells and debris', zh: 'PBS 轻柔洗 2 次，去除脱落细胞和碎片' },
+      { en: 'Add serum-free medium (or 1% FBS) with or without treatment compounds', zh: '加无血清培养基（或 1% FBS），加或不加处理化合物' },
+      { en: 'Image the scratch at 0h under phase-contrast microscope (4× or 10×). Record same positions using reference marks', zh: '0h 相差显微镜（4× 或 10×）拍照。利用参考线记录相同位置' },
+      { en: 'Return plate to 37°C, 5% CO₂ incubator', zh: '培养板放回 37°C, 5% CO₂ 培养箱' },
+      { en: 'Image at regular intervals: 6h, 12h, 24h, 48h (depending on cell type migration speed)', zh: '定时拍照：6h, 12h, 24h, 48h（取决于细胞迁移速度）' },
+      { en: '**Analysis**: Measure wound area at each timepoint using ImageJ (MRI Wound Healing Tool). Calculate % closure = (Area₀ₕ − Areaₜₕ) / Area₀ₕ × 100', zh: '**分析**: 用 ImageJ（MRI Wound Healing Tool 插件）测量各时间点伤口面积。% 愈合 = (面积₀ₕ − 面积ₜₕ) / 面积₀ₕ × 100' },
+      { en: 'Plot wound closure (%) vs time. Compare treated vs control groups', zh: '绘制愈合率 (%) vs 时间曲线。比较处理组与对照组' },
+      { en: 'Representative images: Include 0h and endpoint images for each condition in figures', zh: '代表性图片：在图中包含每个条件的 0h 和终点图片' },
+    ],
+  },
+  cell_freezing: {
+    usage: { en: 'Standard protocol for cryopreserving mammalian cell lines. Cells frozen at controlled rate (-1°C/min) in 10% DMSO/90% FBS to prevent ice crystal damage. Essential for cell banking and maintaining low-passage stocks.', zh: '哺乳动物细胞系的标准冻存方案。在 10% DMSO/90% FBS 中以 -1°C/min 程序降温，防止冰晶损伤。对细胞库建立和维持低代次细胞至关重要。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — cells stored in liquid nitrogen', zh: '实验方案 — 细胞液氮保存' } },
+    materials: [
+      { name: 'Freezing Medium (10% DMSO)', linkedRecipe: 'freezing_medium' },
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: 'Trypsin-EDTA (0.25%)', linkedRecipe: 'edta_trypsin' },
+      { name: 'Cryovials (pre-labeled)', note: { en: '1.5–2 mL', zh: '1.5–2 mL' } },
+      { name: 'Mr. Frosty or CoolCell', note: { en: '-1°C/min controlled rate', zh: '-1°C/min 程序降温' } },
+      { name: 'Hemocytometer', note: { en: 'For counting', zh: '计数用' } },
+    ],
+    briefSteps: [
+      { en: 'Trypsinize → count → centrifuge → resuspend in freezing medium → aliquot to cryovials → Mr. Frosty -80°C overnight → transfer to liquid nitrogen', zh: '消化 → 计数 → 离心 → 冻存液重悬 → 分装至冻存管 → Mr. Frosty -80°C 过夜 → 转液氮' },
+    ],
+    detailedSteps: [
+      { en: 'Use cells at 70–90% confluence, in log-phase growth. Ensure viability >90% (trypan blue)', zh: '选择 70–90% 汇合度、对数生长期细胞。确认活力 >90%（台盼蓝）' },
+      { en: 'Aspirate medium. Wash cells with PBS', zh: '吸除培养基。PBS 洗涤细胞' },
+      { en: 'Add Trypsin-EDTA. Incubate at 37°C until cells detach (1–5 min depending on cell type)', zh: '加入胰酶-EDTA。37°C 孵育至细胞脱落（1–5 min，视细胞类型）' },
+      { en: 'Neutralize with 2× volume complete medium. Transfer to centrifuge tube', zh: '加 2 倍体积完全培养基中和。转移至离心管' },
+      { en: 'Centrifuge at 200 × g for 5 min. Aspirate supernatant', zh: '200 × g 离心 5 min。吸除上清' },
+      { en: 'Resuspend pellet in complete medium. Count cells using hemocytometer', zh: '完全培养基重悬沉淀。血球计数板计数' },
+      { en: 'Centrifuge again at 200 × g for 5 min. Remove supernatant', zh: '再次 200 × g 离心 5 min。去除上清' },
+      { en: 'Resuspend in pre-chilled freezing medium at 1–5 × 10⁶ cells/mL', zh: '预冷冻存液重悬，密度 1–5 × 10⁶ cells/mL' },
+      { en: 'Aliquot 1 mL per cryovial. Label: cell line, passage number, date, initials', zh: '每管分装 1 mL。标记：细胞系、代次、日期、姓名缩写' },
+      { en: 'Place cryovials in Mr. Frosty (or CoolCell) at -80°C overnight. Provides -1°C/min cooling rate', zh: '将冻存管放入 Mr. Frosty（或 CoolCell）-80°C 过夜。提供 -1°C/min 降温速率' },
+      { en: 'Transfer to liquid nitrogen within 24–48h for long-term storage. Record location in cell inventory', zh: '24–48h 内转入液氮长期保存。在细胞库记录中登记位置' },
+    ],
+  },
+  cell_thawing: {
+    usage: { en: 'Quick-thaw protocol to recover frozen cells with minimal DMSO exposure time. The key is speed — DMSO is cytotoxic at 37°C.', zh: '快速解冻恢复冻存细胞，尽量缩短 DMSO 暴露时间。关键是速度——DMSO 在 37°C 对细胞有毒性。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1h hands-on', zh: '实验方案 — 1h 操作时间' } },
+    materials: [
+      { name: 'Complete DMEM or RPMI', linkedRecipe: 'complete_dmem' },
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: '37°C water bath', note: { en: '', zh: '' } },
+      { name: 'T-25 or T-75 flask', note: { en: 'Pre-warmed medium', zh: '预热培养基' } },
+    ],
+    briefSteps: [
+      { en: 'Pre-warm medium → thaw in 37°C water bath → transfer to flask with medium → incubate → change medium after 6–8h → recover 1–2 passages', zh: '预热培养基 → 37°C 水浴解冻 → 转移至含培养基的培养瓶 → 培养 → 6–8h 后换液 → 恢复 1–2 代' },
+    ],
+    detailedSteps: [
+      { en: 'Pre-warm complete medium to 37°C. Prepare flask with 9 mL medium', zh: '预热完全培养基至 37°C。培养瓶中加 9 mL 培养基' },
+      { en: 'Retrieve cryovial from liquid nitrogen. Transport on dry ice', zh: '从液氮中取出冻存管。干冰运输' },
+      { en: 'Thaw rapidly in 37°C water bath with gentle agitation. **Stop when a small ice crystal remains** (~1–2 min). Do not submerge cap', zh: '37°C 水浴快速解冻，轻柔晃动。**留小冰晶时即停止**（约 1–2 min）。勿没过管盖' },
+      { en: 'Immediately transfer thawed cells to flask with 9 mL warm medium (dilutes DMSO 1:10)', zh: '立即将解冻细胞转入含 9 mL 温热培养基的培养瓶（稀释 DMSO 1:10）' },
+      { en: 'Gently rock flask to mix. Do NOT centrifuge — some cell types are fragile post-thaw', zh: '轻柔摇匀。不要离心——某些细胞解冻后很脆弱' },
+      { en: 'Incubate at 37°C, 5% CO₂', zh: '37°C, 5% CO₂ 培养' },
+      { en: 'After 6–8h (or next morning), check attachment. Replace medium to remove residual DMSO and dead cells', zh: '6–8h 后（或次日早上）检查贴壁情况。换液去除残余 DMSO 和死细胞' },
+      { en: 'Allow cells to recover 1–2 passages before starting experiments. Confirm viability >90%', zh: '恢复 1–2 代后开始实验。确认活力 >90%' },
+    ],
+  },
+  electroporation: {
+    usage: { en: 'High-efficiency transformation method (10⁹–10¹⁰ CFU/µg). 10–100× more efficient than chemical transformation. Requires desalted DNA (salt causes arcing). Essential for large plasmids (>10 kb) and library construction.', zh: '高效转化方法 (10⁹–10¹⁰ CFU/µg)。效率比化学转化高 10–100 倍。DNA 必须脱盐（盐导致放电弧光）。大质粒 (>10 kb) 和文库构建必须用电转。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 3h + overnight incubation', zh: '实验方案 — 3h + 过夜培养' } },
+    materials: [
+      { name: '10% Glycerol (ice-cold, sterile)', note: { en: 'Wash buffer', zh: '洗涤缓冲液' } },
+      { name: 'SOC Medium', linkedRecipe: 'soc' },
+      { name: 'LB Agar + Antibiotic', linkedRecipe: 'lb_agar' },
+      { name: 'Electrocompetent cells', note: { en: 'DH10B, TOP10, or similar', zh: 'DH10B、TOP10 等' } },
+      { name: 'Electroporation cuvettes (1 mm gap)', note: { en: 'Pre-chilled', zh: '预冷' } },
+      { name: 'Electroporator', note: { en: '1.8 kV, 25 µF, 200 Ω', zh: '1.8 kV, 25 µF, 200 Ω' } },
+      { name: 'Purified DNA (desalted)', note: { en: '<5 µL, low salt', zh: '<5 µL, 低盐' } },
+    ],
+    briefSteps: [
+      { en: 'Thaw cells on ice → add DNA → transfer to cuvette → pulse 1.8 kV → add SOC → recover 1h 37°C → plate on selective agar', zh: '冰上解冻细胞 → 加 DNA → 转至电转杯 → 1.8 kV 脉冲 → 加 SOC → 37°C 恢复 1h → 涂抗性平板' },
+    ],
+    detailedSteps: [
+      { en: 'Thaw electrocompetent cells on ice for 10 min. Pre-chill electroporation cuvettes on ice', zh: '冰上解冻电转感受态细胞 10 min。预冷电转杯' },
+      { en: 'Add 1–5 µL desalted DNA (1–100 ng) to cells. Mix by flicking gently. **Do NOT pipette up and down.** Keep on ice', zh: '加 1–5 µL 脱盐 DNA（1–100 ng）至细胞。轻弹混匀。**不要吹打。** 保持冰上' },
+      { en: 'Transfer cell-DNA mixture to pre-chilled cuvette. Tap to settle, remove air bubbles', zh: '将细胞-DNA 混合物转至预冷电转杯。轻敲使细胞沉底，去除气泡' },
+      { en: 'Dry outside of cuvette. Place in electroporator', zh: '擦干电转杯外壁。放入电转仪' },
+      { en: 'Pulse: **1.8 kV, 25 µF, 200 Ω** (1 mm cuvettes). Time constant should be 4–5 ms. If arcing (loud pop) — DNA has too much salt, desalt and retry', zh: '电击: **1.8 kV, 25 µF, 200 Ω**（1 mm 电转杯）。时间常数应为 4–5 ms。如发生弧光（啪声）——DNA 盐分过高，脱盐后重试' },
+      { en: 'Immediately add 1 mL pre-warmed SOC medium to cuvette. Mix gently by pipetting', zh: '立即向电转杯加 1 mL 预热 SOC 培养基。轻柔吹打混匀' },
+      { en: 'Transfer to culture tube. Shake at 37°C, 225 rpm for 1h (recovery)', zh: '转至培养管。37°C, 225 rpm 振荡 1h（恢复）' },
+      { en: 'Plate 10 µL, 100 µL, and remaining cells on selective LB agar plates', zh: '分别涂板 10 µL、100 µL 和剩余细胞至含抗生素 LB 平板' },
+      { en: 'Incubate plates at 37°C overnight', zh: '37°C 过夜培养' },
+      { en: 'Count colonies. Typical efficiency: 10⁹–10¹⁰ CFU/µg for supercoiled plasmid', zh: '计数克隆。典型效率：超螺旋质粒 10⁹–10¹⁰ CFU/µg' },
+    ],
+  },
+  // ── batch 2 protocol enhancements ──
+  lentivirus_production: {
+    usage: { en: '2nd-generation lentiviral packaging in HEK293T cells for stable gene delivery. BSL-2 required. Typical titer: 10⁶–10⁷ TU/mL unconcentrated.', zh: '在 HEK293T 中进行第二代慢病毒包装，用于稳定基因递送。需要 BSL-2。典型滴度：未浓缩 10⁶–10⁷ TU/mL。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — BSL-2, multi-day', zh: '实验方案 — BSL-2, 多天' } },
+    materials: [
+      { name: 'Complete DMEM', linkedRecipe: 'complete_dmem' },
+      { name: 'Opti-MEM (serum-free)', note: { en: 'For transfection complex', zh: '用于转染复合物' } },
+      { name: 'Lipofectamine 3000 + P3000', note: { en: 'Or PEI (1:3 DNA:PEI ratio)', zh: '或 PEI（DNA:PEI = 1:3）' } },
+      { name: 'Transfer plasmid', note: { en: '15 µg per 10 cm dish', zh: '每 10 cm 皿 15 µg' } },
+      { name: 'psPAX2 (packaging)', note: { en: '10 µg', zh: '10 µg' } },
+      { name: 'pMD2.G (envelope)', note: { en: '5 µg', zh: '5 µg' } },
+      { name: 'Polybrene (8 µg/mL)', linkedRecipe: 'polybrene_stock', note: { en: 'For transduction', zh: '用于转导' } },
+      { name: 'Puromycin (1 µg/mL)', note: { en: 'For selection', zh: '用于筛选' } },
+      { name: '0.45 µm filter', note: { en: 'PES or PVDF', zh: 'PES 或 PVDF' } },
+    ],
+    briefSteps: [
+      { en: 'Plate HEK293T → transfect (Lipo3000 + transfer + psPAX2 + pMD2.G) → collect virus 48h → filter 0.45 µm → transduce target cells + Polybrene → puromycin select', zh: '接种 HEK293T → 转染 (Lipo3000 + 转移质粒 + psPAX2 + pMD2.G) → 48h 收毒 → 0.45 µm 过滤 → 病毒 + Polybrene 感染靶细胞 → puromycin 筛选' },
+    ],
+    detailedSteps: [
+      { en: '**Day -1**: Plate 4×10⁶ HEK293T cells in 10 cm dish with 7 mL complete DMEM. Cells should be 70-80% confluent at transfection', zh: '**Day -1**: 在 10 cm 皿中接种 4×10⁶ HEK293T 细胞，加 7 mL 完全 DMEM。转染时细胞应 70-80% 汇合' },
+      { en: '**Day 0**: Prepare DNA mix in 15 mL tube: 750 µL Opti-MEM + 15 µg transfer plasmid + 10 µg psPAX2 + 5 µg pMD2.G + 60 µL P3000 reagent', zh: '**Day 0**: 在 15 mL 管中配制 DNA 混合物：750 µL Opti-MEM + 15 µg 转移质粒 + 10 µg psPAX2 + 5 µg pMD2.G + 60 µL P3000 试剂' },
+      { en: 'In separate tube: 750 µL Opti-MEM + 45 µL Lipofectamine 3000. Mix well', zh: '另取一管：750 µL Opti-MEM + 45 µL Lipofectamine 3000。混匀' },
+      { en: 'Combine DNA and Lipofectamine tubes. Mix gently by inversion', zh: '合并 DNA 管和 Lipofectamine 管。轻柔颠倒混匀' },
+      { en: 'Incubate at room temperature for 15 min', zh: '室温孵育 15 min' },
+      { en: 'Add transfection complex drop-wise onto cells. Swirl gently to distribute', zh: '将转染复合物逐滴加入细胞。轻柔旋转使其均匀分布' },
+      { en: 'Incubate overnight (~16h) at 37°C, 5% CO₂', zh: '37°C, 5% CO₂ 过夜孵育（约 16h）' },
+      { en: '**Day 1**: Aspirate medium. Replace with 5 mL fresh DMEM + 10 mM HEPES', zh: '**Day 1**: 吸去培养基。换 5 mL 新鲜 DMEM + 10 mM HEPES' },
+      { en: '**Day 3** (48h post-transfection): Collect supernatant into 50 mL tube', zh: '**Day 3**（转染后 48h）：收集上清至 50 mL 管' },
+      { en: 'Centrifuge at 2,000 rpm, 4°C, 5 min to remove cell debris', zh: '2,000 rpm, 4°C 离心 5 min 去除细胞碎片' },
+      { en: 'Filter through 0.45 µm PES filter. Virus can be used immediately or stored at 4°C for 24h', zh: '0.45 µm PES 滤膜过滤。病毒可立即使用或 4°C 保存 24h' },
+      { en: '**Transduction** — Seed target cells at 1-4×10⁵/well in 6-well plate (Day 0)', zh: '**转导** — 在 6 孔板中接种靶细胞 1-4×10⁵/孔（Day 0）' },
+      { en: 'Day 1: Replace medium with 2 mL virus-containing supernatant + 8 µg/mL Polybrene', zh: 'Day 1: 换液为 2 mL 含病毒上清 + 8 µg/mL Polybrene' },
+      { en: 'Day 2: Replace virus medium with fresh complete medium', zh: 'Day 2: 将病毒培养基换为新鲜完全培养基' },
+      { en: 'Day 4: Begin puromycin selection (1 µg/mL). Continue for 72h', zh: 'Day 4: 开始 puromycin 筛选（1 µg/mL）。持续 72h' },
+      { en: 'Day 7+: Maintain selection. Passage at least 2× before removing from BSL-2', zh: 'Day 7+: 维持筛选。至少传代 2 次后方可移出 BSL-2' },
+    ],
+  },
+  gibson_assembly: {
+    usage: { en: 'Seamless, scarless DNA assembly. Joins 2-6 fragments with 15-25 bp overlaps in a single isothermal reaction.', zh: '无缝无疤 DNA 组装。通过 15-25 bp 重叠区在单一等温反应中连接 2-6 个片段。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 1h reaction + transformation', zh: '实验方案 — 1h 反应 + 转化' } },
+    materials: [
+      { name: 'Gibson Assembly Master Mix (2×)', linkedRecipe: 'gibson_mastermix', note: { en: 'NEB E5510 or homemade', zh: 'NEB E5510 或自配' } },
+      { name: 'Linearized vector', note: { en: '50-100 ng', zh: '50-100 ng' } },
+      { name: 'Insert fragment(s)', note: { en: '2-3 fold molar excess', zh: '2-3 倍摩尔过量' } },
+      { name: 'Competent cells', linkedRecipe: 'competent_cells_cacl2' },
+      { name: 'SOC Medium', linkedRecipe: 'soc' },
+      { name: 'LB Agar + Antibiotic', linkedRecipe: 'lb_agar' },
+    ],
+    briefSteps: [
+      { en: 'Design overlapping primers → PCR amplify fragments → assemble at 50°C (15-60 min) → transform → plate', zh: '设计重叠引物 → PCR 扩增片段 → 50°C 组装 (15-60 min) → 转化 → 涂板' },
+    ],
+    detailedSteps: [
+      { en: 'Design primers with 15-25 bp overlapping regions between adjacent fragments. Use NEBuilder (nebuilder.neb.com) for primer design', zh: '设计引物，使相邻片段间有 15-25 bp 重叠区。使用 NEBuilder (nebuilder.neb.com) 辅助设计' },
+      { en: 'PCR-amplify fragments with high-fidelity polymerase (Q5 or Phusion). Gel-purify or clean up', zh: '用高保真聚合酶（Q5 或 Phusion）PCR 扩增片段。凝胶纯化或柱纯化' },
+      { en: 'On ice, set up reaction: 10 µL Gibson Assembly Master Mix (2×) + DNA fragments (0.02-0.5 pmol for 2-3 fragments; 0.2-1 pmol for 4-6 fragments) + ddH₂O to 20 µL total', zh: '冰上配制反应体系：10 µL Gibson Assembly Master Mix (2×) + DNA 片段（2-3 个片段用 0.02-0.5 pmol；4-6 个片段用 0.2-1 pmol）+ ddH₂O 补至 20 µL' },
+      { en: 'Optimal ratio: 3:1 insert:vector molar ratio. Use NEBioCalculator for pmol conversion', zh: '最佳比例：插入片段:载体 = 3:1 摩尔比。用 NEBioCalculator 计算 pmol' },
+      { en: 'Incubate at 50°C for 15 min (2-3 fragments) or 60 min (4-6 fragments) in thermocycler', zh: 'PCR 仪中 50°C 孵育 15 min（2-3 个片段）或 60 min（4-6 个片段）' },
+      { en: 'Place on ice or store at -20°C', zh: '置于冰上或 -20°C 保存' },
+      { en: 'Transform 2 µL of assembly reaction into competent cells (chemical or electroporation)', zh: '取 2 µL 组装产物转化感受态细胞（化学转化或电转）' },
+      { en: 'Plate on selective media. Screen colonies by colony PCR or restriction digest', zh: '涂选择性平板。通过菌落 PCR 或酶切筛选克隆' },
+    ],
+  },
+  site_directed_mutagenesis: {
+    usage: { en: 'Introduce point mutations, insertions, or deletions into plasmid DNA. Based on inverse PCR with KLD (Kinase-Ligase-DpnI) treatment.', zh: '在质粒 DNA 中引入点突变、插入或缺失。基于反向 PCR + KLD（激酶-连接酶-DpnI）处理。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~4h (PCR + KLD + transform)', zh: '实验方案 — 约 4h（PCR + KLD + 转化）' } },
+    materials: [
+      { name: 'Q5 Hot Start 2× Master Mix', note: { en: 'Or similar HF polymerase', zh: '或类似高保真聚合酶' } },
+      { name: 'Mutagenic primers (10 µM)', note: { en: 'Design with NEBaseChanger', zh: '用 NEBaseChanger 设计' } },
+      { name: 'Template plasmid (1-25 ng/µL)', note: { en: '', zh: '' } },
+      { name: 'KLD Enzyme Mix (10×)', note: { en: 'Kinase + Ligase + DpnI', zh: '激酶 + 连接酶 + DpnI' } },
+      { name: 'KLD Reaction Buffer (2×)', note: { en: '', zh: '' } },
+      { name: 'Competent cells', linkedRecipe: 'competent_cells_cacl2' },
+      { name: 'SOC Medium', linkedRecipe: 'soc' },
+      { name: 'LB Agar + Antibiotic', linkedRecipe: 'lb_agar' },
+    ],
+    briefSteps: [
+      { en: 'Design back-to-back mutagenic primers → Q5 inverse PCR → KLD reaction (5 min RT) → transform → sequence-verify', zh: '设计背靠背突变引物 → Q5 反向 PCR → KLD 反应（RT 5 min）→ 转化 → 测序验证' },
+    ],
+    detailedSteps: [
+      { en: 'Design mutagenic primers using NEBaseChanger (nebasechanger.neb.com). Primers should be back-to-back on the template', zh: '使用 NEBaseChanger (nebasechanger.neb.com) 设计突变引物。引物应在模板上背靠背排列' },
+      { en: 'Set up PCR: 12.5 µL Q5 2× Master Mix + 1.25 µL forward primer (10 µM) + 1.25 µL reverse primer (10 µM) + 1 µL template (1-25 ng) + 9 µL ddH₂O', zh: '配制 PCR 体系：12.5 µL Q5 2× Master Mix + 1.25 µL 正向引物 (10 µM) + 1.25 µL 反向引物 (10 µM) + 1 µL 模板 (1-25 ng) + 9 µL ddH₂O' },
+      { en: 'PCR cycling: 98°C 30s initial denaturation → 25 cycles of (98°C 10s → Tm°C 10-30s → 72°C 20-30s/kb) → 72°C 2 min final extension → hold 4°C', zh: 'PCR 程序：98°C 30s 初始变性 → 25 个循环（98°C 10s → Tm°C 10-30s → 72°C 20-30s/kb）→ 72°C 2 min 终延伸 → 4°C 保持' },
+      { en: 'Check PCR product on 1% agarose gel. Should see a single band at expected size', zh: '1% 琼脂糖凝胶检测 PCR 产物。应看到预期大小的单一条带' },
+      { en: 'Set up KLD reaction: 1 µL PCR product + 5 µL KLD Buffer (2×) + 1 µL KLD Enzyme Mix (10×) + 3 µL ddH₂O', zh: '配制 KLD 反应：1 µL PCR 产物 + 5 µL KLD Buffer (2×) + 1 µL KLD Enzyme Mix (10×) + 3 µL ddH₂O' },
+      { en: 'Mix by pipetting. Incubate at room temperature for 5 min', zh: '吹打混匀。室温孵育 5 min' },
+      { en: 'Transform 5 µL KLD mix into 50 µL competent cells. Ice 30 min → heat shock 42°C 30s → ice 5 min', zh: '取 5 µL KLD 混合物转化 50 µL 感受态细胞。冰浴 30 min → 42°C 热激 30s → 冰浴 5 min' },
+      { en: 'Add 950 µL SOC. Shake at 37°C for 1h', zh: '加 950 µL SOC。37°C 振荡 1h' },
+      { en: 'Plate 50-100 µL on selective plates. Incubate overnight at 37°C', zh: '取 50-100 µL 涂板。37°C 过夜培养' },
+      { en: 'Pick 2-4 colonies for sequencing. Typical mutagenesis efficiency: >80%', zh: '挑 2-4 个克隆送测序。典型突变效率：>80%' },
+    ],
+  },
+  transwell_migration: {
+    usage: { en: 'Quantitative assay for cell migration/invasion using Boyden chamber principle. Count migrated cells after crystal violet staining.', zh: '基于 Boyden 小室原理的定量细胞迁移/侵袭实验。结晶紫染色后计数迁移细胞。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — 2 days (starve + migrate)', zh: '实验方案 — 2 天（饥饿 + 迁移）' } },
+    materials: [
+      { name: 'Transwell inserts (8 µm pore)', note: { en: 'Corning #3422 or similar', zh: 'Corning #3422 或类似' } },
+      { name: '24-well plate', note: { en: 'Companion plate', zh: '配套培养板' } },
+      { name: 'Serum-free medium', note: { en: 'Upper chamber', zh: '上室用' } },
+      { name: 'Complete medium (10% FBS)', linkedRecipe: 'complete_dmem', note: { en: 'Lower chamber chemoattractant', zh: '下室趋化因子' } },
+      { name: 'PBS (1×)', linkedRecipe: 'pbs_1x' },
+      { name: 'Crystal Violet (0.5%)', linkedRecipe: 'crystal_violet_stain' },
+      { name: 'Methanol or 4% PFA', note: { en: 'For fixation', zh: '用于固定' } },
+      { name: 'Cotton swabs', note: { en: 'To remove non-migrated cells', zh: '去除未迁移细胞' } },
+    ],
+    briefSteps: [
+      { en: 'Serum-starve → seed cells in upper chamber (serum-free) → chemoattractant in lower → incubate 16-24h → swab upper surface → fix → crystal violet stain → count', zh: '血清饥饿 → 上室接种细胞（无血清）→ 下室加趋化因子 → 孵育 16-24h → 棉签擦上表面 → 固定 → 结晶紫染色 → 计数' },
+    ],
+    detailedSteps: [
+      { en: 'Serum-starve cells for 12-24h before assay to synchronize migration response', zh: '实验前血清饥饿 12-24h 以同步迁移响应' },
+      { en: 'Optional (invasion assay): Coat upper surface of Transwell insert with 50 µL Matrigel (1:8 dilution in serum-free medium). Incubate 1-2h at 37°C to solidify', zh: '可选（侵袭实验）：在 Transwell 上表面涂 50 µL Matrigel（无血清培养基 1:8 稀释）。37°C 孵育 1-2h 凝固' },
+      { en: 'Add 600 µL complete medium (10% FBS) to lower chamber of 24-well plate as chemoattractant. For negative control, use serum-free medium in lower chamber', zh: '在 24 孔板下室加 600 µL 完全培养基（10% FBS）作为趋化因子。阴性对照：下室加无血清培养基' },
+      { en: 'Trypsinize starved cells, count, and resuspend in serum-free medium at 2-5×10⁵ cells/mL', zh: '消化饥饿细胞，计数，用无血清培养基重悬至 2-5×10⁵ cells/mL' },
+      { en: 'Add 200 µL cell suspension to upper chamber of Transwell insert (4-10×10⁴ cells)', zh: '取 200 µL 细胞悬液加入 Transwell 上室（4-10×10⁴ 个细胞）' },
+      { en: 'Carefully place insert into well. Avoid air bubbles between insert and lower medium', zh: '小心将小室放入孔中。避免小室与下室液面间产生气泡' },
+      { en: 'Incubate at 37°C, 5% CO₂ for 16-24h (varies by cell type; fast migrators like MDA-MB-231 may need only 8h)', zh: '37°C, 5% CO₂ 孵育 16-24h（因细胞类型而异；快速迁移细胞如 MDA-MB-231 可能只需 8h）' },
+      { en: 'Remove insert. Gently wipe upper surface with moist cotton swab to remove non-migrated cells. Repeat 2-3×', zh: '取出小室。用湿棉签轻轻擦拭上表面去除未迁移细胞。重复 2-3 次' },
+      { en: 'Fix cells on lower surface: dip in methanol for 10 min or 4% PFA for 15 min', zh: '固定下表面细胞：浸入甲醇 10 min 或 4% PFA 15 min' },
+      { en: 'Stain with 0.5% crystal violet for 20 min. Rinse excess stain in water', zh: '0.5% 结晶紫染色 20 min。水洗去多余染液' },
+      { en: 'Air-dry inserts. Image 5 random fields per insert under microscope (20× objective)', zh: '晾干小室。显微镜下（20× 物镜）每个小室随机拍摄 5 个视野' },
+      { en: '**Analysis**: Count stained cells per field using ImageJ. Report as average cells/field ± SEM. Compare conditions by t-test or ANOVA', zh: '**分析**：用 ImageJ 计数每视野染色细胞。报告平均 cells/field ± SEM。用 t 检验或 ANOVA 比较各组' },
+    ],
+  },
+  mycoplasma_pcr: {
+    usage: { en: 'Fast, sensitive PCR-based detection of mycoplasma contamination in cell cultures. Test every cell line every 2-4 weeks.', zh: '快速灵敏的 PCR 法检测细胞培养支原体污染。每 2-4 周检测一次。' },
+    storage: { temp: 'N/A', duration: '', icon: '📋', label: { en: 'Protocol — ~3h (prep + PCR + gel)', zh: '实验方案 — 约 3h（准备 + PCR + 跑胶）' } },
+    materials: [
+      { name: 'Cell culture supernatant', note: { en: '48-72h conditioned', zh: '48-72h 条件培养基' } },
+      { name: 'Taq 2× Master Mix', note: { en: 'Standard Taq, not HF', zh: '普通 Taq，非高保真' } },
+      { name: 'Forward primer (10 µM)', note: { en: "GPO-3: 5'-GGGAGCAAACAGGATTAGATACCCT-3'", zh: 'GPO-3 引物' } },
+      { name: 'Reverse primer (10 µM)', note: { en: "MGSO: 5'-TGCACCATCTGTCACTCTGTTAACCTC-3'", zh: 'MGSO 引物' } },
+      { name: 'Agarose gel (2%)', note: { en: 'For detection of ~270 bp band', zh: '检测约 270 bp 条带' } },
+      { name: 'DNA ladder (100 bp)', note: { en: '', zh: '' } },
+    ],
+    briefSteps: [
+      { en: 'Collect conditioned medium → pellet mycoplasma → boil to lyse → PCR (GPO-3/MGSO) → 2% agarose gel → ~270 bp band = positive', zh: '收集条件培养基 → 离心沉淀支原体 → 煮沸裂解 → PCR (GPO-3/MGSO) → 2% 琼脂糖凝胶 → ~270 bp 条带 = 阳性' },
+    ],
+    detailedSteps: [
+      { en: 'Collect 1 mL conditioned medium from cells cultured 48-72h without medium change. Use supernatant (mycoplasma is extracellular)', zh: '收集 1 mL 未换液培养 48-72h 的条件培养基。使用上清（支原体为胞外寄生）' },
+      { en: 'Centrifuge at 250 × g for 5 min to pellet cells. Transfer supernatant', zh: '250 × g 离心 5 min 沉淀细胞。转移上清' },
+      { en: 'Centrifuge supernatant at 15,000 × g for 10 min. Discard supernatant. Resuspend pellet in 50 µL ddH₂O', zh: '上清 15,000 × g 离心 10 min。弃上清。用 50 µL ddH₂O 重悬沉淀' },
+      { en: 'Boil at 95°C for 10 min to lyse mycoplasma and release DNA. Quick-spin', zh: '95°C 煮沸 10 min 裂解支原体释放 DNA。快速离心' },
+      { en: 'Set up PCR: 12.5 µL Taq 2× Master Mix + 1 µL GPO-3 primer (10 µM) + 1 µL MGSO primer (10 µM) + 2 µL template (boiled supernatant) + 8.5 µL ddH₂O', zh: '配制 PCR：12.5 µL Taq 2× Master Mix + 1 µL GPO-3 引物 (10 µM) + 1 µL MGSO 引物 (10 µM) + 2 µL 模板（煮沸上清）+ 8.5 µL ddH₂O' },
+      { en: 'Include positive control (known contaminated DNA or synthetic template) and negative control (ddH₂O)', zh: '设阳性对照（已知污染 DNA 或合成模板）和阴性对照（ddH₂O）' },
+      { en: 'PCR cycling: 94°C 5 min → 35 cycles of (94°C 30s → 55°C 30s → 72°C 30s) → 72°C 5 min', zh: 'PCR 程序：94°C 5 min → 35 个循环（94°C 30s → 55°C 30s → 72°C 30s）→ 72°C 5 min' },
+      { en: 'Run products on 2% agarose gel with 100 bp ladder. Look for band at ~270 bp', zh: '2% 琼脂糖凝胶电泳，加 100 bp ladder。观察 ~270 bp 处条带' },
+      { en: '**Interpretation**: Band at ~270 bp = POSITIVE (contaminated). No band = NEGATIVE. Positive control must show band for valid test. If contaminated: discard cells, bleach hood, check medium and reagents', zh: '**判读**：~270 bp 条带 = 阳性（污染）。无条带 = 阴性。阳性对照必须出带才有效。若污染：丢弃细胞，漂白超净台，检查培养基和试剂' },
+    ],
+  },
+};
+
+// Apply all enhancements to RECIPES
+RECIPES.forEach(r => {
+  const bufEnh = BUFFER_ENHANCEMENTS[r.id];
+  const protoEnh = PROTOCOL_ENHANCEMENTS[r.id];
+  const enh = bufEnh || protoEnh;
+  if (enh) {
+    if (enh.usage) r.usage = enh.usage;
+    if (enh.storage) r.storage = enh.storage;
+    if (enh.relatedProtocols) r.relatedProtocols = enh.relatedProtocols;
+    if (enh.steps) r.prepSteps = enh.steps;
+    if (enh.briefSteps) r.briefSteps = enh.briefSteps;
+    if (enh.detailedSteps) r.detailedSteps = enh.detailedSteps;
+    if (enh.materials) r.materials = enh.materials;
+  }
+});
 
 // Safe stop points for protocols
 const SAFE_STOPS = {
@@ -5711,7 +7164,7 @@ function parseCsvImport(text) {
 function InventoryTab() {
   const lang = useLang();
   const toast = useToast();
-  // TODO (future): drag-to-transfer samples between boxes
+  // TODO (future): Inventory statistics dashboard, undo stack for CRUD, drag-to-transfer samples between boxes
   const [data, setData] = useState(getInvData);
   const [selectedBoxId, setSelectedBoxId] = useState(null);
   const [search, setSearch] = useState('');
@@ -5732,15 +7185,12 @@ function InventoryTab() {
   const [selectedCells, setSelectedCells] = useState(new Set());
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showBulkAdd, setShowBulkAdd] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [bulkForm, setBulkForm] = useState({ owner: '', sampleType: '', expiryDate: '', tags: '' });
   const [bulkAddForm, setBulkAddForm] = useState({ name: '', nameZh: '', sampleType: 'reagent', quantity: '', concentration: '', owner: '', tags: '', description: '', notes: '', expiryDate: '' });
   const csvInputRef = useRef(null);
   const jsonInputRef = useRef(null);
   const exportMenuRef = useRef(null);
   const importMenuRef = useRef(null);
-  const undoStackRef = useRef([]);
-  const [undoCount, setUndoCount] = useState(0);
   // Close dropdown menus on outside click
   useEffect(() => {
     if (!showExportMenu && !showImportMenu) return;
@@ -5753,6 +7203,7 @@ function InventoryTab() {
   }, [showExportMenu, showImportMenu]);
   // TODO: Future features:
   // - Inventory statistics dashboard (samples by type, storage utilization, expiry timeline)
+  // - Undo stack for CRUD operations (keep last 10 states)
   // - Drag-to-transfer samples between boxes/positions
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
@@ -5763,31 +7214,6 @@ function InventoryTab() {
   }, []);
 
   const persist = (newData) => { setData(newData); saveInventory(newData); };
-
-  // Undo stack — in-memory only (max 10 states)
-  const pushUndo = () => {
-    undoStackRef.current.push(JSON.parse(JSON.stringify(data)));
-    if (undoStackRef.current.length > 10) undoStackRef.current.shift();
-    setUndoCount(c => c + 1);
-  };
-  const handleUndo = () => {
-    if (undoStackRef.current.length === 0) { toast.show(t('invNoUndo', lang)); return; }
-    const prev = undoStackRef.current.pop();
-    persist(prev);
-    setUndoCount(c => c - 1);
-    toast.show(t('invUndone', lang));
-  };
-
-  // Ctrl+Z / Cmd+Z keyboard shortcut for undo
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-        if (undoStackRef.current.length > 0) { e.preventDefault(); handleUndo(); }
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [data, lang]);
 
   // Select mode helpers
   const toggleSelectMode = () => { setSelectMode(prev => !prev); setSelectedCells(new Set()); };
@@ -5848,7 +7274,6 @@ function InventoryTab() {
   const handleBulkDelete = () => {
     if (!selectedBoxId || selectedCells.size === 0) return;
     if (!confirmBulkDelete) { setConfirmBulkDelete(true); return; }
-    pushUndo();
     const d = { ...data, samples: [...data.samples] };
     const idsToDelete = new Set();
     selectedCells.forEach(pos => { if (boxSampleMap[pos]) idsToDelete.add(boxSampleMap[pos].id); });
@@ -5871,7 +7296,6 @@ function InventoryTab() {
   const handleBulkAdd = () => {
     if (!selectedBoxId || selectedEmptyCount === 0) return;
     if (!bulkAddForm.name) { toast.show(lang === 'zh' ? '请输入样品名称' : 'Please enter sample name'); return; }
-    pushUndo();
     const d = { ...data, samples: [...data.samples], nextId: { ...data.nextId } };
     const positions = [...selectedCells].filter(pos => !boxSampleMap[pos]);
     let count = 0;
@@ -5898,7 +7322,6 @@ function InventoryTab() {
   // Bulk edit selected (uses memoized boxSampleMap)
   const handleBulkEditApply = () => {
     if (!selectedBoxId || selectedCells.size === 0) return;
-    pushUndo();
     const d = { ...data, samples: [...data.samples] };
     const idsToEdit = new Set();
     selectedCells.forEach(pos => { if (boxSampleMap[pos]) idsToEdit.add(boxSampleMap[pos].id); });
@@ -5920,7 +7343,6 @@ function InventoryTab() {
 
   // Location CRUD
   const handleSaveLocation = (form) => {
-    pushUndo();
     const d = { ...data, locations: [...data.locations], nextId: { ...data.nextId } };
     if (editLoc) {
       d.locations = d.locations.map(l => l.id === editLoc.id ? { ...l, ...form } : l);
@@ -5934,7 +7356,6 @@ function InventoryTab() {
   };
 
   const handleDeleteLocation = (locId) => {
-    pushUndo();
     const d = { ...data };
     const boxIds = d.boxes.filter(b => b.locationId === locId).map(b => b.id);
     d.locations = d.locations.filter(l => l.id !== locId);
@@ -5946,7 +7367,6 @@ function InventoryTab() {
 
   // Box CRUD
   const handleSaveBox = (form) => {
-    pushUndo();
     const d = { ...data, boxes: [...data.boxes], nextId: { ...data.nextId } };
     if (editBox) {
       d.boxes = d.boxes.map(b => b.id === editBox.id ? { ...b, ...form } : b);
@@ -5961,7 +7381,6 @@ function InventoryTab() {
   };
 
   const handleDeleteBox = (boxId) => {
-    pushUndo();
     const d = { ...data };
     d.boxes = d.boxes.filter(b => b.id !== boxId);
     d.samples = d.samples.filter(s => s.boxId !== boxId);
@@ -5971,7 +7390,6 @@ function InventoryTab() {
 
   // Sample CRUD
   const handleSaveSample = (form) => {
-    pushUndo();
     const d = { ...data, samples: [...data.samples], nextId: { ...data.nextId } };
     if (editSample) {
       d.samples = d.samples.map(s => s.id === editSample.id ? { ...s, ...form } : s);
@@ -5986,7 +7404,6 @@ function InventoryTab() {
   };
 
   const handleDeleteSample = (sampleId) => {
-    pushUndo();
     const d = { ...data };
     d.samples = d.samples.filter(s => s.id !== sampleId);
     persist(d);
@@ -6036,7 +7453,6 @@ function InventoryTab() {
         const rows = parseCsvImport(ev.target.result);
         if (rows.length === 0) { toast.show(t('importError', lang)); return; }
         if (!selectedBoxId) { toast.show('Select a box first'); return; }
-        pushUndo();
         const d = { ...data, samples: [...data.samples], nextId: { ...data.nextId } };
         const occupiedPositions = new Set(d.samples.filter(s => s.boxId === selectedBoxId).map(s => s.position));
         let count = 0, skipped = 0;
@@ -6076,7 +7492,6 @@ function InventoryTab() {
         const parsed = JSON.parse(ev.target.result);
         const imported = parsed.data || parsed;
         if (!imported.locations && !imported.boxes && !imported.samples) { toast.show(t('importError', lang)); return; }
-        pushUndo();
         const d = { ...data };
         // Merge: add imported items with new IDs
         const locIdMap = {};
@@ -6169,7 +7584,6 @@ function InventoryTab() {
         React.createElement('button', { onClick: () => jsonInputRef.current && jsonInputRef.current.click(), className: 'block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80', style: { color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' } }, t('invImportJson', lang))
       )
     ),
-    React.createElement('button', { onClick: handleUndo, disabled: undoStackRef.current.length === 0, title: t('invUndoLast', lang), style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', opacity: undoStackRef.current.length === 0 ? 0.4 : 1, cursor: undoStackRef.current.length === 0 ? 'default' : 'pointer' } }, '\u21A9 ' + t('invUndo', lang)),
     invViewMode === 'grid' && selectedBoxId && React.createElement('button', { onClick: toggleSelectMode, style: { ...(selectMode ? invBtnStyle : invBtnSecStyle), padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' } }, selectMode ? t('invCancelSelect', lang) : t('invSelect', lang)),
     invViewMode === 'grid' && selectMode && selectedCells.size > 0 && React.createElement(React.Fragment, null,
       React.createElement('span', { className: 'text-xs font-semibold', style: { color: 'var(--primary)' } }, selectedCells.size + t('invSelCount', lang) + (selectedEmptyCount > 0 ? ' (' + selectedEmptyCount + t('invEmptyCount', lang) : '')),
@@ -6177,10 +7591,6 @@ function InventoryTab() {
       selectedOccupiedCount > 0 && React.createElement('button', { onClick: () => { setShowBulkEdit(true); setBulkForm({ owner: '', sampleType: '', expiryDate: '', tags: '' }); }, style: { ...invBtnSecStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' } }, t('invBulkEdit', lang)),
       selectedOccupiedCount > 0 && React.createElement('button', { onClick: handleBulkDelete, style: { ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: confirmBulkDelete ? '#991b1b' : '#dc2626' } }, confirmBulkDelete ? t('invBulkDelConfirm', lang) : t('invBulkDel', lang))
     ),
-    React.createElement('button', {
-      onClick: () => setShowStats(true),
-      style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }
-    }, '\uD83D\uDCCA ' + t('invStats', lang)),
     invViewMode === 'grid' && React.createElement('button', {
       onClick: () => setInvViewMode('list'),
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', whiteSpace: 'nowrap' }
@@ -6312,104 +7722,6 @@ function InventoryTab() {
     );
   };
 
-  // ── Inventory statistics ──────────────────────────────────────────────────
-  const invStats = useMemo(() => {
-    const now = Date.now();
-    const DAY = 86400000;
-    const totalPositions = data.boxes.reduce((sum, b) => sum + b.rows * b.cols, 0);
-    const occupiedPositions = data.samples.length;
-    const utilPct = totalPositions > 0 ? Math.round(occupiedPositions / totalPositions * 100) : 0;
-    const byType = {};
-    data.samples.forEach(s => { const tp = s.sampleType || 'other'; byType[tp] = (byType[tp] || 0) + 1; });
-    const maxTypeCount = Math.max(1, ...Object.values(byType));
-    const expiring7 = data.samples.filter(s => s.expiryDate && s.expiryDate > now && s.expiryDate <= now + 7 * DAY).length;
-    const expiring30 = data.samples.filter(s => s.expiryDate && s.expiryDate > now && s.expiryDate <= now + 30 * DAY).length;
-    const expiring90 = data.samples.filter(s => s.expiryDate && s.expiryDate > now && s.expiryDate <= now + 90 * DAY).length;
-    const added7 = data.samples.filter(s => s.dateStored && s.dateStored >= now - 7 * DAY).length;
-    const added30 = data.samples.filter(s => s.dateStored && s.dateStored >= now - 30 * DAY).length;
-    return { totalPositions, occupiedPositions, utilPct, byType, maxTypeCount, expiring7, expiring30, expiring90, added7, added30 };
-  }, [data]);
-
-  const statsModal = showStats && ReactDOM.createPortal(
-    React.createElement('div', {
-      className: 'fixed inset-0 z-50 flex items-center justify-center p-4',
-      onClick: () => setShowStats(false)
-    },
-      React.createElement('div', { className: 'absolute inset-0', style: { background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' } }),
-      React.createElement('div', {
-        className: 'relative w-full rounded-xl p-6',
-        style: { background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', maxHeight: '85vh', overflowY: 'auto', maxWidth: 520 },
-        onClick: e => e.stopPropagation()
-      },
-        React.createElement('div', { className: 'flex items-center justify-between mb-5' },
-          React.createElement('h3', { className: 'text-lg font-semibold', style: { color: 'var(--text)' } }, t('invStatsTitle', lang)),
-          React.createElement('button', { onClick: () => setShowStats(false), style: { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 20, lineHeight: 1 } }, '\u00d7')
-        ),
-        data.samples.length === 0 && data.boxes.length === 0
-          ? React.createElement('p', { className: 'text-sm text-center py-8', style: { color: 'var(--text-muted)' } }, t('invStatsEmpty', lang))
-          : React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 20 } },
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 } },
-              [['invStatsLocations', data.locations.length], ['invStatsBoxes', data.boxes.length], ['invStatsSamples', data.samples.length]].map(function(pair) {
-                return React.createElement('div', { key: pair[0], className: 'rounded-lg p-3 text-center', style: { background: 'var(--bg-2)', border: '1px solid var(--border)' } },
-                  React.createElement('div', { className: 'text-2xl font-bold', style: { color: 'var(--primary)' } }, pair[1]),
-                  React.createElement('div', { className: 'text-xs mt-1', style: { color: 'var(--text-muted)' } }, t(pair[0], lang))
-                );
-              })
-            ),
-            React.createElement('div', null,
-              React.createElement('div', { className: 'text-sm font-semibold mb-2', style: { color: 'var(--text)' } }, t('invStatsUtilization', lang)),
-              React.createElement('div', { style: { background: 'var(--bg-2)', borderRadius: 8, height: 24, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' } },
-                React.createElement('div', { style: {
-                  width: invStats.utilPct + '%', height: '100%', borderRadius: 8, transition: 'width 0.3s',
-                  background: invStats.utilPct < 60 ? '#22c55e' : invStats.utilPct < 85 ? '#eab308' : '#ef4444'
-                } })
-              ),
-              React.createElement('div', { className: 'text-xs mt-1', style: { color: 'var(--text-muted)' } },
-                invStats.occupiedPositions + ' ' + t('invStatsOccupied', lang) + ' / ' + invStats.totalPositions + ' ' + t('invStatsTotal', lang) + ' (' + invStats.utilPct + '%)'
-              )
-            ),
-            Object.keys(invStats.byType).length > 0 && React.createElement('div', null,
-              React.createElement('div', { className: 'text-sm font-semibold mb-2', style: { color: 'var(--text)' } }, t('invStatsByType', lang)),
-              React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                Object.entries(invStats.byType).sort(function(a, b) { return b[1] - a[1]; }).map(function(entry) {
-                  var tp = entry[0], count = entry[1];
-                  var colors = SAMPLE_TYPE_COLORS[tp] || SAMPLE_TYPE_COLORS.other;
-                  return React.createElement('div', { key: tp, style: { display: 'flex', alignItems: 'center', gap: 8 } },
-                    React.createElement('span', { className: 'text-xs', style: { width: 70, flexShrink: 0, textAlign: 'right', color: 'var(--text)' } }, t(SAMPLE_TYPE_LABELS[tp] || tp, lang)),
-                    React.createElement('div', { style: { flex: 1, background: 'var(--bg-2)', borderRadius: 6, height: 20, overflow: 'hidden' } },
-                      React.createElement('div', { style: { width: Math.round(count / invStats.maxTypeCount * 100) + '%', height: '100%', background: colors.text, borderRadius: 6, minWidth: 2, transition: 'width 0.3s' } })
-                    ),
-                    React.createElement('span', { className: 'text-xs font-mono', style: { width: 30, flexShrink: 0, color: 'var(--text-muted)' } }, count)
-                  );
-                })
-              )
-            ),
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-              React.createElement('div', { className: 'rounded-lg p-3', style: { background: 'var(--bg-2)', border: '1px solid var(--border)' } },
-                React.createElement('div', { className: 'text-sm font-semibold mb-2', style: { color: 'var(--text)' } }, t('invStatsExpiring', lang)),
-                [['7', invStats.expiring7], ['30', invStats.expiring30], ['90', invStats.expiring90]].map(function(pair) {
-                  return React.createElement('div', { key: pair[0], className: 'flex justify-between text-xs py-1', style: { color: pair[1] > 0 ? '#ef4444' : 'var(--text-muted)' } },
-                    React.createElement('span', null, '\u2264 ' + pair[0] + ' ' + t('invStatsDays', lang)),
-                    React.createElement('span', { className: 'font-mono font-semibold' }, pair[1])
-                  );
-                })
-              ),
-              React.createElement('div', { className: 'rounded-lg p-3', style: { background: 'var(--bg-2)', border: '1px solid var(--border)' } },
-                React.createElement('div', { className: 'text-sm font-semibold mb-2', style: { color: 'var(--text)' } }, t('invStatsRecentlyAdded', lang)),
-                [['7', invStats.added7], ['30', invStats.added30]].map(function(pair) {
-                  return React.createElement('div', { key: pair[0], className: 'flex justify-between text-xs py-1', style: { color: pair[1] > 0 ? '#22c55e' : 'var(--text-muted)' } },
-                    React.createElement('span', null, '\u2264 ' + pair[0] + ' ' + t('invStatsDays', lang)),
-                    React.createElement('span', { className: 'font-mono font-semibold' }, pair[1])
-                  );
-                })
-              )
-            )
-          )
-      )
-    ),
-    document.body
-  );
-
   // ── Shared forms & modals ─────────────────────────────────────────────────
   const sharedForms = React.createElement(React.Fragment, null,
     React.createElement('input', { ref: csvInputRef, type: 'file', accept: '.csv', onChange: handleImportCsv, style: { display: 'none' } }),
@@ -6529,8 +7841,7 @@ function InventoryTab() {
           sampleListPanel()
         )
       ),
-      sharedForms,
-      statsModal
+      sharedForms
     );
   }
 
@@ -6584,8 +7895,7 @@ function InventoryTab() {
         sampleListPanel()
       )
     ),
-    sharedForms,
-    statsModal
+    sharedForms
   );
 }
 
