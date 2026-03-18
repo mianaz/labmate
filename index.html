@@ -1967,47 +1967,7 @@ const ROW_LABELS = 'ABCDEFGHIJKLMNOP'.split('');
 // ═══════════════════════════════════════════════
 
 
-// Safe stop points for protocols
-const SAFE_STOPS = {
-  wb_protocol: [
-    { afterStep: 2, note: { en: 'Lysate can be stored at -80\u00B0C for months', zh: '裂解液可 -80\u00B0C 保存数月' } },
-    { afterStep: 11, note: { en: 'Membrane can be stored dry at -20\u00B0C or in TBST at 4\u00B0C overnight', zh: '膜可 -20\u00B0C 干燥保存或 4\u00B0C TBST 中过夜' } },
-    { afterStep: 13, note: { en: 'Can incubate overnight at 4\u00B0C (recommended for many antibodies)', zh: '可 4\u00B0C 过夜孵育（推荐用于多数抗体）' } },
-  ],
-  chip_protocol: [
-    { afterStep: 4, note: { en: 'Lysate can be stored at -80\u00B0C', zh: '裂解液可 -80\u00B0C 保存' } },
-    { afterStep: 7, note: { en: 'Sheared chromatin can be stored at -80\u00B0C for weeks', zh: '剪切后染色质可 -80\u00B0C 保存数周' } },
-  ],
-  coip_protocol: [
-    { afterStep: 1, note: { en: 'Lysate can be stored at -80\u00B0C', zh: '裂解液可 -80\u00B0C 保存' } },
-  ],
-  trizol_extraction: [
-    { afterStep: 5, note: { en: 'Aqueous phase can be stored at -80\u00B0C', zh: '水相可 -80\u00B0C 保存' } },
-    { afterStep: 9, note: { en: 'RNA pellet in 75% ethanol can be stored at -80\u00B0C for months', zh: 'RNA 沉淀在 75% 乙醇中可 -80\u00B0C 保存数月' } },
-  ],
-  qpcr_protocol: [
-    { afterStep: 3, note: { en: 'cDNA can be stored at -20\u00B0C for months', zh: 'cDNA 可 -20\u00B0C 保存数月' } },
-  ],
-  flow_cytometry_protocol: [
-    { afterStep: 8, note: { en: 'Fixed cells can be stored at 4\u00B0C for up to a week', zh: '固定后的细胞可 4\u00B0C 保存最多一周' } },
-  ],
-  // ── v2.1 new safe stops ──
-  miniprep_protocol: [
-    { afterStep: 0, note: { en: 'Bacterial pellet can be stored at -20\u00B0C', zh: '菌体沉淀可 -20\u00B0C 保存' } },
-    { afterStep: 10, note: { en: 'DNA pellet in 70% ethanol can be stored at -20\u00B0C for months', zh: 'DNA 沉淀在 70% 乙醇中可 -20\u00B0C 保存数月' } },
-  ],
-  cell_freezing: [
-    { afterStep: 9, note: { en: 'Cells can remain at -80\u00B0C for up to 3 months, but transfer to liquid nitrogen for long-term viability', zh: '细胞可在 -80\u00B0C 保存最多 3 个月，但建议转入液氮以保持长期活力' } },
-  ],
-  electroporation: [
-    { afterStep: 0, note: { en: 'Electrocompetent cells can be refrozen if not contaminated with DNA, but efficiency decreases', zh: '未接触 DNA 的电转感受态细胞可重新冻存，但效率会降低' } },
-  ],
-  // ── batch 2 safe stops ──
-  lentivirus_production: [
-    { afterStep: 10, note: { en: 'Filtered virus can be aliquoted and snap-frozen in liquid nitrogen. Store at -80°C (titer drops ~50% per freeze-thaw cycle)', zh: '过滤后的病毒可分装并液氮速冻。-80°C 保存（每次冻融滴度下降约 50%）' } },
-  ],
-};
-RECIPES.forEach(r => { if (SAFE_STOPS[r.id]) r.safeStops = SAFE_STOPS[r.id]; });
+// safeStops now in recipes.json — no runtime merge needed
 
 // Build recipe lookup for cross-linking
 const RECIPE_BY_ID = {};
@@ -6614,7 +6574,7 @@ function App() {
         data.forEach(r => RECIPES.push(r));
         // Rebuild derived structures
         Object.keys(RECIPE_BY_ID).forEach(k => delete RECIPE_BY_ID[k]);
-        RECIPES.forEach(r => { RECIPE_BY_ID[r.id] = r; if (SAFE_STOPS[r.id]) r.safeStops = SAFE_STOPS[r.id]; });
+        RECIPES.forEach(r => { RECIPE_BY_ID[r.id] = r; });
         BUFFER_RECIPES.length = 0;
         PROTOCOL_RECIPES.length = 0;
         RECIPES.filter(r => BUFFER_CATEGORIES.includes(r.category)).forEach(r => BUFFER_RECIPES.push(r));
