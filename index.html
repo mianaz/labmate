@@ -4,12 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>BioinfoSpace LabMate — Molecular Biology Toolkit</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-<link rel="icon" href="/favicon.ico" sizes="48x48"/>
-<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#267a6b">
+<meta name="theme-color" content="#1D9E75">
 <script src="vendor/tailwind.js" integrity="sha384-igm5BeiBt36UU4gqwWS7imYmelpTsZlQ45FZf+XBn9MuJbn4nQr7yx1yFydocC/K" crossorigin="anonymous"></script>
 <script src="vendor/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
 <script src="vendor/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
@@ -29,7 +30,7 @@
   --bg:           hsl(40, 20%, 99%);
   --bg-2:         hsl(170, 20%, 95%);
   --card:         hsl(40, 15%, 98%);
-  --primary:      hsl(168, 55%, 26%);
+  --primary:      hsl(161, 69%, 37%);
   --primary-hover:hsl(168, 55%, 32%);
   --primary-light:hsl(170, 20%, 95%);
   --accent:       hsl(168, 55%, 22%);
@@ -43,7 +44,7 @@
 
   /* ── Gradient tokens (main site) ─────────────────── */
   --grad-primary: linear-gradient(135deg, hsl(168,65%,40%), hsl(180,60%,50%), hsl(195,55%,55%));
-  --grad-tab:     linear-gradient(90deg, hsl(168,55%,26%), hsl(168,60%,40%), hsl(185,55%,45%));
+  --grad-tab:     linear-gradient(90deg, hsl(161,69%,37%), hsl(165,60%,42%), hsl(175,55%,48%));
 
   /* ── Design tokens ────────────────────────────────── */
   --radius:       0.625rem;
@@ -57,9 +58,9 @@
   --bg:           hsl(210, 30%, 6%);
   --bg-2:         hsl(210, 20%, 14%);
   --card:         hsl(210, 25%, 9%);
-  --primary:      hsl(168, 60%, 50%);
-  --primary-hover:hsl(168, 60%, 56%);
-  --primary-light:hsl(168, 30%, 15%);
+  --primary:      hsl(161, 65%, 48%);
+  --primary-hover:hsl(161, 65%, 54%);
+  --primary-light:hsl(161, 30%, 15%);
   --accent:       hsl(170, 15%, 92%);
   --accent-light: hsl(175, 25%, 16%);
   --text:         hsl(200, 15%, 95%);
@@ -67,7 +68,7 @@
   --border:       hsl(210, 18%, 16%);
   --nav-bg:       hsla(210, 30%, 6%, 0.85);
   --shadow:       0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-  --shadow-lg:    0 20px 40px -12px hsla(168,60%,50%,0.15), 0 8px 16px -8px rgba(0,0,0,0.3);
+  --shadow-lg:    0 20px 40px -12px hsla(161,65%,48%,0.15), 0 8px 16px -8px rgba(0,0,0,0.3);
 }
 
 /* prefers-color-scheme removed — theme controlled exclusively via data-theme attribute + toggle button */
@@ -449,7 +450,7 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        primary:        'hsl(168, 55%, 26%)',
+        primary:        'hsl(161, 69%, 37%)',
         'primary-light':'hsl(170, 20%, 95%)',
         accent:         'hsl(168, 55%, 22%)',
         'accent-light': 'hsl(170, 30%, 94%)',
@@ -2086,7 +2087,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, lang,
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <a href="/labmate/" className="text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
-              <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(168 65% 40%), hsl(180 60% 50%), hsl(195 55% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
+              <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
               <span style={{ color: 'var(--text)' }}>LabMate</span>
             </a>
             <span className="text-xs hidden sm:inline" style={S_MUTED}>{t('appSubtitle', lang)}</span>
@@ -6749,7 +6750,7 @@ function App() {
       </main>
       <footer className="text-center py-8 text-xs border-t" style={{color:'var(--text-muted)', borderColor:'var(--border)'}}>
         <p className="font-semibold">
-          Bioinfo<span style={{ background: 'linear-gradient(135deg, hsl(168 65% 40%), hsl(180 60% 50%), hsl(195 55% 55%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
+          Bioinfo<span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
           LabMate v1.0.0 — {t('appSubtitle', lang)}
         </p>
         <p className="mt-1 opacity-50">© {new Date().getFullYear()} BioinfoSpace</p>

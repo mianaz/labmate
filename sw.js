@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labmate-v1';
+const CACHE_NAME = 'labmate-v2';
 
 const PRECACHE_URLS = [
   '/labmate/',
