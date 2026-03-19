@@ -1509,7 +1509,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
         style={{background:'var(--card)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)'}}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-4 border-b" style={S_BORDER}>
-                    <input ref={inputRef} type="search" value={query} onChange={e => setQuery(e.target.value)}
+                    <input ref={inputRef} id="global-search" type="search" value={query} onChange={e => setQuery(e.target.value)}
             placeholder={lang === 'en' ? 'Search recipes, reagents, tags...' : '搜索配方、试剂名、标签...'}
             aria-label="Search recipes"
             className="flex-1 text-base border-none outline-none bg-transparent"
@@ -2308,7 +2308,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
           <div className="flex items-center gap-3">
             <a href="/labmate/" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
               <img src="favicon.svg" alt="" width="24" height="24" style={{flexShrink:0}} />
-              <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
+              <span><span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span></span>{' '}
               <span style={{ color: 'var(--text)' }}>LabMate</span>
             </a>
             {/* subtitle removed */}
@@ -2575,7 +2575,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       {!isProtocol && recipe.id !== 'sds_page_gel' && (
         <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{background:'var(--primary-light)'}}>
           <label className="text-sm font-medium whitespace-nowrap">{t('targetVolume', lang)}:</label>
-          <input type="number" value={targetVol} min={1}
+          <input id="target-volume" type="number" value={targetVol} min={1}
             onChange={e => setTargetVol(Math.max(1, +e.target.value))}
             className="w-28" />
           <span className="text-sm mono">{recipe.unit}</span>
@@ -2935,11 +2935,11 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
   return (
     <div>
       {/* ── DESKTOP layout (lg+): side-by-side ── */}
-      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '3fr 7fr'}}>
+      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '340px 1fr'}}>
         {/* List panel */}
         {!sidebarHidden && <div>
           <div className="flex items-center gap-2 mb-3">
-            <input type="text" placeholder={t('searchPlaceholder', lang)} value={search}
+            <input type="text" autoComplete="off" placeholder={t('searchPlaceholder', lang)} value={search}
               onChange={e => setSearch(e.target.value)}
               style={{ fontFamily: "'DM Sans', sans-serif" }}
               className="flex-1" />
@@ -3141,7 +3141,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
   return (
     <div>
       {/* ── DESKTOP layout ── */}
-      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '3fr 7fr'}}>
+      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '340px 1fr'}}>
         {!sidebarHidden && <div>
           <div className="flex items-center gap-2 mb-3">
             <input type="text" placeholder={t('searchPlaceholder', lang)} value={search}
