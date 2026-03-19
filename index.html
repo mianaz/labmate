@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BioinfoSpace LabMate — Molecular Biology Toolkit</title>
+<title>BioinfoSpace LabMate</title>
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -332,6 +332,7 @@ td:not(:first-child) { font-family: var(--font-mono) !important; font-size: 0.82
   animation: toastIn 0.22s cubic-bezier(0.22,1,0.36,1), toastOut 0.22s ease-in 2.78s forwards;
   display: flex; align-items: center; gap: 0.5rem;
 }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-4px); } }
 
@@ -493,7 +494,7 @@ function useLang() { return useContext(LangContext); }
 const I = {
   // Nav & Tabs
   appTitle: { en: 'BioinfoSpace LabMate', zh: 'BioinfoSpace LabMate' },
-  appSubtitle: { en: 'Molecular Biology Toolkit', zh: '分子生物学工具箱' },
+  appSubtitle: { en: '', zh: '' },
   tabBuffers: { en: 'Buffers & Recipes', zh: '配方库' },
   tabProtocols: { en: 'Protocols', zh: '实验方案' },
   tabCalc: { en: 'Calculator', zh: '计算器' },
@@ -1358,7 +1359,7 @@ function recipeToText(recipe, targetVol, lang) {
     const scaled = c.amount * scale;
     const val = scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1);
     txt += c.name.padEnd(35) + val.padStart(10) + '  ' + c.unit;
-    if (c.note) txt += '  (' + c.note + ')';
+    if (c.note) txt += '  (' + (typeof c.note === 'object' ? (c.note[lang] || c.note.en || '') : c.note) + ')';
     txt += '\n';
   });
   const noteTxt = getRecipeNotes(recipe, 'en'); if (noteTxt) txt += '\nNote: ' + noteTxt + '\n';
@@ -2293,7 +2294,7 @@ const REFERENCES = [
 // ═══════════════════════════════════════════════
 
 // --- Header ---
-function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, lang, setLang, theme, setTheme }) {
+function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme }) {
   const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','refs'];
   const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', refs:'tabRefs' };
@@ -2312,10 +2313,10 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, lang,
             <span className="text-xs hidden sm:inline" style={S_MUTED}>{t('appSubtitle', lang)}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onRefreshRecipes} title={t('refreshRecipes', lang)}
+            <button onClick={onRefreshRecipes} disabled={isSyncing} title={t('refreshRecipes', lang)}
               className="px-2 py-1.5 rounded-lg text-sm transition-all border"
-              style={{ borderColor:'var(--border)', background:'var(--card)', color:'var(--text-muted)' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              style={{ borderColor:'var(--border)', background:'var(--card)', color: isSyncing ? 'var(--primary)' : 'var(--text-muted)', opacity: isSyncing ? 0.7 : 1 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={isSyncing ? {animation:'spin 1s linear infinite'} : {}}><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
             <button onClick={onOpenSearch}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all border"
@@ -2399,6 +2400,9 @@ function RecipeCard({ recipe, onSelect, selected }) {
           </span>
           <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: cc.text }}>
             {(() => {
+              const disc = (recipe.discipline || [])[0];
+              const discLabels = { molecular: t('discMolecular', lang), cell: t('discCell', lang), protein: t('discProtein', lang), rna_dna: t('discRnaDna', lang), immunology: t('discImmunology', lang), microbiology: t('discMicrobiology', lang), biochemistry: t('discBiochemistry', lang), histology: t('discHistology', lang), genomics: t('discGenomics', lang), general: t('discGeneral', lang) };
+              if (disc && discLabels[disc]) return discLabels[disc];
               const displayCat = recipe.category === 'protocol' ? (PROTOCOL_SUBCAT_BY_ID[recipe.id] || 'protocol') : recipe.category;
               const label = CATEGORY_DISPLAY[displayCat];
               return label ? (label[lang] || label.en) : displayCat;
@@ -2735,7 +2739,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                     {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)} {c.unit}
                   </span>
                 )}
-                {c.note && <span className="step-note">{c.note}</span>}
+                {c.note && <span className="step-note">{typeof c.note === 'object' ? (c.note[lang] || c.note.en || c.note.zh) : c.note}</span>}
               </div>
             );
           })}
@@ -2768,7 +2772,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                     {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)}
                   </td>
                   <td className="py-2 text-right mono" style={S_MUTED}>{c.unit}</td>
-                  {recipe.components.some(comp => comp.note) && <td className="py-2 pl-4 text-xs" style={S_MUTED}>{c.note || ''}</td>}
+                  {recipe.components.some(comp => comp.note) && <td className="py-2 pl-4 text-xs" style={S_MUTED}>{c.note ? (typeof c.note === 'object' ? (c.note[lang] || c.note.en || c.note.zh) : c.note) : ''}</td>}
                 </tr>
               );
             })}
@@ -2930,7 +2934,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
   return (
     <div>
       {/* ── DESKTOP layout (lg+): side-by-side ── */}
-      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '5fr 7fr'}}>
+      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '3fr 7fr'}}>
         {/* List panel */}
         {!sidebarHidden && <div>
           <div className="flex items-center gap-2 mb-3">
@@ -3136,7 +3140,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
   return (
     <div>
       {/* ── DESKTOP layout ── */}
-      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '5fr 7fr'}}>
+      <div className="hidden lg:grid gap-6" style={{alignItems:'start', gridTemplateColumns: sidebarHidden ? '1fr' : '3fr 7fr'}}>
         {!sidebarHidden && <div>
           <div className="flex items-center gap-2 mb-3">
             <input type="text" placeholder={t('searchPlaceholder', lang)} value={search}
@@ -7338,7 +7342,11 @@ function App() {
 
   const GITHUB_RECIPES_URL = 'https://raw.githubusercontent.com/mianaz/labmate-recipes/main/dist/recipes.json';
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const refreshRecipes = useCallback(() => {
+    setIsSyncing(true);
+    toast.show(lang === 'zh' ? '正在同步配方...' : 'Syncing recipes...', 'info');
     // Try GitHub first, fall back to local
     fetch(GITHUB_RECIPES_URL + '?t=' + Date.now())
       .then(r => { if (!r.ok) throw new Error('GitHub fetch failed'); return r.json(); })
@@ -7361,9 +7369,10 @@ function App() {
         });
         const newCount = Math.max(0, RECIPES.length - oldLen);
         setRecipeVersion(v => v + 1);
+        setIsSyncing(false);
         toast.show(t('recipesUpdated', lang) + ` (${RECIPES.length} total${newCount > 0 ? ', ' + newCount + ' new' : ''})`, 'success');
       })
-      .catch(() => { toast.show('Failed to refresh recipes', 'error'); });
+      .catch(() => { setIsSyncing(false); toast.show('Failed to refresh recipes', 'error'); });
   }, [lang, toast]);
 
   // Auto-backup reminder: show if no export in last 7 days
@@ -7451,7 +7460,7 @@ function App() {
     <LangContext.Provider value={lang}>
     <div className="min-h-screen" style={{background:'var(--bg)', color:'var(--text)'}}>
       <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
-        onRefreshRecipes={refreshRecipes} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
+        onRefreshRecipes={refreshRecipes} isSyncing={isSyncing} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
       <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
         onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
       <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
