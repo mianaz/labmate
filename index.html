@@ -5369,9 +5369,7 @@ function PlateTab() {
                 <option key={k} value={k}>{k}-well</option>
               ))}
             </select>
-            <button onClick={() => setEnlarged(true)} className="btn-secondary text-xs px-3 py-1.5">
-              {t('plateEnlarge', lang)}
-            </button>
+
           </div>
         </div>
       </div>
@@ -5596,38 +5594,7 @@ function PlateTab() {
         </div>
       </div>
 
-      {/* Enlarged plate modal overlay */}
-      {enlarged && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)'}}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[95vw] h-[90vh] flex flex-col overflow-hidden"
-            style={{background:'var(--card)', border:'1px solid var(--border)'}}>
-            <div className="flex items-center justify-between p-4 border-b" style={{borderColor:'var(--border)'}}>
-              <h3 className="text-lg font-bold">{t('plateTitle', lang)} — {plateType}-well</h3>
-              <div className="flex items-center gap-3">
-                <DownloadBtn small label={t('downloadCSV', lang)}
-                  onClick={() => downloadFile(`plate_${plateType}well.csv`, plateToCSV(wellData, config), 'text/csv')} />
-                <DownloadBtn small label={t('downloadSVG', lang)} icon=""
-                  onClick={() => downloadFile(`plate_${plateType}well.svg`, plateToSVG(wellData, config, groups), 'image/svg+xml')} />
-                <button onClick={() => setEnlarged(false)} className="btn-secondary px-3 py-1.5 text-sm font-semibold">
-                  {t('plateClose', lang)}
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-6 flex gap-6">
-              <div className="flex-1 overflow-auto flex items-start justify-center">
-                {renderPlateGrid(Math.max(28, Math.min(48, Math.floor((window.innerWidth * 0.7) / config.cols))))}
-              </div>
-              {groups.length > 0 && (
-                <div className="w-64 flex-shrink-0 overflow-y-auto">
-                  <div className="card p-4">
-                    {renderLegend()}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
