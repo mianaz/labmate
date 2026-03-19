@@ -6218,7 +6218,6 @@ function StorageTree({ data, selectedBoxId, onSelectBox, onAddLocation, onEditLo
   const [confirmDel, setConfirmDel] = useState(null);
 
   return React.createElement('div', null,
-    showDashboard ? dashboardPanel() : null,
     React.createElement('div', { className: 'flex items-center gap-1 mb-3 flex-wrap' },
       React.createElement('span', { className: 'text-sm font-semibold flex-1', style: { color: 'var(--text)', fontFamily: 'var(--font-heading)' } }, t('invStorageTree', lang)),
       React.createElement('button', { onClick: onAddLocation, style: { ...invBtnStyle, padding: '4px 8px', fontSize: '11px' } }, '+ ' + t('invAddLocation', lang)),
