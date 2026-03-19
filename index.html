@@ -333,6 +333,11 @@ td:not(:first-child) { font-family: var(--font-mono) !important; font-size: 0.82
   display: flex; align-items: center; gap: 0.5rem;
 }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.btn-primary { background: var(--primary); color: white; border: 1px solid var(--primary); border-radius: 8px; padding: 6px 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; font-family: var(--font-body); }
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: var(--font-body); }
+.btn-secondary:hover { background: var(--bg-2); }
 @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-4px); } }
 
@@ -622,8 +627,8 @@ const I = {
   refsSubtitle: { en: 'How to use each feature in LabMate', zh: 'LabMate 各功能使用说明' },
   usageGuide: { en: 'Usage Notes', zh: '使用说明' },
   // Theme/Lang
-  darkMode: { en: '🌙', zh: '🌙' },
-  lightMode: { en: '☀️', zh: '☀️' },
+  darkMode: { en: 'Dark', zh: '深色' },
+  lightMode: { en: 'Light', zh: '浅色' },
   langToggle: { en: '中文', zh: 'EN' },
   refreshRecipes: { en: 'Refresh Recipes', zh: '刷新配方' },
   recipesUpdated: { en: 'Recipes updated', zh: '配方已更新' },
@@ -812,7 +817,7 @@ const I = {
     en: 'Back up all your data to an encrypted GitHub Gist. In the Tools tab, enter a GitHub Personal Access Token and an encryption passphrase. Your data is encrypted with AES-256 before upload — GitHub cannot read it. The passphrase is never stored. You can restore from any browser by entering the same token and passphrase.',
     zh: '将所有数据备份到加密的 GitHub Gist。在工具标签页输入 GitHub 个人访问令牌和加密口令。数据在上传前使用 AES-256 加密——GitHub 无法读取。口令不会被存储。在任何浏览器中输入相同的令牌和口令即可恢复数据。'
   },
-  guideDataSafetyTitle: { en: '⚠️ Data Safety', zh: '⚠️ 数据安全' },
+  guideDataSafetyTitle: { en: 'Data Safety', zh: '数据安全' },
   guideDataSafetyBody: {
     en: 'All your data (favorites, inventory, custom recipes, step progress) is stored in your browser\'s localStorage. Clearing browser data, switching browsers, or using private/incognito mode will erase everything. Export your data regularly from the Tools tab, or set up Cloud Backup for automatic protection.',
     zh: '所有数据（收藏、库存、自定义配方、步骤进度）均存储在浏览器的 localStorage 中。清除浏览器数据、更换浏览器或使用隐私/无痕模式将删除所有数据。请定期从工具标签页导出数据，或设置云备份以自动保护数据。'
@@ -1043,7 +1048,7 @@ const I = {
   cloudRestoreSuccess: { en: 'Restored from Gist. Reloading…', zh: '已从 Gist 恢复，正在重新加载…' },
   noGistFound: { en: 'No backup Gist found. Please backup first.', zh: '未找到备份 Gist，请先备份。' },
   // Auto-backup reminder
-  backupReminder: { en: '⚠️ Your data is stored locally in this browser only. Back up regularly to avoid data loss.', zh: '⚠️ 您的数据仅存储在此浏览器中。请定期备份以防数据丢失。' },
+  backupReminder: { en: 'Your data is stored locally in this browser only. Back up regularly to avoid data loss.', zh: '您的数据仅存储在此浏览器中。请定期备份以防数据丢失。' },
   backupNow: { en: 'Backup Now', zh: '立即备份' },
   dismissReminder: { en: 'Dismiss', zh: '忽略' },
   // MW Calculator
@@ -1201,7 +1206,7 @@ class ErrorBoundary extends React.Component {
         className: 'p-8 text-center',
         style: { color: 'var(--text-muted)' }
       },
-        React.createElement('p', { className: 'text-lg font-semibold mb-2' }, '⚠️ Something went wrong'),
+        React.createElement('p', { className: 'text-lg font-semibold mb-2' }, 'Something went wrong'),
         React.createElement('p', { className: 'text-sm mb-4' }, this.state.error?.message || 'Unknown error'),
         React.createElement('button', {
           onClick: () => this.setState({ hasError: false, error: null }),
@@ -1224,7 +1229,7 @@ function useToast() { return useContext(ToastContext); }
 function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const idRef = useRef(0);
-  const show = useCallback((msg, icon = '✅') => {
+  const show = useCallback((msg, icon = '') => {
     const id = ++idRef.current;
     setToasts(prev => [...prev, { id, msg, icon }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
@@ -1234,7 +1239,7 @@ function ToastProvider({ children }) {
       {children}
       {createPortal(
         <div className="toast-container">
-          {toasts.map(t => <div key={t.id} className="toast"><span>{t.icon}</span> {t.msg}</div>)}
+          {toasts.map(t => <div key={t.id} className="toast">{t.icon && <span>{t.icon}</span>} {t.msg}</div>)}
         </div>,
         document.body
       )}
@@ -2399,7 +2404,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
         </div>
         <div className="flex items-center gap-1.5">
           <span className={`fav-star text-sm ${fav ? 'active' : ''}`}
-            onClick={e => { e.stopPropagation(); toggle(recipe.id); toast.show(fav ? t('removedFav', lang) : t('addedFav', lang), fav ? '💔' : '⭐'); }}
+            onClick={e => { e.stopPropagation(); toggle(recipe.id); toast.show(fav ? t('removedFav', lang) : t('addedFav', lang), ''); }}
             style={{color: fav ? '#f59e0b' : 'var(--text-muted)', opacity: fav ? 1 : 0.4}}>
             {fav ? '★' : '☆'}
           </span>
@@ -4629,7 +4634,7 @@ const EXTERNAL_TOOLS = [
   { cat: 'toolCatBIS', tools: [
     { name: 'ELISA Calculator', icon: '📈', url: 'https://apps.bioinfospace.com/ELISA_calculator/', desc: { en: 'Standard curve fitting & concentration calculation', zh: '标准曲线拟合 & 浓度计算' }},
     { name: 'qPCR Analyzer', icon: '🧬', url: 'https://apps.bioinfospace.com/qpcr-analysis/', desc: { en: 'ΔΔCt analysis & expression plots', zh: 'ΔΔCt 分析 & 表达量图' }},
-    { name: 'freeCount', icon: '📊', url: 'https://apps.bioinfospace.com/freeCount/', desc: { en: 'Differential expression analysis (DESeq2/edgeR)', zh: '差异表达分析 (DESeq2/edgeR)' }},
+    { name: 'freeCount', icon: '', url: 'https://apps.bioinfospace.com/freeCount/', desc: { en: 'Differential expression analysis (DESeq2/edgeR)', zh: '差异表达分析 (DESeq2/edgeR)' }},
     { name: 'crispRdesignR', icon: '✂️', url: 'https://apps.bioinfospace.com/crispRdesignR/', desc: { en: 'CRISPR sgRNA design & off-target scoring', zh: 'CRISPR sgRNA 设计 & 脱靶评分' }},
     { name: 'JBrowse 2', icon: '🗺️', url: 'https://apps.bioinfospace.com/jbrowse/', desc: { en: 'Genome browser with custom tracks', zh: '基因组浏览器（自定义 track）' }},
   ]},
@@ -4652,7 +4657,7 @@ const EXTERNAL_TOOLS = [
     { name: 'UCSC Genome Browser', icon: '🌐', url: 'https://genome.ucsc.edu/', desc: { en: 'Genome visualization & track hubs', zh: '基因组可视化 & track hub' }},
     { name: 'Enrichr', icon: '📈', url: 'https://maayanlab.cloud/Enrichr/', desc: { en: 'Gene set enrichment analysis', zh: '基因集富集分析' }},
     { name: 'STRING', icon: '🕸️', url: 'https://string-db.org/', desc: { en: 'Protein interaction networks', zh: '蛋白相互作用网络' }},
-    { name: 'DAVID', icon: '📊', url: 'https://david.ncifcrf.gov/', desc: { en: 'GO / KEGG pathway enrichment', zh: 'GO / KEGG 通路富集' }},
+    { name: 'DAVID', icon: '', url: 'https://david.ncifcrf.gov/', desc: { en: 'GO / KEGG pathway enrichment', zh: 'GO / KEGG 通路富集' }},
     { name: 'GEO', icon: '🗄️', url: 'https://www.ncbi.nlm.nih.gov/geo/', desc: { en: 'Public gene expression datasets', zh: '公共基因表达数据集' }},
   ]},
   { cat: 'toolCatData', tools: [
@@ -5705,7 +5710,7 @@ function RefsTab({ onReplayTour }) {
     { num: '6', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
     { num: '7', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
     { num: '8', titleKey: 'guideCloudTitle', bodyKey: 'guideCloudBody' },
-    { num: '⚠️', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
+    { num: '!', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
   ];
 
   return (
@@ -5859,8 +5864,8 @@ function loadInventory() {
   } catch (e) {
     console.error('loadInventory: corrupted data:', e);
     alert(navigator.language.startsWith('zh')
-      ? '⚠️ 库存数据已损坏，已重置为空。如有备份文件，请在工具页导入恢复。'
-      : '⚠️ Inventory data was corrupted and has been reset. If you have a backup, import it from the Tools tab.');
+      ? '库存数据已损坏，已重置为空。如有备份文件，请在工具页导入恢复。'
+      : 'Inventory data was corrupted and has been reset. If you have a backup, import it from the Tools tab.');
     return {};
   }
 }
@@ -5869,8 +5874,8 @@ function saveInventory(data) {
   catch (e) {
     console.error('saveInventory failed:', e);
     alert(navigator.language.startsWith('zh')
-      ? '⚠️ 存储空间已满，无法保存库存数据。请先在工具页导出备份，然后清理浏览器数据。'
-      : '⚠️ Storage quota exceeded — inventory data could not be saved. Please export a backup from the Tools tab and clear browser data.');
+      ? '存储空间已满，无法保存库存数据。请先在工具页导出备份，然后清理浏览器数据。'
+      : 'Storage quota exceeded — inventory data could not be saved. Please export a backup from the Tools tab and clear browser data.');
   }
 }
 function getInvData() {
@@ -6193,7 +6198,7 @@ function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedCells, o
               onMouseDown: () => handleMouseDown(r, c),
               onMouseUp: () => handleMouseUp(r, c),
               onMouseEnter: e => handleMouseEnter(e, r, c),
-              title: sample ? (sample.name + ' (' + pos + ')' + (isExpired ? ' ⚠ Expired' : '')) : pos,
+              title: sample ? (sample.name + ' (' + pos + ')' + (isExpired ? ' — Expired' : '')) : pos,
               style: {
                 width: cellSize, height: cellSize, borderRadius: 4, cursor: selectMode ? 'crosshair' : 'pointer',
                 background: isSelected ? 'var(--primary)' : sample ? colors.bg : 'var(--bg-2)',
@@ -6915,11 +6920,11 @@ function InventoryTab() {
     React.createElement('button', {
       onClick: () => setShowStats(true),
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }
-    }, '\uD83D\uDCCA ' + t('invStats', lang)),
+    }, t('invStats', lang)),
     !showDashboard && React.createElement('button', {
       onClick: showDashboardAgain,
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }
-    }, '\u25A3 ' + t('invDashboardShow', lang)),
+    }, t('invDashboardShow', lang)),
     invViewMode === 'grid' && React.createElement('button', {
       onClick: () => setInvViewMode('list'),
       style: { ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', whiteSpace: 'nowrap' }
