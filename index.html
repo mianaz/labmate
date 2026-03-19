@@ -533,6 +533,17 @@ const I = {
   protocol: { en: 'Protocol', zh: 'Protocol' },
   staining: { en: 'Staining', zh: '染色液' },
   media: { en: 'Media', zh: '培养基' },
+  // Discipline filters
+  discMolecular: { en: 'Molecular', zh: '分子生物学' },
+  discCell: { en: 'Cell Biology', zh: '细胞生物学' },
+  discProtein: { en: 'Protein', zh: '蛋白质' },
+  discRnaDna: { en: 'RNA/DNA', zh: 'RNA/DNA' },
+  discImmunology: { en: 'Immunology', zh: '免疫学' },
+  discMicrobiology: { en: 'Microbiology', zh: '微生物学' },
+  discBiochemistry: { en: 'Biochemistry', zh: '生物化学' },
+  discHistology: { en: 'Histology', zh: '组织学' },
+  discGenomics: { en: 'Genomics', zh: '基因组学' },
+  discGeneral: { en: 'General', zh: '通用' },
   // Recipe detail
   targetVolume: { en: 'Target Volume', zh: '目标体积' },
   reagent: { en: 'Reagent', zh: '试剂' },
@@ -2628,7 +2639,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
       const matchCat = selCat === 'all' ? true
         : selCat === 'favs' ? favs.includes(r.id)
         : selCat === 'custom' ? r._isCustom
-        : r.category === selCat;
+        : (r.discipline || []).includes(selCat);
       const q = search.toLowerCase();
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.nameCn || '').includes(q)
         || (r.tags || []).some(t => t.includes(q));
@@ -2641,9 +2652,13 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
     { id: 'all', label: t('all', lang) },
     { id: 'favs', label: t('favorites', lang) },
     { id: 'custom', label: t('customFilter', lang) },
-    { id: 'buffer', label: t('buffer', lang) },
-    { id: 'staining', label: t('staining', lang) },
-    { id: 'media', label: t('media', lang) },
+    { id: 'molecular', label: t('discMolecular', lang) },
+    { id: 'cell', label: t('discCell', lang) },
+    { id: 'protein', label: t('discProtein', lang) },
+    { id: 'rna_dna', label: t('discRnaDna', lang) },
+    { id: 'immunology', label: t('discImmunology', lang) },
+    { id: 'microbiology', label: t('discMicrobiology', lang) },
+    { id: 'general', label: t('discGeneral', lang) },
   ];
 
   // Recently used section (buffers only)
@@ -2842,11 +2857,13 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
     { id: 'all', label: t('all', lang) },
     { id: 'favs', label: t('favorites', lang) },
     { id: 'custom', label: t('customFilter', lang) },
-    { id: 'protein', label: t('catProtein', lang) },
-    { id: 'nucleic_acid', label: t('catNucleicAcid', lang) },
-    { id: 'cell_culture', label: t('catCellCulture', lang) },
-    { id: 'cloning', label: t('catCloning', lang) },
-    { id: 'cell_assay', label: t('catCellAssay', lang) },
+    { id: 'protein', label: t('discProtein', lang) },
+    { id: 'cell', label: t('discCell', lang) },
+    { id: 'molecular', label: t('discMolecular', lang) },
+    { id: 'rna_dna', label: t('discRnaDna', lang) },
+    { id: 'immunology', label: t('discImmunology', lang) },
+    { id: 'microbiology', label: t('discMicrobiology', lang) },
+    { id: 'genomics', label: t('discGenomics', lang) },
   ];
 
   const filtered = useMemo(() => {
@@ -2856,7 +2873,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
       const matchCat = selCat === 'all' ? true
         : selCat === 'favs' ? favs.includes(r.id)
         : selCat === 'custom' ? r._isCustom
-        : (PROTOCOL_SUBCATEGORIES[selCat] || []).includes(r.id);
+        : (r.discipline || []).includes(selCat);
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.nameCn || '').includes(q) || (r.tags || []).some(t => t.includes(q));
       return matchCat && matchSearch;
     });
