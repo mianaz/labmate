@@ -2306,11 +2306,12 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
         {/* Top bar */}
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <a href="/labmate/" className="text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
+            <a href="/labmate/" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
+              <img src="favicon.svg" alt="" width="24" height="24" style={{flexShrink:0}} />
               <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
               <span style={{ color: 'var(--text)' }}>LabMate</span>
             </a>
-            <span className="text-xs hidden sm:inline" style={S_MUTED}>{t('appSubtitle', lang)}</span>
+            {/* subtitle removed */}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={onRefreshRecipes} disabled={isSyncing} title={t('refreshRecipes', lang)}
@@ -7344,35 +7345,43 @@ function App() {
 
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const refreshRecipes = useCallback(() => {
+  const refreshRecipes = useCallback(async () => {
     setIsSyncing(true);
     toast.show(lang === 'zh' ? '正在同步配方...' : 'Syncing recipes...', 'info');
-    // Try GitHub first, fall back to local
-    fetch(GITHUB_RECIPES_URL + '?t=' + Date.now())
-      .then(r => { if (!r.ok) throw new Error('GitHub fetch failed'); return r.json(); })
-      .catch(() => fetch('recipes.json?t=' + Date.now()).then(r => r.json()))
-      .then(data => {
-        const oldLen = RECIPES.length;
-        RECIPES.length = 0;
-        data.forEach(r => RECIPES.push(r));
-        // Rebuild derived structures
-        Object.keys(RECIPE_BY_ID).forEach(k => delete RECIPE_BY_ID[k]);
-        RECIPES.forEach(r => { RECIPE_BY_ID[r.id] = r; });
-        BUFFER_RECIPES.length = 0;
-        PROTOCOL_RECIPES.length = 0;
-        RECIPES.filter(r => BUFFER_CATEGORIES.includes(r.category)).forEach(r => BUFFER_RECIPES.push(r));
-        RECIPES.filter(r => r.category === 'protocol').forEach(r => PROTOCOL_RECIPES.push(r));
-        PROTOCOL_RECIPES.forEach(r => {
-          for (const [subcat, ids] of Object.entries(PROTOCOL_SUBCATEGORIES)) {
-            if (ids.includes(r.id)) { PROTOCOL_SUBCAT_BY_ID[r.id] = subcat; break; }
-          }
-        });
-        const newCount = Math.max(0, RECIPES.length - oldLen);
-        setRecipeVersion(v => v + 1);
-        setIsSyncing(false);
-        toast.show(t('recipesUpdated', lang) + ` (${RECIPES.length} total${newCount > 0 ? ', ' + newCount + ' new' : ''})`, 'success');
-      })
-      .catch(() => { setIsSyncing(false); toast.show('Failed to refresh recipes', 'error'); });
+    try {
+      let data;
+      try {
+        const res = await fetch(GITHUB_RECIPES_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        data = await res.json();
+      } catch (e) {
+        console.warn('GitHub fetch failed, trying local:', e);
+        const res2 = await fetch('recipes.json?t=' + Date.now());
+        data = await res2.json();
+      }
+      const oldLen = RECIPES.length;
+      RECIPES.length = 0;
+      data.forEach(r => RECIPES.push(r));
+      Object.keys(RECIPE_BY_ID).forEach(k => delete RECIPE_BY_ID[k]);
+      RECIPES.forEach(r => { RECIPE_BY_ID[r.id] = r; });
+      BUFFER_RECIPES.length = 0;
+      PROTOCOL_RECIPES.length = 0;
+      RECIPES.filter(r => BUFFER_CATEGORIES.includes(r.category)).forEach(r => BUFFER_RECIPES.push(r));
+      RECIPES.filter(r => r.category === 'protocol').forEach(r => PROTOCOL_RECIPES.push(r));
+      PROTOCOL_RECIPES.forEach(r => {
+        for (const [subcat, ids] of Object.entries(PROTOCOL_SUBCATEGORIES)) {
+          if (ids.includes(r.id)) { PROTOCOL_SUBCAT_BY_ID[r.id] = subcat; break; }
+        }
+      });
+      const newCount = Math.max(0, RECIPES.length - oldLen);
+      setRecipeVersion(v => v + 1);
+      toast.show(t('recipesUpdated', lang) + ` (${RECIPES.length} total${newCount > 0 ? ', ' + newCount + ' new' : ''})`, 'success');
+    } catch (err) {
+      console.error('Refresh failed:', err);
+      toast.show(lang === 'zh' ? '同步失败' : 'Sync failed', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
   }, [lang, toast]);
 
   // Auto-backup reminder: show if no export in last 7 days
@@ -7495,7 +7504,7 @@ function App() {
       <footer className="text-center py-8 text-xs border-t" style={{color:'var(--text-muted)', borderColor:'var(--border)'}}>
         <p className="font-semibold">
           Bioinfo<span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
-          LabMate v1.0.0 — {t('appSubtitle', lang)}
+          LabMate v1.0.0
         </p>
         <p className="mt-1 opacity-50">© {new Date().getFullYear()} BioinfoSpace</p>
         <p className="mt-1">
