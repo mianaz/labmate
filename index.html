@@ -1045,6 +1045,41 @@ const I = {
   backupReminder: { en: '⚠️ Your data is stored locally in this browser only. Back up regularly to avoid data loss.', zh: '⚠️ 您的数据仅存储在此浏览器中。请定期备份以防数据丢失。' },
   backupNow: { en: 'Backup Now', zh: '立即备份' },
   dismissReminder: { en: 'Dismiss', zh: '忽略' },
+  // MW Calculator
+  calcTaskMW: { en: 'MW Calculator', zh: '分子量计算器' },
+  mwCalcTitle: { en: 'Molecular Weight Calculator', zh: '分子量计算器' },
+  mwCalcSubtitle: { en: 'Enter a chemical formula to calculate molecular weight', zh: '输入化学式计算分子量' },
+  mwFormula: { en: 'Chemical Formula', zh: '化学式' },
+  mwFormulaPlaceholder: { en: 'e.g. NaCl, H₂SO₄, Ca(OH)₂', zh: '如 NaCl、H₂SO₄、Ca(OH)₂' },
+  mwResult: { en: 'Molecular Weight', zh: '分子量' },
+  mwBreakdown: { en: 'Element Breakdown', zh: '元素组成' },
+  mwElement: { en: 'Element', zh: '元素' },
+  mwCount: { en: 'Count', zh: '个数' },
+  mwAtomicMass: { en: 'Atomic Mass', zh: '原子量' },
+  mwSubtotal: { en: 'Subtotal', zh: '小计' },
+  mwCommon: { en: 'Common Molecules', zh: '常用分子' },
+  mwParseError: { en: 'Invalid formula', zh: '化学式无效' },
+  // Periodic Table
+  calcTaskPeriodic: { en: 'Periodic Table', zh: '元素周期表' },
+  periodicTitle: { en: 'Interactive Periodic Table', zh: '交互式元素周期表' },
+  periodicSubtitle: { en: 'Click any element for details', zh: '点击元素查看详情' },
+  periodicSearch: { en: 'Search elements...', zh: '搜索元素...' },
+  periodicDetails: { en: 'Element Details', zh: '元素详情' },
+  periodicAtomicNum: { en: 'Atomic Number', zh: '原子序数' },
+  periodicAtomicMass: { en: 'Atomic Mass', zh: '原子量' },
+  periodicCategory: { en: 'Category', zh: '类别' },
+  periodicElectronConfig: { en: 'Electron Configuration', zh: '电子构型' },
+  // Plate Designer additions
+  plateEnlarge: { en: 'Enlarge', zh: '放大' },
+  plateClose: { en: 'Close', zh: '关闭' },
+  plateReplicates: { en: 'Replicates', zh: '重复数' },
+  plateControlLayout: { en: 'Control Layout', zh: '对照布局' },
+  plateAntibodyTitration: { en: 'Antibody Titration', zh: '抗体滴定' },
+  plateCustomColor: { en: 'Custom Color', zh: '自定义颜色' },
+  platePosCtrl: { en: 'Positive Control', zh: '阳性对照' },
+  plateNegCtrl: { en: 'Negative Control', zh: '阴性对照' },
+  plateBlank: { en: 'Blank', zh: '空白' },
+  plateNumAntibodies: { en: 'Number of antibodies', zh: '抗体数量' },
 };
 
 function t(key, lang) {
@@ -1972,9 +2007,219 @@ const WELL_COLORS = [
   '#3b82f6','#ef4444','#22c55e','#f59e0b','#8b5cf6',
   '#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1',
   '#a855f7','#84cc16','#e11d48','#0ea5e9','#d946ef',
+  '#78716c','#0d9488','#b91c1c','#4338ca','#15803d',
+  '#c2410c','#7e22ce','#0369a1','#a16207','#be185d',
 ];
 
 const ROW_LABELS = 'ABCDEFGHIJKLMNOP'.split('');
+
+// ═══════════════════════════════════════════════
+// DATA: Periodic Table Elements
+// ═══════════════════════════════════════════════
+const ELEMENTS = [
+  {z:1,sym:'H',name:'Hydrogen',mass:1.008,cat:'nonmetal',econf:'1s¹'},
+  {z:2,sym:'He',name:'Helium',mass:4.003,cat:'noble-gas',econf:'1s²'},
+  {z:3,sym:'Li',name:'Lithium',mass:6.941,cat:'alkali',econf:'[He] 2s¹'},
+  {z:4,sym:'Be',name:'Beryllium',mass:9.012,cat:'alkaline-earth',econf:'[He] 2s²'},
+  {z:5,sym:'B',name:'Boron',mass:10.81,cat:'metalloid',econf:'[He] 2s² 2p¹'},
+  {z:6,sym:'C',name:'Carbon',mass:12.011,cat:'nonmetal',econf:'[He] 2s² 2p²'},
+  {z:7,sym:'N',name:'Nitrogen',mass:14.007,cat:'nonmetal',econf:'[He] 2s² 2p³'},
+  {z:8,sym:'O',name:'Oxygen',mass:15.999,cat:'nonmetal',econf:'[He] 2s² 2p⁴'},
+  {z:9,sym:'F',name:'Fluorine',mass:18.998,cat:'halogen',econf:'[He] 2s² 2p⁵'},
+  {z:10,sym:'Ne',name:'Neon',mass:20.180,cat:'noble-gas',econf:'[He] 2s² 2p⁶'},
+  {z:11,sym:'Na',name:'Sodium',mass:22.990,cat:'alkali',econf:'[Ne] 3s¹'},
+  {z:12,sym:'Mg',name:'Magnesium',mass:24.305,cat:'alkaline-earth',econf:'[Ne] 3s²'},
+  {z:13,sym:'Al',name:'Aluminium',mass:26.982,cat:'post-transition',econf:'[Ne] 3s² 3p¹'},
+  {z:14,sym:'Si',name:'Silicon',mass:28.086,cat:'metalloid',econf:'[Ne] 3s² 3p²'},
+  {z:15,sym:'P',name:'Phosphorus',mass:30.974,cat:'nonmetal',econf:'[Ne] 3s² 3p³'},
+  {z:16,sym:'S',name:'Sulfur',mass:32.065,cat:'nonmetal',econf:'[Ne] 3s² 3p⁴'},
+  {z:17,sym:'Cl',name:'Chlorine',mass:35.453,cat:'halogen',econf:'[Ne] 3s² 3p⁵'},
+  {z:18,sym:'Ar',name:'Argon',mass:39.948,cat:'noble-gas',econf:'[Ne] 3s² 3p⁶'},
+  {z:19,sym:'K',name:'Potassium',mass:39.098,cat:'alkali',econf:'[Ar] 4s¹'},
+  {z:20,sym:'Ca',name:'Calcium',mass:40.078,cat:'alkaline-earth',econf:'[Ar] 4s²'},
+  {z:21,sym:'Sc',name:'Scandium',mass:44.956,cat:'transition',econf:'[Ar] 3d¹ 4s²'},
+  {z:22,sym:'Ti',name:'Titanium',mass:47.867,cat:'transition',econf:'[Ar] 3d² 4s²'},
+  {z:23,sym:'V',name:'Vanadium',mass:50.942,cat:'transition',econf:'[Ar] 3d³ 4s²'},
+  {z:24,sym:'Cr',name:'Chromium',mass:51.996,cat:'transition',econf:'[Ar] 3d⁵ 4s¹'},
+  {z:25,sym:'Mn',name:'Manganese',mass:54.938,cat:'transition',econf:'[Ar] 3d⁵ 4s²'},
+  {z:26,sym:'Fe',name:'Iron',mass:55.845,cat:'transition',econf:'[Ar] 3d⁶ 4s²'},
+  {z:27,sym:'Co',name:'Cobalt',mass:58.933,cat:'transition',econf:'[Ar] 3d⁷ 4s²'},
+  {z:28,sym:'Ni',name:'Nickel',mass:58.693,cat:'transition',econf:'[Ar] 3d⁸ 4s²'},
+  {z:29,sym:'Cu',name:'Copper',mass:63.546,cat:'transition',econf:'[Ar] 3d¹⁰ 4s¹'},
+  {z:30,sym:'Zn',name:'Zinc',mass:65.38,cat:'transition',econf:'[Ar] 3d¹⁰ 4s²'},
+  {z:31,sym:'Ga',name:'Gallium',mass:69.723,cat:'post-transition',econf:'[Ar] 3d¹⁰ 4s² 4p¹'},
+  {z:32,sym:'Ge',name:'Germanium',mass:72.630,cat:'metalloid',econf:'[Ar] 3d¹⁰ 4s² 4p²'},
+  {z:33,sym:'As',name:'Arsenic',mass:74.922,cat:'metalloid',econf:'[Ar] 3d¹⁰ 4s² 4p³'},
+  {z:34,sym:'Se',name:'Selenium',mass:78.971,cat:'nonmetal',econf:'[Ar] 3d¹⁰ 4s² 4p⁴'},
+  {z:35,sym:'Br',name:'Bromine',mass:79.904,cat:'halogen',econf:'[Ar] 3d¹⁰ 4s² 4p⁵'},
+  {z:36,sym:'Kr',name:'Krypton',mass:83.798,cat:'noble-gas',econf:'[Ar] 3d¹⁰ 4s² 4p⁶'},
+  {z:37,sym:'Rb',name:'Rubidium',mass:85.468,cat:'alkali',econf:'[Kr] 5s¹'},
+  {z:38,sym:'Sr',name:'Strontium',mass:87.62,cat:'alkaline-earth',econf:'[Kr] 5s²'},
+  {z:39,sym:'Y',name:'Yttrium',mass:88.906,cat:'transition',econf:'[Kr] 4d¹ 5s²'},
+  {z:40,sym:'Zr',name:'Zirconium',mass:91.224,cat:'transition',econf:'[Kr] 4d² 5s²'},
+  {z:41,sym:'Nb',name:'Niobium',mass:92.906,cat:'transition',econf:'[Kr] 4d⁴ 5s¹'},
+  {z:42,sym:'Mo',name:'Molybdenum',mass:95.95,cat:'transition',econf:'[Kr] 4d⁵ 5s¹'},
+  {z:43,sym:'Tc',name:'Technetium',mass:98,cat:'transition',econf:'[Kr] 4d⁵ 5s²'},
+  {z:44,sym:'Ru',name:'Ruthenium',mass:101.07,cat:'transition',econf:'[Kr] 4d⁷ 5s¹'},
+  {z:45,sym:'Rh',name:'Rhodium',mass:102.91,cat:'transition',econf:'[Kr] 4d⁸ 5s¹'},
+  {z:46,sym:'Pd',name:'Palladium',mass:106.42,cat:'transition',econf:'[Kr] 4d¹⁰'},
+  {z:47,sym:'Ag',name:'Silver',mass:107.87,cat:'transition',econf:'[Kr] 4d¹⁰ 5s¹'},
+  {z:48,sym:'Cd',name:'Cadmium',mass:112.41,cat:'transition',econf:'[Kr] 4d¹⁰ 5s²'},
+  {z:49,sym:'In',name:'Indium',mass:114.82,cat:'post-transition',econf:'[Kr] 4d¹⁰ 5s² 5p¹'},
+  {z:50,sym:'Sn',name:'Tin',mass:118.71,cat:'post-transition',econf:'[Kr] 4d¹⁰ 5s² 5p²'},
+  {z:51,sym:'Sb',name:'Antimony',mass:121.76,cat:'metalloid',econf:'[Kr] 4d¹⁰ 5s² 5p³'},
+  {z:52,sym:'Te',name:'Tellurium',mass:127.60,cat:'metalloid',econf:'[Kr] 4d¹⁰ 5s² 5p⁴'},
+  {z:53,sym:'I',name:'Iodine',mass:126.90,cat:'halogen',econf:'[Kr] 4d¹⁰ 5s² 5p⁵'},
+  {z:54,sym:'Xe',name:'Xenon',mass:131.29,cat:'noble-gas',econf:'[Kr] 4d¹⁰ 5s² 5p⁶'},
+  {z:55,sym:'Cs',name:'Caesium',mass:132.91,cat:'alkali',econf:'[Xe] 6s¹'},
+  {z:56,sym:'Ba',name:'Barium',mass:137.33,cat:'alkaline-earth',econf:'[Xe] 6s²'},
+  {z:57,sym:'La',name:'Lanthanum',mass:138.91,cat:'lanthanide',econf:'[Xe] 5d¹ 6s²'},
+  {z:58,sym:'Ce',name:'Cerium',mass:140.12,cat:'lanthanide',econf:'[Xe] 4f¹ 5d¹ 6s²'},
+  {z:59,sym:'Pr',name:'Praseodymium',mass:140.91,cat:'lanthanide',econf:'[Xe] 4f³ 6s²'},
+  {z:60,sym:'Nd',name:'Neodymium',mass:144.24,cat:'lanthanide',econf:'[Xe] 4f⁴ 6s²'},
+  {z:61,sym:'Pm',name:'Promethium',mass:145,cat:'lanthanide',econf:'[Xe] 4f⁵ 6s²'},
+  {z:62,sym:'Sm',name:'Samarium',mass:150.36,cat:'lanthanide',econf:'[Xe] 4f⁶ 6s²'},
+  {z:63,sym:'Eu',name:'Europium',mass:151.96,cat:'lanthanide',econf:'[Xe] 4f⁷ 6s²'},
+  {z:64,sym:'Gd',name:'Gadolinium',mass:157.25,cat:'lanthanide',econf:'[Xe] 4f⁷ 5d¹ 6s²'},
+  {z:65,sym:'Tb',name:'Terbium',mass:158.93,cat:'lanthanide',econf:'[Xe] 4f⁹ 6s²'},
+  {z:66,sym:'Dy',name:'Dysprosium',mass:162.50,cat:'lanthanide',econf:'[Xe] 4f¹⁰ 6s²'},
+  {z:67,sym:'Ho',name:'Holmium',mass:164.93,cat:'lanthanide',econf:'[Xe] 4f¹¹ 6s²'},
+  {z:68,sym:'Er',name:'Erbium',mass:167.26,cat:'lanthanide',econf:'[Xe] 4f¹² 6s²'},
+  {z:69,sym:'Tm',name:'Thulium',mass:168.93,cat:'lanthanide',econf:'[Xe] 4f¹³ 6s²'},
+  {z:70,sym:'Yb',name:'Ytterbium',mass:173.05,cat:'lanthanide',econf:'[Xe] 4f¹⁴ 6s²'},
+  {z:71,sym:'Lu',name:'Lutetium',mass:174.97,cat:'lanthanide',econf:'[Xe] 4f¹⁴ 5d¹ 6s²'},
+  {z:72,sym:'Hf',name:'Hafnium',mass:178.49,cat:'transition',econf:'[Xe] 4f¹⁴ 5d² 6s²'},
+  {z:73,sym:'Ta',name:'Tantalum',mass:180.95,cat:'transition',econf:'[Xe] 4f¹⁴ 5d³ 6s²'},
+  {z:74,sym:'W',name:'Tungsten',mass:183.84,cat:'transition',econf:'[Xe] 4f¹⁴ 5d⁴ 6s²'},
+  {z:75,sym:'Re',name:'Rhenium',mass:186.21,cat:'transition',econf:'[Xe] 4f¹⁴ 5d⁵ 6s²'},
+  {z:76,sym:'Os',name:'Osmium',mass:190.23,cat:'transition',econf:'[Xe] 4f¹⁴ 5d⁶ 6s²'},
+  {z:77,sym:'Ir',name:'Iridium',mass:192.22,cat:'transition',econf:'[Xe] 4f¹⁴ 5d⁷ 6s²'},
+  {z:78,sym:'Pt',name:'Platinum',mass:195.08,cat:'transition',econf:'[Xe] 4f¹⁴ 5d⁹ 6s¹'},
+  {z:79,sym:'Au',name:'Gold',mass:196.97,cat:'transition',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s¹'},
+  {z:80,sym:'Hg',name:'Mercury',mass:200.59,cat:'transition',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s²'},
+  {z:81,sym:'Tl',name:'Thallium',mass:204.38,cat:'post-transition',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹'},
+  {z:82,sym:'Pb',name:'Lead',mass:207.2,cat:'post-transition',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²'},
+  {z:83,sym:'Bi',name:'Bismuth',mass:208.98,cat:'post-transition',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³'},
+  {z:84,sym:'Po',name:'Polonium',mass:209,cat:'metalloid',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴'},
+  {z:85,sym:'At',name:'Astatine',mass:210,cat:'halogen',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵'},
+  {z:86,sym:'Rn',name:'Radon',mass:222,cat:'noble-gas',econf:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶'},
+  {z:87,sym:'Fr',name:'Francium',mass:223,cat:'alkali',econf:'[Rn] 7s¹'},
+  {z:88,sym:'Ra',name:'Radium',mass:226,cat:'alkaline-earth',econf:'[Rn] 7s²'},
+  {z:89,sym:'Ac',name:'Actinium',mass:227,cat:'actinide',econf:'[Rn] 6d¹ 7s²'},
+  {z:90,sym:'Th',name:'Thorium',mass:232.04,cat:'actinide',econf:'[Rn] 6d² 7s²'},
+  {z:91,sym:'Pa',name:'Protactinium',mass:231.04,cat:'actinide',econf:'[Rn] 5f² 6d¹ 7s²'},
+  {z:92,sym:'U',name:'Uranium',mass:238.03,cat:'actinide',econf:'[Rn] 5f³ 6d¹ 7s²'},
+  {z:93,sym:'Np',name:'Neptunium',mass:237,cat:'actinide',econf:'[Rn] 5f⁴ 6d¹ 7s²'},
+  {z:94,sym:'Pu',name:'Plutonium',mass:244,cat:'actinide',econf:'[Rn] 5f⁶ 7s²'},
+  {z:95,sym:'Am',name:'Americium',mass:243,cat:'actinide',econf:'[Rn] 5f⁷ 7s²'},
+  {z:96,sym:'Cm',name:'Curium',mass:247,cat:'actinide',econf:'[Rn] 5f⁷ 6d¹ 7s²'},
+  {z:97,sym:'Bk',name:'Berkelium',mass:247,cat:'actinide',econf:'[Rn] 5f⁹ 7s²'},
+  {z:98,sym:'Cf',name:'Californium',mass:251,cat:'actinide',econf:'[Rn] 5f¹⁰ 7s²'},
+  {z:99,sym:'Es',name:'Einsteinium',mass:252,cat:'actinide',econf:'[Rn] 5f¹¹ 7s²'},
+  {z:100,sym:'Fm',name:'Fermium',mass:257,cat:'actinide',econf:'[Rn] 5f¹² 7s²'},
+  {z:101,sym:'Md',name:'Mendelevium',mass:258,cat:'actinide',econf:'[Rn] 5f¹³ 7s²'},
+  {z:102,sym:'No',name:'Nobelium',mass:259,cat:'actinide',econf:'[Rn] 5f¹⁴ 7s²'},
+  {z:103,sym:'Lr',name:'Lawrencium',mass:266,cat:'actinide',econf:'[Rn] 5f¹⁴ 7s² 7p¹'},
+  {z:104,sym:'Rf',name:'Rutherfordium',mass:267,cat:'transition',econf:'[Rn] 5f¹⁴ 6d² 7s²'},
+  {z:105,sym:'Db',name:'Dubnium',mass:268,cat:'transition',econf:'[Rn] 5f¹⁴ 6d³ 7s²'},
+  {z:106,sym:'Sg',name:'Seaborgium',mass:269,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁴ 7s²'},
+  {z:107,sym:'Bh',name:'Bohrium',mass:270,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁵ 7s²'},
+  {z:108,sym:'Hs',name:'Hassium',mass:277,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁶ 7s²'},
+  {z:109,sym:'Mt',name:'Meitnerium',mass:278,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁷ 7s²'},
+  {z:110,sym:'Ds',name:'Darmstadtium',mass:281,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁸ 7s²'},
+  {z:111,sym:'Rg',name:'Roentgenium',mass:282,cat:'transition',econf:'[Rn] 5f¹⁴ 6d⁹ 7s²'},
+  {z:112,sym:'Cn',name:'Copernicium',mass:285,cat:'transition',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s²'},
+  {z:113,sym:'Nh',name:'Nihonium',mass:286,cat:'post-transition',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹'},
+  {z:114,sym:'Fl',name:'Flerovium',mass:289,cat:'post-transition',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²'},
+  {z:115,sym:'Mc',name:'Moscovium',mass:290,cat:'post-transition',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³'},
+  {z:116,sym:'Lv',name:'Livermorium',mass:293,cat:'post-transition',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴'},
+  {z:117,sym:'Ts',name:'Tennessine',mass:294,cat:'halogen',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵'},
+  {z:118,sym:'Og',name:'Oganesson',mass:294,cat:'noble-gas',econf:'[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶'},
+];
+const ELEMENT_BY_SYM = {};
+ELEMENTS.forEach(el => { ELEMENT_BY_SYM[el.sym] = el; });
+
+const ELEMENT_CAT_COLORS = {
+  'alkali': '#ff6b6b', 'alkaline-earth': '#ffa94d', 'transition': '#4dabf7',
+  'post-transition': '#69db7c', 'metalloid': '#da77f2', 'nonmetal': '#ffd43b',
+  'halogen': '#38d9a9', 'noble-gas': '#748ffc', 'lanthanide': '#f783ac',
+  'actinide': '#e599f7',
+};
+
+// Standard periodic table layout: [row, col] for each atomic number
+const PT_LAYOUT = {
+  1:[0,0],2:[0,17],3:[1,0],4:[1,1],5:[1,12],6:[1,13],7:[1,14],8:[1,15],9:[1,16],10:[1,17],
+  11:[2,0],12:[2,1],13:[2,12],14:[2,13],15:[2,14],16:[2,15],17:[2,16],18:[2,17],
+  19:[3,0],20:[3,1],21:[3,2],22:[3,3],23:[3,4],24:[3,5],25:[3,6],26:[3,7],27:[3,8],28:[3,9],29:[3,10],30:[3,11],31:[3,12],32:[3,13],33:[3,14],34:[3,15],35:[3,16],36:[3,17],
+  37:[4,0],38:[4,1],39:[4,2],40:[4,3],41:[4,4],42:[4,5],43:[4,6],44:[4,7],45:[4,8],46:[4,9],47:[4,10],48:[4,11],49:[4,12],50:[4,13],51:[4,14],52:[4,15],53:[4,16],54:[4,17],
+  55:[5,0],56:[5,1],71:[5,2],72:[5,3],73:[5,4],74:[5,5],75:[5,6],76:[5,7],77:[5,8],78:[5,9],79:[5,10],80:[5,11],81:[5,12],82:[5,13],83:[5,14],84:[5,15],85:[5,16],86:[5,17],
+  87:[6,0],88:[6,1],103:[6,2],104:[6,3],105:[6,4],106:[6,5],107:[6,6],108:[6,7],109:[6,8],110:[6,9],111:[6,10],112:[6,11],113:[6,12],114:[6,13],115:[6,14],116:[6,15],117:[6,16],118:[6,17],
+  57:[8,2],58:[8,3],59:[8,4],60:[8,5],61:[8,6],62:[8,7],63:[8,8],64:[8,9],65:[8,10],66:[8,11],67:[8,12],68:[8,13],69:[8,14],70:[8,15],
+  89:[9,2],90:[9,3],91:[9,4],92:[9,5],93:[9,6],94:[9,7],95:[9,8],96:[9,9],97:[9,10],98:[9,11],99:[9,12],100:[9,13],101:[9,14],102:[9,15],
+};
+
+// Parse chemical formula into element counts
+function parseFormula(formula) {
+  // Normalize subscript characters
+  const sub = {'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
+  let f = formula.replace(/[₀-₉]/g, c => sub[c] || c);
+  function parse(s, i) {
+    const counts = {};
+    while (i < s.length) {
+      if (s[i] === '(') {
+        const [inner, ni] = parse(s, i + 1);
+        i = ni;
+        let numStr = '';
+        while (i < s.length && /\d/.test(s[i])) { numStr += s[i]; i++; }
+        const mult = numStr ? parseInt(numStr) : 1;
+        for (const el in inner) counts[el] = (counts[el] || 0) + inner[el] * mult;
+      } else if (s[i] === ')') {
+        return [counts, i + 1];
+      } else if (/[A-Z]/.test(s[i])) {
+        let sym = s[i]; i++;
+        while (i < s.length && /[a-z]/.test(s[i])) { sym += s[i]; i++; }
+        let numStr = '';
+        while (i < s.length && /\d/.test(s[i])) { numStr += s[i]; i++; }
+        const n = numStr ? parseInt(numStr) : 1;
+        counts[sym] = (counts[sym] || 0) + n;
+      } else {
+        i++;
+      }
+    }
+    return [counts, i];
+  }
+  const [counts] = parse(f, 0);
+  return counts;
+}
+
+function calcMW(formula) {
+  const counts = parseFormula(formula);
+  let total = 0;
+  const breakdown = [];
+  for (const sym in counts) {
+    const el = ELEMENT_BY_SYM[sym];
+    if (!el) return { error: true, sym };
+    const sub = el.mass * counts[sym];
+    breakdown.push({ sym, name: el.name, count: counts[sym], mass: el.mass, subtotal: sub });
+    total += sub;
+  }
+  return { total, breakdown, error: false };
+}
+
+const COMMON_MOLECULES = [
+  { name: 'NaCl', formula: 'NaCl' },
+  { name: 'KCl', formula: 'KCl' },
+  { name: 'Tris', formula: 'C4H11NO3' },
+  { name: 'EDTA', formula: 'C10H16N2O8' },
+  { name: 'HEPES', formula: 'C8H18N2O4S' },
+  { name: 'SDS', formula: 'C12H25NaO4S' },
+  { name: 'Glycine', formula: 'C2H5NO2' },
+  { name: 'Glucose', formula: 'C6H12O6' },
+  { name: 'Sucrose', formula: 'C12H22O11' },
+  { name: 'CaCl₂', formula: 'CaCl2' },
+  { name: 'MgCl₂', formula: 'MgCl2' },
+  { name: 'Na₂HPO₄', formula: 'Na2HPO4' },
+];
 
 // ═══════════════════════════════════════════════
 // DATA: References
@@ -3288,6 +3533,203 @@ function UnitConversionCalc() {
   );
 }
 
+// --- MW Calculator ---
+function MWCalc() {
+  const lang = useLang();
+  const [formula, setFormula] = useState('');
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    if (!formula.trim()) { setResult(null); return; }
+    const r = calcMW(formula.trim());
+    setResult(r);
+  }, [formula]);
+
+  return (
+    <div className="card p-5 fade-in">
+      <h2 className="text-xl font-bold mb-1">{t('mwCalcTitle', lang)}</h2>
+      <p className="text-sm mb-4" style={{color:'var(--text-muted)'}}>{t('mwCalcSubtitle', lang)}</p>
+
+      <div className="mb-4">
+        <label className="text-xs font-semibold block mb-1" style={{color:'var(--text-muted)'}}>{t('mwFormula', lang)}</label>
+        <input type="text" value={formula} onChange={e => setFormula(e.target.value)}
+          placeholder={t('mwFormulaPlaceholder', lang)}
+          className="w-full text-lg mono" style={{fontFamily:'var(--font-mono)'}} />
+      </div>
+
+      {/* Common molecules */}
+      <div className="mb-4">
+        <label className="text-xs font-semibold block mb-1.5" style={{color:'var(--text-muted)'}}>{t('mwCommon', lang)}</label>
+        <div className="flex flex-wrap gap-1.5">
+          {COMMON_MOLECULES.map(m => (
+            <button key={m.name} onClick={() => setFormula(m.formula)}
+              className="px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
+              style={{
+                background: formula === m.formula ? 'var(--primary)' : 'var(--bg-2)',
+                color: formula === m.formula ? 'white' : 'var(--text-muted)',
+                border: '1px solid ' + (formula === m.formula ? 'var(--primary)' : 'var(--border)'),
+              }}>
+              {m.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Result */}
+      {result && !result.error && (
+        <div className="fade-in">
+          <div className="p-4 rounded-xl mb-4" style={{background:'var(--primary-light)', border:'1px solid var(--primary)'}}>
+            <div className="text-xs font-semibold mb-1" style={{color:'var(--text-muted)'}}>{t('mwResult', lang)}</div>
+            <div className="text-2xl font-bold mono" style={{color:'var(--primary)'}}>{result.total.toFixed(3)} g/mol</div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{borderBottom:'2px solid var(--border)'}}>
+                  <th className="text-left py-2 px-2 font-semibold" style={{color:'var(--text-muted)'}}>{t('mwElement', lang)}</th>
+                  <th className="text-right py-2 px-2 font-semibold" style={{color:'var(--text-muted)'}}>{t('mwCount', lang)}</th>
+                  <th className="text-right py-2 px-2 font-semibold" style={{color:'var(--text-muted)'}}>{t('mwAtomicMass', lang)}</th>
+                  <th className="text-right py-2 px-2 font-semibold" style={{color:'var(--text-muted)'}}>{t('mwSubtotal', lang)}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.breakdown.map((b, i) => (
+                  <tr key={i} style={{borderBottom:'1px solid var(--border)'}}>
+                    <td className="py-1.5 px-2 font-semibold">{b.sym} <span className="text-xs" style={{color:'var(--text-muted)'}}>({b.name})</span></td>
+                    <td className="py-1.5 px-2 text-right mono">{b.count}</td>
+                    <td className="py-1.5 px-2 text-right mono">{b.mass.toFixed(3)}</td>
+                    <td className="py-1.5 px-2 text-right mono font-semibold">{b.subtotal.toFixed(3)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{borderTop:'2px solid var(--primary)'}}>
+                  <td colSpan={3} className="py-2 px-2 font-bold">{t('mwResult', lang)}</td>
+                  <td className="py-2 px-2 text-right mono font-bold" style={{color:'var(--primary)'}}>{result.total.toFixed(3)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {result && result.error && (
+        <div className="p-3 rounded-lg text-sm" style={{background:'#fee2e2', color:'#dc2626', border:'1px solid #fca5a5'}}>
+          {t('mwParseError', lang)}: {lang === 'en' ? 'Unknown element' : '未知元素'} "{result.sym}"
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Interactive Periodic Table ---
+function PeriodicTableCalc() {
+  const lang = useLang();
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const filteredZ = search.trim() ? ELEMENTS.filter(el =>
+    el.sym.toLowerCase().includes(search.toLowerCase()) ||
+    el.name.toLowerCase().includes(search.toLowerCase()) ||
+    String(el.z) === search.trim()
+  ).map(el => el.z) : null;
+
+  // Build grid: 10 rows x 18 cols
+  const grid = Array.from({length: 10}, () => Array(18).fill(null));
+  ELEMENTS.forEach(el => {
+    const pos = PT_LAYOUT[el.z];
+    if (pos) grid[pos[0]][pos[1]] = el;
+  });
+
+  const catLabels = {
+    'alkali': 'Alkali Metal', 'alkaline-earth': 'Alkaline Earth', 'transition': 'Transition Metal',
+    'post-transition': 'Post-Transition', 'metalloid': 'Metalloid', 'nonmetal': 'Nonmetal',
+    'halogen': 'Halogen', 'noble-gas': 'Noble Gas', 'lanthanide': 'Lanthanide', 'actinide': 'Actinide',
+  };
+
+  return (
+    <div className="card p-5 fade-in">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 className="text-xl font-bold mb-1">{t('periodicTitle', lang)}</h2>
+          <p className="text-sm" style={{color:'var(--text-muted)'}}>{t('periodicSubtitle', lang)}</p>
+        </div>
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder={t('periodicSearch', lang)}
+          className="w-48 text-sm" />
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {Object.entries(ELEMENT_CAT_COLORS).map(([cat, color]) => (
+          <div key={cat} className="flex items-center gap-1 text-[10px]">
+            <div className="w-3 h-3 rounded" style={{background: color}} />
+            <span style={{color:'var(--text-muted)'}}>{catLabels[cat]}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Periodic Table Grid */}
+      <div className="overflow-x-auto pb-2">
+        <div style={{display:'inline-grid', gridTemplateColumns:'repeat(18, 1fr)', gap: 2, minWidth: 620}}>
+          {grid.map((row, ri) => (
+            <React.Fragment key={ri}>
+              {ri === 7 && <div style={{gridColumn:'1 / -1', height: 6}} />}
+              {row.map((el, ci) => {
+                if (!el) return <div key={`${ri}-${ci}`} style={{width: 34, height: 38}} />;
+                const dimmed = filteredZ && !filteredZ.includes(el.z);
+                const isSelected = selected && selected.z === el.z;
+                return (
+                  <div key={el.z}
+                    onClick={() => setSelected(el)}
+                    title={`${el.name} (${el.mass})`}
+                    className="cursor-pointer transition-all rounded"
+                    style={{
+                      width: 34, height: 38, padding: '1px 2px',
+                      background: isSelected ? 'var(--primary)' : (ELEMENT_CAT_COLORS[el.cat] || '#adb5bd') + (dimmed ? '30' : 'cc'),
+                      color: isSelected ? 'white' : dimmed ? 'var(--text-muted)' : '#1a1a2e',
+                      border: isSelected ? '2px solid var(--primary)' : '1px solid ' + (dimmed ? 'transparent' : 'rgba(0,0,0,0.1)'),
+                      opacity: dimmed ? 0.4 : 1,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      lineHeight: 1.1, fontSize: 9, fontWeight: 600,
+                    }}>
+                    <span style={{fontSize: 7, opacity: 0.7}}>{el.z}</span>
+                    <span style={{fontSize: 12, fontWeight: 800, fontFamily: 'var(--font-mono)'}}>{el.sym}</span>
+                    <span style={{fontSize: 6, opacity: 0.7}}>{el.mass.toFixed(1)}</span>
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Selected element details */}
+      {selected && (
+        <div className="mt-4 p-4 rounded-xl fade-in" style={{background:'var(--bg-2)', border:'1px solid var(--border)'}}>
+          <div className="flex items-start gap-4 flex-wrap">
+            <div className="text-center p-3 rounded-xl" style={{
+              background: ELEMENT_CAT_COLORS[selected.cat] + 'cc', color: '#1a1a2e', minWidth: 80
+            }}>
+              <div className="text-xs opacity-70">{selected.z}</div>
+              <div className="text-3xl font-black mono">{selected.sym}</div>
+              <div className="text-xs font-semibold">{selected.name}</div>
+              <div className="text-[10px] mono mt-0.5">{selected.mass.toFixed(3)}</div>
+            </div>
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              <div><span className="font-semibold" style={{color:'var(--text-muted)'}}>{t('periodicAtomicNum', lang)}:</span> {selected.z}</div>
+              <div><span className="font-semibold" style={{color:'var(--text-muted)'}}>{t('periodicAtomicMass', lang)}:</span> {selected.mass.toFixed(4)} u</div>
+              <div><span className="font-semibold" style={{color:'var(--text-muted)'}}>{t('periodicCategory', lang)}:</span> {catLabels[selected.cat]}</div>
+              <div><span className="font-semibold" style={{color:'var(--text-muted)'}}>{t('periodicElectronConfig', lang)}:</span> <span className="mono text-xs">{selected.econf}</span></div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- Solution Calculator Tab ---
 function CalcTab({ initialMode }) {
   const [mode, setMode] = useState(initialMode || 'dilution');
@@ -3302,6 +3744,8 @@ function CalcTab({ initialMode }) {
     { id: 'percent', task: t('calcTaskPercent', lang), formula: '% (w/v) or (v/v)' },
     { id: 'deadvol', task: t('calcTaskDeadVol', lang), formula: 'V \u00D7 N \u00D7 (1 + dead%)' },
     { id: 'convert', task: t('calcTaskConvert', lang), formula: 'Unit ↔ Unit' },
+    { id: 'mw', task: t('calcTaskMW', lang), formula: 'Σ(n × Aᵣ)' },
+    { id: 'periodic', task: t('calcTaskPeriodic', lang), formula: '118 Elements' },
   ];
 
   return (
@@ -3333,6 +3777,8 @@ function CalcTab({ initialMode }) {
           {mode === 'percent' && <PercentCalc />}
           {mode === 'deadvol' && <DeadVolumeCalc />}
           {mode === 'convert' && <UnitConversionCalc />}
+          {mode === 'mw' && <MWCalc />}
+          {mode === 'periodic' && <PeriodicTableCalc />}
         </div>
       </div>
       {/* ── MOBILE: horizontal pills + calc area ── */}
@@ -3356,6 +3802,8 @@ function CalcTab({ initialMode }) {
         {mode === 'percent' && <PercentCalc />}
         {mode === 'deadvol' && <DeadVolumeCalc />}
         {mode === 'convert' && <UnitConversionCalc />}
+        {mode === 'mw' && <MWCalc />}
+        {mode === 'periodic' && <PeriodicTableCalc />}
       </div>
     </div>
   );
@@ -4498,9 +4946,12 @@ function PlateTab() {
   const [wellData, setWellData] = useState({});
   const [selectedWells, setSelectedWells] = useState(new Set());
   const [currentColor, setCurrentColor] = useState(0);
+  const [customColor, setCustomColor] = useState('#ff0000');
+  const [useCustomColor, setUseCustomColor] = useState(false);
   const [currentLabel, setCurrentLabel] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [groups, setGroups] = useState([]);
+  const [enlarged, setEnlarged] = useState(false);
 
   const config = PLATE_CONFIGS[plateType];
 
@@ -4545,9 +4996,13 @@ function PlateTab() {
     return () => window.removeEventListener('mouseup', handleUp);
   }, []);
 
+  function getActiveColor() {
+    return useCustomColor ? customColor : WELL_COLORS[currentColor % WELL_COLORS.length];
+  }
+
   function assignSelected() {
     if (selectedWells.size === 0 || !currentLabel) return;
-    const color = WELL_COLORS[currentColor % WELL_COLORS.length];
+    const color = getActiveColor();
     setWellData(prev => {
       const next = { ...prev };
       selectedWells.forEach(key => {
@@ -4566,7 +5021,7 @@ function PlateTab() {
     }
     setSelectedWells(new Set());
     setCurrentLabel('');
-    setCurrentColor(prev => prev + 1);
+    if (!useCustomColor) setCurrentColor(prev => prev + 1);
   }
 
   function clearAll() {
@@ -4598,9 +5053,11 @@ function PlateTab() {
 
   function openTemplate(type) {
     const defaults = {
-      serial: { startConc: '100', factor: '2', direction: 'row' },
-      checkerboard: { label1: 'Treatment', label2: 'Control' },
-      dose: { drugs: '3', startConc: '100', dilFactor: '3' },
+      serial: { startConc: '100', factor: '2', direction: 'row', replicates: '1' },
+      checkerboard: { label1: 'Treatment', label2: 'Control', replicates: '1' },
+      dose: { drugs: '3', startConc: '100', dilFactor: '3', replicates: '1' },
+      control: {},
+      antibody: { antibodies: '3', startConc: '100', dilFactor: '2' },
     };
     setTemplateParams(defaults[type]);
     setTemplateDialog(type);
@@ -4614,14 +5071,17 @@ function PlateTab() {
     if (templateDialog === 'serial') applySerialDilution();
     else if (templateDialog === 'checkerboard') applyCheckerboard();
     else if (templateDialog === 'dose') applyDoseResponse();
+    else if (templateDialog === 'control') applyControlLayout();
+    else if (templateDialog === 'antibody') applyAntibodyTitration();
     setTemplateDialog(null);
   }
 
-  // Serial dilution template
+  // Serial dilution template with replicates
   function applySerialDilution() {
     const startConc = templateParams.startConc;
     const factor = templateParams.factor;
     const direction = templateParams.direction;
+    const reps = Math.max(1, Math.min(4, +(templateParams.replicates || 1)));
     if (!startConc || !factor) return;
 
     const newData = {};
@@ -4630,24 +5090,40 @@ function PlateTab() {
     const f = +factor;
 
     if (direction === 'row') {
-      for (let c = 0; c < config.cols; c++) {
+      const steps = config.cols;
+      const rowsPerStep = reps;
+      for (let c = 0; c < steps; c++) {
         const label = conc >= 1 ? conc.toFixed(1) : conc.toExponential(1);
         const color = WELL_COLORS[c % WELL_COLORS.length];
         const wells = [];
-        for (let r = 0; r < config.rows; r++) {
+        for (let rep = 0; rep < rowsPerStep && rep < config.rows; rep++) {
+          for (let r = rep; r < config.rows; r += Math.max(1, Math.floor(config.rows / rowsPerStep))) {
+            if (wells.length >= config.rows) break;
+          }
+        }
+        for (let r = 0; r < Math.min(reps, config.rows); r++) {
           const key = wellKey(r, c);
           newData[key] = { color, label };
           wells.push(key);
+        }
+        if (reps === 1) {
+          for (let r = 0; r < config.rows; r++) {
+            const key = wellKey(r, c);
+            newData[key] = { color, label };
+            if (!wells.includes(key)) wells.push(key);
+          }
         }
         newGroups.push({ label, color, wells });
         conc /= f;
       }
     } else {
-      for (let r = 0; r < config.rows; r++) {
+      const steps = config.rows;
+      for (let r = 0; r < steps; r++) {
         const label = conc >= 1 ? conc.toFixed(1) : conc.toExponential(1);
         const color = WELL_COLORS[r % WELL_COLORS.length];
         const wells = [];
-        for (let c = 0; c < config.cols; c++) {
+        const colCount = reps === 1 ? config.cols : Math.min(reps, config.cols);
+        for (let c = 0; c < colCount; c++) {
           const key = wellKey(r, c);
           newData[key] = { color, label };
           wells.push(key);
@@ -4662,17 +5138,20 @@ function PlateTab() {
     setSelectedWells(new Set());
   }
 
-  // Checkerboard template
+  // Checkerboard template with replicates
   function applyCheckerboard() {
     const label1 = templateParams.label1;
     const label2 = templateParams.label2;
+    const reps = Math.max(1, Math.min(4, +(templateParams.replicates || 1)));
     if (!label1 || !label2) return;
     const newData = {};
     const wells1 = [], wells2 = [];
     for (let r = 0; r < config.rows; r++) {
       for (let c = 0; c < config.cols; c++) {
         const key = wellKey(r, c);
-        if ((r + c) % 2 === 0) {
+        const blockR = Math.floor(r / reps);
+        const blockC = Math.floor(c / reps);
+        if ((blockR + blockC) % 2 === 0) {
           newData[key] = { color: WELL_COLORS[0], label: label1 };
           wells1.push(key);
         } else {
@@ -4688,13 +5167,14 @@ function PlateTab() {
     ]);
   }
 
-  // Dose-response template
+  // Dose-response template with replicates
   function applyDoseResponse() {
     const drugs = templateParams.drugs;
     const startConc = templateParams.startConc;
     const dilFactor = templateParams.dilFactor;
+    const reps = Math.max(1, Math.min(4, +(templateParams.replicates || 1)));
     if (!drugs || !startConc || !dilFactor) return;
-    const nDrugs = Math.min(+drugs, config.rows);
+    const nDrugs = Math.min(+drugs, Math.floor(config.rows / reps));
     const newData = {};
     const newGroups = [];
 
@@ -4702,18 +5182,162 @@ function PlateTab() {
       let conc = +startConc;
       const color = WELL_COLORS[d % WELL_COLORS.length];
       const drugLabel = `Drug ${d + 1}`;
+      const wells = [];
 
       for (let c = 0; c < config.cols; c++) {
-        const key = wellKey(d, c);
         const label = conc >= 1 ? conc.toFixed(1) : conc.toExponential(1);
-        newData[key] = { color, label };
+        for (let rep = 0; rep < reps; rep++) {
+          const r = d * reps + rep;
+          if (r >= config.rows) break;
+          const key = wellKey(r, c);
+          newData[key] = { color, label };
+          wells.push(key);
+        }
         conc /= +dilFactor;
       }
-      newGroups.push({ label: drugLabel, color, wells: Array.from({length: config.cols}, (_, c) => wellKey(d, c)) });
+      newGroups.push({ label: drugLabel, color, wells });
     }
 
     setWellData(newData);
     setGroups(newGroups);
+  }
+
+  // Control Layout template
+  function applyControlLayout() {
+    const newData = {};
+    const posWells = [], negWells = [], blankWells = [];
+    const posColor = WELL_COLORS[2]; // green
+    const negColor = WELL_COLORS[1]; // red
+    const blankColor = WELL_COLORS[6]; // cyan
+
+    // Last column: positive controls (top half), negative controls (bottom half)
+    const lastCol = config.cols - 1;
+    const midRow = Math.floor(config.rows / 2);
+    for (let r = 0; r < config.rows; r++) {
+      const key = wellKey(r, lastCol);
+      if (r < midRow) {
+        newData[key] = { color: posColor, label: t('platePosCtrl', lang) };
+        posWells.push(key);
+      } else {
+        newData[key] = { color: negColor, label: t('plateNegCtrl', lang) };
+        negWells.push(key);
+      }
+    }
+    // First column: blanks
+    for (let r = 0; r < config.rows; r++) {
+      const key = wellKey(r, 0);
+      newData[key] = { color: blankColor, label: t('plateBlank', lang) };
+      blankWells.push(key);
+    }
+
+    setWellData(newData);
+    setGroups([
+      { label: t('platePosCtrl', lang), color: posColor, wells: posWells },
+      { label: t('plateNegCtrl', lang), color: negColor, wells: negWells },
+      { label: t('plateBlank', lang), color: blankColor, wells: blankWells },
+    ]);
+  }
+
+  // Antibody Titration template
+  function applyAntibodyTitration() {
+    const nAb = Math.min(+(templateParams.antibodies || 3), config.rows);
+    const startConc = +(templateParams.startConc || 100);
+    const dilFactor = +(templateParams.dilFactor || 2);
+    const newData = {};
+    const newGroups = [];
+
+    for (let ab = 0; ab < nAb; ab++) {
+      let conc = startConc;
+      const color = WELL_COLORS[ab % WELL_COLORS.length];
+      const abLabel = `Ab ${ab + 1}`;
+      const wells = [];
+
+      for (let c = 0; c < config.cols; c++) {
+        const key = wellKey(ab, c);
+        const label = conc >= 1 ? conc.toFixed(1) : conc.toExponential(1);
+        newData[key] = { color, label };
+        wells.push(key);
+        conc /= dilFactor;
+      }
+      newGroups.push({ label: abLabel, color, wells });
+    }
+
+    setWellData(newData);
+    setGroups(newGroups);
+  }
+
+  // Plate grid renderer (shared between normal and enlarged views)
+  function renderPlateGrid(wellSizeOverride) {
+    const ws = wellSizeOverride || config.wellSize;
+    const fs = wellSizeOverride ? (wellSizeOverride > 28 ? 10 : wellSizeOverride > 18 ? 8 : 6) : (plateType > 96 ? 6 : plateType > 48 ? 7 : 9);
+    return (
+      <div>
+        <div className="flex items-center gap-0.5 mb-1 ml-6">
+          {Array.from({length: config.cols}, (_, c) => (
+            <div key={c} onClick={() => selectCol(c)}
+              className="text-center text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold"
+              style={{width: ws, minWidth: ws}}>
+              {c + 1}
+            </div>
+          ))}
+        </div>
+        {Array.from({length: config.rows}, (_, r) => (
+          <div key={r} className="flex items-center gap-0.5 mb-0.5">
+            <div onClick={() => selectRow(r)}
+              className="w-5 text-right text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold mr-1">
+              {ROW_LABELS[r]}
+            </div>
+            {Array.from({length: config.cols}, (_, c) => {
+              const key = wellKey(r, c);
+              const data = wellData[key];
+              const isSel = selectedWells.has(key);
+              return (
+                <div key={c}
+                  className={`well ${isSel ? 'selected' : ''}`}
+                  style={{
+                    width: ws, height: ws, minWidth: ws,
+                    background: data ? data.color + '30' : '#f9fafb',
+                    borderColor: data ? data.color : '#d1d5db',
+                    borderWidth: data ? 2 : 1,
+                    fontSize: fs,
+                  }}
+                  onMouseDown={e => handleMouseDown(r, c, e)}
+                  onMouseEnter={() => handleMouseEnter(r, c)}
+                  title={key + (data ? ': ' + data.label : '')}>
+                  {ws >= 22 && data && (
+                    <span className="truncate px-0.5" style={{color: data.color, fontWeight: 700}}>
+                      {data.label.length > 5 ? data.label.slice(0,4)+'…' : data.label}
+                    </span>
+                  )}
+                  {ws >= 22 && !data && (
+                    <span className="text-gray-300">{key}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Legend component (shared)
+  function renderLegend() {
+    if (groups.length === 0) return null;
+    return (
+      <div>
+        <h4 className="text-sm font-bold mb-2">{t('plateLegend', lang)}</h4>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+          {groups.map((g, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{background: g.color}} />
+              <span className="font-medium">{g.label}</span>
+              <span className="text-gray-400 mono">({g.wells.length})</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -4731,6 +5355,9 @@ function PlateTab() {
                 <option key={k} value={k}>{k}-well</option>
               ))}
             </select>
+            <button onClick={() => setEnlarged(true)} className="btn-secondary text-xs px-3 py-1.5">
+              {t('plateEnlarge', lang)}
+            </button>
           </div>
         </div>
       </div>
@@ -4738,59 +5365,17 @@ function PlateTab() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
           <div className="card p-5 overflow-x-auto">
-            {/* Column headers */}
-            <div className="flex items-center gap-0.5 mb-1 ml-6">
-              {Array.from({length: config.cols}, (_, c) => (
-                <div key={c} onClick={() => selectCol(c)}
-                  className="text-center text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold"
-                  style={{width: config.wellSize, minWidth: config.wellSize}}>
-                  {c + 1}
-                </div>
-              ))}
-            </div>
-
-            {/* Grid */}
-            {Array.from({length: config.rows}, (_, r) => (
-              <div key={r} className="flex items-center gap-0.5 mb-0.5">
-                <div onClick={() => selectRow(r)}
-                  className="w-5 text-right text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold mr-1">
-                  {ROW_LABELS[r]}
-                </div>
-                {Array.from({length: config.cols}, (_, c) => {
-                  const key = wellKey(r, c);
-                  const data = wellData[key];
-                  const isSel = selectedWells.has(key);
-                  return (
-                    <div key={c}
-                      className={`well ${isSel ? 'selected' : ''}`}
-                      style={{
-                        width: config.wellSize,
-                        height: config.wellSize,
-                        minWidth: config.wellSize,
-                        background: data ? data.color + '30' : '#f9fafb',
-                        borderColor: data ? data.color : '#d1d5db',
-                        borderWidth: data ? 2 : 1,
-                        fontSize: plateType > 96 ? 6 : plateType > 48 ? 7 : 9,
-                      }}
-                      onMouseDown={e => handleMouseDown(r, c, e)}
-                      onMouseEnter={() => handleMouseEnter(r, c)}
-                      title={key + (data ? ': ' + data.label : '')}>
-                      {plateType <= 48 && data && (
-                        <span className="truncate px-0.5" style={{color: data.color, fontWeight: 700}}>
-                          {data.label.length > 5 ? data.label.slice(0,4)+'…' : data.label}
-                        </span>
-                      )}
-                      {plateType <= 48 && !data && (
-                        <span className="text-gray-300">{key}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+            {renderPlateGrid()}
           </div>
 
-          {/* ── Plate View / Table View toggle ── */}
+          {/* Legend alongside plate */}
+          {groups.length > 0 && (
+            <div className="card p-4 mt-3">
+              {renderLegend()}
+            </div>
+          )}
+
+          {/* Plate View / Table View toggle */}
           {Object.keys(wellData).length > 0 && (
             <PlateTableView wellData={wellData} config={config} lang={lang} />
           )}
@@ -4811,12 +5396,20 @@ function PlateTab() {
             </div>
             <div className="mb-3">
               <label className="text-xs font-semibold block mb-1.5" style={S_MUTED}>{t('color', lang)}</label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 mb-2">
                 {WELL_COLORS.map((c, i) => (
-                  <button key={i} onClick={() => setCurrentColor(i)}
-                    className={`w-6 h-6 rounded-full border-2 transition-transform ${currentColor === i ? 'scale-125' : ''}`}
-                    style={{background: c, borderColor: currentColor === i ? 'var(--text)' : 'transparent'}} />
+                  <button key={i} onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
+                    className={`w-5 h-5 rounded-full border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
+                    style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'transparent', ringColor: 'var(--primary)'}} />
                 ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] font-semibold" style={S_MUTED}>{t('plateCustomColor', lang)}:</label>
+                <input type="color" value={customColor} onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
+                  className="w-7 h-7 rounded cursor-pointer border-0 p-0" style={{background:'transparent'}} />
+                {useCustomColor && (
+                  <div className="w-5 h-5 rounded-full border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
+                )}
               </div>
             </div>
             <button onClick={assignSelected} className="btn-primary w-full" disabled={!selectedWells.size || !currentLabel}>
@@ -4827,20 +5420,27 @@ function PlateTab() {
           {/* Templates */}
           <div className="card p-4">
             <h4 className="text-sm font-bold mb-3">{t('plateTemplates', lang)}</h4>
-            <div className="space-y-2">
-              <button onClick={() => openTemplate('serial')} className="btn-secondary w-full text-sm">
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => openTemplate('serial')} className="btn-secondary text-xs py-2 px-2">
                 {t('plateSerial', lang)}
               </button>
-              <button onClick={() => openTemplate('dose')} className="btn-secondary w-full text-sm">
+              <button onClick={() => openTemplate('dose')} className="btn-secondary text-xs py-2 px-2">
                 {t('plateDose', lang)}
               </button>
-              <button onClick={() => openTemplate('checkerboard')} className="btn-secondary w-full text-sm">
+              <button onClick={() => openTemplate('checkerboard')} className="btn-secondary text-xs py-2 px-2">
                 {t('plateCheckerboard', lang)}
               </button>
-              <button onClick={clearAll} className="w-full text-sm px-4 py-2 rounded-lg border font-semibold" style={{borderColor:'var(--accent)', color:'var(--accent)'}}>
-                {t('plateClear', lang)}
+              <button onClick={() => openTemplate('control')} className="btn-secondary text-xs py-2 px-2">
+                {t('plateControlLayout', lang)}
+              </button>
+              <button onClick={() => openTemplate('antibody')} className="btn-secondary text-xs py-2 px-2 col-span-2">
+                {t('plateAntibodyTitration', lang)}
               </button>
             </div>
+            <button onClick={clearAll} className="w-full text-sm px-4 py-2 mt-2 rounded-lg border font-semibold transition-colors"
+              style={{borderColor:'var(--border)', color:'var(--text-muted)'}}>
+              {t('plateClear', lang)}
+            </button>
 
             {/* Inline template config */}
             {templateDialog && (
@@ -4848,7 +5448,9 @@ function PlateTab() {
                 <h5 className="text-xs font-bold mb-2" style={S_PRIMARY}>
                   {templateDialog === 'serial' ? t('plateSerial', lang) :
                    templateDialog === 'dose' ? t('plateDose', lang) :
-                   t('plateCheckerboard', lang)}
+                   templateDialog === 'checkerboard' ? t('plateCheckerboard', lang) :
+                   templateDialog === 'control' ? t('plateControlLayout', lang) :
+                   t('plateAntibodyTitration', lang)}
                 </h5>
                 <div className="space-y-2">
                   {templateDialog === 'serial' && (<>
@@ -4877,6 +5479,12 @@ function PlateTab() {
                         </button>
                       </div>
                     </div>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
+                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                      </select>
+                    </div>
                   </>)}
                   {templateDialog === 'checkerboard' && (<>
                     <div>
@@ -4890,6 +5498,12 @@ function PlateTab() {
                         {lang === 'en' ? 'Label 2' : '标签 2'}
                       </label>
                       <input type="text" value={templateParams.label2} onChange={e => updateParam('label2', e.target.value)} className="w-full text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
+                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                      </select>
                     </div>
                   </>)}
                   {templateDialog === 'dose' && (<>
@@ -4905,13 +5519,39 @@ function PlateTab() {
                       <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialFactor', lang)}</label>
                       <input type="text" value={templateParams.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full text-sm" />
                     </div>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
+                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                      </select>
+                    </div>
+                  </>)}
+                  {templateDialog === 'control' && (
+                    <p className="text-[11px]" style={S_MUTED}>
+                      {lang === 'en'
+                        ? 'Places positive controls (top half of last column), negative controls (bottom half of last column), and blanks (first column).'
+                        : '在最后一列上半部分放置阳性对照，下半部分放置阴性对照，第一列放置空白。'}
+                    </p>
+                  )}
+                  {templateDialog === 'antibody' && (<>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateNumAntibodies', lang)}</label>
+                      <input type="number" value={templateParams.antibodies} onChange={e => updateParam('antibodies', e.target.value)} min={1} max={config.rows} className="w-full text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialStartConc', lang)}</label>
+                      <input type="text" value={templateParams.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialFactor', lang)}</label>
+                      <input type="text" value={templateParams.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full text-sm" />
+                    </div>
                   </>)}
                   <div className="flex gap-2 mt-2">
                     <button onClick={confirmTemplate} className="btn-primary flex-1 text-sm py-1.5">
                       {lang === 'en' ? 'Apply' : '应用'}
                     </button>
-                    <button onClick={() => setTemplateDialog(null)} className="flex-1 text-sm py-1.5 rounded-lg border"
-                      style={{borderColor:'var(--border)', color:'var(--text-muted)'}}>
+                    <button onClick={() => setTemplateDialog(null)} className="btn-secondary flex-1 text-sm py-1.5">
                       {lang === 'en' ? 'Cancel' : '取消'}
                     </button>
                   </div>
@@ -4939,25 +5579,43 @@ function PlateTab() {
                 }} />
             </div>
           </div>
-
-          {/* Legend */}
-          {groups.length > 0 && (
-            <div className="card p-4">
-              <h4 className="text-sm font-bold mb-3">{t('plateLegend', lang)}</h4>
-              <div className="space-y-1.5">
-                {groups.map((g, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded-full flex-shrink-0" style={{background: g.color}} />
-                    <span className="font-medium truncate">{g.label}</span>
-                    <span className="text-gray-400 ml-auto mono">{g.wells.length}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </div>  );
+
+      {/* Enlarged plate modal overlay */}
+      {enlarged && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)'}}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[95vw] h-[90vh] flex flex-col overflow-hidden"
+            style={{background:'var(--card)', border:'1px solid var(--border)'}}>
+            <div className="flex items-center justify-between p-4 border-b" style={{borderColor:'var(--border)'}}>
+              <h3 className="text-lg font-bold">{t('plateTitle', lang)} — {plateType}-well</h3>
+              <div className="flex items-center gap-3">
+                <DownloadBtn small label={t('downloadCSV', lang)}
+                  onClick={() => downloadFile(`plate_${plateType}well.csv`, plateToCSV(wellData, config), 'text/csv')} />
+                <DownloadBtn small label={t('downloadSVG', lang)} icon=""
+                  onClick={() => downloadFile(`plate_${plateType}well.svg`, plateToSVG(wellData, config, groups), 'image/svg+xml')} />
+                <button onClick={() => setEnlarged(false)} className="btn-secondary px-3 py-1.5 text-sm font-semibold">
+                  {t('plateClose', lang)}
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-6 flex gap-6">
+              <div className="flex-1 overflow-auto flex items-start justify-center">
+                {renderPlateGrid(Math.max(28, Math.min(48, Math.floor((window.innerWidth * 0.7) / config.cols))))}
+              </div>
+              {groups.length > 0 && (
+                <div className="w-64 flex-shrink-0 overflow-y-auto">
+                  <div className="card p-4">
+                    {renderLegend()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // --- Guide Tab ---
