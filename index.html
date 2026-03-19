@@ -1336,12 +1336,16 @@ function renderDynamicStep(text, scale) {
 }
 
 // Unified notes accessor — handles string, {en, zh} object, false, null
+// Safe text extractor: handles string, {en,zh} object, or null
+function safeText(val, lang) {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') return (lang === 'en' ? val.en : val.zh) || val.en || val.zh || '';
+  return String(val);
+}
+
 function getRecipeNotes(recipe, lang) {
-  const n = recipe.notes;
-  if (!n) return '';
-  if (typeof n === 'string') return n;
-  if (typeof n === 'object') return (lang === 'en' ? n.en : n.zh) || n.en || n.zh || '';
-  return '';
+  return safeText(recipe.notes, lang);
 }
 
 function recipeToText(recipe, targetVol, lang) {
@@ -1359,7 +1363,7 @@ function recipeToText(recipe, targetVol, lang) {
     const scaled = c.amount * scale;
     const val = scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1);
     txt += c.name.padEnd(35) + val.padStart(10) + '  ' + c.unit;
-    if (c.note) txt += '  (' + (typeof c.note === 'object' ? (c.note[lang] || c.note.en || '') : c.note) + ')';
+    if (c.note) txt += '  (' + safeText(c.note, lang) + ')';
     txt += '\n';
   });
   const noteTxt = getRecipeNotes(recipe, 'en'); if (noteTxt) txt += '\nNote: ' + noteTxt + '\n';
@@ -2611,7 +2615,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                   </span>
                   {(m.note) && (
                     <span className="text-xs" style={S_MUTED}>
-                      {typeof m.note === 'object' ? (m.note[lang] || m.note.zh) : m.note}
+                      {safeText(m.note, lang)}
                     </span>
                   )}
                 </div>
@@ -2740,7 +2744,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                     {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)} {c.unit}
                   </span>
                 )}
-                {c.note && <span className="step-note">{typeof c.note === 'object' ? (c.note[lang] || c.note.en || c.note.zh) : c.note}</span>}
+                {c.note && <span className="step-note">{safeText(c.note, lang)}</span>}
               </div>
             );
           })}
@@ -2773,7 +2777,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                     {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)}
                   </td>
                   <td className="py-2 text-right mono" style={S_MUTED}>{c.unit}</td>
-                  {recipe.components.some(comp => comp.note) && <td className="py-2 pl-4 text-xs" style={S_MUTED}>{c.note ? (typeof c.note === 'object' ? (c.note[lang] || c.note.en || c.note.zh) : c.note) : ''}</td>}
+                  {recipe.components.some(comp => comp.note) && <td className="py-2 pl-4 text-xs" style={S_MUTED}>{safeText(c.note, lang)}</td>}
                 </tr>
               );
             })}
@@ -5817,7 +5821,7 @@ function RefsTab({ onReplayTour }) {
                   {ref.vol && <span> {ref.vol}</span>}
                   {ref.pages && <span>:{ref.pages}</span>}
                   {' — '}
-                  <span>{lang === 'en' ? (REF_NOTES_EN[ref.id] || ref.note) : ref.note}</span>
+                  <span>{lang === 'en' ? (REF_NOTES_EN[ref.id] || safeText(ref.note, lang)) : safeText(ref.note, lang)}</span>
                   {ref.doi && (
                     <span>{' '}
                       <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener"
