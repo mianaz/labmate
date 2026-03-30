@@ -1086,6 +1086,113 @@ const I = {
   plateNegCtrl: { en: 'Negative Control', zh: '阴性对照' },
   plateBlank: { en: 'Blank', zh: '空白' },
   plateNumAntibodies: { en: 'Number of antibodies', zh: '抗体数量' },
+  // ── Notebook Tab ──
+  tabNotebook: { en: 'Notebook', zh: '实验记录' },
+  nbTitle: { en: 'Experiment Notebook', zh: '实验记录本' },
+  nbSubtitle: { en: 'Structured experiment records with protocol integration', zh: '结构化实验记录，支持方案集成' },
+  nbNewEntry: { en: 'New Entry', zh: '新建记录' },
+  nbSearch: { en: 'Search entries...', zh: '搜索记录...' },
+  nbNoEntries: { en: 'No experiment entries yet', zh: '暂无实验记录' },
+  nbNoEntriesHint: { en: 'Click "New Entry" to create your first experiment record', zh: '点击"新建记录"创建第一条实验记录' },
+  nbSelectEntry: { en: 'Select an entry to view details', zh: '选择左侧记录查看详情' },
+  nbPlan: { en: 'Plan', zh: '实验计划' },
+  nbObjectives: { en: 'Objectives', zh: '实验目的' },
+  nbNotes: { en: 'Notes', zh: '备注' },
+  nbMaterials: { en: 'Materials', zh: '实验材料' },
+  nbReagents: { en: 'Reagents', zh: '试剂' },
+  nbEquipment: { en: 'Equipment', zh: '设备' },
+  nbChecklist: { en: 'Checklist', zh: '检查清单' },
+  nbProcedure: { en: 'Procedure', zh: '实验步骤' },
+  nbResults: { en: 'Results', zh: '实验结果' },
+  nbSummary: { en: 'Summary', zh: '总结' },
+  nbDataProcessing: { en: 'Data Processing', zh: '数据处理' },
+  nbFigures: { en: 'Figures', zh: '图片/图表' },
+  nbBackupStatus: { en: 'Backup Status', zh: '备份状态' },
+  nbAddReagent: { en: 'Add Reagent', zh: '添加试剂' },
+  nbAddEquipment: { en: 'Add Equipment', zh: '添加设备' },
+  nbAddCheckItem: { en: 'Add Item', zh: '添加项目' },
+  nbAddFigure: { en: 'Add Figure', zh: '添加图表' },
+  nbReagentName: { en: 'Reagent Name', zh: '试剂名' },
+  nbAmount: { en: 'Amount', zh: '用量' },
+  nbUnit: { en: 'Unit', zh: '单位' },
+  nbLocation: { en: 'Location', zh: '位置' },
+  nbEquipmentName: { en: 'Equipment', zh: '设备名' },
+  nbReady: { en: 'Ready', zh: '就绪' },
+  nbPending: { en: 'Pending', zh: '待准备' },
+  nbTemplateMode: { en: 'From Protocol', zh: '来自方案' },
+  nbFreetextMode: { en: 'Free Text', zh: '自由记录' },
+  nbDeviation: { en: 'Deviation', zh: '偏差记录' },
+  nbActualParams: { en: 'Actual Parameters', zh: '实际参数' },
+  nbImportProtocol: { en: 'Import from Protocol', zh: '从方案导入' },
+  nbImportPlateLayout: { en: 'Import Plate Layout', zh: '导入板布局' },
+  nbSearchInventory: { en: 'Search Inventory', zh: '搜索库存' },
+  nbFigureDesc: { en: 'Description', zh: '描述' },
+  nbFigureNotes: { en: 'Notes', zh: '备注' },
+  nbStatus: { en: 'Status', zh: '状态' },
+  nbPriority: { en: 'Priority', zh: '优先级' },
+  nbStatusPlanned: { en: 'Planned', zh: '计划中' },
+  nbStatusInProgress: { en: 'In Progress', zh: '进行中' },
+  nbStatusCompleted: { en: 'Completed', zh: '已完成' },
+  nbStatusCancelled: { en: 'Cancelled', zh: '已取消' },
+  nbPriorityHigh: { en: 'High', zh: '高' },
+  nbPriorityMedium: { en: 'Medium', zh: '中' },
+  nbPriorityLow: { en: 'Low', zh: '低' },
+  nbDeleteEntry: { en: 'Delete Entry', zh: '删除记录' },
+  nbDeleteConfirm: { en: 'Delete this experiment entry? This cannot be undone.', zh: '删除此实验记录？此操作不可撤销。' },
+  nbExportMd: { en: 'Export Markdown', zh: '导出 Markdown' },
+  nbExportJson: { en: 'Export JSON', zh: '导出 JSON' },
+  nbImportJson: { en: 'Import JSON', zh: '导入 JSON' },
+  nbAutoSaved: { en: 'Auto-saved', zh: '已自动保存' },
+  nbDate: { en: 'Date', zh: '日期' },
+  nbEntryTitle: { en: 'Title', zh: '标题' },
+  nbEntryTitleZh: { en: 'Title (Chinese)', zh: '中文标题' },
+  nbDuration: { en: 'Duration (min)', zh: '时长（分钟）' },
+  nbStartTime: { en: 'Start Time', zh: '开始时间' },
+  nbEndTime: { en: 'End Time', zh: '结束时间' },
+  nbLinkedProtocol: { en: 'Linked Protocol', zh: '关联方案' },
+  nbSave: { en: 'Save', zh: '保存' },
+  nbCancel: { en: 'Cancel', zh: '取消' },
+  nbAll: { en: 'All', zh: '全部' },
+  // ── Calendar Tab ──
+  tabCalendar: { en: 'Calendar', zh: '实验日历' },
+  calTitle: { en: 'Experiment Calendar', zh: '实验日历' },
+  calSubtitle: { en: 'Plan and schedule experiments with protocol integration', zh: '规划和安排实验，支持方案集成' },
+  calMonthView: { en: 'Month', zh: '月视图' },
+  calWeekView: { en: 'Week', zh: '周视图' },
+  calToday: { en: 'Today', zh: '今天' },
+  calNewEvent: { en: 'New Experiment', zh: '新建实验' },
+  calExportIcs: { en: 'Export .ics', zh: '导出 .ics' },
+  calImportProtocol: { en: 'Import from Protocol', zh: '从方案导入' },
+  calNoEvents: { en: 'No experiments scheduled', zh: '暂无实验安排' },
+  calSun: { en: 'Sun', zh: '日' },
+  calMon: { en: 'Mon', zh: '一' },
+  calTue: { en: 'Tue', zh: '二' },
+  calWed: { en: 'Wed', zh: '三' },
+  calThu: { en: 'Thu', zh: '四' },
+  calFri: { en: 'Fri', zh: '五' },
+  calSat: { en: 'Sat', zh: '六' },
+  calJan: { en: 'January', zh: '一月' },
+  calFeb: { en: 'February', zh: '二月' },
+  calMar: { en: 'March', zh: '三月' },
+  calApr: { en: 'April', zh: '四月' },
+  calMay: { en: 'May', zh: '五月' },
+  calJun: { en: 'June', zh: '六月' },
+  calJul: { en: 'July', zh: '七月' },
+  calAug: { en: 'August', zh: '八月' },
+  calSep: { en: 'September', zh: '九月' },
+  calOct: { en: 'October', zh: '十月' },
+  calNov: { en: 'November', zh: '十一月' },
+  calDec: { en: 'December', zh: '十二月' },
+  calIcsExported: { en: 'Calendar exported as .ics', zh: '日历已导出为 .ics' },
+  calEditEvent: { en: 'Edit Experiment', zh: '编辑实验' },
+  calDeleteEvent: { en: 'Delete', zh: '删除' },
+  calOpenInNotebook: { en: 'Open in Notebook', zh: '在记录本中打开' },
+  calColor: { en: 'Color', zh: '颜色' },
+  calIcsFrom: { en: 'From', zh: '从' },
+  calIcsTo: { en: 'To', zh: '到' },
+  calEventForm: { en: 'Experiment Details', zh: '实验详情' },
+  calSelectProtocol: { en: 'Select a protocol...', zh: '选择方案...' },
+  calWeekHours: { en: 'hours', zh: '时' },
 };
 
 function t(key, lang) {
@@ -1279,6 +1386,134 @@ function loadCustomProtocols() {
   catch { return []; }
 }
 function saveCustomProtocols(arr) { localStorage.setItem('labmate_customProtocols', JSON.stringify(arr)); }
+
+// ═══════════════════════════════════════════════
+// IndexedDB for Experiment Notebook & Calendar
+// ═══════════════════════════════════════════════
+
+const EXPERIMENT_DB = 'labmate_experiments';
+const EXPERIMENT_STORE = 'entries';
+const EXPERIMENT_DB_VERSION = 1;
+
+function openExperimentDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(EXPERIMENT_DB, EXPERIMENT_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(EXPERIMENT_STORE)) {
+        const store = db.createObjectStore(EXPERIMENT_STORE, { keyPath: 'id' });
+        store.createIndex('date', 'date', { unique: false });
+        store.createIndex('status', 'status', { unique: false });
+        store.createIndex('protocolRef', 'protocolRef', { unique: false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getAllExperiments() {
+  const db = await openExperimentDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(EXPERIMENT_STORE, 'readonly');
+    const store = tx.objectStore(EXPERIMENT_STORE);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveExperiment(entry) {
+  const db = await openExperimentDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(EXPERIMENT_STORE, 'readwrite');
+    const store = tx.objectStore(EXPERIMENT_STORE);
+    store.put(entry);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function deleteExperiment(id) {
+  const db = await openExperimentDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(EXPERIMENT_STORE, 'readwrite');
+    const store = tx.objectStore(EXPERIMENT_STORE);
+    store.delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function exportExperimentsJSON() {
+  const entries = await getAllExperiments();
+  return JSON.stringify({ exportedAt: new Date().toISOString(), type: 'experiments', data: entries }, null, 2);
+}
+
+async function importExperimentsJSON(jsonStr) {
+  const parsed = JSON.parse(jsonStr);
+  const entries = parsed.data || parsed;
+  if (!Array.isArray(entries)) throw new Error('Invalid format');
+  const db = await openExperimentDB();
+  const tx = db.transaction(EXPERIMENT_STORE, 'readwrite');
+  const store = tx.objectStore(EXPERIMENT_STORE);
+  entries.forEach(e => store.put(e));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve(entries.length);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function createEmptyExperiment(date, startTime) {
+  const now = Date.now();
+  return {
+    id: 'exp_' + now + '_' + Math.random().toString(36).substr(2, 6),
+    date: date || new Date().toISOString().slice(0, 10),
+    title: '',
+    titleZh: '',
+    status: 'planned',
+    priority: 'medium',
+    color: '#1D9E75',
+    startTime: startTime || '09:00',
+    endTime: '',
+    duration: 60,
+    protocolRef: null,
+    plan: { objectives: '', notes: '' },
+    materials: { reagents: [], equipment: [], plateLayout: null, checklist: [] },
+    procedure: { mode: 'freetext', protocolSteps: [], freeText: '' },
+    results: { summary: '', dataProcessing: '', figures: [], backupStatus: '' },
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function useExperiments() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const loadAll = useCallback(async () => {
+    try {
+      const all = await getAllExperiments();
+      setEntries(all.sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt));
+    } catch (e) { console.error('Failed to load experiments:', e); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { loadAll(); }, [loadAll]);
+  const save = useCallback(async (entry) => {
+    const updated = { ...entry, updatedAt: Date.now() };
+    await saveExperiment(updated);
+    setEntries(prev => {
+      const idx = prev.findIndex(e => e.id === updated.id);
+      const next = idx >= 0 ? [...prev.slice(0, idx), updated, ...prev.slice(idx + 1)] : [updated, ...prev];
+      return next.sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt);
+    });
+    return updated;
+  }, []);
+  const remove = useCallback(async (id) => {
+    await deleteExperiment(id);
+    setEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+  return { entries, loading, save, remove, reload: loadAll };
+}
 
 // ═══════════════════════════════════════════════
 // FAVORITES CONTEXT
@@ -2304,9 +2539,9 @@ const REFERENCES = [
 
 // --- Header ---
 function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme }) {
-  const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','refs'];
-  const tabIcons = {};
-  const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', refs:'tabRefs' };
+  const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','notebook','calendar','refs'];
+  const tabIcons = { notebook: '📓', calendar: '📅' };
+  const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', notebook:'tabNotebook', calendar:'tabCalendar', refs:'tabRefs' };
 
   return (
     <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderColor: 'var(--border)' }}
@@ -2368,7 +2603,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
                   color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
                   borderBottomColor: activeTab === id ? 'var(--primary)' : 'transparent',
                 }}>
-                <span className="mr-1.5"></span>
+                {tabIcons[id] && <span className="mr-1">{tabIcons[id]}</span>}
                 {t(tabLabels[id], lang)}
               </button>
             ))}
@@ -7302,6 +7537,1066 @@ function InventoryTab() {
   );
 }
 
+// ═══════════════════════════════════════════════
+// NOTEBOOK TAB
+// ═══════════════════════════════════════════════
+
+function NotebookTab({ onNavigateCalendar }) {
+  const lang = useLang();
+  const toast = useToast();
+  const { entries, loading, save, remove, reload } = useExperiments();
+  const [selectedId, setSelectedId] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showProtocolImport, setShowProtocolImport] = useState(false);
+  const [showInventorySearch, setShowInventorySearch] = useState(null);
+  const [mobileView, setMobileView] = useState('list');
+  const [expandedSections, setExpandedSections] = useState({ plan: true, materials: true, procedure: true, results: true });
+  const saveTimerRef = useRef(null);
+  const jsonInputRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const selected = useMemo(() => entries.find(e => e.id === selectedId), [entries, selectedId]);
+
+  useEffect(() => {
+    if (selected && !editingEntry) setEditingEntry(JSON.parse(JSON.stringify(selected)));
+  }, [selectedId]);
+
+  const filteredEntries = useMemo(() => {
+    let list = entries;
+    if (statusFilter !== 'all') list = list.filter(e => e.status === statusFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(e =>
+        (e.title || '').toLowerCase().includes(q) ||
+        (e.titleZh || '').toLowerCase().includes(q) ||
+        (e.plan?.objectives || '').toLowerCase().includes(q) ||
+        (e.date || '').includes(q)
+      );
+    }
+    return list;
+  }, [entries, statusFilter, search]);
+
+  const toggleSection = (key) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const autoSave = useCallback((entry) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      await save(entry);
+      toast.show(t('nbAutoSaved', lang), '💾');
+    }, 1500);
+  }, [save, lang, toast]);
+
+  const updateField = useCallback((path, value) => {
+    setEditingEntry(prev => {
+      if (!prev) return prev;
+      const next = JSON.parse(JSON.stringify(prev));
+      const keys = path.split('.');
+      let obj = next;
+      for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
+      obj[keys[keys.length - 1]] = value;
+      autoSave(next);
+      return next;
+    });
+  }, [autoSave]);
+
+  const handleNewEntry = useCallback(async () => {
+    const entry = createEmptyExperiment();
+    const saved = await save(entry);
+    setSelectedId(saved.id);
+    setEditingEntry(JSON.parse(JSON.stringify(saved)));
+    if (isMobile) setMobileView('editor');
+  }, [save, isMobile]);
+
+  const handleDelete = useCallback(async () => {
+    if (!selectedId) return;
+    await remove(selectedId);
+    setSelectedId(null);
+    setEditingEntry(null);
+    setShowDeleteConfirm(false);
+    toast.show(lang === 'zh' ? '记录已删除' : 'Entry deleted', '🗑️');
+  }, [selectedId, remove, lang, toast]);
+
+  const handleImportProtocol = useCallback((recipe) => {
+    if (!editingEntry) return;
+    const steps = (recipe.briefSteps || recipe.detailedSteps || []).map(s => ({
+      stepText: typeof s === 'string' ? s : (s.text || s.step || ''),
+      completed: false, deviation: '', actualParams: ''
+    }));
+    const next = {
+      ...editingEntry,
+      protocolRef: recipe.id,
+      title: editingEntry.title || (lang === 'zh' ? (recipe.nameZh || recipe.name) : recipe.name),
+      titleZh: editingEntry.titleZh || (recipe.nameZh || ''),
+      duration: recipe.duration || editingEntry.duration,
+      procedure: { mode: 'template', protocolSteps: steps, freeText: editingEntry.procedure?.freeText || '' }
+    };
+    if (recipe.materials) {
+      next.materials = {
+        ...next.materials,
+        reagents: recipe.materials.map(m => ({
+          name: typeof m === 'string' ? m : (m.name || m.reagent || ''),
+          amount: m.amount || '', unit: m.unit || '', location: '', inventoryRef: null
+        }))
+      };
+    }
+    setEditingEntry(next);
+    autoSave(next);
+    setShowProtocolImport(false);
+    toast.show(lang === 'zh' ? '已从方案导入' : 'Imported from protocol', '📋');
+  }, [editingEntry, lang, autoSave, toast]);
+
+  const exportMarkdown = useCallback(() => {
+    if (!editingEntry) return;
+    const e = editingEntry;
+    let md = `# ${e.title || 'Untitled Experiment'}\n`;
+    if (e.titleZh) md += `**${e.titleZh}**\n`;
+    md += `\n**Date:** ${e.date || 'N/A'}  \n`;
+    md += `**Status:** ${e.status}  \n**Priority:** ${e.priority}\n`;
+    if (e.protocolRef) md += `**Protocol:** ${e.protocolRef}\n`;
+    md += `\n## Plan\n\n### Objectives\n${e.plan?.objectives || '_None_'}\n\n### Notes\n${e.plan?.notes || '_None_'}\n`;
+    md += `\n## Materials\n\n### Reagents\n`;
+    (e.materials?.reagents || []).forEach(r => { md += `- ${r.name}${r.amount ? ': ' + r.amount + ' ' + (r.unit || '') : ''}${r.location ? ' (' + r.location + ')' : ''}\n`; });
+    if ((e.materials?.equipment || []).length) { md += `\n### Equipment\n`; e.materials.equipment.forEach(eq => { md += `- [${eq.status === 'ready' ? 'x' : ' '}] ${eq.name}\n`; }); }
+    if ((e.materials?.checklist || []).length) { md += `\n### Checklist\n`; e.materials.checklist.forEach(c => { md += `- [${c.checked ? 'x' : ' '}] ${c.item}\n`; }); }
+    md += `\n## Procedure\n\n`;
+    if (e.procedure?.mode === 'template' && e.procedure.protocolSteps?.length) {
+      e.procedure.protocolSteps.forEach((s, i) => {
+        md += `${i + 1}. [${s.completed ? 'x' : ' '}] ${s.stepText}\n`;
+        if (s.deviation) md += `   - **Deviation:** ${s.deviation}\n`;
+        if (s.actualParams) md += `   - **Actual:** ${s.actualParams}\n`;
+      });
+    } else { md += e.procedure?.freeText || '_None_'; }
+    md += `\n\n## Results\n\n### Summary\n${e.results?.summary || '_None_'}\n`;
+    if (e.results?.dataProcessing) md += `\n### Data Processing\n${e.results.dataProcessing}\n`;
+    if ((e.results?.figures || []).length) { md += `\n### Figures\n`; e.results.figures.forEach((f, i) => { md += `${i + 1}. ${f.description}${f.notes ? ' — ' + f.notes : ''}\n`; }); }
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `experiment_${e.date || 'entry'}_${e.id.slice(-6)}.md`; a.click();
+    URL.revokeObjectURL(url);
+    toast.show(t('downloaded', lang), '📄');
+  }, [editingEntry, lang, toast]);
+
+  const handleExportJson = useCallback(async () => {
+    const json = await exportExperimentsJSON();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `labmate_experiments_${new Date().toISOString().slice(0, 10)}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.show(t('downloaded', lang), '📦');
+  }, [lang, toast]);
+
+  const handleImportJson = useCallback(async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const count = await importExperimentsJSON(text);
+      await reload();
+      toast.show((lang === 'zh' ? '已导入 ' : 'Imported ') + count + (lang === 'zh' ? ' 条记录' : ' entries'), '📦');
+    } catch (err) {
+      toast.show(lang === 'zh' ? '导入失败' : 'Import failed', '❌');
+    }
+    e.target.value = '';
+  }, [reload, lang, toast]);
+
+  const statusColors = { planned: '#6366f1', 'in-progress': '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' };
+  const priorityIcons = { high: '🔴', medium: '🟡', low: '🟢' };
+
+  // --- Section renderers ---
+  const renderSection = (key, icon, labelKey, content) => (
+    <div className="mb-3" key={key}>
+      <button onClick={() => toggleSection(key)}
+        className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-left font-semibold text-sm transition-colors"
+        style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+        <span>{icon}</span>
+        <span className="flex-1">{t(labelKey, lang)}</span>
+        <span style={{ transform: expandedSections[key] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '0.7rem' }}>▼</span>
+      </button>
+      {expandedSections[key] && <div className="mt-2 px-1">{content}</div>}
+    </div>
+  );
+
+  const renderPlanSection = () => renderSection('plan', '📋', 'nbPlan', (
+    <div className="space-y-3">
+      <div>
+        <label>{t('nbObjectives', lang)}</label>
+        <textarea value={editingEntry?.plan?.objectives || ''} onChange={e => updateField('plan.objectives', e.target.value)}
+          className="w-full" rows={3} placeholder={lang === 'zh' ? '描述实验目的...' : 'Describe experiment objectives...'} />
+      </div>
+      <div>
+        <label>{t('nbNotes', lang)}</label>
+        <textarea value={editingEntry?.plan?.notes || ''} onChange={e => updateField('plan.notes', e.target.value)}
+          className="w-full" rows={2} placeholder={lang === 'zh' ? '其他备注...' : 'Additional notes...'} />
+      </div>
+    </div>
+  ));
+
+  const renderMaterialsSection = () => {
+    const reagents = editingEntry?.materials?.reagents || [];
+    const equipment = editingEntry?.materials?.equipment || [];
+    const checklist = editingEntry?.materials?.checklist || [];
+    return renderSection('materials', '🧪', 'nbMaterials', (
+      <div className="space-y-4">
+        {/* Reagents */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-bold">{t('nbReagents', lang)}</h4>
+            <div className="flex gap-1">
+              <button onClick={() => { const next = [...reagents, { name: '', amount: '', unit: '', location: '', inventoryRef: null }]; updateField('materials.reagents', next); }}
+                className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddReagent', lang)}</button>
+            </div>
+          </div>
+          {reagents.map((r, i) => (
+            <div key={i} className="flex gap-2 mb-2 items-center flex-wrap">
+              <input type="text" value={r.name} placeholder={t('nbReagentName', lang)}
+                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], name: e.target.value }; updateField('materials.reagents', next); }}
+                className="flex-1 min-w-[120px]" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
+              <input type="text" value={r.amount} placeholder={t('nbAmount', lang)}
+                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], amount: e.target.value }; updateField('materials.reagents', next); }}
+                style={{ width: '70px', padding: '4px 8px', fontSize: '0.82rem' }} />
+              <input type="text" value={r.unit} placeholder={t('nbUnit', lang)}
+                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], unit: e.target.value }; updateField('materials.reagents', next); }}
+                style={{ width: '50px', padding: '4px 8px', fontSize: '0.82rem' }} />
+              <input type="text" value={r.location} placeholder={t('nbLocation', lang)}
+                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], location: e.target.value }; updateField('materials.reagents', next); }}
+                style={{ width: '90px', padding: '4px 8px', fontSize: '0.82rem' }} />
+              <button onClick={() => { const next = reagents.filter((_, j) => j !== i); updateField('materials.reagents', next); }}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>×</button>
+            </div>
+          ))}
+        </div>
+        {/* Equipment */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-bold">{t('nbEquipment', lang)}</h4>
+            <button onClick={() => { const next = [...equipment, { name: '', status: 'pending' }]; updateField('materials.equipment', next); }}
+              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddEquipment', lang)}</button>
+          </div>
+          {equipment.map((eq, i) => (
+            <div key={i} className="flex gap-2 mb-1.5 items-center">
+              <input type="text" value={eq.name} placeholder={t('nbEquipmentName', lang)}
+                onChange={e => { const next = [...equipment]; next[i] = { ...next[i], name: e.target.value }; updateField('materials.equipment', next); }}
+                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
+              <select value={eq.status} onChange={e => { const next = [...equipment]; next[i] = { ...next[i], status: e.target.value }; updateField('materials.equipment', next); }}
+                style={{ padding: '4px 6px', fontSize: '0.82rem', width: '80px' }}>
+                <option value="ready">{t('nbReady', lang)}</option>
+                <option value="pending">{t('nbPending', lang)}</option>
+              </select>
+              <button onClick={() => { updateField('materials.equipment', equipment.filter((_, j) => j !== i)); }}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>×</button>
+            </div>
+          ))}
+        </div>
+        {/* Checklist */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-bold">{t('nbChecklist', lang)}</h4>
+            <button onClick={() => { updateField('materials.checklist', [...checklist, { item: '', checked: false }]); }}
+              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddCheckItem', lang)}</button>
+          </div>
+          {checklist.map((c, i) => (
+            <div key={i} className="flex gap-2 mb-1.5 items-center">
+              <input type="checkbox" checked={c.checked}
+                onChange={e => { const next = [...checklist]; next[i] = { ...next[i], checked: e.target.checked }; updateField('materials.checklist', next); }}
+                style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
+              <input type="text" value={c.item}
+                onChange={e => { const next = [...checklist]; next[i] = { ...next[i], item: e.target.value }; updateField('materials.checklist', next); }}
+                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem', textDecoration: c.checked ? 'line-through' : 'none', opacity: c.checked ? 0.6 : 1 }} />
+              <button onClick={() => { updateField('materials.checklist', checklist.filter((_, j) => j !== i)); }}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    ));
+  };
+
+  const renderProcedureSection = () => {
+    const proc = editingEntry?.procedure || { mode: 'freetext', protocolSteps: [], freeText: '' };
+    return renderSection('procedure', '📝', 'nbProcedure', (
+      <div className="space-y-3">
+        <div className="flex gap-2 items-center flex-wrap">
+          <button onClick={() => updateField('procedure.mode', 'template')}
+            className={proc.mode === 'template' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
+            {t('nbTemplateMode', lang)}
+          </button>
+          <button onClick={() => updateField('procedure.mode', 'freetext')}
+            className={proc.mode === 'freetext' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
+            {t('nbFreetextMode', lang)}
+          </button>
+          {proc.mode === 'template' && (
+            <button onClick={() => setShowProtocolImport(true)}
+              className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
+              📋 {t('nbImportProtocol', lang)}
+            </button>
+          )}
+        </div>
+        {proc.mode === 'template' ? (
+          <div className="space-y-2">
+            {(proc.protocolSteps || []).length === 0 && (
+              <p className="text-sm py-4 text-center" style={S_MUTED}>
+                {lang === 'zh' ? '点击"从方案导入"加载步骤' : 'Click "Import from Protocol" to load steps'}
+              </p>
+            )}
+            {(proc.protocolSteps || []).map((step, i) => (
+              <div key={i} className="p-2 rounded-lg" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                <div className="flex gap-2 items-start">
+                  <input type="checkbox" checked={step.completed}
+                    onChange={e => {
+                      const next = [...proc.protocolSteps]; next[i] = { ...next[i], completed: e.target.checked };
+                      updateField('procedure.protocolSteps', next);
+                    }}
+                    style={{ accentColor: 'var(--primary)', marginTop: 4, width: 16, height: 16 }} />
+                  <div className="flex-1">
+                    <p className="text-sm" style={{ opacity: step.completed ? 0.5 : 1, textDecoration: step.completed ? 'line-through' : 'none' }}>
+                      <span className="font-semibold mr-1" style={{ color: 'var(--primary)' }}>{i + 1}.</span>
+                      {step.stepText}
+                    </p>
+                    <div className="flex gap-2 mt-1.5 flex-wrap">
+                      <input type="text" value={step.deviation || ''} placeholder={t('nbDeviation', lang)}
+                        onChange={e => { const next = [...proc.protocolSteps]; next[i] = { ...next[i], deviation: e.target.value }; updateField('procedure.protocolSteps', next); }}
+                        className="flex-1 min-w-[120px]" style={{ padding: '3px 6px', fontSize: '0.75rem' }} />
+                      <input type="text" value={step.actualParams || ''} placeholder={t('nbActualParams', lang)}
+                        onChange={e => { const next = [...proc.protocolSteps]; next[i] = { ...next[i], actualParams: e.target.value }; updateField('procedure.protocolSteps', next); }}
+                        className="flex-1 min-w-[120px]" style={{ padding: '3px 6px', fontSize: '0.75rem' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <textarea value={proc.freeText || ''} onChange={e => updateField('procedure.freeText', e.target.value)}
+            className="w-full" rows={8} placeholder={lang === 'zh' ? '自由记录实验步骤...' : 'Record experiment procedure...'} />
+        )}
+      </div>
+    ));
+  };
+
+  const renderResultsSection = () => {
+    const res = editingEntry?.results || { summary: '', dataProcessing: '', figures: [], backupStatus: '' };
+    return renderSection('results', '📊', 'nbResults', (
+      <div className="space-y-3">
+        <div>
+          <label>{t('nbSummary', lang)}</label>
+          <textarea value={res.summary || ''} onChange={e => updateField('results.summary', e.target.value)}
+            className="w-full" rows={3} placeholder={lang === 'zh' ? '实验结果总结...' : 'Summarize results...'} />
+        </div>
+        <div>
+          <label>{t('nbDataProcessing', lang)}</label>
+          <textarea value={res.dataProcessing || ''} onChange={e => updateField('results.dataProcessing', e.target.value)}
+            className="w-full" rows={2} placeholder={lang === 'zh' ? '数据处理方法和结果...' : 'Data processing methods and results...'} />
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="mb-0">{t('nbFigures', lang)}</label>
+            <button onClick={() => updateField('results.figures', [...(res.figures || []), { description: '', notes: '' }])}
+              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddFigure', lang)}</button>
+          </div>
+          {(res.figures || []).map((fig, i) => (
+            <div key={i} className="flex gap-2 mb-1.5 items-center">
+              <input type="text" value={fig.description} placeholder={t('nbFigureDesc', lang)}
+                onChange={e => { const next = [...res.figures]; next[i] = { ...next[i], description: e.target.value }; updateField('results.figures', next); }}
+                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
+              <input type="text" value={fig.notes} placeholder={t('nbFigureNotes', lang)}
+                onChange={e => { const next = [...res.figures]; next[i] = { ...next[i], notes: e.target.value }; updateField('results.figures', next); }}
+                style={{ width: '120px', padding: '4px 8px', fontSize: '0.82rem' }} />
+              <button onClick={() => updateField('results.figures', res.figures.filter((_, j) => j !== i))}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>×</button>
+            </div>
+          ))}
+        </div>
+        <div>
+          <label>{t('nbBackupStatus', lang)}</label>
+          <input type="text" value={res.backupStatus || ''} onChange={e => updateField('results.backupStatus', e.target.value)}
+            className="w-full" placeholder={lang === 'zh' ? '备份位置/状态...' : 'Backup location/status...'} />
+        </div>
+      </div>
+    ));
+  };
+
+  // Protocol import modal
+  const protocolImportModal = showProtocolImport && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
+        <h3 className="text-lg font-semibold mb-3">{t('nbImportProtocol', lang)}</h3>
+        <ProtocolSelector lang={lang} onSelect={handleImportProtocol} onClose={() => setShowProtocolImport(false)} />
+      </div>
+    </div>
+  );
+
+  // Sidebar
+  const sidebar = (
+    <div className="card card-scroll p-3" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <button onClick={handleNewEntry} className="btn-primary flex-1" style={{ padding: '6px 12px', fontSize: '0.82rem' }}>
+          + {t('nbNewEntry', lang)}
+        </button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => jsonInputRef.current?.click()} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbImportJson', lang)}>📥</button>
+          <input ref={jsonInputRef} type="file" accept=".json" onChange={handleImportJson} style={{ display: 'none' }} />
+        </div>
+        <button onClick={handleExportJson} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbExportJson', lang)}>📤</button>
+      </div>
+      <input type="search" value={search} onChange={e => setSearch(e.target.value)}
+        placeholder={t('nbSearch', lang)} className="w-full mb-2" style={{ padding: '5px 10px', fontSize: '0.82rem' }} />
+      <div className="flex gap-1 mb-3 flex-wrap">
+        {['all', 'planned', 'in-progress', 'completed', 'cancelled'].map(s => (
+          <button key={s} onClick={() => setStatusFilter(s)}
+            className="text-xs rounded-full px-2.5 py-0.5 font-medium transition-colors"
+            style={statusFilter === s
+              ? { background: 'var(--primary)', color: 'white' }
+              : { background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+            {s === 'all' ? t('nbAll', lang) : t('nbStatus' + s.replace(/-./g, m => m[1].toUpperCase()).replace(/^./, c => c.toUpperCase()), lang)}
+          </button>
+        ))}
+      </div>
+      {loading && <p className="text-sm text-center py-4" style={S_MUTED}>Loading...</p>}
+      {!loading && filteredEntries.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-2xl mb-2">📓</p>
+          <p className="text-sm" style={S_MUTED}>{t('nbNoEntries', lang)}</p>
+          <p className="text-xs mt-1" style={S_MUTED}>{t('nbNoEntriesHint', lang)}</p>
+        </div>
+      )}
+      <div className="space-y-1">
+        {filteredEntries.map(entry => {
+          const isSelected = entry.id === selectedId;
+          const title = lang === 'zh' ? (entry.titleZh || entry.title || '—') : (entry.title || '—');
+          return (
+            <button key={entry.id} onClick={() => { setSelectedId(entry.id); setEditingEntry(JSON.parse(JSON.stringify(entry))); if (isMobile) setMobileView('editor'); }}
+              className="w-full text-left px-3 py-2.5 rounded-lg transition-all"
+              style={{
+                background: isSelected ? 'var(--primary-light)' : 'transparent',
+                border: isSelected ? '1px solid var(--primary)' : '1px solid transparent',
+                color: 'var(--text)'
+              }}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs" style={{ color: statusColors[entry.status] || 'var(--text-muted)' }}>●</span>
+                <span className="text-sm font-medium truncate flex-1">{title || (lang === 'zh' ? '未命名' : 'Untitled')}</span>
+                <span className="text-xs">{priorityIcons[entry.priority] || ''}</span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5 ml-4">
+                <span className="text-xs mono" style={S_MUTED}>{entry.date || ''}</span>
+                {entry.protocolRef && <span className="text-xs px-1.5 py-0 rounded" style={S_PILL_PRIMARY}>📋</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Editor
+  const editor = editingEntry ? (
+    <div className="card card-scroll p-4" style={{ maxHeight: 'calc(100vh - 240px)' }}>
+      {isMobile && (
+        <button onClick={() => setMobileView('list')} className="mb-3 text-sm font-medium flex items-center gap-1" style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          ← {t('backNav', lang)}
+        </button>
+      )}
+      {/* Header fields */}
+      <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
+        <div>
+          <label>{t('nbEntryTitle', lang)}</label>
+          <input type="text" value={editingEntry.title || ''} onChange={e => updateField('title', e.target.value)}
+            className="w-full" placeholder={lang === 'zh' ? '实验标题 (EN)' : 'Experiment title'} />
+        </div>
+        <div>
+          <label>{t('nbEntryTitleZh', lang)}</label>
+          <input type="text" value={editingEntry.titleZh || ''} onChange={e => updateField('titleZh', e.target.value)}
+            className="w-full" placeholder={lang === 'zh' ? '中文标题' : 'Chinese title (optional)'} />
+        </div>
+        <div>
+          <label>{t('nbDate', lang)}</label>
+          <input type="date" value={editingEntry.date || ''} onChange={e => updateField('date', e.target.value)} className="w-full" />
+        </div>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label>{t('nbStartTime', lang)}</label>
+            <input type="time" value={editingEntry.startTime || ''} onChange={e => updateField('startTime', e.target.value)} className="w-full" />
+          </div>
+          <div style={{ width: 80 }}>
+            <label>{t('nbDuration', lang)}</label>
+            <input type="number" value={editingEntry.duration || ''} onChange={e => updateField('duration', parseInt(e.target.value) || 0)} className="w-full" min="0" />
+          </div>
+        </div>
+        <div>
+          <label>{t('nbStatus', lang)}</label>
+          <select value={editingEntry.status || 'planned'} onChange={e => updateField('status', e.target.value)} className="w-full">
+            <option value="planned">{t('nbStatusPlanned', lang)}</option>
+            <option value="in-progress">{t('nbStatusInProgress', lang)}</option>
+            <option value="completed">{t('nbStatusCompleted', lang)}</option>
+            <option value="cancelled">{t('nbStatusCancelled', lang)}</option>
+          </select>
+        </div>
+        <div>
+          <label>{t('nbPriority', lang)}</label>
+          <select value={editingEntry.priority || 'medium'} onChange={e => updateField('priority', e.target.value)} className="w-full">
+            <option value="high">{t('nbPriorityHigh', lang)}</option>
+            <option value="medium">{t('nbPriorityMedium', lang)}</option>
+            <option value="low">{t('nbPriorityLow', lang)}</option>
+          </select>
+        </div>
+      </div>
+      {editingEntry.protocolRef && (
+        <div className="mb-3 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
+          <span>📋</span>
+          <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEntry.protocolRef]?.name || editingEntry.protocolRef}</span>
+        </div>
+      )}
+      {/* 4 sections */}
+      {renderPlanSection()}
+      {renderMaterialsSection()}
+      {renderProcedureSection()}
+      {renderResultsSection()}
+      {/* Action buttons */}
+      <div className="flex gap-2 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--border)' }}>
+        <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>📄 {t('nbExportMd', lang)}</button>
+        <div className="flex-1" />
+        <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: '#ef4444' }}>
+          🗑️ {t('nbDeleteEntry', lang)}
+        </button>
+      </div>
+    </div>
+  ) : (
+    <div className="card p-8 flex flex-col items-center justify-center" style={{ minHeight: 400 }}>
+      <p className="text-3xl mb-3">📓</p>
+      <p className="text-sm" style={S_MUTED}>{t('nbSelectEntry', lang)}</p>
+    </div>
+  );
+
+  // Delete confirm
+  const deleteConfirmModal = showDeleteConfirm && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="card p-6 max-w-sm w-full" style={{ background: 'var(--card)' }}>
+        <p className="text-sm mb-4">{t('nbDeleteConfirm', lang)}</p>
+        <div className="flex gap-2 justify-end">
+          <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
+          <button onClick={handleDelete} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem', background: '#ef4444', borderColor: '#ef4444' }}>{t('nbDeleteEntry', lang)}</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold" style={S_TEXT}>{t('nbTitle', lang)}</h2>
+        <p className="text-sm mt-1" style={S_MUTED}>{t('nbSubtitle', lang)}</p>
+      </div>
+      {isMobile ? (
+        mobileView === 'list' ? sidebar : editor
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: '320px 1fr' }}>
+          {sidebar}
+          {editor}
+        </div>
+      )}
+      {protocolImportModal}
+      {deleteConfirmModal}
+    </div>
+  );
+}
+
+// Protocol selector sub-component (shared by Notebook and Calendar)
+function ProtocolSelector({ lang, onSelect, onClose }) {
+  const [search, setSearch] = useState('');
+  const filtered = useMemo(() => {
+    if (!search.trim()) return PROTOCOL_RECIPES;
+    const q = search.toLowerCase();
+    return PROTOCOL_RECIPES.filter(r =>
+      (r.name || '').toLowerCase().includes(q) ||
+      (r.nameZh || '').toLowerCase().includes(q) ||
+      (r.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }, [search]);
+  return (
+    <div>
+      <input type="search" value={search} onChange={e => setSearch(e.target.value)}
+        placeholder={lang === 'zh' ? '搜索方案...' : 'Search protocols...'}
+        className="w-full mb-3" style={{ padding: '6px 10px', fontSize: '0.82rem' }} />
+      <div className="space-y-1" style={{ maxHeight: 400, overflowY: 'auto' }}>
+        {filtered.map(r => (
+          <button key={r.id} onClick={() => onSelect(r)}
+            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:opacity-80"
+            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+            <span className="text-sm font-medium">{lang === 'zh' ? (r.nameZh || r.name) : r.name}</span>
+            {r.duration && <span className="text-xs ml-2" style={S_MUTED}>~{r.duration} min</span>}
+          </button>
+        ))}
+        {filtered.length === 0 && <p className="text-sm text-center py-4" style={S_MUTED}>{t('noResults', lang)}</p>}
+      </div>
+      <div className="mt-3 flex justify-end">
+        <button onClick={onClose} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// CALENDAR TAB
+// ═══════════════════════════════════════════════
+
+function CalendarTab({ onNavigateNotebook }) {
+  const lang = useLang();
+  const toast = useToast();
+  const { entries, loading, save, remove, reload } = useExperiments();
+  const [viewMode, setViewMode] = useState('month');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [showProtocolImport, setShowProtocolImport] = useState(false);
+  const [showIcsExport, setShowIcsExport] = useState(false);
+  const [icsRange, setIcsRange] = useState({ from: new Date().toISOString().slice(0, 10), to: '' });
+
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const monthNames = ['calJan','calFeb','calMar','calApr','calMay','calJun','calJul','calAug','calSep','calOct','calNov','calDec'];
+  const dayNames = ['calSun','calMon','calTue','calWed','calThu','calFri','calSat'];
+  const statusColors = { planned: '#6366f1', 'in-progress': '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' };
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const goToday = () => setCurrentDate(new Date());
+
+  const prevWeek = () => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; });
+  const nextWeek = () => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; });
+
+  // Get entries by date map
+  const entriesByDate = useMemo(() => {
+    const map = {};
+    entries.forEach(e => {
+      if (!e.date) return;
+      if (!map[e.date]) map[e.date] = [];
+      map[e.date].push(e);
+    });
+    return map;
+  }, [entries]);
+
+  const handleDayClick = (dateStr) => {
+    const entry = createEmptyExperiment(dateStr);
+    setEditingEvent(entry);
+    setShowEventForm(true);
+  };
+
+  const handleEventClick = (entry) => {
+    setEditingEvent(JSON.parse(JSON.stringify(entry)));
+    setShowEventForm(true);
+  };
+
+  const handleSaveEvent = async () => {
+    if (!editingEvent) return;
+    await save(editingEvent);
+    setShowEventForm(false);
+    setEditingEvent(null);
+    toast.show(lang === 'zh' ? '实验已保存' : 'Experiment saved', '✅');
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!editingEvent?.id) return;
+    await remove(editingEvent.id);
+    setShowEventForm(false);
+    setEditingEvent(null);
+    toast.show(lang === 'zh' ? '已删除' : 'Deleted', '🗑️');
+  };
+
+  const handleProtocolImport = (recipe) => {
+    const entry = createEmptyExperiment();
+    entry.protocolRef = recipe.id;
+    entry.title = lang === 'zh' ? (recipe.nameZh || recipe.name) : recipe.name;
+    entry.titleZh = recipe.nameZh || '';
+    entry.duration = recipe.duration || 60;
+    if (recipe.briefSteps || recipe.detailedSteps) {
+      entry.procedure = {
+        mode: 'template',
+        protocolSteps: (recipe.briefSteps || recipe.detailedSteps || []).map(s => ({
+          stepText: typeof s === 'string' ? s : (s.text || s.step || ''),
+          completed: false, deviation: '', actualParams: ''
+        })),
+        freeText: ''
+      };
+    }
+    if (recipe.materials) {
+      entry.materials.reagents = recipe.materials.map(m => ({
+        name: typeof m === 'string' ? m : (m.name || m.reagent || ''),
+        amount: m.amount || '', unit: m.unit || '', location: '', inventoryRef: null
+      }));
+    }
+    setEditingEvent(entry);
+    setShowProtocolImport(false);
+    setShowEventForm(true);
+  };
+
+  // .ics export
+  const generateICS = useCallback(() => {
+    const from = icsRange.from;
+    const to = icsRange.to || '9999-12-31';
+    const filtered = entries.filter(e => e.date && e.date >= from && e.date <= to);
+    if (filtered.length === 0) { toast.show(lang === 'zh' ? '无匹配实验' : 'No matching experiments', '⚠️'); return; }
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const formatDT = (dateStr, timeStr) => {
+      const [y, m, d] = dateStr.split('-');
+      const [h, min] = (timeStr || '09:00').split(':');
+      return `${y}${m}${d}T${pad(h)}${pad(min)}00`;
+    };
+
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BioinfoSpace LabMate//EN\r\nCALSCALE:GREGORIAN\r\n';
+    filtered.forEach(e => {
+      const dtStart = formatDT(e.date, e.startTime);
+      const dur = e.duration || 60;
+      const endH = Math.floor(((parseInt((e.startTime || '09:00').split(':')[0]) * 60) + parseInt((e.startTime || '09:00').split(':')[1]) + dur) / 60);
+      const endM = ((parseInt((e.startTime || '09:00').split(':')[0]) * 60) + parseInt((e.startTime || '09:00').split(':')[1]) + dur) % 60;
+      const dtEnd = formatDT(e.date, pad(endH) + ':' + pad(endM));
+      ics += 'BEGIN:VEVENT\r\n';
+      ics += `DTSTART:${dtStart}\r\n`;
+      ics += `DTEND:${dtEnd}\r\n`;
+      ics += `SUMMARY:${(e.title || 'Experiment').replace(/[,;\\]/g, ' ')}\r\n`;
+      ics += `UID:${e.id}@labmate.bioinfospace.com\r\n`;
+      if (e.plan?.objectives) ics += `DESCRIPTION:${e.plan.objectives.replace(/\n/g, '\\n').replace(/[,;\\]/g, ' ')}\r\n`;
+      ics += `STATUS:${e.status === 'completed' ? 'CONFIRMED' : e.status === 'cancelled' ? 'CANCELLED' : 'TENTATIVE'}\r\n`;
+      ics += 'END:VEVENT\r\n';
+    });
+    ics += 'END:VCALENDAR\r\n';
+
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `labmate_calendar_${from}.ics`; a.click();
+    URL.revokeObjectURL(url);
+    setShowIcsExport(false);
+    toast.show(t('calIcsExported', lang), '📅');
+  }, [entries, icsRange, lang, toast]);
+
+  // --- Month View ---
+  const renderMonthView = () => {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date().toISOString().slice(0, 10);
+    const cells = [];
+
+    for (let i = 0; i < firstDay; i++) cells.push(<div key={'empty-' + i} className="p-1 min-h-[60px]" />);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayEntries = entriesByDate[dateStr] || [];
+      const isToday = dateStr === today;
+      cells.push(
+        <div key={d} onClick={() => handleDayClick(dateStr)}
+          className="p-1 min-h-[60px] rounded-lg cursor-pointer transition-colors"
+          style={{
+            border: isToday ? '2px solid var(--primary)' : '1px solid var(--border)',
+            background: isToday ? 'var(--primary-light)' : 'var(--card)',
+          }}>
+          <div className="text-xs font-semibold mb-0.5" style={{ color: isToday ? 'var(--primary)' : 'var(--text-muted)' }}>{d}</div>
+          {dayEntries.slice(0, 3).map(e => (
+            <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
+              className="text-xs px-1 py-0.5 rounded mb-0.5 truncate cursor-pointer transition-opacity hover:opacity-80"
+              style={{ background: e.color || statusColors[e.status] || '#6366f1', color: 'white', fontSize: '0.65rem' }}>
+              {lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}
+            </div>
+          ))}
+          {dayEntries.length > 3 && <div className="text-xs" style={S_MUTED}>+{dayEntries.length - 3}</div>}
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
+          {dayNames.map(d => <div key={d} className="text-center text-xs font-semibold py-1.5" style={S_MUTED}>{t(d, lang)}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">{cells}</div>
+      </div>
+    );
+  };
+
+  // --- Week View ---
+  const renderWeekView = () => {
+    const start = new Date(currentDate);
+    start.setDate(start.getDate() - start.getDay());
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const hours = Array.from({ length: 13 }, (_, i) => i + 7); // 7am to 7pm
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="grid" style={{ gridTemplateColumns: `50px repeat(7, 1fr)`, minWidth: isMobile ? '600px' : 'auto' }}>
+          {/* Header row */}
+          <div />
+          {days.map(d => {
+            const dateStr = d.toISOString().slice(0, 10);
+            const isToday = dateStr === today;
+            return (
+              <div key={dateStr} className="text-center py-1.5 text-xs font-semibold"
+                style={{ color: isToday ? 'var(--primary)' : 'var(--text-muted)', background: isToday ? 'var(--primary-light)' : 'transparent', borderRadius: 'var(--radius)' }}>
+                {t(dayNames[d.getDay()], lang)} {d.getDate()}
+              </div>
+            );
+          })}
+          {/* Time slots */}
+          {hours.map(h => (
+            <React.Fragment key={h}>
+              <div className="text-xs text-right pr-2 py-2" style={S_MUTED}>{h}:00</div>
+              {days.map(d => {
+                const dateStr = d.toISOString().slice(0, 10);
+                const dayEntries = (entriesByDate[dateStr] || []).filter(e => {
+                  const startH = parseInt((e.startTime || '09:00').split(':')[0]);
+                  return startH === h;
+                });
+                return (
+                  <div key={dateStr + h} onClick={() => { const entry = createEmptyExperiment(dateStr, `${String(h).padStart(2, '0')}:00`); setEditingEvent(entry); setShowEventForm(true); }}
+                    className="py-1 px-0.5 cursor-pointer transition-colors min-h-[36px]"
+                    style={{ borderTop: '1px solid var(--border)' }}>
+                    {dayEntries.map(e => (
+                      <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
+                        className="text-xs px-1.5 py-1 rounded mb-0.5 cursor-pointer transition-opacity hover:opacity-80"
+                        style={{ background: e.color || statusColors[e.status] || '#6366f1', color: 'white', fontSize: '0.7rem' }}>
+                        <div className="font-medium truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</div>
+                        <div className="opacity-75">{e.startTime} · {e.duration}m</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Event form modal
+  const eventFormModal = showEventForm && editingEvent && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="card p-6 w-full max-w-md max-h-[85vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
+        <h3 className="text-lg font-semibold mb-4">{t('calEventForm', lang)}</h3>
+        <div className="space-y-3">
+          <div>
+            <label>{t('nbEntryTitle', lang)}</label>
+            <input type="text" value={editingEvent.title || ''} onChange={e => setEditingEvent(prev => ({ ...prev, title: e.target.value }))}
+              className="w-full" placeholder={lang === 'zh' ? '实验标题' : 'Experiment title'} />
+          </div>
+          <div>
+            <label>{t('nbEntryTitleZh', lang)}</label>
+            <input type="text" value={editingEvent.titleZh || ''} onChange={e => setEditingEvent(prev => ({ ...prev, titleZh: e.target.value }))}
+              className="w-full" placeholder={lang === 'zh' ? '中文标题' : 'Chinese title'} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label>{t('nbDate', lang)}</label>
+              <input type="date" value={editingEvent.date || ''} onChange={e => setEditingEvent(prev => ({ ...prev, date: e.target.value }))} className="w-full" />
+            </div>
+            <div>
+              <label>{t('nbStartTime', lang)}</label>
+              <input type="time" value={editingEvent.startTime || ''} onChange={e => setEditingEvent(prev => ({ ...prev, startTime: e.target.value }))} className="w-full" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label>{t('nbDuration', lang)}</label>
+              <input type="number" value={editingEvent.duration || ''} onChange={e => setEditingEvent(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} className="w-full" min="0" />
+            </div>
+            <div>
+              <label>{t('calColor', lang)}</label>
+              <div className="flex gap-1.5 mt-1 flex-wrap">
+                {['#1D9E75', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'].map(c => (
+                  <button key={c} onClick={() => setEditingEvent(prev => ({ ...prev, color: c }))}
+                    style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: editingEvent.color === c ? '3px solid var(--text)' : '2px solid var(--border)', cursor: 'pointer', transition: 'transform 0.15s' }} />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label>{t('nbStatus', lang)}</label>
+              <select value={editingEvent.status || 'planned'} onChange={e => setEditingEvent(prev => ({ ...prev, status: e.target.value }))} className="w-full">
+                <option value="planned">{t('nbStatusPlanned', lang)}</option>
+                <option value="in-progress">{t('nbStatusInProgress', lang)}</option>
+                <option value="completed">{t('nbStatusCompleted', lang)}</option>
+                <option value="cancelled">{t('nbStatusCancelled', lang)}</option>
+              </select>
+            </div>
+            <div>
+              <label>{t('nbPriority', lang)}</label>
+              <select value={editingEvent.priority || 'medium'} onChange={e => setEditingEvent(prev => ({ ...prev, priority: e.target.value }))} className="w-full">
+                <option value="high">{t('nbPriorityHigh', lang)}</option>
+                <option value="medium">{t('nbPriorityMedium', lang)}</option>
+                <option value="low">{t('nbPriorityLow', lang)}</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label>{t('nbObjectives', lang)}</label>
+            <textarea value={editingEvent.plan?.objectives || ''} onChange={e => setEditingEvent(prev => ({ ...prev, plan: { ...prev.plan, objectives: e.target.value } }))}
+              className="w-full" rows={2} placeholder={lang === 'zh' ? '简述实验目的...' : 'Brief objectives...'} />
+          </div>
+          {editingEvent.protocolRef && (
+            <div className="px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
+              <span>📋</span>
+              <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEvent.protocolRef]?.name || editingEvent.protocolRef}</span>
+            </div>
+          )}
+        </div>
+        <div className="flex gap-2 mt-5 justify-between">
+          <button onClick={handleDeleteEvent} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.82rem', color: '#ef4444' }}>
+            🗑️ {t('calDeleteEvent', lang)}
+          </button>
+          <div className="flex gap-2">
+            <button onClick={() => { setShowEventForm(false); setEditingEvent(null); }} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
+            <button onClick={handleSaveEvent} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbSave', lang)}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ICS export modal
+  const icsExportModal = showIcsExport && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="card p-6 max-w-sm w-full" style={{ background: 'var(--card)' }}>
+        <h3 className="text-lg font-semibold mb-3">{t('calExportIcs', lang)}</h3>
+        <div className="space-y-3">
+          <div>
+            <label>{t('calIcsFrom', lang)}</label>
+            <input type="date" value={icsRange.from} onChange={e => setIcsRange(prev => ({ ...prev, from: e.target.value }))} className="w-full" />
+          </div>
+          <div>
+            <label>{t('calIcsTo', lang)}</label>
+            <input type="date" value={icsRange.to} onChange={e => setIcsRange(prev => ({ ...prev, to: e.target.value }))} className="w-full" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4 justify-end">
+          <button onClick={() => setShowIcsExport(false)} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
+          <button onClick={generateICS} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('calExportIcs', lang)}</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const protocolImportModal = showProtocolImport && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
+      <div className="card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
+        <h3 className="text-lg font-semibold mb-3">{t('calImportProtocol', lang)}</h3>
+        <ProtocolSelector lang={lang} onSelect={handleProtocolImport} onClose={() => setShowProtocolImport(false)} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold" style={S_TEXT}>{t('calTitle', lang)}</h2>
+        <p className="text-sm mt-1" style={S_MUTED}>{t('calSubtitle', lang)}</p>
+      </div>
+
+      {/* Toolbar */}
+      <div className="card p-3 mb-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex gap-1">
+            <button onClick={() => setViewMode('month')}
+              className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+              {t('calMonthView', lang)}
+            </button>
+            <button onClick={() => setViewMode('week')}
+              className={viewMode === 'week' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+              {t('calWeekView', lang)}
+            </button>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={viewMode === 'month' ? prevMonth : prevWeek}
+              className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>‹</button>
+            <span className="text-sm font-semibold px-2 min-w-[140px] text-center" style={S_TEXT}>
+              {t(monthNames[month], lang)} {year}
+            </span>
+            <button onClick={viewMode === 'month' ? nextMonth : nextWeek}
+              className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>›</button>
+          </div>
+          <button onClick={goToday} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
+            {t('calToday', lang)}
+          </button>
+          <div className="flex-1" />
+          <button onClick={() => setShowProtocolImport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
+            📋 {t('calImportProtocol', lang)}
+          </button>
+          <button onClick={() => setShowIcsExport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
+            📅 {t('calExportIcs', lang)}
+          </button>
+          <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
+            className="btn-primary" style={{ padding: '5px 12px', fontSize: '0.82rem' }}>
+            + {t('calNewEvent', lang)}
+          </button>
+        </div>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="card p-4">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
+          </div>
+        ) : viewMode === 'month' ? renderMonthView() : renderWeekView()}
+      </div>
+
+      {/* Upcoming list */}
+      {entries.length > 0 && (
+        <div className="card p-4 mt-4">
+          <h3 className="text-lg font-semibold mb-3" style={S_TEXT}>
+            {lang === 'zh' ? '即将进行' : 'Upcoming'}
+          </h3>
+          <div className="space-y-1.5">
+            {entries
+              .filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled')
+              .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+              .slice(0, 8)
+              .map(e => (
+                <div key={e.id} onClick={() => handleEventClick(e)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+                  style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || '#6366f1' }} />
+                  <span className="text-sm font-medium flex-1 truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</span>
+                  <span className="text-xs mono" style={S_MUTED}>{e.date}</span>
+                  <span className="text-xs" style={S_MUTED}>{e.startTime || ''}</span>
+                </div>
+              ))}
+            {entries.filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled').length === 0 && (
+              <p className="text-sm text-center py-4" style={S_MUTED}>{t('calNoEvents', lang)}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {eventFormModal}
+      {icsExportModal}
+      {protocolImportModal}
+    </div>
+  );
+}
+
 // MAIN APP
 function App() {
   const [recipesReady, setRecipesReady] = useState(_recipesLoaded);
@@ -7475,6 +8770,8 @@ function App() {
         {activeTab === 'plate' && <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate"><ErrorBoundary><PlateTab /></ErrorBoundary></div>}
         {activeTab === 'tools' && <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools"><ErrorBoundary><ToolsTab /></ErrorBoundary></div>}
         {activeTab === 'inventory' && <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory"><ErrorBoundary><InventoryTab /></ErrorBoundary></div>}
+        {activeTab === 'notebook' && <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook"><ErrorBoundary><NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} /></ErrorBoundary></div>}
+        {activeTab === 'calendar' && <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar"><ErrorBoundary><CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} /></ErrorBoundary></div>}
         {activeTab === 'refs' && <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs"><ErrorBoundary><RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); setShowOnboarding(true); }} /></ErrorBoundary></div>}
       </main>
       <footer className="text-center py-8 text-xs border-t" style={{color:'var(--text-muted)', borderColor:'var(--border)'}}>
