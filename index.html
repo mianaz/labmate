@@ -2540,7 +2540,7 @@ const REFERENCES = [
 // --- Header ---
 function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme }) {
   const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','notebook','calendar','refs'];
-  const tabIcons = { notebook: '📓', calendar: '📅' };
+  const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', notebook:'tabNotebook', calendar:'tabCalendar', refs:'tabRefs' };
 
   return (
@@ -7652,7 +7652,7 @@ function NotebookTab({ onNavigateCalendar }) {
     setEditingEntry(next);
     autoSave(next);
     setShowProtocolImport(false);
-    toast.show(lang === 'zh' ? '已从方案导入' : 'Imported from protocol', '📋');
+    toast.show(lang === 'zh' ? '已从方案导入' : 'Imported from protocol');
   }, [editingEntry, lang, autoSave, toast]);
 
   const exportMarkdown = useCallback(() => {
@@ -7683,7 +7683,7 @@ function NotebookTab({ onNavigateCalendar }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `experiment_${e.date || 'entry'}_${e.id.slice(-6)}.md`; a.click();
     URL.revokeObjectURL(url);
-    toast.show(t('downloaded', lang), '📄');
+    toast.show(t('downloaded', lang));
   }, [editingEntry, lang, toast]);
 
   const handleExportJson = useCallback(async () => {
@@ -7692,7 +7692,7 @@ function NotebookTab({ onNavigateCalendar }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `labmate_experiments_${new Date().toISOString().slice(0, 10)}.json`; a.click();
     URL.revokeObjectURL(url);
-    toast.show(t('downloaded', lang), '📦');
+    toast.show(t('downloaded', lang));
   }, [lang, toast]);
 
   const handleImportJson = useCallback(async (e) => {
@@ -7702,7 +7702,7 @@ function NotebookTab({ onNavigateCalendar }) {
       const text = await file.text();
       const count = await importExperimentsJSON(text);
       await reload();
-      toast.show((lang === 'zh' ? '已导入 ' : 'Imported ') + count + (lang === 'zh' ? ' 条记录' : ' entries'), '📦');
+      toast.show((lang === 'zh' ? '已导入 ' : 'Imported ') + count + (lang === 'zh' ? ' 条记录' : ' entries'));
     } catch (err) {
       toast.show(lang === 'zh' ? '导入失败' : 'Import failed', '❌');
     }
@@ -7718,7 +7718,7 @@ function NotebookTab({ onNavigateCalendar }) {
       <button onClick={() => toggleSection(key)}
         className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-left font-semibold text-sm transition-colors"
         style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>
-        <span>{icon}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{icon}</span>
         <span className="flex-1">{t(labelKey, lang)}</span>
         <span style={{ transform: expandedSections[key] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '0.7rem' }}>▼</span>
       </button>
@@ -7726,7 +7726,7 @@ function NotebookTab({ onNavigateCalendar }) {
     </div>
   );
 
-  const renderPlanSection = () => renderSection('plan', '📋', 'nbPlan', (
+  const renderPlanSection = () => renderSection('plan', '1', 'nbPlan', (
     <div className="space-y-3">
       <div>
         <label>{t('nbObjectives', lang)}</label>
@@ -7745,7 +7745,7 @@ function NotebookTab({ onNavigateCalendar }) {
     const reagents = editingEntry?.materials?.reagents || [];
     const equipment = editingEntry?.materials?.equipment || [];
     const checklist = editingEntry?.materials?.checklist || [];
-    return renderSection('materials', '🧪', 'nbMaterials', (
+    return renderSection('materials', '2', 'nbMaterials', (
       <div className="space-y-4">
         {/* Reagents */}
         <div>
@@ -7823,7 +7823,7 @@ function NotebookTab({ onNavigateCalendar }) {
 
   const renderProcedureSection = () => {
     const proc = editingEntry?.procedure || { mode: 'freetext', protocolSteps: [], freeText: '' };
-    return renderSection('procedure', '📝', 'nbProcedure', (
+    return renderSection('procedure', '3', 'nbProcedure', (
       <div className="space-y-3">
         <div className="flex gap-2 items-center flex-wrap">
           <button onClick={() => updateField('procedure.mode', 'template')}
@@ -7837,7 +7837,7 @@ function NotebookTab({ onNavigateCalendar }) {
           {proc.mode === 'template' && (
             <button onClick={() => setShowProtocolImport(true)}
               className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
-              📋 {t('nbImportProtocol', lang)}
+              {t('nbImportProtocol', lang)}
             </button>
           )}
         </div>
@@ -7885,7 +7885,7 @@ function NotebookTab({ onNavigateCalendar }) {
 
   const renderResultsSection = () => {
     const res = editingEntry?.results || { summary: '', dataProcessing: '', figures: [], backupStatus: '' };
-    return renderSection('results', '📊', 'nbResults', (
+    return renderSection('results', '4', 'nbResults', (
       <div className="space-y-3">
         <div>
           <label>{t('nbSummary', lang)}</label>
@@ -7943,7 +7943,7 @@ function NotebookTab({ onNavigateCalendar }) {
           + {t('nbNewEntry', lang)}
         </button>
         <div style={{ position: 'relative' }}>
-          <button onClick={() => jsonInputRef.current?.click()} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbImportJson', lang)}>📥</button>
+          <button onClick={() => jsonInputRef.current?.click()} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbImportJson', lang)}>↓</button>
           <input ref={jsonInputRef} type="file" accept=".json" onChange={handleImportJson} style={{ display: 'none' }} />
         </div>
         <button onClick={handleExportJson} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbExportJson', lang)}>📤</button>
@@ -7964,7 +7964,7 @@ function NotebookTab({ onNavigateCalendar }) {
       {loading && <p className="text-sm text-center py-4" style={S_MUTED}>Loading...</p>}
       {!loading && filteredEntries.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-2xl mb-2">📓</p>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{margin:'0 auto 8px'}}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
           <p className="text-sm" style={S_MUTED}>{t('nbNoEntries', lang)}</p>
           <p className="text-xs mt-1" style={S_MUTED}>{t('nbNoEntriesHint', lang)}</p>
         </div>
@@ -7988,7 +7988,7 @@ function NotebookTab({ onNavigateCalendar }) {
               </div>
               <div className="flex items-center gap-2 mt-0.5 ml-4">
                 <span className="text-xs mono" style={S_MUTED}>{entry.date || ''}</span>
-                {entry.protocolRef && <span className="text-xs px-1.5 py-0 rounded" style={S_PILL_PRIMARY}>📋</span>}
+                {entry.protocolRef && <span className="text-xs px-1.5 py-0 rounded" style={S_PILL_PRIMARY}>•</span>}
               </div>
             </button>
           );
@@ -8051,7 +8051,7 @@ function NotebookTab({ onNavigateCalendar }) {
       </div>
       {editingEntry.protocolRef && (
         <div className="mb-3 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
-          <span>📋</span>
+          <span>→</span>
           <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEntry.protocolRef]?.name || editingEntry.protocolRef}</span>
         </div>
       )}
@@ -8062,7 +8062,7 @@ function NotebookTab({ onNavigateCalendar }) {
       {renderResultsSection()}
       {/* Action buttons */}
       <div className="flex gap-2 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--border)' }}>
-        <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>📄 {t('nbExportMd', lang)}</button>
+        <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>{t('nbExportMd', lang)}</button>
         <div className="flex-1" />
         <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: '#ef4444' }}>
           🗑️ {t('nbDeleteEntry', lang)}
@@ -8071,7 +8071,7 @@ function NotebookTab({ onNavigateCalendar }) {
     </div>
   ) : (
     <div className="card p-8 flex flex-col items-center justify-center" style={{ minHeight: 400 }}>
-      <p className="text-3xl mb-3">📓</p>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{margin:'0 auto 12px'}}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       <p className="text-sm" style={S_MUTED}>{t('nbSelectEntry', lang)}</p>
     </div>
   );
@@ -8284,7 +8284,7 @@ function CalendarTab({ onNavigateNotebook }) {
     const a = document.createElement('a'); a.href = url; a.download = `labmate_calendar_${from}.ics`; a.click();
     URL.revokeObjectURL(url);
     setShowIcsExport(false);
-    toast.show(t('calIcsExported', lang), '📅');
+    toast.show(t('calIcsExported', lang));
   }, [entries, icsRange, lang, toast]);
 
   // --- Month View ---
@@ -8457,7 +8457,7 @@ function CalendarTab({ onNavigateNotebook }) {
           </div>
           {editingEvent.protocolRef && (
             <div className="px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
-              <span>📋</span>
+              <span>→</span>
               <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEvent.protocolRef]?.name || editingEvent.protocolRef}</span>
             </div>
           )}
@@ -8541,10 +8541,10 @@ function CalendarTab({ onNavigateNotebook }) {
           </button>
           <div className="flex-1" />
           <button onClick={() => setShowProtocolImport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-            📋 {t('calImportProtocol', lang)}
+            {t('calImportProtocol', lang)}
           </button>
           <button onClick={() => setShowIcsExport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-            📅 {t('calExportIcs', lang)}
+            {t('calExportIcs', lang)}
           </button>
           <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
             className="btn-primary" style={{ padding: '5px 12px', fontSize: '0.82rem' }}>
