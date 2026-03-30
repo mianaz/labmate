@@ -7592,7 +7592,7 @@ function NotebookTab({ onNavigateCalendar }) {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
       await save(entry);
-      toast.show(t('nbAutoSaved', lang), '💾');
+      toast.show(t('nbAutoSaved', lang));
     }, 1500);
   }, [save, lang, toast]);
 
@@ -7623,7 +7623,7 @@ function NotebookTab({ onNavigateCalendar }) {
     setSelectedId(null);
     setEditingEntry(null);
     setShowDeleteConfirm(false);
-    toast.show(lang === 'zh' ? '记录已删除' : 'Entry deleted', '🗑️');
+    toast.show(lang === 'zh' ? '记录已删除' : 'Entry deleted');
   }, [selectedId, remove, lang, toast]);
 
   const handleImportProtocol = useCallback((recipe) => {
@@ -7704,13 +7704,13 @@ function NotebookTab({ onNavigateCalendar }) {
       await reload();
       toast.show((lang === 'zh' ? '已导入 ' : 'Imported ') + count + (lang === 'zh' ? ' 条记录' : ' entries'));
     } catch (err) {
-      toast.show(lang === 'zh' ? '导入失败' : 'Import failed', '❌');
+      toast.show(lang === 'zh' ? '导入失败' : 'Import failed');
     }
     e.target.value = '';
   }, [reload, lang, toast]);
 
   const statusColors = { planned: '#6366f1', 'in-progress': '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' };
-  const priorityIcons = { high: '🔴', medium: '🟡', low: '🟢' };
+  const priorityColors = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
 
   // --- Section renderers ---
   const renderSection = (key, icon, labelKey, content) => (
@@ -7946,7 +7946,7 @@ function NotebookTab({ onNavigateCalendar }) {
           <button onClick={() => jsonInputRef.current?.click()} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbImportJson', lang)}>↓</button>
           <input ref={jsonInputRef} type="file" accept=".json" onChange={handleImportJson} style={{ display: 'none' }} />
         </div>
-        <button onClick={handleExportJson} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbExportJson', lang)}>📤</button>
+        <button onClick={handleExportJson} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbExportJson', lang)}>↑</button>
       </div>
       <input type="search" value={search} onChange={e => setSearch(e.target.value)}
         placeholder={t('nbSearch', lang)} className="w-full mb-2" style={{ padding: '5px 10px', fontSize: '0.82rem' }} />
@@ -7984,7 +7984,7 @@ function NotebookTab({ onNavigateCalendar }) {
               <div className="flex items-center gap-2">
                 <span className="text-xs" style={{ color: statusColors[entry.status] || 'var(--text-muted)' }}>●</span>
                 <span className="text-sm font-medium truncate flex-1">{title || (lang === 'zh' ? '未命名' : 'Untitled')}</span>
-                <span className="text-xs">{priorityIcons[entry.priority] || ''}</span>
+                <span className="text-xs" style={{ color: priorityColors[entry.priority] || 'var(--text-muted)' }}>●</span>
               </div>
               <div className="flex items-center gap-2 mt-0.5 ml-4">
                 <span className="text-xs mono" style={S_MUTED}>{entry.date || ''}</span>
@@ -8065,7 +8065,7 @@ function NotebookTab({ onNavigateCalendar }) {
         <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>{t('nbExportMd', lang)}</button>
         <div className="flex-1" />
         <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: '#ef4444' }}>
-          🗑️ {t('nbDeleteEntry', lang)}
+          {t('nbDeleteEntry', lang)}
         </button>
       </div>
     </div>
@@ -8209,7 +8209,7 @@ function CalendarTab({ onNavigateNotebook }) {
     await save(editingEvent);
     setShowEventForm(false);
     setEditingEvent(null);
-    toast.show(lang === 'zh' ? '实验已保存' : 'Experiment saved', '✅');
+    toast.show(lang === 'zh' ? '实验已保存' : 'Experiment saved');
   };
 
   const handleDeleteEvent = async () => {
@@ -8217,7 +8217,7 @@ function CalendarTab({ onNavigateNotebook }) {
     await remove(editingEvent.id);
     setShowEventForm(false);
     setEditingEvent(null);
-    toast.show(lang === 'zh' ? '已删除' : 'Deleted', '🗑️');
+    toast.show(lang === 'zh' ? '已删除' : 'Deleted');
   };
 
   const handleProtocolImport = (recipe) => {
@@ -8464,7 +8464,7 @@ function CalendarTab({ onNavigateNotebook }) {
         </div>
         <div className="flex gap-2 mt-5 justify-between">
           <button onClick={handleDeleteEvent} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.82rem', color: '#ef4444' }}>
-            🗑️ {t('calDeleteEvent', lang)}
+            {t('calDeleteEvent', lang)}
           </button>
           <div className="flex gap-2">
             <button onClick={() => { setShowEventForm(false); setEditingEvent(null); }} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
