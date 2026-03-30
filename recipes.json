@@ -3230,7 +3230,8 @@
           "zh": "RNA 沉淀在 75% 乙醇中可 -80°C 保存数月"
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "wb_protocol",
@@ -3494,7 +3495,8 @@
           "zh": "可 4°C 过夜孵育（推荐用于多数抗体）"
         }
       }
-    ]
+    ],
+    "duration": 480
   },
   {
     "id": "if_protocol",
@@ -3705,7 +3707,8 @@
           "zh": "#1.5 厚度，适合共聚焦"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "chip_protocol",
@@ -3968,7 +3971,8 @@
           "zh": "剪切后染色质可 -80°C 保存数周"
         }
       }
-    ]
+    ],
+    "duration": 720
   },
   {
     "id": "coip_protocol",
@@ -4140,7 +4144,8 @@
           "zh": "裂解液可 -80°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 360
   },
   {
     "id": "qpcr_protocol",
@@ -4346,7 +4351,8 @@
           "zh": "cDNA 可 -20°C 保存数月"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "cell_transfection",
@@ -4515,7 +4521,8 @@
           "zh": "转染后恢复培养用"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "flow_cytometry_protocol",
@@ -4709,7 +4716,8 @@
           "zh": "固定后的细胞可 4°C 保存最多一周"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "mops_running_buffer",
@@ -4977,7 +4985,8 @@
           "zh": "用于备份划线"
         }
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "glycerol_stock",
@@ -5284,7 +5293,8 @@
           "zh": "速冻用"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "2yt_media",
@@ -5799,7 +5809,8 @@
           "zh": "可选"
         }
       }
-    ]
+    ],
+    "duration": 15
   },
   {
     "id": "edta_trypsin",
@@ -6361,7 +6372,8 @@
           "zh": ""
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "heat_shock_transformation",
@@ -6522,7 +6534,8 @@
           "zh": "高纯度, 1–50 ng"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "agarose_gel_electrophoresis",
@@ -6734,7 +6747,8 @@
           "zh": ""
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "mes_running_buffer",
@@ -7690,7 +7704,8 @@
           "zh": "DNA 沉淀在 70% 乙醇中可 -20°C 保存数月"
         }
       }
-    ]
+    ],
+    "duration": 45
   },
   {
     "id": "mtt_assay",
@@ -7857,7 +7872,8 @@
           "zh": "570 nm 波长"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "scratch_assay",
@@ -8013,7 +8029,8 @@
           "zh": "抑制增殖"
         }
       }
-    ]
+    ],
+    "duration": 30
   },
   {
     "id": "cell_freezing",
@@ -8189,7 +8206,8 @@
           "zh": "细胞可在 -80°C 保存最多 3 个月，但建议转入液氮以保持长期活力"
         }
       }
-    ]
+    ],
+    "duration": 30
   },
   {
     "id": "cell_thawing",
@@ -8334,7 +8352,8 @@
           "zh": "预热培养基"
         }
       }
-    ]
+    ],
+    "duration": 30
   },
   {
     "id": "electroporation",
@@ -8511,7 +8530,8 @@
           "zh": "未接触 DNA 的电转感受态细胞可重新冻存，但效率会降低"
         }
       }
-    ]
+    ],
+    "duration": 45
   },
   {
     "id": "lentivirus_production",
@@ -8721,7 +8741,8 @@
           "zh": "过滤后的病毒可分装并液氮速冻。-80°C 保存（每次冻融滴度下降约 50%）"
         }
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "gibson_assembly",
@@ -8861,7 +8882,8 @@
         "name": "LB Agar + Antibiotic",
         "linkedRecipe": "lb_agar"
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "site_directed_mutagenesis",
@@ -9022,7 +9044,8 @@
         "name": "LB Agar + Antibiotic",
         "linkedRecipe": "lb_agar"
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "transwell_migration",
@@ -9195,7 +9218,8 @@
           "zh": "去除未迁移细胞"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "mycoplasma_pcr",
@@ -9347,7 +9371,8 @@
           "zh": ""
         }
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "polybrene_stock",
@@ -10000,7 +10025,8 @@
         }
       }
     ],
-    "safeStops": []
+    "safeStops": [],
+    "duration": 120
   },
   {
     "id": "bacterial_glycerol_stock",
@@ -10157,7 +10183,8 @@
           "zh": "甘油菌 -80°C 可保存 >10 年"
         }
       }
-    ]
+    ],
+    "duration": 15
   },
   {
     "id": "bca_protein_assay",
@@ -10297,7 +10324,8 @@
         }
       }
     ],
-    "safeStops": []
+    "safeStops": [],
+    "duration": 90
   },
   {
     "id": "cck8_proliferation",
@@ -10457,7 +10485,8 @@
           "zh": "细胞过夜贴壁后再处理"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "cell_counting_hemocytometer",
@@ -10587,7 +10616,8 @@
         "linkedRecipe": "pbs_1x"
       }
     ],
-    "safeStops": []
+    "safeStops": [],
+    "duration": 15
   },
   {
     "id": "cell_cycle_pi",
@@ -10729,7 +10759,8 @@
           "zh": "70% 乙醇固定的细胞可在 -20°C 保存数周"
         }
       }
-    ]
+    ],
+    "duration": 150
   },
   {
     "id": "cell_passage",
@@ -10879,7 +10910,8 @@
         }
       }
     ],
-    "safeStops": []
+    "safeStops": [],
+    "duration": 30
   },
   {
     "id": "chromatin_accessibility_atac",
@@ -11058,7 +11090,8 @@
           "zh": "纯化后的文库可 -20°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 360
   },
   {
     "id": "clonogenic_assay",
@@ -11221,7 +11254,8 @@
           "zh": "固定染色后的板可室温干燥保存"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "comet_assay",
@@ -11398,7 +11432,8 @@
           "zh": "裂解液中的玻片可在 4°C 保存至多 1 周"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "coomassie_staining",
@@ -11548,7 +11583,8 @@
           "zh": "染色凝胶在 7% 乙酸中 4°C 可保存数周"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "crispr_sgrna_cloning",
@@ -11747,7 +11783,8 @@
           "zh": "小提质粒 -20°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "dna_ligation",
@@ -11927,7 +11964,8 @@
           "zh": "热灭活后的连接产物可 -20°C 保存数周"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "dual_luciferase",
@@ -12100,7 +12138,8 @@
           "zh": "PLB 裂解液可 -80°C 保存（但新鲜最佳）"
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "elisa_sandwich",
@@ -12305,7 +12344,8 @@
           "zh": "封闭后的板密封 4°C 可过夜保存"
         }
       }
-    ]
+    ],
+    "duration": 300
   },
   {
     "id": "ethanol_precipitation",
@@ -12488,7 +12528,8 @@
           "zh": "沉淀在70%乙醇中可 −20°C 保存数周"
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "gel_extraction",
@@ -12686,7 +12727,8 @@
           "zh": "溶解在QG缓冲液中的胶可 −20°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 45
   },
   {
     "id": "genomic_dna_extraction",
@@ -12869,7 +12911,8 @@
           "zh": "DNA沉淀在70%乙醇中可 −20°C 保存数周"
         }
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "immunoprecipitation",
@@ -13069,7 +13112,8 @@
           "zh": "抗体-裂解液 4°C 过夜孵育（标准操作）"
         }
       }
-    ]
+    ],
+    "duration": 300
   },
   {
     "id": "northern_blot",
@@ -13317,7 +13361,8 @@
           "zh": "洗涤后的膜可用保鲜膜包裹后延后曝光"
         }
       }
-    ]
+    ],
+    "duration": 480
   },
   {
     "id": "pcr_standard",
@@ -13498,7 +13543,8 @@
           "zh": "PCR产物 4°C 过夜稳定；长期保存 −20°C"
         }
       }
-    ]
+    ],
+    "duration": 120
   },
   {
     "id": "plasmid_maxiprep",
@@ -13757,7 +13803,8 @@
           "zh": "DNA沉淀在70%乙醇中可 −20°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "proximity_ligation_assay",
@@ -13948,7 +13995,8 @@
           "zh": "一抗 4°C 过夜孵育（标准操作）"
         }
       }
-    ]
+    ],
+    "duration": 360
   },
   {
     "id": "restriction_digest",
@@ -14125,7 +14173,8 @@
           "zh": "热灭活后的酶切产物可 −20°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "rna_column_extraction",
@@ -14321,7 +14370,8 @@
           "zh": "纯化RNA应 −80°C 保存；避免反复冻融"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "soft_agar_assay",
@@ -14478,7 +14528,8 @@
           "zh": "凝固底层板可37°C培养箱保存最多24 h后再加上层"
         }
       }
-    ]
+    ],
+    "duration": 90
   },
   {
     "id": "southern_blot",
@@ -14736,7 +14787,8 @@
           "zh": "杂交65°C过夜"
         }
       }
-    ]
+    ],
+    "duration": 720
   },
   {
     "id": "tube_formation_assay",
@@ -14896,7 +14948,8 @@
           "zh": "聚合后的Matrigel铺板应1 h内使用；勿长期保存"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "esc_culture_media",
@@ -16035,7 +16088,8 @@
           "zh": "澄清裂解液如需可短期 −80°C 保存"
         }
       }
-    ]
+    ],
+    "duration": 360
   },
   {
     "id": "bradford_assay_protocol",
@@ -16208,7 +16262,8 @@
           "zh": "稀释样品可在冰上保存最多1小时"
         }
       }
-    ]
+    ],
+    "duration": 45
   },
   {
     "id": "cut_and_run",
@@ -16531,7 +16586,8 @@
           "zh": "纯化DNA可在-20°C保存数周后再建库"
         }
       }
-    ]
+    ],
+    "duration": 480
   },
   {
     "id": "emsa_gel_shift",
@@ -16770,7 +16826,8 @@
           "zh": "标记探针可-20°C保存1-2周（³²P）或数月（生物素/荧光）"
         }
       }
-    ]
+    ],
+    "duration": 300
   },
   {
     "id": "enzyme_kinetics_michaelis",
@@ -17000,7 +17057,8 @@
           "zh": "底物稀释液若稳定可-20°C保存；先确认底物稳定性"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "gst_tag_purification",
@@ -17262,7 +17320,8 @@
           "zh": "纯化蛋白分装-80°C长期保存"
         }
       }
-    ]
+    ],
+    "duration": 300
   },
   {
     "id": "his_tag_purification",
@@ -17538,7 +17597,8 @@
           "zh": "储存缓冲液中的纯化蛋白-80°C长期保存"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "ihc_paraffin_protocol",
@@ -17849,7 +17909,8 @@
           "zh": "封片后的载玻片可室温无限期保存"
         }
       }
-    ]
+    ],
+    "duration": 480
   },
   {
     "id": "ion_exchange_chromatography",
@@ -18074,7 +18135,8 @@
           "zh": "合并的组分可4°C过夜保存后再浓缩"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "mitochondria_isolation",
@@ -18297,7 +18359,8 @@
           "zh": "粗线粒体可液氮速冻-80°C保存，但膜电位会丧失——仅适用于蛋白/脂质分析，不适用于功能性检测"
         }
       }
-    ]
+    ],
+    "duration": 180
   },
   {
     "id": "protein_dialysis",
@@ -18500,7 +18563,8 @@
           "zh": "分装蛋白-80°C长期保存"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "rnaseq_library_prep",
@@ -18789,7 +18853,8 @@
           "zh": "最终文库可-20°C保存数周后再测序"
         }
       }
-    ]
+    ],
+    "duration": 360
   },
   {
     "id": "sec_purification",
@@ -19011,7 +19076,8 @@
           "zh": "合并的组分可4°C过夜保存后再使用"
         }
       }
-    ]
+    ],
+    "duration": 240
   },
   {
     "id": "sirna_knockdown",
@@ -19254,7 +19320,8 @@
           "zh": "RLT/TRIzol中的RNA可-80°C保存；蛋白裂解液-80°C保存"
         }
       }
-    ]
+    ],
+    "duration": 60
   },
   {
     "id": "subcellular_fractionation",
@@ -19498,6 +19565,7 @@
           "zh": "所有组分定量后可-80°C保存"
         }
       }
-    ]
+    ],
+    "duration": 180
   }
 ]
