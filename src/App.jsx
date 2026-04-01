@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { LangContext, t } from './i18n/index.js';
 import { useLocalStorage } from './hooks/useLocalStorage.js';
 import db from './lib/db.js';
@@ -8,16 +8,23 @@ import { TimerProvider, TimerBar, QuickTimerButton } from './components/Timer.js
 import RecipeProvider, { useRecipes } from './lib/RecipeProvider.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Header from './components/Header.jsx';
-import GlobalSearchModal from './components/GlobalSearchModal.jsx';
-import OnboardingModal from './components/OnboardingModal.jsx';
 import QuickCalculatorButton from './features/calc/QuickCalculatorButton.jsx';
+
+// Eager load (always needed on first render)
 import BuffersTab from './features/buffers/BuffersTab.jsx';
 import ProtocolsTab from './features/protocols/ProtocolsTab.jsx';
-import CalcTab from './features/calc/CalcTab.jsx';
-import PlateTab from './features/plate/PlateTab.jsx';
-import ToolsTab from './features/tools/ToolsTab.jsx';
-import InventoryTab from './features/inventory/InventoryTab.jsx';
-import RefsTab from './features/refs/RefsTab.jsx';
+
+// Lazy load tabs (loaded on demand when tab is selected)
+const CalcTab = lazy(() => import('./features/calc/CalcTab.jsx'));
+const PlateTab = lazy(() => import('./features/plate/PlateTab.jsx'));
+const ToolsTab = lazy(() => import('./features/tools/ToolsTab.jsx'));
+const InventoryTab = lazy(() => import('./features/inventory/InventoryTab.jsx'));
+const RefsTab = lazy(() => import('./features/refs/RefsTab.jsx'));
+
+// Lazy load modals (not visible on initial render)
+const GlobalSearchModal = lazy(() => import('./components/GlobalSearchModal.jsx'));
+const OnboardingModal = lazy(() => import('./components/OnboardingModal.jsx'));
+
 import { S_MUTED } from './lib/styleConstants.js';
 import { BUFFER_CATEGORIES } from './data/protocolCategories.js';
 
