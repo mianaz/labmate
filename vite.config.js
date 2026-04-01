@@ -44,6 +44,12 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: resolve(__dirname, 'index.vite.html'),
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'dexie': ['dexie'],
+        },
+      },
     },
   },
 });

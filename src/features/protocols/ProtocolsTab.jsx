@@ -103,7 +103,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
               {t('addCustomProtocol', lang)}
             </button>
           </div>
-          <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1 filter-tags-scroll">
             {protoCats.map(c => (
               <button key={c.id} onClick={() => setSelCat(c.id)}
                 className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
@@ -128,7 +128,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
               </div>
             </div>
           )}
-          <div className="space-y-2 overflow-y-auto pr-1" style={{maxHeight:'calc(100vh - 220px)'}}>
+          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll" style={{maxHeight:'calc(100vh - 220px)'}}>
             {filtered.map(r => (
               <RecipeCard key={r.id} recipe={r} onSelect={handleSelect} selected={selected?.id === r.id} />
             ))}
@@ -167,7 +167,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
                 {t('addCustomProtocol', lang)}
               </button>
             </div>
-            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
+            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1 filter-tags-scroll" style={{WebkitOverflowScrolling:'touch'}}>
               {protoCats.map(c => (
                 <button key={c.id} onClick={() => setSelCat(c.id)}
                   className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"

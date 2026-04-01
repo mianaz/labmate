@@ -153,7 +153,7 @@ export function QuickTimerButton() {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
+        className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
         style={{background:'var(--primary)', color:'white', opacity: 0.85}} title={t('timerAdd', lang)}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8"/>
@@ -168,7 +168,7 @@ export function QuickTimerButton() {
   }
 
   return (
-    <div className="fixed bottom-36 left-4 z-50 rounded-xl p-4 shadow-lg" style={{background:'var(--card)', border:'1px solid var(--border)', width:'280px', overflow:'hidden'}}>
+    <div className="fixed bottom-36 right-4 z-50 rounded-xl p-4 shadow-lg" style={{background:'var(--card)', border:'1px solid var(--border)', width:'280px', overflow:'hidden'}}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-bold">{t('timerAdd', lang)}</span>
         <button onClick={() => setOpen(false)} className="text-xs px-2 py-0.5 rounded" style={S_MUTED}>✕</button>

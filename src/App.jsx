@@ -28,6 +28,13 @@ const OnboardingModal = lazy(() => import('./components/OnboardingModal.jsx'));
 import { S_MUTED } from './lib/styleConstants.js';
 import { BUFFER_CATEGORIES } from './data/protocolCategories.js';
 
+const LazySpinner = () => (
+  <div className="flex justify-center py-12">
+    <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin"
+      style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
+  </div>
+);
+
 function AppInner() {
   const { loading, syncing, refresh, recipes } = useRecipes();
   const [activeTab, setActiveTab] = useState('buffers');
@@ -121,9 +128,13 @@ function AppInner() {
       <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
           onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
-        <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
-          onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
-        <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
+        <Suspense fallback={null}>
+          <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
+            onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
+        </Suspense>
         <main className="max-w-7xl mx-auto px-4 py-6">
           {showBackupReminder && (
             <div className="mb-5 px-5 py-4 rounded-lg flex items-center justify-between gap-4 text-sm"
@@ -149,11 +160,51 @@ function AppInner() {
           )}
           {activeTab === 'buffers' && <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>}
           {activeTab === 'protocols' && <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>}
-          {activeTab === 'calc' && <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc"><ErrorBoundary><CalcTab initialMode={calcInitialMode} /></ErrorBoundary></div>}
-          {activeTab === 'plate' && <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate"><ErrorBoundary><PlateTab /></ErrorBoundary></div>}
-          {activeTab === 'tools' && <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools"><ErrorBoundary><ToolsTab /></ErrorBoundary></div>}
-          {activeTab === 'inventory' && <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory"><ErrorBoundary><InventoryTab /></ErrorBoundary></div>}
-          {activeTab === 'refs' && <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs"><ErrorBoundary><RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} /></ErrorBoundary></div>}
+          {activeTab === 'calc' && (
+            <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
+              <ErrorBoundary>
+                <Suspense fallback={<LazySpinner />}>
+                  <CalcTab initialMode={calcInitialMode} />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {activeTab === 'plate' && (
+            <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
+              <ErrorBoundary>
+                <Suspense fallback={<LazySpinner />}>
+                  <PlateTab />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {activeTab === 'tools' && (
+            <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
+              <ErrorBoundary>
+                <Suspense fallback={<LazySpinner />}>
+                  <ToolsTab />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {activeTab === 'inventory' && (
+            <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
+              <ErrorBoundary>
+                <Suspense fallback={<LazySpinner />}>
+                  <InventoryTab />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+          {activeTab === 'refs' && (
+            <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
+              <ErrorBoundary>
+                <Suspense fallback={<LazySpinner />}>
+                  <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
         </main>
         <footer className="text-center py-8 text-xs border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           <p className="font-semibold">

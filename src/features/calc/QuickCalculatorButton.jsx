@@ -51,7 +51,7 @@ export default function QuickCalculatorButton() {
   if (!open) {
     return (
       React.createElement('button', {onClick: () => setOpen(true),
-        className:'fixed bottom-20 left-4 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110',
+        className:'fixed bottom-20 right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110',
         style:{background:'var(--primary)', color:'white', opacity: 0.85}, title: t('quickCalc', lang)},
         React.createElement('svg', {width:20, height:20, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round'},
           React.createElement('rect', {x:4, y:2, width:16, height:20, rx:2}),
@@ -69,7 +69,7 @@ export default function QuickCalculatorButton() {
   const btnStyle = (bg, col) => ({background: bg, color: col, border: 'none', cursor: 'pointer', borderRadius: 'var(--radius)', fontFamily: 'var(--font-mono)', fontSize: '0.95rem', fontWeight: 600});
 
   return (
-    React.createElement('div', {className:'fixed bottom-36 left-4 z-50 rounded-xl shadow-lg', style:{background:'var(--card)', border:'1px solid var(--border)', width:'240px', overflow:'hidden'}},
+    React.createElement('div', {className:'fixed bottom-36 right-4 z-50 rounded-xl shadow-lg', style:{background:'var(--card)', border:'1px solid var(--border)', width:'240px', overflow:'hidden'}},
       React.createElement('div', {className:'flex items-center justify-between px-3 py-2', style:{borderBottom:'1px solid var(--border)'}},
         React.createElement('span', {className:'text-xs font-bold', style:{color:'var(--text)'}}, t('quickCalc', lang)),
         React.createElement('button', {onClick: () => setOpen(false), className:'text-xs px-2 py-0.5 rounded', style:{color:'var(--text-muted)'}},

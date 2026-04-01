@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { t } from '../i18n/index.js';
 import { S_BG2, S_TEXT } from '../lib/styleConstants.js';
 
@@ -5,6 +6,14 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
   const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','refs'];
   const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', refs:'tabRefs' };
+
+  // Auto-scroll active tab into view on mobile
+  const tabBarRef = useRef(null);
+  useEffect(() => {
+    if (!tabBarRef.current) return;
+    const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [activeTab]);
 
   return (
     <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderColor: 'var(--border)' }}
@@ -49,7 +58,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
         </div>
         {/* Tab bar */}
         <div style={{ position: 'relative' }}>
-          <div className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
+          <div ref={tabBarRef} className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
             onScroll={e => { const h = e.currentTarget.parentElement.querySelector('.tab-scroll-hint'); if (h) h.style.opacity = '0'; }}>
             {tabKeys.map(id => (
               <button key={id} onClick={() => setActiveTab(id)}

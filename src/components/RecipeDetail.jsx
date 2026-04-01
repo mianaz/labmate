@@ -161,7 +161,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* Usage description */}
       {recipe.usage && (
-        <div className="mb-4 p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)'}}>
+        <div className="mb-4 p-3 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)'}}>
           {recipe.usage[lang] || recipe.usage.zh}
         </div>
       )}
@@ -266,7 +266,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
           </div>
 
           {!showDetailed ? (
-            <div className="p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
+            <div className="p-3 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
               {recipe.briefSteps.map((s, i) => (
                 <p key={i} className="leading-relaxed">{s[lang] || s.zh}</p>
               ))}
@@ -421,7 +421,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       )}
 
       {(NOTES_EN[recipe.id] || recipe.notes) && (
-        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 detail-text">
           <p className="text-xs text-amber-800"><strong>{t('tip', lang)}:</strong> {lang === 'en' && NOTES_EN[recipe.id] ? NOTES_EN[recipe.id] : getRecipeNotes(recipe, lang)}</p>
         </div>
       )}

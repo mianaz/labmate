@@ -19,7 +19,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
   return (
     <div
       onClick={() => onSelect(recipe)}
-      className={`card p-4 cursor-pointer transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
+      className={`card p-4 cursor-pointer transition-all ${selected ? 'recipe-selected' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <div style={{flex:1, minWidth:0}}>
           <h3 className="font-semibold text-sm" style={S_TEXT}>{recipe.name}</h3>
