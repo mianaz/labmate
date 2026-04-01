@@ -1,0 +1,548 @@
+@import "tailwindcss";
+
+/* ── Tailwind v4 → v3 line-height compatibility ────── */
+/* Override Tailwind v4's tighter default line-heights to match v3 behavior */
+@theme {
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl--line-height: 2.25rem;
+}
+
+/*
+ * BioLab Toolkit — v4
+ * Design language: BioinfoSpace main site
+ * Bricolage Grotesque + DM Sans + JetBrains Mono
+ * Original CSS variable names preserved for JSX compatibility
+ */
+
+:root {
+  /* ── Main site light palette ─────────────────────── */
+  --bg:           hsl(40, 20%, 99%);
+  --bg-2:         hsl(170, 20%, 95%);
+  --card:         hsl(40, 15%, 98%);
+  --primary:      hsl(161, 69%, 37%);
+  --primary-hover:hsl(168, 55%, 32%);
+  --primary-light:hsl(170, 20%, 95%);
+  --accent:       hsl(168, 55%, 22%);
+  --accent-light: hsl(170, 30%, 94%);
+  --text:         hsl(200, 25%, 10%);
+  --text-muted:   hsl(200, 12%, 44%);
+  --border:       hsl(200, 15%, 90%);
+  --nav-bg:       hsla(40, 20%, 99%, 0.85);
+  --shadow:       0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg:    0 20px 40px -12px hsla(168,55%,26%,0.12), 0 8px 16px -8px rgba(0,0,0,0.06);
+
+  /* ── Gradient tokens (main site) ─────────────────── */
+  --grad-primary: linear-gradient(135deg, hsl(168,65%,40%), hsl(180,60%,50%), hsl(195,55%,55%));
+  --grad-tab:     linear-gradient(90deg, hsl(161,69%,37%), hsl(165,60%,42%), hsl(175,55%,48%));
+
+  /* ── Design tokens ────────────────────────────────── */
+  --radius:       0.625rem;
+  --font-heading: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  --font-body:    "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+/* ── Dark mode ──────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:           hsl(210, 30%, 6%);
+  --bg-2:         hsl(210, 20%, 14%);
+  --card:         hsl(210, 25%, 9%);
+  --primary:      hsl(161, 65%, 48%);
+  --primary-hover:hsl(161, 65%, 54%);
+  --primary-light:hsl(161, 30%, 15%);
+  --accent:       hsl(170, 15%, 92%);
+  --accent-light: hsl(175, 25%, 16%);
+  --text:         hsl(200, 15%, 95%);
+  --text-muted:   hsl(200, 12%, 60%);
+  --border:       hsl(210, 18%, 16%);
+  --nav-bg:       hsla(210, 30%, 6%, 0.85);
+  --shadow:       0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-lg:    0 20px 40px -12px hsla(161,65%,48%,0.15), 0 8px 16px -8px rgba(0,0,0,0.3);
+}
+
+/* prefers-color-scheme removed — theme controlled exclusively via data-theme attribute + toggle button */
+
+/* ── Base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+}
+
+/* ── Typography ──────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-variation-settings: "opsz" 32;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+h2.text-xl, h2.font-bold {
+  font-size: 1.85rem !important;
+  font-weight: 700 !important;
+  font-variation-settings: "opsz" 48 !important;
+  letter-spacing: -0.04em !important;
+}
+
+h3.text-lg {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  font-variation-settings: "opsz" 24 !important;
+}
+
+h3.font-semibold, h3.font-bold {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+h4.font-bold, h4.text-sm {
+  font-family: var(--font-body) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Nav — glass-strong (main site pattern) ─────────── */
+nav {
+  background: var(--nav-bg) !important;
+  backdrop-filter: blur(20px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: 0 1px 0 hsla(168, 55%, 26%, 0.06) !important;
+}
+
+nav .font-bold.text-xl, nav h1 {
+  font-family: var(--font-heading) !important;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  font-variation-settings: "opsz" 32 !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* Brand gradient — main site .text-gradient-primary */
+nav .text-primary {
+  background: var(--grad-primary) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ── Tabs ────────────────────────────────────────────── */
+/* Hide the empty icon spans */
+nav span.mr-1\.5 { display: none !important; }
+
+/* Tab indicator — gradient line */
+.tab-indicator {
+  height: 2px;
+  background: var(--grad-tab);
+  border-radius: 1px;
+  transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              width 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  position: absolute;
+  bottom: 0;
+  box-shadow: 0 0 6px hsla(168, 55%, 26%, 0.25);
+}
+
+nav button {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.9rem 1.2rem !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 0.01em !important;
+  transition: color 0.2s ease !important;
+}
+nav button:hover { color: var(--text) !important; }
+.tab-active { color: var(--primary) !important; font-weight: 600 !important; }
+
+/* ── Cards — feature-card (main site) ───────────────── */
+.card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.card.card-scroll {
+  overflow-y: auto !important;
+}
+.card.card-scroll:hover {
+  transform: none !important;
+}
+.card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0; left: 0; right: 0 !important;
+  height: 3px !important;
+  background: var(--grad-tab) !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+  z-index: 1 !important;
+}
+.card:hover::before { opacity: 1 !important; }
+.card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────── */
+input[type="number"],
+input[type="text"],
+input[type="search"],
+select,
+textarea {
+  font-family: var(--font-mono) !important;
+  font-size: 0.875rem !important;
+  padding: 0.6rem 0.85rem !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: calc(var(--radius) - 2px) !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px hsla(168, 55%, 26%, 0.1) !important;
+}
+input::placeholder { color: var(--text-muted) !important; opacity: 1 !important; }
+
+label {
+  font-family: var(--font-body) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+  display: block !important;
+  margin-bottom: 0.3rem !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+button { font-family: var(--font-body) !important; transition: all 0.2s ease !important; }
+
+/* ── Tables ──────────────────────────────────────────── */
+table { font-size: 0.875rem !important; border-collapse: collapse !important; }
+thead tr { border-bottom: 1.5px solid var(--border) !important; }
+th {
+  font-family: var(--font-body) !important;
+  font-size: 0.68rem !important; font-weight: 600 !important;
+  letter-spacing: 0.07em !important; text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+  padding: 0.6rem 0.85rem !important; text-align: left !important;
+}
+td {
+  padding: 0.6rem 0.85rem !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-size: 0.875rem !important;
+  color: var(--text) !important;
+  vertical-align: middle !important;
+}
+tr:last-child td { border-bottom: none !important; }
+td:not(:first-child) { font-family: var(--font-mono) !important; font-size: 0.82rem !important; }
+
+/* ── Protocol Timeline ───────────────────────────────── */
+.protocol-timeline { position: relative; padding-left: 1.75rem; }
+.protocol-timeline::before {
+  content: ''; position: absolute;
+  left: 6.25px; top: 0.5rem; bottom: 0.5rem;
+  width: 1.5px; background: var(--border); border-radius: 1px;
+}
+.protocol-step {
+  position: relative; padding: 0.45rem 0 0.75rem;
+  font-size: 0.9rem; line-height: 1.65;
+}
+.protocol-step::before {
+  content: ''; position: absolute;
+  left: -25px; top: 0.78rem;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--card);
+  box-shadow: 0 0 0 1.5px var(--primary-light);
+}
+.protocol-step.sub-step { padding-left: 0.9rem; font-size: 0.84rem; color: var(--text-muted); }
+.protocol-step.sub-step::before {
+  width: 5px; height: 5px; left: -23.5px; top: 0.75rem;
+  background: var(--border); box-shadow: none; border: none;
+}
+.protocol-step .step-note {
+  display: inline-block; margin-left: 0.4rem;
+  font-size: 0.72rem; color: var(--text-muted);
+  background: var(--bg-2); padding: 0.1rem 0.45rem;
+  border-radius: calc(var(--radius) - 4px); border: 1px solid var(--border);
+}
+.protocol-step .step-amount {
+  font-family: var(--font-mono); font-weight: 500; color: var(--primary);
+}
+
+/* ── Well (Plate Designer) ───────────────────────────── */
+.well {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  border-style: solid;
+  transition: outline 0.15s ease, transform 0.1s ease;
+}
+.well:hover { transform: scale(1.08); z-index: 1; }
+.well.selected {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 1.5px;
+}
+
+/* ── Mono class ──────────────────────────────────────── */
+.mono { font-family: var(--font-mono) !important; }
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast-container {
+  position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 9000;
+  display: flex; flex-direction: column; gap: 0.4rem; pointer-events: none;
+}
+.toast {
+  pointer-events: auto; padding: 0.65rem 1.1rem;
+  border-radius: var(--radius); background: var(--card);
+  border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+  font-size: 0.82rem; font-weight: 500; color: var(--text);
+  animation: toastIn 0.22s cubic-bezier(0.22,1,0.36,1), toastOut 0.22s ease-in 2.78s forwards;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.btn-primary { background: var(--primary); color: white; border: 1px solid var(--primary); border-radius: 8px; padding: 6px 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; font-family: var(--font-body); }
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: var(--font-body); }
+.btn-secondary:hover { background: var(--bg-2); }
+@keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-4px); } }
+
+/* ── Favorites ───────────────────────────────────────── */
+.fav-star { cursor: pointer; transition: transform 0.2s ease, color 0.2s ease; }
+.fav-star:hover { transform: scale(1.2); }
+.fav-star.active { color: hsl(38, 92%, 50%); }
+
+/* ── Tailwind overrides — light ─────────────────────── */
+.bg-gray-50, .bg-gray-100 { background: var(--bg-2) !important; }
+.bg-gray-200 { background: var(--border) !important; }
+.bg-white { background: var(--card) !important; }
+.text-gray-300 { color: hsl(200, 8%, 72%) !important; }
+.text-gray-400, .text-gray-500, .text-gray-600 { color: var(--text-muted) !important; }
+.text-gray-700, .text-gray-800, .text-gray-900 { color: var(--text) !important; }
+.border-gray-200, .border-gray-300 { border-color: var(--border) !important; }
+.bg-amber-50 { background: hsl(48,100%,96%) !important; }
+.border-amber-200 { border-color: hsl(48,80%,82%) !important; }
+.text-amber-800 { color: hsl(32,80%,30%) !important; }
+.bg-white\/10, .bg-white\/15, .bg-white\/20 { background: hsla(0,0%,100%,0.6) !important; }
+.hover\:bg-gray-100:hover { background: var(--bg-2) !important; }
+.hover\:bg-gray-200:hover { background: var(--border) !important; }
+.ring-2 { --tw-ring-color: var(--primary) !important; }
+.text-primary { color: var(--primary) !important; }
+.bg-primary { background: var(--primary) !important; }
+.bg-primary-light { background: var(--primary-light) !important; }
+.border-primary { border-color: var(--primary) !important; }
+.text-accent { color: var(--accent) !important; }
+.bg-accent-light { background: var(--accent-light) !important; }
+
+/* ── Tailwind overrides — dark ───────────────────────── */
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100 { background: var(--bg-2) !important; }
+[data-theme="dark"] .bg-white { background: var(--card) !important; }
+[data-theme="dark"] .bg-gray-200 { background: var(--border) !important; }
+[data-theme="dark"] .text-gray-400,
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-600 { color: var(--text-muted) !important; }
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-800 { color: var(--text) !important; }
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-300 { border-color: var(--border) !important; }
+[data-theme="dark"] .bg-amber-50 { background: hsla(38,92%,50%,0.08) !important; }
+[data-theme="dark"] .border-amber-200 { border-color: hsla(38,80%,55%,0.2) !important; }
+[data-theme="dark"] .text-amber-800 { color: hsl(38,80%,68%) !important; }
+[data-theme="dark"] .bg-white\/10,
+[data-theme="dark"] .bg-white\/15,
+[data-theme="dark"] .bg-white\/20 { background: hsla(0,0%,100%,0.05) !important; }
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--bg-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] input::placeholder { color: var(--text-muted) !important; }
+[data-theme="dark"] .hover\:bg-gray-100:hover { background: var(--bg-2) !important; }
+[data-theme="dark"] .hover\:bg-gray-200:hover { background: var(--border) !important; }
+
+/* ── Result numerics ─────────────────────────────────── */
+.text-2xl, .text-3xl {
+  font-family: var(--font-heading) !important;
+  font-variation-settings: "opsz" 40 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+footer { border-color: var(--border) !important; font-size: 0.75rem !important; color: var(--text-muted) !important; }
+
+/* ── Scrollbar — main site style ─────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; transition: background 0.2s; }
+::-webkit-scrollbar-thumb:hover { background: hsla(168, 55%, 26%, 0.5); }
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* ── Section animation ───────────────────────────────── */
+main > div { animation: cardStaggerIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+@keyframes cardStaggerIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Grain ───────────────────────────────────────────── */
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Print ───────────────────────────────────────────── */
+@media print {
+  body { background: white !important; color: black !important; font-size: 10.5pt; }
+  nav, .toast-container, footer, button, .no-print { display: none !important; }
+  .card { box-shadow: none !important; border: 1px solid #d1d5db !important; break-inside: avoid; }
+  .print-only { display: block !important; }
+  * { color: black !important; }
+  @page { margin: 1.5cm; }
+}
+.print-only { display: none; }
+
+/* ── Spacing fixes: restore v3-like spacing ────────── */
+/* Tailwind v4 base reset is more aggressive — restore breathing room */
+
+/* Cards and sections need more internal padding on mobile */
+@media (max-width: 640px) {
+  .card { padding: 0.75rem !important; }
+  main { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+}
+
+/* Recipe list items need more vertical spacing */
+.space-y-1 > * + * { margin-top: 0.35rem; }
+.space-y-2 > * + * { margin-top: 0.6rem; }
+
+/* Ensure body line-height isn't overridden */
+body {
+  line-height: 1.65 !important;
+}
+
+/* Paragraphs and text blocks */
+p, li, td, .protocol-step {
+  line-height: 1.65;
+}
+
+/* Nav tabs need more room on mobile */
+@media (max-width: 640px) {
+  nav button {
+    padding: 0.65rem 0.6rem !important;
+    font-size: 0.78rem !important;
+  }
+  nav .flex { 
+    gap: 0 !important;
+  }
+}
+
+/* Recipe sidebar items */
+.cursor-pointer.rounded-lg {
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Section headings need more margin */
+h2, h3 {
+  margin-bottom: 0.5rem;
+}
+
+/* Form elements need more vertical space */
+label + input, label + select, label + textarea {
+  margin-top: 0.25rem;
+}
+input, select, textarea {
+  margin-bottom: 0.5rem;
+}
+
+/* Discipline/category filter pills */
+.flex.flex-wrap.gap-1\.5 {
+  gap: 0.5rem !important;
+}
+.flex.flex-wrap.gap-2 {
+  gap: 0.6rem !important;
+}
+
+/* ── Badge/Tag/Pill padding fix (Tailwind v4 spacing is tighter) ── */
+/* All small rounded badges, pills, tags need more breathing room */
+[class*="rounded-full"][class*="text-[10px]"],
+[class*="rounded-full"][class*="text-[9px]"],
+[class*="rounded-full"][class*="text-xs"] {
+  padding: 0.2rem 0.6rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Category/discipline filter pills (buttons) */
+button[class*="rounded-full"][class*="text-xs"] {
+  padding: 0.35rem 0.85rem !important;
+  line-height: 1.3 !important;
+}
+
+/* Small inline badges */
+span[class*="rounded"][class*="text-[10px]"],
+span[class*="rounded"][class*="text-[9px]"],
+span[class*="rounded"][class*="text-[11px]"] {
+  padding: 0.15rem 0.5rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Keyboard shortcut badges (kbd) */
+kbd {
+  padding: 0.15rem 0.4rem !important;
+  line-height: 1.3 !important;
+}
+
+/* Step notes in protocols */
+.step-note {
+  padding: 0.15rem 0.5rem !important;
+}
+
+/* General small buttons with rounded corners */
+button[class*="rounded"][class*="py-0.5"],
+button[class*="rounded-lg"][class*="py-1.5"] {
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+}
+
+/* Ensure inline-flex badges have proper vertical alignment */
+.inline-flex[class*="rounded"] {
+  padding: 0.2rem 0.5rem;
+  line-height: 1.4;
+}
+
+/* ── Inventory medium breakpoint ──────────────────────── */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .inv-grid-3col { grid-template-columns: 200px 1fr !important; }
+  .inv-col-3 { display: none !important; }
+}

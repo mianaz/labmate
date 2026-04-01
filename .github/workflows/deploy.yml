@@ -1,0 +1,39 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Deploy to server
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
+          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
+          SOURCE: "dist/"
+          TARGET: "/var/www/apps.bioinfospace.com/labmate/"
+          ARGS: "-rlgoDzvc --delete"
+
+      - name: Copy static assets
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
+            cp recipes.json /var/www/apps.bioinfospace.com/labmate/
+            cp sw.js /var/www/apps.bioinfospace.com/labmate/ 2>/dev/null || cp public/sw.js /var/www/apps.bioinfospace.com/labmate/
