@@ -439,9 +439,34 @@ main > div { animation: cardStaggerIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
 }
 .print-only { display: none; }
 
+/* ── Sidebar selected item ───────────────────────────── */
+.sidebar-item-selected {
+  background: hsl(168, 55%, 94%) !important;
+  border-left: 3px solid var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+[data-theme="dark"] .sidebar-item-selected {
+  background: hsl(168, 30%, 18%) !important;
+}
+
+/* ── Sidebar scroll bottom padding (FAB overlap fix) ── */
+.sidebar-scroll { padding-bottom: 72px; }
+
+/* ── Filter tags scroll ─────────────────────────────── */
+.filter-tags-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-tags-scroll::-webkit-scrollbar { display: none; }
+
+/* ── App nav tab bar scrollbar hide ─────────────────── */
+.app-nav [role="tablist"]::-webkit-scrollbar { display: none; }
+
 /* ── Mobile ──────────────────────────────────────────── */
 @media (max-width: 640px) {
   nav button { padding: 0.75rem 0.85rem !important; font-size: 0.82rem !important; }
+  nav .max-w-7xl { padding-left: 0.5rem; padding-right: 0.5rem; }
 }
 
 /* ── Inventory medium breakpoint ──────────────────────── */
@@ -2543,19 +2568,26 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
   const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', notebook:'tabNotebook', calendar:'tabCalendar', refs:'tabRefs' };
 
+  const tabBarRef = useRef(null);
+  useEffect(() => {
+    if (!tabBarRef.current) return;
+    const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [activeTab]);
+
   return (
     <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderColor: 'var(--border)' }}
       className="sticky top-0 z-40 border-b">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-4" style={{paddingLeft: undefined, paddingRight: undefined}}>
         {/* Top bar */}
         <div className="flex items-center justify-between h-14">
-          <div className="flex items-center gap-3">
-            <a href="/labmate/" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a href="/labmate/" className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
               <img src="favicon.svg" alt="" width="24" height="24" style={{flexShrink:0}} />
-              <span><span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span></span>{' '}
+              <span className="hidden sm:inline"><span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span></span>
+              <span className="sm:hidden"><span style={{ color: 'var(--text)' }}>Bio</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>S</span></span>{' '}
               <span style={{ color: 'var(--text)' }}>LabMate</span>
             </a>
-            {/* subtitle removed */}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={onRefreshRecipes} disabled={isSyncing} title={t('refreshRecipes', lang)}
@@ -2585,8 +2617,9 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
           </div>
         </div>
         {/* Tab bar */}
-        <div style={{ position: 'relative' }}>
-          <div className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
+        <div className="app-nav" style={{ position: 'relative' }}>
+          <div ref={tabBarRef} className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
+            style={{scrollbarWidth:'none', msOverflowStyle:'none', WebkitOverflowScrolling:'touch'}}
             onScroll={e => { const h = e.currentTarget.parentElement.querySelector('.tab-scroll-hint'); if (h) h.style.opacity = '0'; }}>
             {tabKeys.map(id => (
               <button key={id} onClick={() => setActiveTab(id)}
@@ -2631,7 +2664,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
   return (
     <div
       onClick={() => onSelect(recipe)}
-      className={`card p-4 cursor-pointer transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
+      className={`card p-4 cursor-pointer transition-all ${selected ? 'sidebar-item-selected' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <div style={{flex:1, minWidth:0}}>
           <h3 className="font-semibold text-sm" style={S_TEXT}>{recipe.name}</h3>
@@ -2782,7 +2815,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* Usage description */}
       {recipe.usage && (
-        <div className="mb-4 p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)'}}>
+        <div className="mb-4 p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)', maxWidth:'72ch'}}>
           {recipe.usage[lang] || recipe.usage.zh}
         </div>
       )}
@@ -2887,7 +2920,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
           </div>
 
           {!showDetailed ? (
-            <div className="p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
+            <div className="p-3 rounded-lg text-sm" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)', maxWidth:'72ch'}}>
               {recipe.briefSteps.map((s, i) => (
                 <p key={i} className="leading-relaxed">{s[lang] || s.zh}</p>
               ))}
@@ -3042,7 +3075,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       )}
 
       {(NOTES_EN[recipe.id] || recipe.notes) && (
-        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200" style={{maxWidth:'72ch'}}>
           <p className="text-xs text-amber-800"><strong>{t('tip', lang)}:</strong> {lang === 'en' && NOTES_EN[recipe.id] ? NOTES_EN[recipe.id] : getRecipeNotes(recipe, lang)}</p>
         </div>
       )}
@@ -3194,7 +3227,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
               {t('addCustomRecipe', lang)}
             </button>
           </div>
-          <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
+          <div className="filter-tags-scroll flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
             {cats.map(c => (
               <button key={c.id} onClick={() => setSelCat(c.id)}
                 className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
@@ -3202,6 +3235,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
                   background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
                   color: selCat === c.id ? 'white' : 'var(--text-muted)',
                   border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
+                  minHeight: '36px',
                 }}>{c.label}</button>
             ))}
           </div>
@@ -3219,7 +3253,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
               </div>
             </div>
           )}
-          <div className="space-y-2 overflow-y-auto pr-1" style={{maxHeight:'calc(100vh - 220px)'}}>
+          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll" style={{maxHeight:'calc(100vh - 220px)'}}>
             {filtered.map(r => (
               <RecipeCard key={r.id} recipe={r} onSelect={handleSelect} selected={selected?.id === r.id} />
             ))}
@@ -3261,7 +3295,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
                 {t('addCustomRecipe', lang)}
               </button>
             </div>
-            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
+            <div className="filter-tags-scroll flex items-center gap-1.5 mb-3 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
               {cats.map(c => (
                 <button key={c.id} onClick={() => setSelCat(c.id)}
                   className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
@@ -3269,6 +3303,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
                     background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
                     color: selCat === c.id ? 'white' : 'var(--text-muted)',
                     border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
+                    minHeight: '36px',
                   }}>{c.label}</button>
               ))}
             </div>
@@ -3398,7 +3433,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
               {t('addCustomProtocol', lang)}
             </button>
           </div>
-          <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
+          <div className="filter-tags-scroll flex items-center gap-1.5 mb-3 overflow-x-auto pb-1">
             {protoCats.map(c => (
               <button key={c.id} onClick={() => setSelCat(c.id)}
                 className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
@@ -3406,6 +3441,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
                   background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
                   color: selCat === c.id ? 'white' : 'var(--text-muted)',
                   border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
+                  minHeight: '36px',
                 }}>{c.label}</button>
             ))}
           </div>
@@ -3423,7 +3459,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
               </div>
             </div>
           )}
-          <div className="space-y-2 overflow-y-auto pr-1" style={{maxHeight:'calc(100vh - 220px)'}}>
+          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll" style={{maxHeight:'calc(100vh - 220px)'}}>
             {filtered.map(r => (
               <RecipeCard key={r.id} recipe={r} onSelect={handleSelect} selected={selected?.id === r.id} />
             ))}
@@ -3462,7 +3498,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
                 {t('addCustomProtocol', lang)}
               </button>
             </div>
-            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
+            <div className="filter-tags-scroll flex items-center gap-1.5 mb-3 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
               {protoCats.map(c => (
                 <button key={c.id} onClick={() => setSelCat(c.id)}
                   className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
@@ -3470,6 +3506,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
                     background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
                     color: selCat === c.id ? 'white' : 'var(--text-muted)',
                     border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
+                    minHeight: '36px',
                   }}>{c.label}</button>
               ))}
             </div>
@@ -8609,6 +8646,7 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
   const [calcInitialMode, setCalcInitialMode] = useState(null);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('labmate_banner_dismissed') === 'true');
   const [recipeVersion, setRecipeVersion] = useState(0);
   const toast = useToast();
 
@@ -8745,15 +8783,27 @@ function App() {
         onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
       <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {showBackupReminder && (
+        {showBackupReminder && !bannerDismissed && (
           <div className="mb-4 px-4 py-3 rounded-lg flex items-center justify-between gap-3 text-sm" style={{background:'hsl(45,90%,94%)', border:'1px solid hsl(45,80%,70%)', color:'hsl(30,60%,30%)'}}>
             <span>{t('backupReminder', lang)}</span>
             <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
                 className="px-3 py-1 rounded-md text-xs font-semibold" style={{background:'var(--primary)', color:'white'}}>{t('backupNow', lang)}</button>
-              <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); setShowBackupReminder(false); }}
-                className="px-3 py-1 rounded-md text-xs font-semibold" style={{background:'transparent', color:'hsl(30,60%,30%)', border:'1px solid hsl(45,80%,70%)'}}>{t('dismissReminder', lang)}</button>
+              <button onClick={() => { setBannerDismissed(true); localStorage.setItem('labmate_banner_dismissed', 'true'); }}
+                className="px-3 py-1 rounded-md text-xs font-semibold" style={{background:'transparent', color:'hsl(30,60%,30%)', border:'1px solid hsl(45,80%,70%)'}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
             </div>
+          </div>
+        )}
+        {showBackupReminder && bannerDismissed && (
+          <div className="mb-2 flex justify-end">
+            <button onClick={() => { setBannerDismissed(false); localStorage.removeItem('labmate_banner_dismissed'); }}
+              title={t('backupReminder', lang)}
+              className="p-1.5 rounded-lg transition-all hover:opacity-80"
+              style={{background:'hsl(45,90%,94%)', border:'1px solid hsl(45,80%,70%)', color:'hsl(30,60%,30%)'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </button>
           </div>
         )}
         {navHistory.length > 0 && (
