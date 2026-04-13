@@ -8,6 +8,9 @@ import { SAMPLE_TYPE_COLORS, SAMPLE_TYPE_LABELS, posLabel } from './inventoryUti
 export { posLabel };
 
 export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedCells, onToggleSelect, onDragSelect }) {
+  const dragStart = useRef(null);
+  const [dragging, setDragging] = useState(false);
+
   if (!box) return null;
 
   const sampleMap = {};
@@ -15,9 +18,6 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
   const occupied = Object.keys(sampleMap).length;
   const total = box.rows * box.cols;
   const cellSize = Math.max(24, Math.min(40, Math.floor(300 / Math.max(box.rows, box.cols))));
-
-  const dragStart = useRef(null);
-  const [dragging, setDragging] = useState(false);
 
   const handleMouseDown = (r, c) => {
     if (!selectMode) return;

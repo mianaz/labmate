@@ -43,6 +43,13 @@ export default [
         alert: 'readonly',
         Uint8Array: 'readonly',
         HTMLElement: 'readonly',
+        indexedDB: 'readonly',
+        IntersectionObserver: 'readonly',
+        MutationObserver: 'readonly',
+        requestAnimationFrame: 'readonly',
+        matchMedia: 'readonly',
+        // Vite defines
+        __APP_VERSION__: 'readonly',
       },
     },
     settings: {
@@ -63,6 +70,7 @@ export default [
       // General rules
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {
