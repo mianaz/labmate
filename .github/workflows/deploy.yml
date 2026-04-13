@@ -19,23 +19,26 @@ jobs:
         env:
           VITE_BASE: /labmate/
 
-      - name: Deploy to server
-        uses: easingthemes/ssh-deploy@v4
+      - name: Deploy build to server
+        uses: appleboy/scp-action@v0.1.7
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
-          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-          SOURCE: "dist/"
-          TARGET: "/var/www/apps.bioinfospace.com/labmate/"
-          ARGS: "-rlgoDzvc --delete"
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "dist/*"
+          target: "/tmp/labmate-deploy"
+          strip_components: 1
 
-      - name: Copy static assets
+      - name: Swap into production
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            rsync -rlgoDzvc --delete /tmp/labmate-deploy/ /var/www/apps.bioinfospace.com/labmate/
             cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
+            git pull --ff-only origin main
             cp recipes.json /var/www/apps.bioinfospace.com/labmate/
             cp sw.js /var/www/apps.bioinfospace.com/labmate/ 2>/dev/null || cp public/sw.js /var/www/apps.bioinfospace.com/labmate/
+            rm -rf /tmp/labmate-deploy
