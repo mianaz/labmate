@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+dist-preview/
 
 # Environment
 .env
@@ -19,3 +20,17 @@ dist/
 
 # Vite
 *.local
+
+# Backup / deployment artifacts
+index.html.bak.*
+index.html.pre-deploy-*
+
+# Legacy vendor libs (now bundled by Vite)
+vendor/
+
+# Internal dev planning docs
+TASKS.md
+REFACTOR_PLAN.md
+DATA_AUDIT.md
+RECIPE_SCHEMA_REF.md
+VALID_IDS.txt
