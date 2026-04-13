@@ -2,7 +2,7 @@
 import React from 'react';
 import { t } from '../../i18n/index.js';
 import { S_MUTED } from '../../lib/styleConstants.js';
-import db from '../../lib/db.js';
+import { collectBackupData } from '../../lib/backup.js';
 
 // ═══════════════════════════════════════════════
 // CRYPTO HELPERS — Gist encrypted sync
@@ -39,15 +39,8 @@ export async function _gistDecrypt(base64, passphrase) {
 // ═══════════════════════════════════════════════
 
 export function _gistCollectData() {
-  const data = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key.startsWith('labmate_') || key.startsWith('biolab_') || key.startsWith('stepProgress_') || ['favs', 'lang', 'theme'].includes(key)) {
-      try { data[key] = JSON.parse(localStorage.getItem(key)); }
-      catch { data[key] = localStorage.getItem(key); }
-    }
-  }
-  return JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: 'v0.1.0', data });
+  const data = collectBackupData();
+  return JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: __APP_VERSION__, data });
 }
 
 // ═══════════════════════════════════════════════

@@ -17,6 +17,17 @@ db.version(1).stores({
   stepProgress: 'recipeId',
 });
 
+db.version(2).stores({
+  settings: 'key',
+  customRecipes: 'id, category',
+  customProtocols: 'id',
+  inventory: 'key',
+  favorites: 'key',
+  stepProgress: 'recipeId',
+  // Experiment notebook & calendar entries
+  experiments: 'id, date, status, protocolRef',
+});
+
 export default db;
 
 // ─── Migration: import existing localStorage data on first run ───

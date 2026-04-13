@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { S_MUTED } from '../../lib/styleConstants.js';
-import db from '../../lib/db.js';
+import { exportBackup, importBackup } from '../../lib/backup.js';
 
 import { useToast } from '../../components/Toast.jsx';
 
@@ -85,23 +85,7 @@ function ToolsTab() {
   const fileInputRef = React.useRef(null);
 
   function handleExport() {
-    const data = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key.startsWith('labmate_') || key.startsWith('biolab_') || key.startsWith('stepProgress_') || key.startsWith('stepTracker_') || ['favs', 'lang', 'theme'].includes(key)) {
-        try { data[key] = JSON.parse(localStorage.getItem(key)); }
-        catch { data[key] = localStorage.getItem(key); }
-      }
-    }
-    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: 'v0.1.0', data }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `labmate-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    localStorage.setItem('labmate_lastExport', String(Date.now()));
-    db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {});
+    exportBackup();
   }
 
   function handleImport(e) {
@@ -110,53 +94,7 @@ function ToolsTab() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = JSON.parse(ev.target.result);
-        if (!parsed.exportedAt || !parsed.data || typeof parsed.data !== 'object') {
-          toast.show(t('importError', lang)); return;
-        }
-        const MERGE_ARRAY_KEYS = ['labmate_customRecipes', 'labmate_customProtocols'];
-        let count = 0;
-        Object.entries(parsed.data).forEach(([key, value]) => {
-          if (MERGE_ARRAY_KEYS.includes(key)) {
-            let existing = [];
-            try { existing = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
-            const incoming = Array.isArray(value) ? value : [];
-            const merged = [...existing];
-            const existingIds = new Set(existing.map(item => item.id));
-            for (const item of incoming) {
-              if (existingIds.has(item.id)) {
-                const idx = merged.findIndex(m => m.id === item.id);
-                if (idx >= 0) merged[idx] = item;
-              } else {
-                merged.push(item);
-              }
-            }
-            localStorage.setItem(key, JSON.stringify(merged));
-            // Sync merged data to IndexedDB
-            if (key === 'labmate_customRecipes') {
-              db.customRecipes.clear().then(() => db.customRecipes.bulkPut(merged)).catch(() => {});
-            } else if (key === 'labmate_customProtocols') {
-              db.customProtocols.clear().then(() => db.customProtocols.bulkPut(merged)).catch(() => {});
-            }
-          } else {
-            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-            // Sync settings to IndexedDB
-            if (key.startsWith('labmate_') || key.startsWith('biolab_')) {
-              db.settings.put({ key, value: typeof value === 'string' ? value : JSON.stringify(value) }).catch(() => {});
-            }
-            // Sync inventory to IndexedDB
-            if (key === 'labmate_inventory') {
-              db.inventory.put({ key: 'data', value: typeof value === 'object' ? value : JSON.parse(value) }).catch(() => {});
-            }
-            // Sync step progress to IndexedDB
-            if (key.startsWith('stepTracker_')) {
-              const recipeId = key.replace('stepTracker_', '');
-              const steps = Array.isArray(value) ? value : [];
-              db.stepProgress.put({ recipeId, completedSteps: steps }).catch(() => {});
-            }
-          }
-          count++;
-        });
+        const count = importBackup(ev.target.result);
         toast.show(t('importSuccess', lang).replace('{n}', count));
         setTimeout(() => window.location.reload(), 500);
       } catch {

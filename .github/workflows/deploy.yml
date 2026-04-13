@@ -16,9 +16,11 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_BASE: /labmate/
 
       - name: Deploy to server
-        uses: easingthemes/ssh-deploy@v5
+        uses: easingthemes/ssh-deploy@v4
         with:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}

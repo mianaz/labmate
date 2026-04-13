@@ -36,6 +36,11 @@
   --shadow:       0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
   --shadow-lg:    0 20px 40px -12px hsla(168,55%,26%,0.12), 0 8px 16px -8px rgba(0,0,0,0.06);
 
+  /* ── Warning/amber tokens ────────────────────────── */
+  --warning-bg:     hsl(45, 90%, 94%);
+  --warning-border: hsl(45, 80%, 70%);
+  --warning-text:   hsl(30, 60%, 30%);
+
   /* ── Gradient tokens (main site) ─────────────────── */
   --grad-primary: linear-gradient(135deg, hsl(168,65%,40%), hsl(180,60%,50%), hsl(195,55%,55%));
   --grad-tab:     linear-gradient(90deg, hsl(161,69%,37%), hsl(165,60%,42%), hsl(175,55%,48%));
@@ -63,6 +68,9 @@
   --nav-bg:       hsla(210, 30%, 6%, 0.85);
   --shadow:       0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
   --shadow-lg:    0 20px 40px -12px hsla(161,65%,48%,0.15), 0 8px 16px -8px rgba(0,0,0,0.3);
+  --warning-bg:     hsl(45, 30%, 15%);
+  --warning-border: hsl(45, 40%, 30%);
+  --warning-text:   hsl(45, 60%, 75%);
 }
 
 /* prefers-color-scheme removed — theme controlled exclusively via data-theme attribute + toggle button */
@@ -143,9 +151,6 @@ nav .text-primary {
 }
 
 /* ── Tabs ────────────────────────────────────────────── */
-/* Hide the empty icon spans */
-nav span.mr-1\.5 { display: none !important; }
-
 /* Tab indicator — gradient line */
 .tab-indicator {
   height: 2px;

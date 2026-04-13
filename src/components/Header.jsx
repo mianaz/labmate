@@ -3,9 +3,9 @@ import { t } from '../i18n/index.js';
 import { S_BG2, S_TEXT } from '../lib/styleConstants.js';
 
 function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme }) {
-  const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','refs'];
+  const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','notebook','calendar','refs'];
   const tabIcons = {};
-  const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', refs:'tabRefs' };
+  const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', notebook:'tabNotebook', calendar:'tabCalendar', refs:'tabRefs' };
 
   // Auto-scroll active tab into view on mobile
   const tabBarRef = useRef(null);
@@ -22,11 +22,13 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
         {/* Top bar */}
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <a href="/labmate/" className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", textDecoration: 'none' }}>
+            <div className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}>
               <img src="favicon.svg" alt="" width="24" height="24" style={{flexShrink:0}} />
-              <span><span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span></span>{' '}
-              <span style={{ color: 'var(--text)' }}>LabMate</span>
-            </a>
+              <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>
+              </a>{' '}
+              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)' }}>LabMate</a>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -75,7 +77,6 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
                   color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
                   borderBottomColor: activeTab === id ? 'var(--primary)' : 'transparent',
                 }}>
-                <span className="mr-1.5"></span>
                 {t(tabLabels[id], lang)}
               </button>
             ))}

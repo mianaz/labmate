@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { t, useLang } from '../i18n/index.js';
 import db from '../lib/db.js';
@@ -25,56 +25,62 @@ function OnboardingModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return createPortal(
-    React.createElement('div', {className:'fixed inset-0 z-50 flex items-center justify-center p-4'},
-      React.createElement('div', {className:'absolute inset-0', style:{background:'rgba(0,0,0,0.5)', backdropFilter:'blur(6px)'}}),
-      React.createElement('div', {className:'relative w-full max-w-md rounded-2xl p-6', style:{background:'var(--card)', border:'1px solid var(--border)', boxShadow:'var(--shadow-lg)'}},
-        // Illustration
-        React.createElement('div', {className:'flex justify-center mb-5'},
-          React.createElement('div', {className:'w-20 h-20 rounded-2xl flex items-center justify-center', style:{background:'var(--primary-light)'}},
-            React.createElement('svg', {width:36, height:36, viewBox:'0 0 24 24', fill:'none', stroke:'var(--primary)', strokeWidth:1.5, strokeLinecap:'round', strokeLinejoin:'round'},
-              React.createElement('path', {d: slides[step].icon})
-            )
-          )
-        ),
-        // Content
-        React.createElement('h2', {className:'text-xl font-bold text-center mb-2', style:{fontFamily:'var(--font-heading)', color:'var(--text)'}},
-          t(slides[step].titleKey, lang)
-        ),
-        React.createElement('p', {className:'text-sm text-center mb-6 leading-relaxed', style:{color:'var(--text-muted)'}},
-          t(slides[step].bodyKey, lang)
-        ),
-        // Progress dots
-        React.createElement('div', {className:'flex justify-center gap-2 mb-5'},
-          slides.map((_, i) =>
-            React.createElement('div', {key:i, className:'rounded-full transition-all', style:{
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }} />
+      <div className="relative w-full max-w-md rounded-2xl p-6"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+        {/* Illustration */}
+        <div className="flex justify-center mb-5">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'var(--primary-light)' }}>
+            <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="var(--primary)"
+              strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d={slides[step].icon} />
+            </svg>
+          </div>
+        </div>
+        {/* Content */}
+        <h2 className="text-xl font-bold text-center mb-2" style={{ fontFamily: 'var(--font-heading)', color: 'var(--text)' }}>
+          {t(slides[step].titleKey, lang)}
+        </h2>
+        <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          {t(slides[step].bodyKey, lang)}
+        </p>
+        {/* Progress dots */}
+        <div className="flex justify-center gap-2 mb-5">
+          {slides.map((_, i) => (
+            <div key={i} className="rounded-full transition-all" style={{
               width: i === step ? '24px' : '8px', height: '8px',
               background: i === step ? 'var(--primary)' : 'var(--border)',
-            }})
-          )
-        ),
-        // Buttons
-        React.createElement('div', {className:'flex gap-3'},
-          step > 0 ? (
-            React.createElement('button', {onClick: () => setStep(step - 1), className:'px-4 py-2.5 rounded-lg text-sm font-semibold',
-              style:{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}},
-              t('onboardingPrev', lang))
+            }} />
+          ))}
+        </div>
+        {/* Buttons */}
+        <div className="flex gap-3">
+          {step > 0 ? (
+            <button onClick={() => setStep(step - 1)} className="px-4 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+              {t('onboardingPrev', lang)}
+            </button>
           ) : (
-            React.createElement('button', {onClick: handleClose, className:'px-4 py-2.5 rounded-lg text-sm font-semibold',
-              style:{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}},
-              t('onboardingSkip', lang))
-          ),
-          step < slides.length - 1 ? (
-            React.createElement('button', {onClick: () => setStep(step + 1), className:'flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold',
-              style:{background:'var(--primary)', color:'white'}},
-              t('onboardingNext', lang))
+            <button onClick={handleClose} className="px-4 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+              {t('onboardingSkip', lang)}
+            </button>
+          )}
+          {step < slides.length - 1 ? (
+            <button onClick={() => setStep(step + 1)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--primary)', color: 'white' }}>
+              {t('onboardingNext', lang)}
+            </button>
           ) : (
-            React.createElement('button', {onClick: handleClose, className:'flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold',
-              style:{background:'var(--primary)', color:'white'}},
-              t('onboardingDone', lang))
-          )
-        )
-      )
-    ),
+            <button onClick={handleClose} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--primary)', color: 'white' }}>
+              {t('onboardingDone', lang)}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
     document.body
   );
 }
