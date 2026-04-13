@@ -44,6 +44,7 @@ export default function MolarityCalc() {
           </div>
         </div>
       </div>
+      <div aria-live="polite" aria-atomic="true">
       {molarity !== null && (
         <div className="mt-5 p-4 rounded-lg border-2 border-accent bg-accent-light text-center">
           <p className="text-sm mb-1" style={S_MUTED}>{t('molConc', lang)}</p>
@@ -53,6 +54,7 @@ export default function MolarityCalc() {
           <p className="text-xs text-gray-500 mt-1 mono">= {molarity.toExponential(4)} M</p>
         </div>
       )}
+      </div>
     </div>
   );
 }

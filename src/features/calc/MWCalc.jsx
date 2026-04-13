@@ -46,7 +46,7 @@ export default function MWCalc() {
       {/* Result */}
       {result && !result.error && (
         <div className="fade-in">
-          <div className="p-4 rounded-xl mb-4" style={{background:'var(--primary-light)', border:'1px solid var(--primary)'}}>
+          <div className="p-4 rounded-xl mb-4" style={{background:'var(--primary-light)', border:'1px solid var(--primary)'}} aria-live="polite" aria-atomic="true">
             <div className="text-xs font-semibold mb-1" style={{color:'var(--text-muted)'}}>{t('mwResult', lang)}</div>
             <div className="text-2xl font-bold mono" style={{color:'var(--primary)'}}>{result.total.toFixed(3)} g/mol</div>
           </div>

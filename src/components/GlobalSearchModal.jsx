@@ -78,10 +78,10 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
           )}
           {results.map(({ recipe: r, compMatch, tagMatch }) => {
             const catColors = {
-              buffer: { bg: '#e0f2ef', text: '#0b6e63' },
-              protocol: { bg: '#f3e8ff', text: '#7c3aed' },
-              staining: { bg: '#fef0ec', text: '#d4552a' },
-              media: { bg: '#eff6ff', text: '#2563eb' },
+              buffer: { bg: 'var(--cat-buffer-bg)', text: 'var(--cat-buffer)' },
+              protocol: { bg: 'var(--cat-protocol-bg)', text: 'var(--cat-protocol)' },
+              staining: { bg: 'var(--cat-staining-bg)', text: 'var(--cat-staining)' },
+              media: { bg: 'var(--cat-media-bg)', text: 'var(--cat-media)' },
             };
             const cc = catColors[r.category] || catColors.buffer;
             return (

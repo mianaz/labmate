@@ -44,7 +44,7 @@ export default function PercentCalc() {
           </button>
         ))}
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4" aria-live="polite" aria-atomic="true">
         <div className="p-3 rounded-lg" style={{background: solve === 'perc' ? 'var(--primary-light)' : 'var(--bg-2)', border: solve === 'perc' ? '2px solid var(--primary)' : 'none'}}>
           <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('percentConc', lang)}</label>
           <p className="text-xs mb-1" style={S_MUTED_DIM}>{t('pctPercDesc', lang)}</p>

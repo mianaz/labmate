@@ -128,7 +128,7 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
               </div>
             </div>
           )}
-          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll" style={{maxHeight:'calc(100vh - 220px)'}}>
+          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll stagger-list" style={{maxHeight:'calc(100vh - 220px)'}}>
             {filtered.map(r => (
               <RecipeCard key={r.id} recipe={r} onSelect={handleSelect} selected={selected?.id === r.id} />
             ))}

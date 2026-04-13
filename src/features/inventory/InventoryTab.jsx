@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { t, useLang } from '../../i18n/index.js';
 import { useToast } from '../../components/Toast.jsx';
+import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { InvModal, InvInput, InvSelect } from './InventoryComponents.jsx';
 import { LocationForm, BoxForm, SampleForm } from './InventoryForms.jsx';
 import { BoxGrid, posLabel } from './BoxGrid.jsx';
@@ -69,13 +70,7 @@ export default function InventoryTab() {
   }, [showExportMenu, showImportMenu]);
 
   // ── Responsive ───────────────────────────────────────────────────────────
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+  const isMobile = useIsMobile();
 
   // ── Persist helper ───────────────────────────────────────────────────────
   const persist = (newData) => { setData(newData); saveInventory(newData); };

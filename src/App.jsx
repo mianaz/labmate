@@ -30,10 +30,24 @@ const OnboardingModal = lazy(() => import('./components/OnboardingModal.jsx'));
 import { S_MUTED } from './lib/styleConstants.js';
 import { BUFFER_CATEGORIES } from './data/protocolCategories.js';
 
-const LazySpinner = () => (
-  <div className="flex justify-center py-12">
-    <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin"
-      style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
+const SkeletonLine = ({ width = '100%', height = '0.75rem', style }) => (
+  <div className="skeleton-shimmer rounded" style={{ width, height, ...style }} />
+);
+
+const LazySkeleton = () => (
+  <div className="space-y-4 py-4">
+    <SkeletonLine width="40%" height="1.5rem" />
+    <div className="card p-5 space-y-3">
+      <SkeletonLine width="60%" height="1rem" />
+      <SkeletonLine width="100%" />
+      <SkeletonLine width="80%" />
+      <SkeletonLine width="45%" />
+    </div>
+    <div className="card p-5 space-y-3">
+      <SkeletonLine width="50%" height="1rem" />
+      <SkeletonLine width="90%" />
+      <SkeletonLine width="70%" />
+    </div>
   </div>
 );
 
@@ -94,6 +108,19 @@ function AppInner() {
     if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     else document.documentElement.removeAttribute('data-theme');
   }, [theme]);
+
+  // Scroll-reveal observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+    const observe = () => document.querySelectorAll('.scroll-reveal:not(.visible)').forEach(el => observer.observe(el));
+    observe();
+    const mo = new MutationObserver(observe);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { observer.disconnect(); mo.disconnect(); };
+  }, []);
 
   // Sync <html lang>
   useEffect(() => {
@@ -160,12 +187,13 @@ function AppInner() {
               {t('backNav', lang)}
             </button>
           )}
+          <div key={activeTab} className="tab-fade-in">
           {activeTab === 'buffers' && <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>}
           {activeTab === 'protocols' && <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>}
           {activeTab === 'calc' && (
             <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <CalcTab initialMode={calcInitialMode} />
                 </Suspense>
               </ErrorBoundary>
@@ -174,7 +202,7 @@ function AppInner() {
           {activeTab === 'plate' && (
             <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <PlateTab />
                 </Suspense>
               </ErrorBoundary>
@@ -183,7 +211,7 @@ function AppInner() {
           {activeTab === 'tools' && (
             <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <ToolsTab />
                 </Suspense>
               </ErrorBoundary>
@@ -192,7 +220,7 @@ function AppInner() {
           {activeTab === 'inventory' && (
             <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <InventoryTab />
                 </Suspense>
               </ErrorBoundary>
@@ -201,7 +229,7 @@ function AppInner() {
           {activeTab === 'notebook' && (
             <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
                 </Suspense>
               </ErrorBoundary>
@@ -210,7 +238,7 @@ function AppInner() {
           {activeTab === 'calendar' && (
             <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
                 </Suspense>
               </ErrorBoundary>
@@ -219,14 +247,15 @@ function AppInner() {
           {activeTab === 'refs' && (
             <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
               <ErrorBoundary>
-                <Suspense fallback={<LazySpinner />}>
+                <Suspense fallback={<LazySkeleton />}>
                   <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
                 </Suspense>
               </ErrorBoundary>
             </div>
           )}
+          </div>
         </main>
-        <footer className="text-center py-8 text-xs border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+        <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           <p className="font-semibold">
             Bioinfo<span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
             LabMate v{__APP_VERSION__}
@@ -250,6 +279,7 @@ function AppInner() {
         <TimerBar />
         <QuickTimerButton />
         <QuickCalculatorButton />
+        <div className="grain" aria-hidden="true" />
       </div>
     </LangContext.Provider>
   );

@@ -9,10 +9,10 @@ function RecipeCard({ recipe, onSelect, selected }) {
   const { isFav, toggle } = useFavs();
   const toast = useToast();
   const catColors = {
-    buffer: { bg: 'var(--primary-light)', text: 'var(--primary)' },
-    protocol: { bg: 'hsla(270,60%,55%,0.1)', text: 'hsl(270,60%,55%)' },
-    staining: { bg: 'var(--accent-light)', text: 'var(--accent)' },
-    media: { bg: 'hsla(220,70%,55%,0.1)', text: 'hsl(220,70%,55%)' },
+    buffer: { bg: 'var(--cat-buffer-bg)', text: 'var(--cat-buffer)' },
+    protocol: { bg: 'var(--cat-protocol-bg)', text: 'var(--cat-protocol)' },
+    staining: { bg: 'var(--cat-staining-bg)', text: 'var(--cat-staining)' },
+    media: { bg: 'var(--cat-media-bg)', text: 'var(--cat-media)' },
   };
   const cc = catColors[recipe.category] || catColors.buffer;
   const fav = isFav(recipe.id);
@@ -26,11 +26,12 @@ function RecipeCard({ recipe, onSelect, selected }) {
           {lang === 'zh' && <p className="text-xs" style={S_MUTED}>{recipe.nameCn}</p>}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`fav-star text-sm ${fav ? 'active' : ''}`}
+          <button className={`fav-star text-sm ${fav ? 'active' : ''}`}
+            aria-label={fav ? t('removedFav', lang) : t('addedFav', lang)}
             onClick={e => { e.stopPropagation(); toggle(recipe.id); toast.show(fav ? t('removedFav', lang) : t('addedFav', lang), ''); }}
-            style={{color: fav ? '#f59e0b' : 'var(--text-muted)', opacity: fav ? 1 : 0.4}}>
+            style={{color: fav ? 'var(--fav-star)' : 'var(--text-muted)', opacity: fav ? 1 : 0.4, background: 'none', border: 'none', padding: 0, lineHeight: 1}}>
             {fav ? '★' : '☆'}
-          </span>
+          </button>
           <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: cc.text }}>
             {(() => {
               const disc = (recipe.discipline || [])[0];

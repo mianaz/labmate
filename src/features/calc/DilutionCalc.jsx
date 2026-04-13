@@ -89,6 +89,7 @@ export default function DilutionCalc() {
         <InputRow label="V₂" desc={t('dilV2Desc', lang)} value={v2} setValue={setV2} unit={v2Unit} setUnit={setV2Unit} units={volUnits} isSolveTarget={solve==='v2'} />
       </div>
 
+      <div aria-live="polite" aria-atomic="true">
       {result && (
         <div className="mt-4 p-4 rounded-lg border-2 border-primary bg-primary-light text-center">
           <p className="text-sm" style={S_MUTED}>{t('result', lang)}</p>
@@ -97,6 +98,7 @@ export default function DilutionCalc() {
           </p>
         </div>
       )}
+      </div>
       {result && (() => {
         const fmtVal = (v) => v < 0.001 ? v.toExponential(3) : v.toFixed(4);
         let prep = null;

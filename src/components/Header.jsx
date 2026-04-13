@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { t } from '../i18n/index.js';
 import { S_BG2, S_TEXT } from '../lib/styleConstants.js';
 
@@ -9,11 +9,32 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
 
   // Auto-scroll active tab into view on mobile
   const tabBarRef = useRef(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  const updateIndicator = useCallback(() => {
+    if (!tabBarRef.current) return;
+    const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
+    if (activeBtn) {
+      const bar = tabBarRef.current.getBoundingClientRect();
+      const btn = activeBtn.getBoundingClientRect();
+      setIndicator({ left: btn.left - bar.left + tabBarRef.current.scrollLeft, width: btn.width });
+    }
+  }, []);
+
   useEffect(() => {
     if (!tabBarRef.current) return;
     const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }, [activeTab]);
+    // Update indicator after scroll settles
+    requestAnimationFrame(updateIndicator);
+  }, [activeTab, updateIndicator, lang]);
+
+  // Re-measure on resize / font load
+  useEffect(() => {
+    window.addEventListener('resize', updateIndicator);
+    document.fonts?.ready?.then(updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [updateIndicator]);
 
   return (
     <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderColor: 'var(--border)' }}
@@ -68,19 +89,17 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
                 aria-selected={activeTab === id}
                 aria-controls={`tabpanel-${id}`}
                 id={`tab-${id}`}
-                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${
-                  activeTab === id
-                    ? 'font-semibold'
-                    : 'border-transparent'
+                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === id ? 'font-semibold' : ''
                 }`}
                 style={{
                   color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
-                  borderBottomColor: activeTab === id ? 'var(--primary)' : 'transparent',
                 }}>
                 {t(tabLabels[id], lang)}
               </button>
             ))}
           </div>
+          <div className="tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
           <div className="tab-scroll-hint md:hidden" style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700, opacity: 0.6, transition: 'opacity 0.3s', background: 'linear-gradient(to right, transparent, var(--nav-bg) 60%)' }}>›</div>
         </div>
       </div>

@@ -98,6 +98,7 @@ export default function DeadVolumeCalc() {
         </div>
       </div>
 
+      <div aria-live="polite" aria-atomic="true">
       {hasResult && (
         <div className="mt-5 p-4 rounded-xl" style={{background:'var(--primary-light)', border:'2px solid var(--primary)'}}>
           <p className="text-xs mb-2" style={S_MUTED}>{t('totalNeeded', lang)}</p>
@@ -113,6 +114,7 @@ export default function DeadVolumeCalc() {
           </p>
         </div>
       )}
+      </div>
 
       <div className="mt-4 p-3 rounded-lg text-xs" style={{background:'var(--accent-light)', color:'var(--accent)'}}>
         {t('deadVolTip', lang)}

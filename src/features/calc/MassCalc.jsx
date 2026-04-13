@@ -70,6 +70,7 @@ export default function MassCalc() {
           </div>
         </div>
 
+        <div aria-live="polite" aria-atomic="true">
         {mass !== null && (
           <div className="mt-5 p-4 rounded-lg border-2 border-primary bg-primary-light text-center">
             <p className="text-sm mb-1" style={S_MUTED}>{t('massNeededLabel', lang)}</p>
@@ -79,6 +80,7 @@ export default function MassCalc() {
             <p className="text-xs mt-1 mono" style={S_MUTED}>= {mass.toExponential(4)} g</p>
           </div>
         )}
+        </div>
         {mass !== null && (
           <div className="mt-3 p-3 rounded-lg" style={{background:'var(--accent-light)', border:'1px solid var(--border)'}}>
             <p className="text-xs font-semibold mb-1" style={S_MUTED}>{t('massPrepSummary', lang)}</p>
