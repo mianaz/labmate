@@ -21,7 +21,8 @@ export default function PercentCalc() {
 
   return (
     <div className="card p-6 max-w-2xl">
-      <h3 className="text-sm font-bold mb-1">{t('percentCalcTitle', lang)}</h3>
+      <h2 className="text-xl font-bold mb-1">{t('percentCalcTitle', lang)}</h2>
+      <p className="text-sm mb-4" style={S_MUTED}>{t('percentCalcDesc', lang)}</p>
       <div className="flex gap-3 mb-4">
         <button onClick={() => setMode('wv')}
           className="px-4 py-1.5 rounded-lg text-sm font-semibold"

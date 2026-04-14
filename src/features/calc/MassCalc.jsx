@@ -39,7 +39,8 @@ export default function MassCalc() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="md:col-span-2 card p-6">
-        <h3 className="text-sm font-bold mb-1">{t('massCalcTitle', lang)}</h3>
+        <h2 className="text-xl font-bold mb-1">{t('massCalcTitle', lang)}</h2>
+        <p className="text-sm mb-2" style={S_MUTED}>{t('massCalcDesc', lang)}</p>
         <p className="text-xs mb-4 mono" style={S_MUTED}>{t('massFormula', lang)}</p>
 
         <div className="space-y-4">

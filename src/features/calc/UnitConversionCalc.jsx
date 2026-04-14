@@ -66,10 +66,8 @@ export default function UnitConversionCalc() {
   return (
     <div className="fade-in">
       <div className="card p-5">
-        <h3 className="text-sm font-bold mb-1">{t('calcTaskConvert', lang)}</h3>
-        <p className="text-xs mb-4" style={S_MUTED}>
-          {lang === 'en' ? 'Convert between metric, imperial, and lab units' : '公制、英制和实验室单位互转'}
-        </p>
+        <h2 className="text-xl font-bold mb-1">{t('calcTaskConvert', lang)}</h2>
+        <p className="text-sm mb-4" style={S_MUTED}>{t('convertCalcDesc', lang)}</p>
         <div className="mb-4">
           <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('convertCategory', lang)}</label>
           <div className="flex gap-1.5 flex-wrap">

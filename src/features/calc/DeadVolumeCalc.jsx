@@ -41,8 +41,8 @@ export default function DeadVolumeCalc() {
 
   return (
     <div className="card p-6 max-w-2xl">
-      <h3 className="text-sm font-bold mb-1">{t('deadVolTitle', lang)}</h3>
-      <p className="text-xs mb-4" style={S_MUTED}>{t('deadVolSubtitle', lang)}</p>
+      <h2 className="text-xl font-bold mb-1">{t('deadVolTitle', lang)}</h2>
+      <p className="text-sm mb-4" style={S_MUTED}>{t('deadVolDesc', lang)}</p>
 
       <p className="text-xs font-semibold mb-2" style={S_MUTED}>{t('presets', lang)}</p>
       <div className="flex flex-wrap gap-2 mb-5">

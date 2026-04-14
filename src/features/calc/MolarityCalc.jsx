@@ -15,7 +15,8 @@ export default function MolarityCalc() {
 
   return (
     <div className="card p-6 max-w-2xl">
-      <h3 className="text-sm font-bold mb-1">{t('molarityCalcTitle', lang)}</h3>
+      <h2 className="text-xl font-bold mb-1">{t('molarityCalcTitle', lang)}</h2>
+      <p className="text-sm mb-2" style={S_MUTED}>{t('molarityCalcDesc', lang)}</p>
       <p className="text-xs mb-4 mono" style={S_MUTED}>{t('molarityFormula', lang)}</p>
       <div className="space-y-4">
         <div>

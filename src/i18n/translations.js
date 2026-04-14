@@ -6,11 +6,13 @@ export const translations = {
   tabProtocols: { en: 'Protocols', zh: '实验方案' },
   tabCalc: { en: 'Calculator', zh: '计算器' },
   calcTaskDilution: { en: 'Dilution Calculator', zh: '稀释计算器' },
+  dilutionCalcDesc: { en: 'Solve C₁V₁ = C₂V₂ for any unknown — concentration or volume, stock or working solution.', zh: '根据 C₁V₁ = C₂V₂ 求解任一未知量——母液/工作液的浓度或体积均可。' },
   calcTaskMass: { en: 'Mass Calculator', zh: '质量计算器' },
   calcTaskMolarity: { en: 'Molarity Calculator', zh: '摩尔浓度计算器' },
   calcTaskPercent: { en: 'Percent Calculator', zh: '百分比计算器' },
   calcTaskDeadVol: { en: 'Dead Volume Calculator', zh: '损耗体积计算器' },
   calcTaskConvert: { en: 'Unit Conversion', zh: '单位换算' },
+  convertCalcDesc: { en: 'Convert between concentration units (M, mM, µM, nM, %) and volume units (L, mL, µL).', zh: '在浓度单位（M、mM、µM、nM、%）与体积单位（L、mL、µL）之间互相换算。' },
   convertFrom: { en: 'From', zh: '从' },
   convertTo: { en: 'To', zh: '到' },
   convertResult: { en: 'Result', zh: '结果' },
@@ -138,13 +140,16 @@ export const translations = {
   dilutionFormula: { en: 'C₁V₁ = C₂V₂ Dilution Formula', zh: 'C₁V₁ = C₂V₂ 稀释公式' },
   // Mass calc
   massCalcTitle: { en: 'Mass Calculator', zh: '质量计算器' },
+  massCalcDesc: { en: 'Calculate the reagent mass needed to prepare a solution at a target concentration and volume.', zh: '根据目标浓度与体积计算所需试剂质量。' },
   massFormula: { en: 'm = MW × C × V', zh: 'm = MW × C × V' },
   massNeededLabel: { en: 'Mass needed', zh: '需要称量' },
   // Molarity calc
   molarityCalcTitle: { en: 'Molarity Calculator', zh: '摩尔浓度计算' },
+  molarityCalcDesc: { en: 'Convert between mass and molar concentration for a given molecular weight and volume.', zh: '已知分子量与体积，在质量与摩尔浓度之间互相换算。' },
   molarityFormula: { en: 'C = m / (MW × V)', zh: 'C = m / (MW × V)' },
   // Percent calc
   percentCalcTitle: { en: 'Percentage Solution', zh: '百分比溶液配制' },
+  percentCalcDesc: { en: 'Calculate % (w/v) or (v/v) solutions — either the percent from inputs, or the solute needed for a target percent.', zh: '配制 % (w/v) 或 (v/v) 溶液：由输入值反推百分比，或计算目标百分比所需的溶质量。' },
   // Gel controls
   gelResolvingPct: { en: 'Resolving %', zh: '分离胶 %' },
   gelResolvingVol: { en: 'Vol/gel (mL)', zh: '体积/胶 (mL)' },
@@ -196,6 +201,7 @@ export const translations = {
   deadVolCalc: { en: 'Prep Calculator', zh: '配液计算' },
   deadVolDesc: { en: 'N×V + dead volume', zh: 'N×V + 余量' },
   deadVolTitle: { en: 'Preparation Volume Calculator', zh: '实验配液量计算器' },
+  deadVolDesc: { en: 'Compute how much buffer or reagent to prepare, accounting for extra volume lost to pipetting and dead space.', zh: '计算实验所需配液量，自动加入移液与管路死体积的补偿量。' },
   deadVolSubtitle: { en: 'Calculate total volume to prepare with dead volume compensation', zh: '根据样品数和用量计算总配制量（含 Dead Volume 补偿）' },
   numSamples: { en: 'Number of samples / reactions', zh: '样品/反应数' },
   volPerSample: { en: 'Volume per sample', zh: '每份用量' },
@@ -554,6 +560,7 @@ export const translations = {
   // MW Calculator
   calcTaskMW: { en: 'MW Calculator', zh: '分子量计算器' },
   mwCalcTitle: { en: 'Molecular Weight Calculator', zh: '分子量计算器' },
+  mwCalcDesc: { en: 'Compute molecular weight from any chemical formula (e.g. C₆H₁₂O₆, NaHCO₃, Fe₂(SO₄)₃) using IUPAC atomic masses.', zh: '输入任意化学式（如 C₆H₁₂O₆、NaHCO₃、Fe₂(SO₄)₃）自动计算分子量，基于 IUPAC 标准原子量。' },
   mwCalcSubtitle: { en: 'Enter a chemical formula to calculate molecular weight', zh: '输入化学式计算分子量' },
   mwFormula: { en: 'Chemical Formula', zh: '化学式' },
   mwFormulaPlaceholder: { en: 'e.g. NaCl, H₂SO₄, Ca(OH)₂', zh: '如 NaCl、H₂SO₄、Ca(OH)₂' },
@@ -568,6 +575,7 @@ export const translations = {
   // Periodic Table
   calcTaskPeriodic: { en: 'Periodic Table', zh: '元素周期表' },
   periodicTitle: { en: 'Interactive Periodic Table', zh: '交互式元素周期表' },
+  periodicDesc: { en: 'Browse all 118 elements — click any cell for atomic number, mass, electron configuration, and group/period context.', zh: '浏览全部 118 种元素，点击任一元素查看原子序数、相对原子质量、电子排布及所在族与周期。' },
   periodicSubtitle: { en: 'Click any element for details', zh: '点击元素查看详情' },
   periodicSearch: { en: 'Search elements...', zh: '搜索元素...' },
   periodicDetails: { en: 'Element Details', zh: '元素详情' },

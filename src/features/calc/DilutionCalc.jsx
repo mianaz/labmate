@@ -68,8 +68,10 @@ export default function DilutionCalc() {
 
   return (
     <div className="card p-6">
+      <h2 className="text-xl font-bold mb-1">{t('calcTaskDilution', lang)}</h2>
+      <p className="text-sm mb-4" style={S_MUTED}>{t('dilutionCalcDesc', lang)}</p>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold">{t('dilutionFormula', lang)}</h3>
+        <h3 className="text-sm font-bold mono" style={S_MUTED}>{t('dilutionFormula', lang)}</h3>
         <div className="flex items-center gap-2 text-sm">
           <span style={S_MUTED}>{t('solveFor', lang)}:</span>
           {['c1','v1','c2','v2'].map(s => (
