@@ -2,7 +2,7 @@ export const translations = {
   // Nav & Tabs
   appTitle: { en: 'BioinfoSpace LabMate', zh: 'BioinfoSpace LabMate' },
   appSubtitle: { en: '', zh: '' },
-  tabBuffers: { en: 'Buffers & Recipes', zh: '配方库' },
+  tabBuffers: { en: 'Recipes', zh: '配方库' },
   tabProtocols: { en: 'Protocols', zh: '实验方案' },
   tabCalc: { en: 'Calculator', zh: '计算器' },
   calcTaskDilution: { en: 'Dilution Calculator', zh: '稀释计算器' },
@@ -280,7 +280,7 @@ export const translations = {
   pctVolDesc: { en: 'Total solution volume', zh: '溶液总体积' },
   // Guide tab sections
   guideIntro: { en: 'Quick-start guide to every feature in LabMate.', zh: 'LabMate 各功能快速使用指南。' },
-  guideBuffersTitle: { en: 'Buffers & Recipes', zh: '配方库' },
+  guideBuffersTitle: { en: 'Recipes', zh: '配方库' },
   guideBuffersBody: {
     en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Use the Target Volume slider to scale any recipe. Star recipes to add them to Favorites for quick access. From a recipe\'s detail view, download the scaled recipe as TXT or copy it to clipboard. Recently viewed recipes appear at the top.',
     zh: '按学科分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。使用"目标体积"滑块缩放配方。点击星标收藏常用配方。在配方详情页可将缩放后的配方下载为 TXT 或复制到剪贴板。最近查看的配方会置顶显示。'
