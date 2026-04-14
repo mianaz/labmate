@@ -276,8 +276,8 @@ export const translations = {
   guideIntro: { en: 'Quick-start guide to every feature in LabMate.', zh: 'LabMate 各功能快速使用指南。' },
   guideBuffersTitle: { en: 'Buffers & Recipes', zh: '配方库' },
   guideBuffersBody: {
-    en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by category. Use the Target Volume slider to scale any recipe to your needs. Star recipes to add them to Favorites for quick access. Export individual recipes as TXT or copy to clipboard. Use "Export All" to download every recipe at once.',
-    zh: '按分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。使用"目标体积"滑块缩放配方。点击星标收藏常用配方。可导出为 TXT 或复制到剪贴板，也可一键"导出全部"。'
+    en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Use the Target Volume slider to scale any recipe. Star recipes to add them to Favorites for quick access. From a recipe\'s detail view, download the scaled recipe as TXT or copy it to clipboard. Recently viewed recipes appear at the top.',
+    zh: '按学科分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。使用"目标体积"滑块缩放配方。点击星标收藏常用配方。在配方详情页可将缩放后的配方下载为 TXT 或复制到剪贴板。最近查看的配方会置顶显示。'
   },
   guideProtocolsTitle: { en: 'Protocols', zh: '实验方案' },
   guideProtocolsBody: {
@@ -309,20 +309,30 @@ export const translations = {
     en: 'Organize lab samples with a hierarchical storage system. Create locations (freezers, fridges, shelves), add boxes (cryo 9×9, 10×10, tip 8×12, etc.), and track samples in a visual grid. Each sample records type, quantity, concentration, passage, dates, owner, and tags. Color-coded by sample type. Export per-box or full inventory as CSV, backup as JSON. All data stored locally in your browser.',
     zh: '使用层级存储系统管理实验室样品。创建存储位置（冰箱、冰柜、架子），添加盒子（冻存盒 9×9、10×10、枪头盒 8×12 等），在可视化网格中追踪样品。每个样品记录类型、数量、浓度、代数、日期、负责人和标签。按样品类型颜色编码。可导出单盒或全部库存为 CSV，备份为 JSON。所有数据存储在浏览器本地。'
   },
+  guideNotebookTitle: { en: 'Lab Notebook', zh: '实验记录本' },
+  guideNotebookBody: {
+    en: 'Digital lab notebook with auto-save. Create dated entries with plan, materials, step-by-step procedure, and results sections. Import steps from any protocol recipe to prefill the procedure. Link reagents from your Inventory to track what you used. Filter by status (planned / in-progress / completed / cancelled). Jump to the Calendar view to see entries laid out by date.',
+    zh: '带自动保存的电子实验记录本。创建按日期的条目，含计划、材料、分步流程和结果四大板块。可从任意实验方案配方导入步骤自动填充流程。可关联库存中的试剂以追踪实际用量。按状态筛选（计划中 / 进行中 / 已完成 / 已取消）。可切换至日历视图按日期查看条目。'
+  },
+  guideCalendarTitle: { en: 'Experiment Calendar', zh: '实验日历' },
+  guideCalendarBody: {
+    en: 'Month or week view of all notebook entries, color-coded by status. Click an empty day to schedule a new experiment; click an existing event to edit. Navigate months with the arrows or jump to Today. Export a date range as an ICS file to import into Google/Apple Calendar. Share a notebook entry with Calendar via the "Open Calendar" button in the Notebook tab.',
+    zh: '按月或按周查看所有记录本条目，按状态颜色编码。点击空白日期可新建实验；点击已有条目可编辑。使用箭头切换月份或点击"今天"跳转。可将一段日期范围导出为 ICS 文件导入 Google/Apple 日历。也可在记录本标签页点击"打开日历"跳转至对应条目。'
+  },
+  guideToolsTitle: { en: 'External Tools & Data Hub', zh: '外部工具 & 数据中心' },
+  guideToolsBody: {
+    en: 'Curated directory of external bioinformatics resources grouped by category: sequencing analysis, primer design, protein/structure databases, genome browsers, pathway tools, single-cell atlases, and more. Filter by category to narrow the list. Each card opens the external site in a new tab. This tab also hosts data Export / Import and Cloud Backup setup.',
+    zh: '精选的外部生物信息学资源目录，按类别分组：测序分析、引物设计、蛋白/结构数据库、基因组浏览器、通路工具、单细胞图谱等。可按类别筛选。每张卡片点击后在新标签页打开外部站点。本标签页同时提供数据导出 / 导入及云备份配置入口。'
+  },
   guideCustomTitle: { en: 'Custom Recipes & Protocols', zh: '自定义配方和实验方案' },
   guideCustomBody: {
-    en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons in the Buffers and Protocols tabs. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports and cloud backups.',
-    zh: '使用缓冲液和实验方案标签页中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出和云备份中。'
-  },
-  guideCloudTitle: { en: 'Cloud Backup (GitHub Gist)', zh: '云备份 (GitHub Gist)' },
-  guideCloudBody: {
-    en: 'Back up all your data to an encrypted GitHub Gist. In the Tools tab, enter a GitHub Personal Access Token and an encryption passphrase. Your data is encrypted with AES-256 before upload — GitHub cannot read it. The passphrase is never stored. You can restore from any browser by entering the same token and passphrase.',
-    zh: '将所有数据备份到加密的 GitHub Gist。在工具标签页输入 GitHub 个人访问令牌和加密口令。数据在上传前使用 AES-256 加密——GitHub 无法读取。口令不会被存储。在任何浏览器中输入相同的令牌和口令即可恢复数据。'
+    en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons in the Buffers and Protocols tabs. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports.',
+    zh: '使用缓冲液和实验方案标签页中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出中。'
   },
   guideDataSafetyTitle: { en: 'Data Safety', zh: '数据安全' },
   guideDataSafetyBody: {
-    en: 'All your data (favorites, inventory, custom recipes, step progress) is stored in your browser\'s IndexedDB (with localStorage as fallback). Clearing browser data, switching browsers, or using private/incognito mode will erase everything. Export your data regularly from the Tools tab, or set up Cloud Backup for automatic protection.',
-    zh: '所有数据（收藏、库存、自定义配方、步骤进度）均存储在浏览器的 IndexedDB 中（localStorage 作为备用）。清除浏览器数据、更换浏览器或使用隐私/无痕模式将删除所有数据。请定期从工具标签页导出数据，或设置云备份以自动保护数据。'
+    en: 'All your data (favorites, inventory, custom recipes, step progress) is stored in your browser\'s IndexedDB (with localStorage as fallback). Clearing browser data, switching browsers, or using private/incognito mode will erase everything. Export your data regularly from the Guide tab to keep a backup.',
+    zh: '所有数据（收藏、库存、自定义配方、步骤进度）均存储在浏览器的 IndexedDB 中（localStorage 作为备用）。清除浏览器数据、更换浏览器或使用隐私/无痕模式将删除所有数据。请定期从指南标签页导出数据作为备份。'
   },
   guideRefsCollapse: { en: 'Literature References', zh: '参考文献' },
   guideRefsCollapseDesc: { en: 'Classic papers and manuals cited in this tool', zh: '本工具所引用的经典论文与手册' },
@@ -537,18 +547,6 @@ export const translations = {
   toolCatPathway: { en: 'Pathway & Network', zh: '通路 & 网络' },
   toolCatClinical: { en: 'Clinical & Pharmacology', zh: '临床 & 药理' },
   toolCatSingleCell: { en: 'Single Cell', zh: '单细胞' },
-  // Cloud Backup (Gist sync)
-  cloudBackup: { en: 'Cloud Backup', zh: '云端备份' },
-  cloudBackupDesc: { en: 'Encrypt and sync your data to a private GitHub Gist.', zh: '将数据加密同步到 GitHub Gist（私有）。' },
-  gistToken: { en: 'GitHub Personal Access Token', zh: 'GitHub 个人访问令牌' },
-  encPassphrase: { en: 'Encryption Passphrase', zh: '加密口令' },
-  backupToGist: { en: 'Backup to Gist', zh: '备份到 Gist' },
-  restoreFromGist: { en: 'Restore from Gist', zh: '从 Gist 恢复' },
-  lastSynced: { en: 'Last synced', zh: '上次同步' },
-  cloudSyncSuccess: { en: 'Backup synced to Gist successfully!', zh: '已成功同步备份到 Gist！' },
-  cloudSyncError: { en: 'Sync failed: ', zh: '同步失败：' },
-  cloudRestoreSuccess: { en: 'Restored from Gist. Reloading…', zh: '已从 Gist 恢复，正在重新加载…' },
-  noGistFound: { en: 'No backup Gist found. Please backup first.', zh: '未找到备份 Gist，请先备份。' },
   // Auto-backup reminder
   backupReminder: { en: 'Your data is stored locally in this browser only. Back up regularly to avoid data loss.', zh: '您的数据仅存储在此浏览器中。请定期备份以防数据丢失。' },
   backupNow: { en: 'Backup Now', zh: '立即备份' },

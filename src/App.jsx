@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LangContext, t } from './i18n/index.js';
 import { useLocalStorage } from './hooks/useLocalStorage.js';
 import db from './lib/db.js';
@@ -51,12 +52,34 @@ const LazySkeleton = () => (
   </div>
 );
 
+// Tab <-> URL path mapping. /labmate/ basename is applied by BrowserRouter.
+const TAB_TO_PATH = {
+  buffers:   '/recipes',
+  protocols: '/protocols',
+  calc:      '/calc',
+  plate:     '/plate',
+  tools:     '/tools',
+  inventory: '/inventory',
+  notebook:  '/notebook',
+  calendar:  '/calendar',
+  refs:      '/guide',
+};
+const PATH_TO_TAB = Object.fromEntries(Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k]));
+
 function AppInner() {
   const { loading, syncing, refresh, recipes } = useRecipes();
-  const [activeTab, setActiveTab] = useState('buffers');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = useMemo(() => {
+    const seg = '/' + (location.pathname.split('/')[1] || '');
+    return PATH_TO_TAB[seg] || 'buffers';
+  }, [location.pathname]);
+  const setActiveTab = useCallback((tabId) => {
+    const path = TAB_TO_PATH[tabId] || '/recipes';
+    navigate(path);
+  }, [navigate]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSelected, setSearchSelected] = useState(null);
-  const [navHistory, setNavHistory] = useState([]);
   const [lang, setLang] = useLocalStorage('lang', (navigator.language || '').startsWith('zh') ? 'zh' : 'en');
   const [theme, setTheme] = useLocalStorage('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
@@ -86,22 +109,10 @@ function AppInner() {
   }, []);
 
   const handleCrossNavigate = useCallback((fromTab, fromSelected, targetRecipe) => {
-    setNavHistory(prev => [...prev, { tab: fromTab, recipeId: fromSelected }]);
     setSearchSelected(targetRecipe);
     const targetTab = BUFFER_CATEGORIES.includes(targetRecipe.category) ? 'buffers' : 'protocols';
     setActiveTab(targetTab);
-  }, []);
-
-  const handleNavBack = useCallback(() => {
-    setNavHistory(prev => {
-      if (prev.length === 0) return prev;
-      const next = [...prev];
-      const last = next.pop();
-      if (last.recipeId) setSearchSelected(last.recipeId);
-      setActiveTab(last.tab);
-      return next;
-    });
-  }, []);
+  }, [setActiveTab]);
 
   // Theme effect
   useEffect(() => {
@@ -164,7 +175,7 @@ function AppInner() {
         <Suspense fallback={null}>
           <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
         </Suspense>
-        <main className="max-w-7xl mx-auto px-4 py-6">
+        <main className="max-w-6xl mx-auto px-6 md:px-10 lg:px-12 py-8 md:py-10">
           {showBackupReminder && (
             <div className="mb-5 px-5 py-4 rounded-lg flex items-center justify-between gap-4 text-sm"
               style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
@@ -179,80 +190,81 @@ function AppInner() {
               </div>
             </div>
           )}
-          {navHistory.length > 0 && (
-            <button onClick={handleNavBack}
-              className="mb-3 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors hover:opacity-80"
-              style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--border)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-              {t('backNav', lang)}
-            </button>
-          )}
           <div key={activeTab} className="tab-fade-in">
-          {activeTab === 'buffers' && <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>}
-          {activeTab === 'protocols' && <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>}
-          {activeTab === 'calc' && (
-            <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <CalcTab initialMode={calcInitialMode} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'plate' && (
-            <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <PlateTab />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'tools' && (
-            <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <ToolsTab />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'inventory' && (
-            <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <InventoryTab />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'notebook' && (
-            <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'calendar' && (
-            <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
-          {activeTab === 'refs' && (
-            <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
-              <ErrorBoundary>
-                <Suspense fallback={<LazySkeleton />}>
-                  <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-          )}
+            <Routes>
+              <Route path="/" element={<Navigate to="/recipes" replace />} />
+              <Route path="/buffers" element={<Navigate to="/recipes" replace />} />
+              <Route path="/recipes" element={
+                <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>
+              } />
+              <Route path="/protocols" element={
+                <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>
+              } />
+              <Route path="/calc" element={
+                <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <CalcTab initialMode={calcInitialMode} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/plate" element={
+                <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <PlateTab />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/tools" element={
+                <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <ToolsTab />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/inventory" element={
+                <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <InventoryTab />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/notebook" element={
+                <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/calendar" element={
+                <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="/guide" element={
+                <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
+                  <ErrorBoundary>
+                    <Suspense fallback={<LazySkeleton />}>
+                      <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              } />
+              <Route path="*" element={<Navigate to="/recipes" replace />} />
+            </Routes>
           </div>
         </main>
         <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>

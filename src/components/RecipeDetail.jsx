@@ -135,8 +135,8 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
   );
 
   return (
-    <div className="card p-6 fade-in">
-      <div className="flex items-start justify-between mb-3">
+    <div className="card p-7 fade-in">
+      <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-xl font-bold">{recipe.name}</h2>
           {lang === 'zh' && <p className="text-sm" style={S_MUTED}>{recipe.nameCn}</p>}
@@ -161,14 +161,14 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* Usage description */}
       {recipe.usage && (
-        <div className="mb-4 p-3 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)'}}>
+        <div className="mb-5 p-4 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', color:'var(--text)', borderLeft:'3px solid var(--primary)'}}>
           {recipe.usage[lang] || recipe.usage.zh}
         </div>
       )}
 
       {/* Related protocols */}
       {relatedProtos.length > 0 && (
-        <div className="mb-4 flex items-center gap-2 flex-wrap">
+        <div className="mb-5 flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold" style={S_MUTED}>
             {lang === 'en' ? 'Used in:' : '相关实验:'}
           </span>
@@ -184,7 +184,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* pH and Storage/Duration as plain text */}
       {(recipe.ph || recipe.storage) && (
-        <div className="mb-4 text-sm" style={S_MUTED}>
+        <div className="mb-5 text-sm" style={S_MUTED}>
           {recipe.ph && <p>pH {recipe.ph}</p>}
           {recipe.storage && (() => {
             const rawLabel = recipe.storage.label[lang] || recipe.storage.label.zh;
@@ -196,7 +196,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       )}
 
       {!isProtocol && recipe.id !== 'sds_page_gel' && (
-        <div className="flex items-center gap-3 mb-4 p-3 rounded-lg" style={{background:'var(--primary-light)'}}>
+        <div className="flex items-center gap-3 mb-5 p-4 rounded-lg" style={{background:'var(--primary-light)'}}>
           <label className="text-sm font-medium whitespace-nowrap">{t('targetVolume', lang)}:</label>
           <input id="target-volume" type="number" value={targetVol} min={1}
             onChange={e => setTargetVol(Math.max(1, +e.target.value))}
@@ -211,7 +211,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* Materials section (for protocols with linked recipes) */}
       {recipe.materials && recipe.materials.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-5">
           <h4 className="text-sm font-bold mb-2" style={S_TEXT}>
             {lang === 'en' ? 'Materials' : '所需材料'}
           </h4>
@@ -266,7 +266,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
           </div>
 
           {!showDetailed ? (
-            <div className="p-3 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
+            <div className="p-4 rounded-lg text-sm detail-text" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
               {recipe.briefSteps.map((s, i) => (
                 <p key={i} className="leading-relaxed">{s[lang] || s.zh}</p>
               ))}
@@ -373,10 +373,10 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b-2" style={S_BORDER}>
-              <th className="text-left py-2 font-semibold">{t('reagent', lang)}</th>
-              <th className="text-right py-2 font-semibold">{t('amount', lang)}</th>
-              <th className="text-right py-2 font-semibold">{t('unit', lang)}</th>
-              {recipe.components.some(c => c.note) && <th className="text-left py-2 pl-4 font-semibold">{t('notes', lang)}</th>}
+              <th className="text-left py-2.5 pr-3 font-semibold">{t('reagent', lang)}</th>
+              <th className="text-right py-2.5 px-2 font-semibold">{t('amount', lang)}</th>
+              <th className="text-right py-2.5 px-2 font-semibold">{t('unit', lang)}</th>
+              {recipe.components.some(c => c.note) && <th className="text-left py-2.5 pl-4 font-semibold">{t('notes', lang)}</th>}
             </tr>
           </thead>
           <tbody>
@@ -384,7 +384,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
               const scaled = c.amount * scale;
               return (
                 <tr key={i} className="border-b" style={S_BORDER}>
-                  <td className="py-2 font-medium">
+                  <td className="py-2.5 pr-3 font-medium">
                     {c.linkedRecipe && RECIPE_BY_ID[c.linkedRecipe] && onNavigateRecipe ? (
                       <button onClick={() => onNavigateRecipe(RECIPE_BY_ID[c.linkedRecipe])} className="font-medium hover:underline inline-flex items-center gap-1"
                         style={{color:'var(--primary)', background:'none', border:'none', cursor:'pointer', padding:0, font:'inherit'}}>
@@ -392,11 +392,11 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                       </button>
                     ) : c.name}
                   </td>
-                  <td className="py-2 text-right mono font-semibold" style={S_PRIMARY}>
+                  <td className="py-2.5 px-2 text-right mono font-semibold" style={S_PRIMARY}>
                     {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)}
                   </td>
-                  <td className="py-2 text-right mono" style={S_MUTED}>{c.unit}</td>
-                  {recipe.components.some(comp => comp.note) && <td className="py-2 pl-4 text-xs" style={S_MUTED}>{safeText(c.note, lang)}</td>}
+                  <td className="py-2.5 px-2 text-right mono" style={S_MUTED}>{c.unit}</td>
+                  {recipe.components.some(comp => comp.note) && <td className="py-2.5 pl-4 text-xs" style={S_MUTED}>{safeText(c.note, lang)}</td>}
                 </tr>
               );
             })}
@@ -406,7 +406,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
 
       {/* Preparation steps */}
       {recipe.prepSteps && recipe.prepSteps.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-6">
           <h4 className="text-sm font-bold mb-2" style={S_TEXT}>
             {lang === 'en' ? 'Preparation Steps' : '配制步骤'}
           </h4>
@@ -421,14 +421,14 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
       )}
 
       {(NOTES_EN[recipe.id] || recipe.notes) && (
-        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 detail-text">
+        <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 detail-text">
           <p className="text-xs text-amber-800"><strong>{t('tip', lang)}:</strong> {lang === 'en' && NOTES_EN[recipe.id] ? NOTES_EN[recipe.id] : getRecipeNotes(recipe, lang)}</p>
         </div>
       )}
       {recipe.ref && <div className="mt-3 text-[11px] italic" style={S_MUTED}>
         Ref: {recipe.ref}
       </div>}
-      <div className="mt-4 pt-3 border-t flex gap-2" style={S_BORDER}>
+      <div className="mt-6 pt-4 border-t flex gap-2" style={S_BORDER}>
         <DownloadBtn small label={t('downloadTxt', lang)}
           onClick={() => { downloadFile(recipe.id + '.txt', recipeToText(recipe, targetVol, lang)); toast.show(t('downloaded', lang)); }} />
         <DownloadBtn small label={t('copyClipboard', lang)}

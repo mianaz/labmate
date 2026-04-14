@@ -47,11 +47,14 @@ function RefsTab({ onReplayTour }) {
     { num: '1', titleKey: 'guideBuffersTitle', bodyKey: 'guideBuffersBody' },
     { num: '2', titleKey: 'guideProtocolsTitle', bodyKey: 'guideProtocolsBody' },
     { num: '3', titleKey: 'guideCalcTitle', bodyKey: 'guideCalcBody' },
-    { num: '4', titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
-    { num: '5', titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
-    { num: '6', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
-    { num: '7', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
-    { num: '8', titleKey: 'guideCloudTitle', bodyKey: 'guideCloudBody' },
+    { num: '4', titleKey: 'guideGelTitle', bodyKey: 'guideGelBody' },
+    { num: '5', titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
+    { num: '6', titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
+    { num: '7', titleKey: 'guideNotebookTitle', bodyKey: 'guideNotebookBody' },
+    { num: '8', titleKey: 'guideCalendarTitle', bodyKey: 'guideCalendarBody' },
+    { num: '9', titleKey: 'guideToolsTitle', bodyKey: 'guideToolsBody' },
+    { num: '⌘', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
+    { num: '+', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
     { num: '!', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
   ];
 
@@ -61,13 +64,13 @@ function RefsTab({ onReplayTour }) {
 
   return (
     <div className="fade-in">
-      <div className="card p-6 mb-6">
+      <div className="card p-6 mb-8">
         <h2 className="text-xl font-bold mb-1">{t('refsTitle', lang)}</h2>
         <p className="text-sm" style={S_MUTED}>{t('guideIntro', lang)}</p>
       </div>
 
       {/* Data Export/Import */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         <div className="card p-5">
           <div className="flex items-start gap-3 mb-3">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -102,19 +105,8 @@ function RefsTab({ onReplayTour }) {
         </div>
       </div>
 
-      {/* Cloud Sync — coming soon */}
-      <div className="card p-5 mb-6" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
-        <div className="flex items-start gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-          <div>
-            <h3 className="text-sm font-bold mb-1">{t('cloudBackup', lang)}</h3>
-            <p className="text-xs leading-relaxed" style={S_MUTED}>{lang === 'zh' ? '通过 Google Drive / GitHub OAuth 云同步 — 即将推出' : 'Cloud sync via Google Drive / GitHub OAuth — coming soon'}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Feature guide sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         {guideSections.map((sec, i) => (
           <div key={i} className="card p-5">
             <h3 className="text-base font-bold mb-2" style={{fontFamily:'var(--font-heading)'}}>
@@ -127,7 +119,7 @@ function RefsTab({ onReplayTour }) {
 
       {/* Replay Tour button */}
       {onReplayTour && (
-        <div className="mb-6">
+        <div className="mb-8">
           <button onClick={onReplayTour}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all hover:opacity-90"
             style={{background:'var(--primary)', color:'white'}}>
@@ -138,7 +130,7 @@ function RefsTab({ onReplayTour }) {
       )}
 
       {/* Privacy statement */}
-      <div className="card p-5 mb-6" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
+      <div className="card p-5 mb-8" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
         <div className="flex items-start gap-3">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <div>

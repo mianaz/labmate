@@ -112,11 +112,11 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
           <div className="flex items-center gap-2 mb-4">
             <input type="text" autoComplete="off" placeholder={t('searchPlaceholder', lang)} value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
+              style={{ fontFamily: "'DM Sans', sans-serif", height: '2.375rem', marginBottom: 0 }}
               className="flex-1" />
             <button onClick={() => { setEditingRecipe(null); setShowCustomForm(true); }}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
-              style={{background:'var(--accent-light)', color:'var(--accent)', border:'1px solid var(--border)'}}>
+              className="inline-flex items-center justify-center gap-1 px-3 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+              style={{background:'var(--accent-light)', color:'var(--accent)', border:'1px solid var(--border)', height: '2.375rem'}}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={S_INLINE_ICON}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               {t('addCustomRecipe', lang)}
             </button>
@@ -146,7 +146,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
               </div>
             </div>
           )}
-          <div className="space-y-2 overflow-y-auto pr-1 sidebar-scroll stagger-list" style={{maxHeight:'calc(100vh - 220px)'}}>
+          <div className="space-y-3 overflow-y-auto pr-1 sidebar-scroll stagger-list" style={{maxHeight:'calc(100vh - 220px)'}}>
             {filtered.map(r => (
               <RecipeCard key={r.id} recipe={r} onSelect={handleSelect} selected={selected?.id === r.id} />
             ))}
@@ -213,7 +213,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
                 </div>
               </div>
             )}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {filtered.map(r => (
                 <RecipeCard key={r.id} recipe={r} onSelect={handleMobileSelect} selected={false} />
               ))}

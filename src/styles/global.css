@@ -93,7 +93,8 @@
 /* prefers-color-scheme removed — theme controlled exclusively via data-theme attribute + toggle button */
 
 /* ── Base ───────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Tailwind v4's preflight already resets margin/padding/box-sizing in the base layer.
+   Previously a duplicate unlayered reset here zeroed utilities like p-5/p-6 by out-cascading them. */
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
@@ -201,6 +202,10 @@ nav button:hover { color: var(--text) !important; }
   position: relative;
   overflow: hidden;
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Default card padding — placed in components layer so Tailwind p-* utilities override it */
+@layer components {
+  .card { padding: 1.25rem; }
 }
 .card.card-scroll {
   overflow-y: auto;
@@ -530,13 +535,17 @@ main > div { animation: cardStaggerIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
 
 /* Cards and sections need more internal padding on mobile */
 @media (max-width: 640px) {
-  .card { padding: 0.75rem !important; }
-  main { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+  .card { padding: 1rem !important; }
+  main { padding-left: 1rem !important; padding-right: 1rem !important; padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
 }
 
 /* Recipe list items need more vertical spacing */
-.space-y-1 > * + * { margin-top: 0.35rem; }
-.space-y-2 > * + * { margin-top: 0.6rem; }
+.space-y-1 > * + * { margin-top: 0.5rem; }
+.space-y-2 > * + * { margin-top: 0.875rem; }
+.space-y-3 > * + * { margin-top: 1.25rem; }
+.space-y-4 > * + * { margin-top: 1.5rem; }
+.space-y-5 > * + * { margin-top: 1.75rem; }
+.space-y-6 > * + * { margin-top: 2rem; }
 
 /* Ensure body line-height isn't overridden */
 body {

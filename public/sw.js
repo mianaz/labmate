@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labmate-v3';
+const CACHE_NAME = 'labmate-v6';
 
 // Install: precache essential shell
 self.addEventListener('install', (event) => {
@@ -35,6 +35,9 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  // Skip non-http(s) schemes (e.g. chrome-extension://) — Cache API rejects them
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
   // Hashed assets: cache-first (they're immutable by hash)
   if (url.pathname.match(/\/assets\/.*-[a-zA-Z0-9]{8}\.(js|css|png|svg|ico|json)$/)) {
