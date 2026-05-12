@@ -41,13 +41,18 @@ jobs:
             # Ensure ubuntu owns the deploy target — prior sudo deploys left root-owned files
             # under assets/, causing rsync to fail with EACCES on subsequent ubuntu deploys.
             sudo chown -R ubuntu:ubuntu "$DEST"
+            # Strict rsync: fail the step if any file can't be written, so we don't
+            # ship an index.html that points at assets that didn't actually deploy.
             rsync -rlgoDzvc --delete /tmp/labmate-deploy/ "$DEST/"
             cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
             git pull --ff-only origin main
             cp recipes.json "$DEST/"
             cp sw.js "$DEST/" 2>/dev/null || cp public/sw.js "$DEST/"
-            # Cache-bust asset URLs in index.html (defeats stale Cloudflare 404s
-            # cached from the brief window when a hashed asset didn't exist yet).
-            BUSTER="$(date -u +%Y%m%dT%H%M%SZ)"
-            sed -i "s|/labmate/assets/\\([^\"]*\\)|/labmate/assets/\\1?v=$BUSTER|g" "$DEST/index.html"
             rm -rf /tmp/labmate-deploy
+            # Do NOT add a `?v=...` cache buster to /labmate/assets/ URLs in
+            # index.html — lazy-loaded chunks import the main bundle via a
+            # relative path that does NOT carry the query string, so adding
+            # the buster causes the browser to load the main module twice
+            # (with and without the query), producing two RecipeContext
+            # singletons and breaking Provider propagation across Suspense.
+            # Vite's content-hashed filenames already handle cache invalidation.
