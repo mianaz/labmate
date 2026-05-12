@@ -36,9 +36,18 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            rsync -rlgoDzvc --delete /tmp/labmate-deploy/ /var/www/apps.bioinfospace.com/labmate/
+            set -e
+            DEST=/var/www/apps.bioinfospace.com/labmate
+            # Ensure ubuntu owns the deploy target — prior sudo deploys left root-owned files
+            # under assets/, causing rsync to fail with EACCES on subsequent ubuntu deploys.
+            sudo chown -R ubuntu:ubuntu "$DEST"
+            rsync -rlgoDzvc --delete /tmp/labmate-deploy/ "$DEST/"
             cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
             git pull --ff-only origin main
-            cp recipes.json /var/www/apps.bioinfospace.com/labmate/
-            cp sw.js /var/www/apps.bioinfospace.com/labmate/ 2>/dev/null || cp public/sw.js /var/www/apps.bioinfospace.com/labmate/
+            cp recipes.json "$DEST/"
+            cp sw.js "$DEST/" 2>/dev/null || cp public/sw.js "$DEST/"
+            # Cache-bust asset URLs in index.html (defeats stale Cloudflare 404s
+            # cached from the brief window when a hashed asset didn't exist yet).
+            BUSTER="$(date -u +%Y%m%dT%H%M%SZ)"
+            sed -i "s|/labmate/assets/\\([^\"]*\\)|/labmate/assets/\\1?v=$BUSTER|g" "$DEST/index.html"
             rm -rf /tmp/labmate-deploy
