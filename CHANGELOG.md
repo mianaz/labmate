@@ -2,6 +2,23 @@
 
 All notable changes to LabMate will be documented in this file.
 
+## [2.2.0] - 2026-05-12
+
+### Added
+- **Plate Reader Import** — new sub-mode inside the Plate tab that auto-detects 6/12/24/48/96/384-well grids from Tecan / BioTek / SpectraMax CSV/TSV exports, pivots to long-format (tidy) data with `well, row, col, value, sample` columns
+  - Skips metadata header rows (date/wavelength/title) above the grid
+  - Tolerates `OVRFLW`, `<0.001` and other non-numeric markers
+  - Optional merge with sample labels assigned in the Plate Designer
+  - Heatmap preview, per-sample mean/SD/CV% summary, download CSV / copy to clipboard
+- 19 new parser unit tests covering grid detection, header peeling, error cases, and CSV serialization
+
+### Fixed
+- **CI lint failure**: duplicate `deadVolDesc` key in `i18n/translations.js` no longer fails `npm run lint`
+
+### Changed
+- Test count: 77 → 96 (added `plateReaderParser.test.js`)
+- Docs (`apps/labmate.md`) refreshed to describe the new Reader Import flow
+
 ## [2.1.0] - 2026-04-13
 
 ### Added

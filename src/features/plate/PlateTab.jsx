@@ -6,6 +6,7 @@ import { S_MUTED, S_PRIMARY } from '../../lib/styleConstants.js';
 import { downloadFile } from '../../lib/utils.js';
 import { plateToCSV, plateToSVG } from './plateExport.js';
 import PlateTableView from './PlateTableView.jsx';
+import PlateReaderImport from './PlateReaderImport.jsx';
 
 import DownloadBtn from '../../components/DownloadBtn.jsx';
 import { useToast } from '../../components/Toast.jsx';
@@ -13,6 +14,7 @@ import { useToast } from '../../components/Toast.jsx';
 function PlateTab() {
   const lang = useLang();
   const toast = useToast();
+  const [mode, setMode] = useState('designer'); // 'designer' | 'reader'
   const [plateType, setPlateType] = useState(96);
   const [wellData, setWellData] = useState({});
   const [selectedWells, setSelectedWells] = useState(new Set());
@@ -444,17 +446,44 @@ function PlateTab() {
             <h2 className="text-xl font-bold mb-1">{t('plateTitle', lang)}</h2>
             <p className="text-sm" style={S_MUTED}>{t('plateSubtitle', lang)}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <label className="text-xs font-semibold" style={S_MUTED}>{t('plateType', lang)}:</label>
-            <select value={plateType} onChange={e => setPlateType(+e.target.value)} className="w-28">
-              {Object.keys(PLATE_CONFIGS).map(k => (
-                <option key={k} value={k}>{k}-well</option>
-              ))}
-            </select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="inline-flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              <button onClick={() => setMode('designer')}
+                className="px-3 py-1.5 text-xs font-semibold transition-colors"
+                style={{
+                  background: mode === 'designer' ? 'var(--primary)' : 'var(--card)',
+                  color: mode === 'designer' ? 'white' : 'var(--text-muted)',
+                }}>
+                {t('plateModeDesigner', lang)}
+              </button>
+              <button onClick={() => setMode('reader')}
+                className="px-3 py-1.5 text-xs font-semibold transition-colors"
+                style={{
+                  background: mode === 'reader' ? 'var(--primary)' : 'var(--card)',
+                  color: mode === 'reader' ? 'white' : 'var(--text-muted)',
+                }}>
+                {t('plateModeReader', lang)}
+              </button>
+            </div>
+            {mode === 'designer' && (
+              <>
+                <label className="text-xs font-semibold" style={S_MUTED}>{t('plateType', lang)}:</label>
+                <select value={plateType} onChange={e => setPlateType(+e.target.value)} className="w-28">
+                  {Object.keys(PLATE_CONFIGS).map(k => (
+                    <option key={k} value={k}>{k}-well</option>
+                  ))}
+                </select>
+              </>
+            )}
           </div>
         </div>
       </div>
 
+      {mode === 'reader' && (
+        <PlateReaderImport wellData={wellData} plateConfig={config} designerPlateSize={plateType} />
+      )}
+
+      {mode === 'designer' && (
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
           <div className="card p-5 overflow-x-auto">
@@ -674,6 +703,7 @@ function PlateTab() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
