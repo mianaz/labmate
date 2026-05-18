@@ -187,8 +187,19 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         <div className="mb-5 text-sm" style={S_MUTED}>
           {recipe.ph && <p>pH {recipe.ph}</p>}
           {recipe.storage && (() => {
-            const rawLabel = recipe.storage.label[lang] || recipe.storage.label.zh;
-            const cleanLabel = rawLabel.replace(/^(Protocol|实验方案)\s*[—–-]\s*/i, '');
+            const { storage } = recipe;
+            // Two recipe shapes exist: protocols carry `storage.label.{en,zh}`,
+            // buffers carry `{temperature, duration, sterile, notes}`.
+            let cleanLabel;
+            if (storage.label) {
+              const rawLabel = storage.label[lang] || storage.label.zh || storage.label.en;
+              cleanLabel = (rawLabel || '').replace(/^(Protocol|实验方案)\s*[—–-]\s*/i, '');
+            } else {
+              cleanLabel = [storage.temperature || storage.temp, storage.duration]
+                .filter(Boolean)
+                .join(', ');
+            }
+            if (!cleanLabel) return null;
             const fieldLabel = isProtocol ? t('durationLabel', lang) : t('storageLabel', lang);
             return <p>{fieldLabel}: {cleanLabel}</p>;
           })()}
