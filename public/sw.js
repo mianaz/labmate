@@ -12,7 +12,17 @@ self.addEventListener('install', (event) => {
       ]);
     })
   );
-  self.skipWaiting();
+  // Intentionally no self.skipWaiting() here — a new SW should sit in `waiting` until
+  // the user accepts the update toast (see message handler below), not silently take
+  // over an in-progress session.
+});
+
+// Let the page trigger activation on demand (see main.jsx / Toast.jsx update flow)
+// instead of the new SW silently taking over mid-session.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate: clean old caches

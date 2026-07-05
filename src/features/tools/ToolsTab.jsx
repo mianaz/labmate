@@ -92,9 +92,9 @@ function ToolsTab() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        const count = importBackup(ev.target.result);
+        const count = await importBackup(ev.target.result);
         toast.show(t('importSuccess', lang).replace('{n}', count));
         setTimeout(() => window.location.reload(), 500);
       } catch {

@@ -49,6 +49,50 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
     }
   };
 
+  // ── Touch drag-select (mirrors the mouse handlers above for touchscreens) ──
+  // Touch events stay targeted to the cell where the gesture started, so we
+  // resolve the *current* finger position via elementFromPoint + data attrs.
+  const handleTouchStart = (r, c) => {
+    if (!selectMode) return;
+    dragStart.current = { r, c };
+    setDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!selectMode || !dragStart.current) return;
+    // Keep the drag gesture from scrolling the page/grid while selecting.
+    if (e.cancelable) e.preventDefault();
+  };
+
+  const cellAtTouchPoint = (touch) => {
+    if (!touch || typeof document.elementFromPoint !== 'function') return null;
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const cellEl = el && el.closest ? el.closest('[data-cell-row]') : null;
+    if (!cellEl) return null;
+    const r = parseInt(cellEl.dataset.cellRow, 10);
+    const c = parseInt(cellEl.dataset.cellCol, 10);
+    if (Number.isNaN(r) || Number.isNaN(c)) return null;
+    return { r, c };
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!selectMode || !dragStart.current) return;
+    const end = cellAtTouchPoint(e.changedTouches && e.changedTouches[0]) || dragStart.current;
+    if (dragStart.current.r === end.r && dragStart.current.c === end.c) {
+      onToggleSelect && onToggleSelect(posLabel(end.r, end.c));
+    } else {
+      const r0 = Math.min(dragStart.current.r, end.r), r1 = Math.max(dragStart.current.r, end.r);
+      const c0 = Math.min(dragStart.current.c, end.c), c1 = Math.max(dragStart.current.c, end.c);
+      const positions = [];
+      for (let ri = r0; ri <= r1; ri++)
+        for (let ci = c0; ci <= c1; ci++)
+          positions.push(posLabel(ri, ci));
+      onDragSelect && onDragSelect(positions);
+    }
+    dragStart.current = null;
+    setDragging(false);
+  };
+
   // Build column headers
   const colHeaders = Array.from({ length: box.cols }, (_, c) => (
     <div
@@ -82,11 +126,16 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
       return (
         <div
           key={pos}
+          data-cell-row={r}
+          data-cell-col={c}
           onClick={() => { if (!selectMode) onCellClick(pos, sample); }}
           onMouseDown={() => handleMouseDown(r, c)}
           onMouseUp={() => handleMouseUp(r, c)}
           onMouseEnter={e => handleMouseEnter(e, r, c)}
           onMouseLeave={e => { if (!selectMode) e.currentTarget.style.transform = 'scale(1)'; }}
+          onTouchStart={() => handleTouchStart(r, c)}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           title={sample ? (sample.name + ' (' + pos + ')' + (isExpired ? ' — Expired' : '')) : pos}
           style={{
             width: cellSize,
@@ -110,6 +159,7 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
             textShadow: sample ? '0 0 2px rgba(255,255,255,0.4)' : 'none',
             transition: 'transform 0.1s, background 0.1s',
             position: 'relative',
+            touchAction: selectMode ? 'none' : 'auto',
           }}
         >
           {isSelected ? '✓' : sample ? sample.name.slice(0, cellSize >= 36 ? 5 : 3) : ''}

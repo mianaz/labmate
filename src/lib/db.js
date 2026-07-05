@@ -30,6 +30,20 @@ db.version(2).stores({
 
 export default db;
 
+// ─── Persistent storage: ask the browser not to evict IndexedDB/localStorage ───
+// Without this, Safari/iOS can silently wipe all local data after ~7 days of
+// site inactivity — fatal for a local-only notebook. Best-effort: Chromium
+// decides silently from engagement, Firefox may prompt, unsupported → null.
+export async function ensurePersistentStorage() {
+  try {
+    if (!navigator.storage || !navigator.storage.persist) return null;
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return null;
+  }
+}
+
 // ─── Migration: import existing localStorage data on first run ───
 export async function migrateFromLocalStorage() {
   const migrated = await db.settings.get('_migrated_from_ls');

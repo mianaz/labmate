@@ -39,35 +39,37 @@ function GelTable({ title, data, color, lang }) {
   return (
     <div className="card p-5">
       <h3 className="text-sm font-bold mb-3" style={{color}}>{title}</h3>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b-2" style={S_BORDER}>
-            <th className="text-left py-2">{t('reagent', lang)}</th>
-            <th className="text-right py-2">{t('amount', lang)}</th>
-            <th className="text-right py-2">{t('unit', lang)}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, i) => (
-            <tr key={i} className="border-b" style={{borderColor:'var(--border)'}}>
-              <td className="py-2 font-medium">{row.name}</td>
-              <td className="py-2 text-right mono font-semibold" style={{color}}>
-                {row.unit === 'µL' ? row.vol.toFixed(1) : row.vol.toFixed(3)}
-              </td>
-              <td className="py-2 text-right text-gray-500 mono">{row.unit}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b-2" style={S_BORDER}>
+              <th className="text-left py-2">{t('reagent', lang)}</th>
+              <th className="text-right py-2">{t('amount', lang)}</th>
+              <th className="text-right py-2">{t('unit', lang)}</th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="border-t-2 font-bold" style={{borderColor: color}}>
-            <td className="py-2">{t('gelTotal', lang)}</td>
-            <td className="py-2 text-right mono" style={{color}}>
-              {data.reduce((sum, r) => sum + (r.unit === 'µL' ? r.vol/1000 : r.vol), 0).toFixed(2)}
-            </td>
-            <td className="py-2 text-right text-gray-500 mono">mL</td>
-          </tr>
-        </tfoot>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i} className="border-b" style={{borderColor:'var(--border)'}}>
+                <td className="py-2 font-medium">{row.name}</td>
+                <td className="py-2 text-right mono font-semibold" style={{color}}>
+                  {row.unit === 'µL' ? row.vol.toFixed(1) : row.vol.toFixed(3)}
+                </td>
+                <td className="py-2 text-right text-gray-500 mono">{row.unit}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 font-bold" style={{borderColor: color}}>
+              <td className="py-2">{t('gelTotal', lang)}</td>
+              <td className="py-2 text-right mono" style={{color}}>
+                {data.reduce((sum, r) => sum + (r.unit === 'µL' ? r.vol/1000 : r.vol), 0).toFixed(2)}
+              </td>
+              <td className="py-2 text-right text-gray-500 mono">mL</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   );
 }

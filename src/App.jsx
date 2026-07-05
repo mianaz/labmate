@@ -9,7 +9,9 @@ import { TimerProvider, TimerBar, QuickTimerButton } from './components/Timer.js
 import RecipeProvider, { useRecipes } from './lib/RecipeProvider.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Header from './components/Header.jsx';
-import QuickCalculatorButton from './features/calc/QuickCalculatorButton.jsx';
+import BottomNav from './components/BottomNav.jsx';
+import MoreSheet from './components/MoreSheet.jsx';
+import InstallPrompt from './components/InstallPrompt.jsx';
 
 // Eager load (always needed on first render)
 import BuffersTab from './features/buffers/BuffersTab.jsx';
@@ -86,6 +88,7 @@ function AppInner() {
   const [calcInitialMode, setCalcInitialMode] = useState(null);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
   const [recipeVersion, setRecipeVersion] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
   const toast = useToast();
 
   const refreshRecipes = useCallback(async () => {
@@ -177,18 +180,41 @@ function AppInner() {
         </Suspense>
         <main className="max-w-6xl mx-auto px-6 md:px-10 lg:px-12 py-8 md:py-10">
           {showBackupReminder && (
-            <div className="mb-5 px-5 py-4 rounded-lg flex items-center justify-between gap-4 text-sm"
-              style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
-              <span style={{lineHeight:'1.5'}}>{t('backupReminder', lang)}</span>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
-                  className="px-3 py-1 rounded-md text-xs font-semibold"
-                  style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>{t('backupNow', lang)}</button>
-                <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
-                  className="px-3 py-1 rounded-md text-xs font-semibold"
-                  style={{ background: 'transparent', color: 'var(--warning-text)', border: '1px solid var(--warning-border)' }}>{t('dismissReminder', lang)}</button>
+            <>
+              {/* Full banner — sm: and up (≥640px), unchanged from pre-mobile-overhaul */}
+              <div className="hidden sm:flex mb-5 px-5 py-4 rounded-lg items-center justify-between gap-4 text-sm"
+                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
+                <span style={{lineHeight:'1.5'}}>{t('backupReminder', lang)}</span>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
+                    className="px-3 py-1 rounded-md text-xs font-semibold"
+                    style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>{t('backupNow', lang)}</button>
+                  <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
+                    className="px-3 py-1 rounded-md text-xs font-semibold"
+                    style={{ background: 'transparent', color: 'var(--warning-text)', border: '1px solid var(--warning-border)' }}>{t('dismissReminder', lang)}</button>
+                </div>
               </div>
-            </div>
+              {/* Slim banner — below sm (<640px): same state/handlers, compact one-liner (≤44px) */}
+              <div className="sm:hidden mb-3 px-3 py-2 flex items-center justify-between gap-3 text-xs"
+                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
+                <span className="truncate" style={{ lineHeight: '1.3' }}>
+                  {lang === 'zh' ? '仅本地存储，请定期备份' : 'Local data only — back up regularly'}
+                </span>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
+                    className="font-semibold py-1"
+                    style={{ color: 'var(--warning-text)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                    {lang === 'zh' ? '备份' : 'Back up'}
+                  </button>
+                  <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
+                    aria-label={lang === 'zh' ? '关闭' : 'Dismiss'}
+                    className="font-bold leading-none px-1 py-1"
+                    style={{ color: 'var(--warning-text)', fontSize: '1rem' }}>
+                    ×
+                  </button>
+                </div>
+              </div>
+            </>
           )}
           <div key={activeTab} className="tab-fade-in">
             <Routes>
@@ -290,7 +316,10 @@ function AppInner() {
         </footer>
         <TimerBar />
         <QuickTimerButton />
-        <QuickCalculatorButton />
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} lang={lang} />
+        <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab}
+          lang={lang} setLang={setLang} onRefreshRecipes={refreshRecipes} isSyncing={syncing} />
+        <InstallPrompt />
         <div className="grain" aria-hidden="true" />
       </div>
     </LangContext.Provider>
