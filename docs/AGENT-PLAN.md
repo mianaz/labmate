@@ -7,14 +7,15 @@
 
 ## 0. Locked owner decisions (recap)
 
-1. **Two key modes.** DEFAULT = owner key via server-side proxy (Bioinfospace API :3001, systemd `bioinfospace-api.service`, nginx rate-limit zones, Redis on `localhost:6379`) with strict per-session/IP limits, cheap/free model allowlist, hard monthly spend cap (<$10/mo budget). **BYOK** = user key, client-side only, browser→provider direct, never touches our server. Optional **local LLM** (Ollama / LM Studio on localhost).
-2. **Trust model (Biomni-style):** open-source client; in BYOK mode the key is never proxied and calls are visible in the browser Network tab.
+1. **One key, one mode on web.** WEB = owner key via server-side proxy ONLY — **no BYOK / key-input UI on the web build**. The owner key is a **single OpenRouter key** (`LABMATE_OPENROUTER_API_KEY`, one OpenAI-compatible endpoint `https://openrouter.ai/api/v1`) reaching a **3-model allowlist** through one adapter. Proxy runs on Bioinfospace API :3001 (systemd `bioinfospace-api.service`, nginx rate-limit zones, Redis on `localhost:6379`) with strict per-session/IP limits and a hard monthly spend cap ($8 soft, <$10/mo budget). **BYOK + local LLM are DEFERRED to the desktop/Capacitor app** (`origin/desktop`) — §5 keeps their design for that build; the web repo ships neither.
+   - **Model roster (3, no free tier):** `minimax/minimax-m3` = **DEFAULT** — on a prepaid MiniMax token plan billed via the OpenRouter key, so its spend **does NOT count toward the $8 cap until that plan is exhausted**, and it is never blocked by the cap (the default always works); `deepseek/deepseek-v4-flash` = **fallback**, surfaced as **"Fast"** (draws real credits → counts toward the cap); `z-ai/glm-5.2` = **selective premium** (opt-in). Default chain = MiniMax → DeepSeek. When the cap trips, cap-counting models (DeepSeek/GLM) return `402`; MiniMax still serves.
+2. **Trust model (Biomni-style):** open-source client. On web the LLM turn is proxied (owner key can't ship to the browser); BYOK's un-proxied "verify in Network tab" story applies to the **desktop app** where the user's own key is used.
 3. **Agent behavior:** a chatbox that clarifies → retrieves from the curated recipe library → generates an editable/downloadable protocol → schedules experiments in the calendar → auto-pulls reagent locations from inventory → later runs a deterministic one-click analysis on uploaded raw data.
 4. **HARD RED LINE — bio content is retrieval-only.** The LLM NEVER invents biology/protocols; it only retrieves from the curated library and orchestrates existing app functions. Numeric analysis (e.g. qPCR ΔΔCt) is done by a deterministic calculator, NOT the LLM.
 5. **Tool-calling loop over EXISTING app functions.**
 6. **Permissions:** agent may auto-write, user sets per-tool `auto | ask | off`; default `ask`.
-7. **Web stays LIGHTWEIGHT.** Heavy features → Capacitor **APP** version (`origin/desktop` branch, already scaffolded: `capacitor.config.ts`, `android/`, `ios/`).
-8. **Privacy copy stays HONEST.** Proxy mode transits our server (disclose; we don't log/store). BYOK = direct to provider. Local = fully on-device.
+7. **Web stays LIGHTWEIGHT.** Heavy features **and BYOK/local key modes** → Capacitor **APP** version (`origin/desktop` branch, already scaffolded: `capacitor.config.ts`, `android/`, `ios/`).
+8. **Privacy copy stays HONEST.** Web proxy transits our server via OpenRouter (disclose; we don't log/store, and OpenRouter is configured no-log/no-train — see §4.7). Desktop BYOK = direct to provider; desktop local = fully on-device.
 
 ---
 
@@ -65,7 +66,7 @@ LabMate is a client-only PWA (React 19 + Vite 6 + Tailwind v4 + Dexie/IndexedDB 
 │  │  searchProtocols       │           │  (owner key + Redis rate-limit          │
 │  │  getProtocol           │           │   + model allowlist + $ cap)            │
 │  │  queryInventory        │           ▼                                         │
-│  │  runCalculator         │     ANTHROPIC_API_KEY / DEEPSEEK_API_KEY (env)      │
+│  │  runCalculator         │     LABMATE_OPENROUTER_API_KEY → openrouter.ai/api/v1      │
 │  │  createExperiment      │                                                     │
 │  │  scheduleCalendarEvent │                                                     │
 │  │  exportProtocol        │                                                     │
@@ -235,7 +236,9 @@ The LLM's only role is to (a) pick the analyzer, (b) map columns, (c) narrate th
 
 ## 4. Owner-key proxy design
 
-Lives in the existing backend: new route **`src/routes/agent.js` [NEW]** under `/var/www/bioinfospace.com/backend/`, registered in `server.js` (`app.use('/api/labmate/agent', agentRoutes)`). Reuses the provider-selection pattern already in `services/claudeSummarizer.js` (`getProvider()` reads `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` from env). Redis client is **[NEW]** (`ioredis` — not yet a backend dep; add it; Redis is up on `localhost:6379`).
+Lives in the existing backend: new route **`src/routes/agent.js` [NEW]** + config **`src/config/agentModels.js` [NEW]** under `/var/www/bioinfospace.com/backend/`, registered in `server.js` (`app.use('/api/labmate/agent', agentRoutes)`). **One OpenRouter client** (OpenAI-compatible `fetch` to `https://openrouter.ai/api/v1/chat/completions`, `Authorization: Bearer $LABMATE_OPENROUTER_API_KEY`) reaches all three models by their namespaced IDs — this collapses the old three-provider `getProvider()` fan-out from `claudeSummarizer.js` into a single adapter that only varies the `model` field. Rate-limit + spend counters use a small pluggable store **`utils/agentRateStore.js` [NEW]** that prefers `ioredis` (Redis up on `localhost:6379`) and falls back to an in-process Map (the API is a single systemd process, so in-memory is a safe default until `ioredis` is added).
+
+> **Why OpenRouter buys us three things** the raw-provider design couldn't: (a) the **$8 cap can be set on the key itself** in the OpenRouter dashboard — a billing-level hard ceiling independent of our code; (b) **no-log / no-train** data policy + **provider-routing preferences** are set account-side, so we can honestly disclose it and keep open-weight traffic off undesired hosts; (c) **MiniMax's prepaid token plan** and any future model are reachable through the *same* key — no second account — and because OpenRouter returns real **`usage.cost` (USD)** (when we set `usage:{include:true}`), a plan-billed call reports ~$0 and self-excludes from the shared cap, making the monthly spend counter both exact and prepaid-aware.
 
 ### 4.1 Endpoints
 - `GET /api/labmate/agent/models` → `{ models: [{id,label,ctx}], defaultModel }` — the allowlist, so the client can render the model picker.
@@ -246,9 +249,11 @@ Lives in the existing backend: new route **`src/routes/agent.js` [NEW]** under `
 POST /api/labmate/agent/chat
 Headers: Content-Type: application/json
          X-LabMate-Session: <uuid>          // anonymous, generated client-side, stored in db.settings
-Body:    { "model": "deepseek-chat",
+Body:    { "model": "deepseek-v4-flash",    // allowlist KEY (not the raw OpenRouter id) — server maps it
            "messages": [ {role, content|tool_calls|tool_call_id}... ],
            "tools":    [ <schemas from §3> ] }
+         // server injects: model → AGENT_MODELS[key].model (e.g. "deepseek/deepseek-v4-flash"),
+         //                 stream:true, stream_options:{include_usage:true}, usage:{include:true}
 
 200 text/event-stream:
   event: delta   data: {"content":"…"}                 // token stream
@@ -263,39 +268,53 @@ Body:    { "model": "deepseek-chat",
 400: { "error":"model_not_allowed", "allowed":[...] }
 ```
 
-### 4.3 Model allowlist (cheap/free only)
-Hard-coded server-side; env keys never exposed to client:
-```
-deepseek-chat            (DeepSeek — cheapest, preferred default)
-claude-3-5-haiku-latest  (Anthropic Haiku)
-gpt-4o-mini              (OpenAI)
-```
-Any other id → 400. Verify current per-token pricing before shipping the cap (see claude-api skill for Anthropic rates). Default surfaced to client = `deepseek-chat`.
+### 4.3 Model allowlist (single OpenRouter key)
+Defined in `config/agentModels.js`; the OpenRouter key never leaves the server. Client sends the **allowlist key** (left column); server maps it to the OpenRouter **model id** and price. Any other key → `400 model_not_allowed`.
 
-### 4.4 Rate-limit strategy (per-IP + per-session token bucket in Redis)
+| Allowlist key | OpenRouter id | Badge | Tier | Counts to cap? | Price /1M (in / out) | Notes |
+|---|---|---|---|---|---|---|
+| `minimax-m3` | `minimax/minimax-m3` | Default | default | **No** (prepaid plan) | $0.30 / $1.20 | **surfaced default**, 1M ctx; never blocked by cap |
+| `deepseek-v4-flash` | `deepseek/deepseek-v4-flash` | Fast | default | Yes | $0.14 / $0.28 | fallback in the default chain |
+| `glm-5.2` | `z-ai/glm-5.2` | Premium | premium | Yes | $1.40 / $4.40 | opt-in quality tier |
+
+**No free tier.** Default chain = `['minimax-m3','deepseek-v4-flash']` (prepaid default first, DeepSeek fallback on error). MiniMax runs on a prepaid token plan billed to its own allotment via the OpenRouter key, so `estimateCostUsd` reads ~$0 from `usage.cost` and it self-excludes from the shared cap until the plan is exhausted (after which cost turns real and starts counting). `bypassCap:true` also means the cap gate never blocks it. GLM is opt-in only, **not** in the chain. Prices confirmed against OpenRouter before the cap goes live.
+
+### 4.4 Rate-limit strategy (per-IP + per-session, per-tier)
 Two independent gates, both must pass:
-1. **Per-IP** — reuse `express-rate-limit` (already imported in `server.js`; nginx `api_zone` 20 r/s also fronts it). Add a dedicated limiter on the agent router, e.g. 15 req / 5 min / IP.
-2. **Per-session token bucket (Redis)** — key `labmate:agent:rl:<session>` with a sliding/leaky bucket: e.g. **20 msgs/hour, 120 msgs/day**. Also cap **input tokens/day** per session (e.g. 200k) to stop context-stuffing. On depletion → `429 + Retry-After` (seconds to next refill). Implementation: `INCR` + `EXPIRE`, or a small Lua leaky-bucket script for atomicity.
+1. **Per-IP** — reuse `express-rate-limit` (already imported in `server.js`; nginx `api_zone` 20 r/s also fronts it). Add a dedicated limiter on the agent router, e.g. 30 req / 5 min / IP.
+2. **Per-session, per-tier bucket** (`utils/agentRateStore.js`, Redis or in-memory) — keyed `labmate:agent:rl:<tier>:<session>`, limits pulled from the tier of the requested model. **Owner-set defaults** (DeepSeek/MiniMax are cheap, so generous):
+
+   | Tier | rpm | rpd | Rationale |
+   |---|---|---|---|
+   | `default` (MiniMax M3, DeepSeek V4 Flash) | **20** | **200** | both cheap/prepaid; 200 DeepSeek req/day ≈ $0.10/day worst-case — trivial vs the $8 cap |
+   | `premium` (GLM-5.2) | 10 | 40 | ~10× the per-token price → leash it so it can't eat the month (≈ $1–2/mo worst case) |
+
+   On depletion → `429 + Retry-After` (seconds to next window). Implementation: `INCR`+`EXPIRE` per rolling minute and per UTC day. Also cap **input tokens/day** per session (e.g. 200k) to stop context-stuffing.
 
 ### 4.5 Monthly spend cap
-- Redis counter `labmate:agent:spend:<YYYY-MM>` (float USD), `EXPIRE` ~40 days.
-- After each provider call, estimate cost from returned `usage` × per-model price table → `INCRBYFLOAT`.
-- Soft cap at **$8** → start returning `402 budget_exceeded` for owner-proxy chat (reads/tools still work; user prompted to switch to BYOK/local). Keeps <$10/mo with headroom.
-- `GET /api/labmate/agent/models` also returns `{ budget: { softCapUsd, spentUsd, month } }` so the client can pre-warn near the cap.
+- Counter `labmate:agent:spend:<YYYY-MM>` (float USD), `EXPIRE` ~40 days.
+- After each call, cost = OpenRouter-returned **`usage.cost`** (exact USD; fall back to `tokens × price` only if absent). **The shared counter increments only when `usage.is_byok` is falsy** — a BYOK/prepaid call (e.g. MiniMax billed to its own token plan) has `is_byok:true` and `include_byok_in_limit:false` on the key, so it's outside the cap. ⚠ **Verified 2026-07-05:** MiniMax currently returns `is_byok:false` (billing OpenRouter credits) — the prepaid plan only kicks in once the MiniMax key is added as a **BYOK integration** in the OpenRouter dashboard. Until then MiniMax counts toward the cap like the others.
+- The cap **gate** is skipped for `bypassCap` models (MiniMax) — the default is never blocked. Cap-counting models (DeepSeek, GLM) return `402 budget_exceeded` at/over the soft cap.
+- Soft cap at **$8** → the client falls back to the **default (MiniMax)**, which still serves (reads/tools always work). Keeps <$10/mo with headroom.
+- **Belt + suspenders:** also set an **$8 credit/spend limit on the OpenRouter key itself** (dashboard) — a provider-enforced hard ceiling even if this counter has a bug, and the true backstop if MiniMax's prepaid plan runs out while the cap is already reached.
+- `GET /api/labmate/agent/models` returns `{ budget: { softCapUsd, spentUsd, month } }` so the client can pre-warn near the cap.
 
 ### 4.6 Client discovers rate-limit state
-- `429` + `Retry-After` → chatbox shows a non-blocking banner: "Owner-key limit reached, retry in N s — or switch to your own key / local model." with a one-tap deep link to key settings.
-- `402` → same banner, budget wording.
+- `429` + `Retry-After` → chatbox shows a non-blocking banner: "Rate limit reached, retry in N s" (on `premium`, also "— or switch back to the default model"). Web has no BYOK; the desktop app adds "or use your own key / local model".
+- `402` (only on DeepSeek/GLM) → budget wording + one-tap **"switch to default (MiniMax)"** (re-issues with `model:'minimax-m3'`, which bypasses the cap).
 - Optional soft signal: proxy echoes `X-RateLimit-Remaining` / `X-Budget-Remaining` headers; client shows a subtle meter when low.
 
 ### 4.7 Privacy at the proxy
 - `morgan` must **not** log request bodies for this route (log method/status/latency only). Add a route-scoped skip.
-- No persistence of `messages` anywhere (no DB, no file, no Redis value — Redis stores only counters keyed by session/IP).
+- No persistence of `messages` anywhere (no DB, no file, no store value — the rate store holds only counters keyed by session/IP).
+- **OpenRouter account configured no-log / no-train** (data policy off; provider-routing set to exclude undesired hosts). So the disclosure is: messages transit our server → OpenRouter → provider, none of which log or train on them.
 - Disclosed in privacy copy (§9): messages transit our server in transit only; not stored/logged.
 
 ---
 
-## 5. BYOK + local-LLM client design
+## 5. BYOK + local-LLM client design  *(DESKTOP APP ONLY — not shipped on web)*
+
+> **Scope note (owner decision §0.1):** the **web** build ships **only** `ownerProxy.js` (owner OpenRouter key). Everything else in this section — BYOK cloud keys, local Ollama/LM Studio, key storage, "clear key" UX — lands on the **Capacitor desktop app** (`origin/desktop`). The adapter interface is kept identical so `ownerProxy` and the app adapters share one code path.
 
 All client LLM I/O goes through **`src/lib/agent/providers/` [NEW]** with a common interface `createChat({messages, tools, model, signal}) → AsyncIterable<delta>`:
 
@@ -426,8 +445,8 @@ agentKeyStoreSession: { en: 'This session only (forgotten on reload)', zh: '仅�
 agentClearKey: { en: 'Clear key', zh: '清除密钥' },
 agentKeyCleared: { en: 'Key removed from this device.', zh: '已从本设备移除密钥。' },
 
-agentRateLimited: { en: 'Shared-key limit reached. Retry shortly, or switch to your own key / a local model.', zh: '共享密钥已达上限。请稍后重试，或切换到自有密钥 / 本地模型。' },
-agentBudgetExceeded: { en: 'The shared monthly budget is used up. Switch to your own key or a local model to continue.', zh: '本月共享预算已用尽。请切换到自有密钥或本地模型以继续使用。' },
+agentRateLimited: { en: 'Rate limit reached. Retry shortly, or switch back to the default model.', zh: '已达速率上限。请稍后重试，或切换回默认模型。' },
+agentBudgetExceeded: { en: 'The monthly budget for this model is used up. Switch to the default model to continue.', zh: '该模型的本月预算已用尽。请切换到默认模型以继续使用。' },
 
 agentRedLine: { en: 'Bio content is retrieval-only: steps and reagents come from the curated library, and all calculations run in deterministic app functions — not from the language model.', zh: '生物内容仅来自检索：步骤与试剂取自精选库，所有计算均由确定性的应用函数完成——而非语言模型。' },
 
@@ -466,11 +485,12 @@ Rule of thumb: **web = orchestration + light deterministic analysis on shared or
 
 ## 11. Phased milestones (+ acceptance tests)
 
-**Phase 0 — plumbing (no LLM).** Add `AgentToolsContext`, tool layer, retrieval helpers, `saveExperimentRecord`, extracted `experimentToMarkdown`. Fix `briefSteps/detailedSteps`→`components` fallback in Notebook/Calendar.
+**Phase 0 — plumbing (no LLM).** Add `AgentToolsContext`, tool layer, retrieval helpers, `saveExperimentRecord`, extracted `experimentToMarkdown`.
+- ✅ **DONE 2026-07-05 — protocol-import step normalization.** `src/lib/protocolImport.js` (pure: `normalizeProtocolSteps`/`toProcedureSteps`/`toReagents`/`recipeTitle`) now feeds Notebook + Calendar imports; 10 Vitest cases in `src/lib/__tests__/protocolImport.test.js`. Fixed a live bug: imports read `s.text||s.step` on `{en,zh}` step objects (→ **blank steps** for all 99 library protocols) and preferred `briefSteps` (a single "→"-joined summary line) over the real `detailedSteps` list, plus read a non-existent `recipe.nameZh` (field is `nameCn`). Now prefers `detailedSteps` (section headers dropped, language-aware), falls back to `briefSteps` for custom recipes. The agent's `getProtocol` tool can reuse this normalizer.
 - *Accept:* unit tests (Vitest, `src/lib/agent/__tests__`) — `searchRecipes` finds `trizol_extraction`; `getProtocol` returns normalized steps from `components`; `queryInventory` resolves a seeded sample's box/location; `createExperiment` handler writes a record readable via `db.experiments.get`.
 
 **Phase 1 — MVP chatbox (owner proxy, read + plan).** `AgentPanel`, loop, `ownerProxy` adapter, backend `agent.js` with allowlist + per-session Redis limit (spend cap stubbed). Tools: search/get/queryInventory/runCalculator/createExperiment/scheduleCalendarEvent/exportProtocol. All writes gated `ask`.
-- *Accept:* the owner flow (§8 steps 1–7) runs end-to-end against `deepseek-chat`; a notebook entry + 3 calendar events appear and are visible in the Notebook/Calendar tabs; `429` shows the switch-mode banner; asking for a protocol not in the library yields a "not found, no fabrication" reply (manual red-line check).
+- *Accept:* the owner flow (§8 steps 1–7) runs end-to-end against `minimax-m3` (the default); a notebook entry + 3 calendar events appear and are visible in the Notebook/Calendar tabs; `429` shows the switch-mode banner; asking for a protocol not in the library yields a "not found, no fabrication" reply (manual red-line check).
 
 **Phase 2 — permissions + BYOK/local.** `agent_permissions` model + `PermissionDialog`; `KeyModeSettings` with owner/BYOK/local; `openaiCompat` + `anthropic` adapters; privacy copy (§9).
 - *Accept:* setting `createExperiment: ask` shows the confirm dialog with an accurate preview; "Allow & remember" flips it to `auto`; in BYOK mode DevTools Network shows requests only to the provider host (never `bioinfospace.com`); local mode works with the site offline + Ollama running; "Clear key" removes it from IndexedDB.
@@ -486,15 +506,17 @@ Rule of thumb: **web = orchestration + light deterministic analysis on shared or
 ## 12. File-by-file change checklist
 
 **New — client (`src/lib/agent/`)**
-- `tools.js` — tool `{schema, handler}` registry (§3).
-- `retrieval.js` — `searchRecipes()`, `queryInventory()` pure fns.
-- `loop.js` — agent turn loop: LLM call → parse tool_calls → permission gate → execute → feed back.
-- `prompt.js` — system prompt + red-line rules (§8).
-- `exportProtocol.js` — `experimentToMarkdown()`, `downloadText()` (extracted from `NotebookTab`).
-- `providers/ownerProxy.js`, `providers/openaiCompat.js`, `providers/anthropic.js`, `providers/ollama.js` (optional), `providers/index.js` (mode→adapter).
-- `permissions.js` — load/save `agent_permissions` from `db.settings`; defaults.
-- `session.js` — get/create `agent_session` UUID in `db.settings`.
-- `__tests__/…` — Vitest for retrieval, tools, qpcr.
+- ✅ `tools.js` — tool `{schema, kind, handler, preview}` registry (§3): 7 tools (search/get/queryInventory/runCalculator/createExperiment/scheduleCalendarEvent/exportProtocol) + `getToolSchemas`/`isWriteTool`/`previewTool`/`executeTool`; write handlers validate `protocolRef` (retrieve-first anti-fabrication). No Dexie/DOM imports — handlers go through `ctx`. **[done 2026-07-05]**
+- ✅ `retrieval.js` — `searchRecipes()`, `getProtocol()`, `queryInventory()` pure fns. **[done 2026-07-05]**
+- ✅ `loop.js` — `runAgentTurn()`: provider-agnostic (`callModel` injected), tool dispatch, write permission gate (auto/ask/off + once/remember/deny), `maxSteps` guard, `onEvent` UI hook. **[done 2026-07-05]**
+- ✅ `prompt.js` — `buildSystemPrompt({lang,today})` + hard-coded `RED_LINES` (retrieval-only, deterministic-numbers, copy-verbatim, no-invented-ids, clarify-first). **[done 2026-07-05]**
+- ✅ `exportProtocol.js` — `experimentToMarkdown()`, `experimentFilename()`, `downloadText()` (extracted from `NotebookTab`, now deduped). **[done 2026-07-05]**
+- ✅ `protocolImport.js` (`src/lib/`) — `normalizeProtocolSteps()`/`toProcedureSteps()`/`toReagents()`/`recipeTitle()`; feeds Notebook+Calendar imports and the future `getProtocol` tool. **[done 2026-07-05]**
+- ✅ `providers/ownerProxy.js` — `createOwnerProxy()` = the `callModel` SSE adapter to the backend; pure `makeAssembler()` (reassembles indexed tool-call fragments + content deltas) + `makeSSEParser()`. **[done 2026-07-05]** (openaiCompat/anthropic/ollama = desktop BYOK/local, later.)
+- ✅ `permissions.js` — load/save `agent_permissions` from `db.settings`; write-tools default `ask`; sanitizes corrupt values. **[done 2026-07-05]**
+- ✅ `session.js` — get/create `agent_session` UUID in `db.settings` (crypto.randomUUID + fallback). **[done 2026-07-05]**
+- ✅ `AgentContext.jsx` (`src/lib/agent/`) — `AgentProvider`/`useAgent()`: builds tool `ctx` from live hooks, runs `runAgentTurn` via ownerProxy, exposes chat state + permission-request promise. Built but NOT mounted (inert). **[done 2026-07-05]**
+- ✅ `__tests__/…` — Vitest for retrieval/tools/loop/exportProtocol/protocolImport/ownerProxy/permissions (164 total, all green). qpcr = Phase 3.
 
 **New — client (`src/lib/analysis/`)**
 - `qpcr.js` — `analyzeDDCt()` (deterministic; cites references 16/17).
@@ -504,22 +526,22 @@ Rule of thumb: **web = orchestration + light deterministic analysis on shared or
 
 **Edited — client**
 - `src/App.jsx` — mount `<AgentToolsContext>` around `AppInner`; render `<AgentPanel>` + launcher button; add `⌘/Ctrl+J` handler (mirror existing `⌘K` block).
-- `src/lib/experiments.js` — add `saveExperimentRecord(entry)` (imperative Dexie write).
-- `src/features/notebook/NotebookTab.jsx` — import `experimentToMarkdown`/`downloadText` (dedupe inline `exportMarkdown`); fix step source to `components` fallback.
-- `src/features/calendar/CalendarTab.jsx` — same `components` fallback in `handleProtocolImport`.
+- ✅ `src/lib/experiments.js` — add `saveExperimentRecord(entry)` (imperative Dexie write). **[done 2026-07-05]**
+- ✅ `src/features/notebook/NotebookTab.jsx` — imports `experimentToMarkdown`/`downloadText` (deduped inline `exportMarkdown`); fixed step normalization via `protocolImport`. **[done 2026-07-05]**
+- ✅ `src/features/calendar/CalendarTab.jsx` — same `protocolImport` normalization in `handleProtocolImport`. **[done 2026-07-05]**
 - `src/i18n/translations.js` — add all keys from §9.
 - `src/components/MoreSheet.jsx` — add "Agent" entry (optional secondary launcher).
 - `src/lib/db.js` — no schema change needed (`settings`, `experiments` already exist); new settings keys are just rows.
 
-**New — backend (`/var/www/bioinfospace.com/backend/src/`)**
-- `routes/agent.js` — `GET /models`, `POST /chat` (SSE), allowlist, Redis rate-limit + spend cap; reuse `services/claudeSummarizer.js` provider pattern.
-- `services/agentProxy.js` (optional) — provider call + usage→cost estimation, kept out of the route file.
-- `utils/redisClient.js` — `ioredis` singleton to `localhost:6379`.
+**New — backend (`/var/www/bioinfospace.com/backend/src/`)**  *(drafts scaffolded 2026-07-05 — NOT yet wired into `server.js`)*
+- `config/agentModels.js` — allowlist (OpenRouter ids + tiers + prices), default chain, per-tier `RATE_LIMITS`, `$8` cap, `estimateCostUsd()`. **[scaffolded]**
+- `routes/agent.js` — `GET /models`, `POST /chat` (SSE over one OpenRouter client), allowlist validation, per-IP + per-session/tier rate-limit, spend cap. **[scaffolded]**
+- `utils/agentRateStore.js` — pluggable counter store: `ioredis` → `localhost:6379`, in-memory fallback. **[scaffolded]**
 
-**Edited — backend**
+**Edited — backend**  *(pending owner go — do these at wire-up time)*
 - `src/server.js` — `import agentRoutes` + `app.use('/api/labmate/agent', agentRoutes)`; add route-scoped `morgan` body-skip; add agent-specific `express-rate-limit`.
-- `package.json` — add `ioredis` (Anthropic/OpenAI/DeepSeek reached via `fetch`, no SDK needed — matches existing `claudeSummarizer.js`).
-- `.env` (chmod 600, not committed) — ensure `DEEPSEEK_API_KEY` (and/or `ANTHROPIC_API_KEY`) present; add `AGENT_MONTHLY_CAP_USD=8`, `AGENT_MODEL_ALLOWLIST=deepseek-chat,claude-3-5-haiku-latest,gpt-4o-mini`.
+- `package.json` — add `ioredis` (optional; store falls back to in-memory without it). OpenRouter reached via `fetch`, no SDK — matches existing `claudeSummarizer.js`.
+- `.env` (chmod 600, not committed) — add **one** key `LABMATE_OPENROUTER_API_KEY=sk-or-…`; optional `LABMATE_AGENT_MONTHLY_CAP_USD=8`. (The site's existing `DEEPSEEK_API_KEY` is untouched — the agent reads only the OpenRouter var.)
 
 **Ops**
 - nginx: agent route sits under existing `/api/` `api_zone` (20 r/s) — confirm SSE isn't buffered (`proxy_buffering off;` for the `/api/labmate/agent/chat` location).
@@ -541,8 +563,14 @@ Rule of thumb: **web = orchestration + light deterministic analysis on shared or
 
 ## 14. Open questions for the owner
 
-1. **Default proxy model:** `deepseek-chat` (cheapest) vs `claude-3-5-haiku-latest` (better tool-calling)? Affects budget math.
-2. **Auth for owner mode:** anonymous session UUID (frictionless, spoofable) vs require the existing `authenticateToken` (ties usage to accounts, higher friction). Plan assumes anonymous + IP + global cap.
-3. **Spend cap value:** $8 soft cap assumed — confirm, and whether to hard-stop or degrade to BYOK-only prompt.
-4. **qPCR analyzer scope:** in-app minimal `analyzeDDCt` vs deep-link to the existing external `apps.bioinfospace.com/qpcr-analysis`. Plan brings a minimal version in-app for offline + tool-calling.
-5. **BYOK key persistence default:** default to session-only (safer) or remember (convenient)? Plan defaults to session-only.
+**Resolved (2026-07-05):**
+- ~~Model roster~~ → **3 models, no free tier**: `minimax-m3` (**default**, prepaid plan → bypasses $8 cap until exhausted), `deepseek-v4-flash` (**"Fast"** fallback), `glm-5.2` (opt-in premium). Chain `[minimax-m3 → deepseek-v4-flash]`. (LOCKED)
+- ~~Key architecture~~ → **one OpenRouter key** (`LABMATE_OPENROUTER_API_KEY`), not per-provider keys. (LOCKED)
+- ~~Spend cap value~~ → **$8 soft cap** on DeepSeek/GLM only; MiniMax always serves as the fallback (not hard-stop); also mirror an **$8 limit on the OpenRouter key** in the dashboard. (LOCKED)
+- ~~BYOK on web~~ → **deferred to desktop app**; web is owner-proxy only. (LOCKED)
+- ~~Rate limits~~ → default **20 rpm / 200 rpd** (MiniMax, DeepSeek), premium **10 / 40** (GLM). (LOCKED)
+
+**Still open:**
+1. **Auth for owner mode:** anonymous session UUID (frictionless, spoofable) vs require the existing `authenticateToken` (ties usage to accounts, higher friction). Plan assumes anonymous + IP + global cap.
+2. **qPCR analyzer scope:** in-app minimal `analyzeDDCt` vs deep-link to the existing external `apps.bioinfospace.com/qpcr-analysis`. Plan brings a minimal version in-app for offline + tool-calling.
+3. **OpenRouter provider routing:** which providers to allow/deny for the open-weight models (DeepSeek/GLM/MiniMax) — set account-side once, then it's transparent to the code.

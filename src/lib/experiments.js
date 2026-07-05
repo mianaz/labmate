@@ -57,6 +57,24 @@ export function createEmptyExperiment(date, startTime) {
   };
 }
 
+// Imperative Dexie write for non-React callers (the agent's createExperiment
+// tool, importers). Fills id/timestamps if absent so a partial record is valid,
+// then upserts. Returns the persisted record. Callers holding the useExperiments
+// hook should reload() afterward (or use the hook's save()) to refresh the UI.
+export async function saveExperimentRecord(entry) {
+  const now = Date.now();
+  const base = createEmptyExperiment(entry?.date, entry?.startTime);
+  const record = {
+    ...base,
+    ...entry,
+    id: entry?.id || base.id,
+    createdAt: entry?.createdAt || now,
+    updatedAt: now,
+  };
+  await db.experiments.put(record);
+  return record;
+}
+
 export async function exportExperimentsJSON() {
   const entries = await db.experiments.toArray();
   return JSON.stringify({ exportedAt: new Date().toISOString(), type: 'experiments', data: entries }, null, 2);

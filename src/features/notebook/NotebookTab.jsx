@@ -5,6 +5,8 @@ import { useToast } from '../../components/Toast.jsx';
 import { useExperiments, createEmptyExperiment, exportExperimentsJSON, importExperimentsJSON } from '../../lib/experiments.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from './ProtocolSelector.jsx';
+import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImport.js';
+import { experimentToMarkdown, experimentFilename, downloadText } from '../../lib/agent/exportProtocol.js';
 
 const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
 
@@ -96,26 +98,17 @@ function NotebookTab({ onNavigateCalendar }) {
 
   const handleImportProtocol = useCallback((recipe) => {
     if (!editingEntry) return;
-    const steps = (recipe.briefSteps || recipe.detailedSteps || []).map(s => ({
-      stepText: typeof s === 'string' ? s : (s.text || s.step || ''),
-      completed: false, deviation: '', actualParams: ''
-    }));
+    const steps = toProcedureSteps(recipe, lang);
     const next = {
       ...editingEntry,
       protocolRef: recipe.id,
-      title: editingEntry.title || (lang === 'zh' ? (recipe.nameZh || recipe.name) : recipe.name),
-      titleZh: editingEntry.titleZh || (recipe.nameZh || ''),
+      title: editingEntry.title || recipeTitle(recipe, lang),
+      titleZh: editingEntry.titleZh || (recipe.nameCn || ''),
       duration: recipe.duration || editingEntry.duration,
       procedure: { mode: 'template', protocolSteps: steps, freeText: editingEntry.procedure?.freeText || '' }
     };
     if (recipe.materials) {
-      next.materials = {
-        ...next.materials,
-        reagents: recipe.materials.map(m => ({
-          name: typeof m === 'string' ? m : (m.name || m.reagent || ''),
-          amount: m.amount || '', unit: m.unit || '', location: '', inventoryRef: null
-        }))
-      };
+      next.materials = { ...next.materials, reagents: toReagents(recipe) };
     }
     setEditingEntry(next);
     autoSave(next);
@@ -125,32 +118,7 @@ function NotebookTab({ onNavigateCalendar }) {
 
   const exportMarkdown = useCallback(() => {
     if (!editingEntry) return;
-    const e = editingEntry;
-    let md = `# ${e.title || 'Untitled Experiment'}\n`;
-    if (e.titleZh) md += `**${e.titleZh}**\n`;
-    md += `\n**Date:** ${e.date || 'N/A'}  \n`;
-    md += `**Status:** ${e.status}  \n**Priority:** ${e.priority}\n`;
-    if (e.protocolRef) md += `**Protocol:** ${e.protocolRef}\n`;
-    md += `\n## Plan\n\n### Objectives\n${e.plan?.objectives || '_None_'}\n\n### Notes\n${e.plan?.notes || '_None_'}\n`;
-    md += `\n## Materials\n\n### Reagents\n`;
-    (e.materials?.reagents || []).forEach(r => { md += `- ${r.name}${r.amount ? ': ' + r.amount + ' ' + (r.unit || '') : ''}${r.location ? ' (' + r.location + ')' : ''}\n`; });
-    if ((e.materials?.equipment || []).length) { md += `\n### Equipment\n`; e.materials.equipment.forEach(eq => { md += `- [${eq.status === 'ready' ? 'x' : ' '}] ${eq.name}\n`; }); }
-    if ((e.materials?.checklist || []).length) { md += `\n### Checklist\n`; e.materials.checklist.forEach(c => { md += `- [${c.checked ? 'x' : ' '}] ${c.item}\n`; }); }
-    md += `\n## Procedure\n\n`;
-    if (e.procedure?.mode === 'template' && e.procedure.protocolSteps?.length) {
-      e.procedure.protocolSteps.forEach((s, i) => {
-        md += `${i + 1}. [${s.completed ? 'x' : ' '}] ${s.stepText}\n`;
-        if (s.deviation) md += `   - **Deviation:** ${s.deviation}\n`;
-        if (s.actualParams) md += `   - **Actual:** ${s.actualParams}\n`;
-      });
-    } else { md += e.procedure?.freeText || '_None_'; }
-    md += `\n\n## Results\n\n### Summary\n${e.results?.summary || '_None_'}\n`;
-    if (e.results?.dataProcessing) md += `\n### Data Processing\n${e.results.dataProcessing}\n`;
-    if ((e.results?.figures || []).length) { md += `\n### Figures\n`; e.results.figures.forEach((f, i) => { md += `${i + 1}. ${f.description}${f.notes ? ' — ' + f.notes : ''}\n`; }); }
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `experiment_${e.date || 'entry'}_${e.id.slice(-6)}.md`; a.click();
-    URL.revokeObjectURL(url);
+    downloadText(experimentToMarkdown(editingEntry), experimentFilename(editingEntry));
     toast.show(t('downloaded', lang));
   }, [editingEntry, lang, toast]);
 

@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toast.jsx';
 import { useExperiments, createEmptyExperiment } from '../../lib/experiments.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from '../notebook/ProtocolSelector.jsx';
+import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImport.js';
 
 const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
 
@@ -120,24 +121,15 @@ function CalendarTab({ onNavigateNotebook }) {
   const handleProtocolImport = (recipe) => {
     const entry = createEmptyExperiment();
     entry.protocolRef = recipe.id;
-    entry.title = lang === 'zh' ? (recipe.nameZh || recipe.name) : recipe.name;
-    entry.titleZh = recipe.nameZh || '';
+    entry.title = recipeTitle(recipe, lang);
+    entry.titleZh = recipe.nameCn || '';
     entry.duration = recipe.duration || 60;
-    if (recipe.briefSteps || recipe.detailedSteps) {
-      entry.procedure = {
-        mode: 'template',
-        protocolSteps: (recipe.briefSteps || recipe.detailedSteps || []).map(s => ({
-          stepText: typeof s === 'string' ? s : (s.text || s.step || ''),
-          completed: false, deviation: '', actualParams: ''
-        })),
-        freeText: ''
-      };
+    const steps = toProcedureSteps(recipe, lang);
+    if (steps.length) {
+      entry.procedure = { mode: 'template', protocolSteps: steps, freeText: '' };
     }
     if (recipe.materials) {
-      entry.materials.reagents = recipe.materials.map(m => ({
-        name: typeof m === 'string' ? m : (m.name || m.reagent || ''),
-        amount: m.amount || '', unit: m.unit || '', location: '', inventoryRef: null
-      }));
+      entry.materials.reagents = toReagents(recipe);
     }
     setEditingEvent(entry);
     setShowProtocolImport(false);
