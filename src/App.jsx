@@ -269,7 +269,7 @@ function AppInner() {
         </main>
         <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           <p className="font-semibold">
-            Bioinfo<span style={{ color: 'var(--accent)' }}>Space</span>{' '}
+            Bio<span style={{ color: 'var(--accent)' }}>info</span>space{' '}
             LabMate v{__APP_VERSION__}
           </p>
           <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Bioinfospace</a></p>

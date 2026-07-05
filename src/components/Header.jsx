@@ -46,7 +46,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
             <div className="flex items-center gap-2 text-xl font-bold" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em' }}>
               <img src="favicon.svg" alt="" width="26" height="26" style={{flexShrink:0}} />
               <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ color: 'var(--accent)' }}>Space</span>
+                <span style={{ color: 'var(--text)' }}>Bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
               </a>
               <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>LabMate</a>
             </div>
