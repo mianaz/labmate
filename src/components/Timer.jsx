@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { t, useLang } from '../i18n/index.js';
 import { S_MUTED, S_BG2 } from '../lib/styleConstants.js';
+import { useIsMobile } from '../hooks/useMediaQuery.js';
 
 // ═══════════════════════════════════════════════
 // CONTEXT & PROVIDER
@@ -82,6 +83,7 @@ export function useTimers() { return React.useContext(TimerContext); }
 
 export function TimerBar() {
   const lang = useLang();
+  const isMobile = useIsMobile();
   const { timers, removeTimer, pauseTimer, resumeTimer, resetTimer } = useTimers();
   const active = timers.filter(t => t.remaining > 0 || t.running);
   const done = timers.filter(t => t.remaining <= 0 && !t.running);
@@ -95,9 +97,8 @@ export function TimerBar() {
   };
 
   return (
-    <div className="fixed z-40 space-y-2" style={{
-      bottom: 'calc(var(--fab-b) + 3.75rem)',
-      right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+    <div className={`fixed z-40 space-y-2 ${isMobile ? '' : 'bottom-4 right-4'}`} style={{
+      ...(isMobile ? { bottom: 'calc(var(--fab-b) + 3.75rem)', right: 'calc(env(safe-area-inset-right, 0px) + 1rem)' } : {}),
       maxWidth: '320px',
     }}>
       {active.map(tmr => {
@@ -141,6 +142,7 @@ export function TimerBar() {
 
 export function QuickTimerButton() {
   const lang = useLang();
+  const isMobile = useIsMobile();
   const { addTimer } = useTimers();
   const [open, setOpen] = useState(false);
   const [customMin, setCustomMin] = useState('');
@@ -176,9 +178,8 @@ export function QuickTimerButton() {
   }
 
   return (
-    <div className="fixed z-40 p-4 shadow-lg" style={{
-      bottom: 'calc(var(--fab-b) + 3.75rem)',
-      right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+    <div className={`fixed z-40 p-4 shadow-lg ${isMobile ? '' : 'bottom-36 right-4'}`} style={{
+      ...(isMobile ? { bottom: 'calc(var(--fab-b) + 3.75rem)', right: 'calc(env(safe-area-inset-right, 0px) + 1rem)' } : {}),
       background:'var(--card)', border:'2px solid var(--border-strong)', width:'280px', overflow:'hidden',
     }}>
       <div className="flex items-center justify-between mb-3">

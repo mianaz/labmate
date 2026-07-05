@@ -8,6 +8,7 @@ import DownloadBtn from './DownloadBtn.jsx';
 import { useRecipes } from '../lib/RecipeProvider.jsx';
 import GelTab from '../features/calc/GelTab.jsx';
 import db from '../lib/db.js';
+import { useIsMobile } from '../hooks/useMediaQuery.js';
 
 // Helper: convert recipe to text for download/clipboard
 function recipeToText(recipe, targetVol, lang) {
@@ -84,6 +85,7 @@ export function parseTimePatternsFromText(text) {
 
 function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom, onDeleteCustom }) {
   const lang = useLang();
+  const isMobile = useIsMobile();
   const toast = useToast();
   const { addTimer } = useTimers();
   const { recipeById: RECIPE_BY_ID } = useRecipes();
@@ -336,9 +338,13 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                           <span className="flex gap-1 flex-shrink-0 flex-wrap" style={{marginTop:'1px'}}>
                             {timeMatches.slice(0, 2).map((tm, ti) => (
                               <button key={ti} onClick={() => addTimer(recipe.name + ' - ' + tm.label, tm.seconds)}
-                                className="inline-flex items-center gap-1 font-semibold transition-colors hover:opacity-80"
-                                style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)', cursor:'pointer', lineHeight:1.2, whiteSpace:'nowrap', fontSize:'11px', padding:'0 10px', minHeight:36}}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="10" y1="2" x2="14" y2="2"/></svg>
+                                className={isMobile
+                                  ? "inline-flex items-center gap-1 font-semibold transition-colors hover:opacity-80"
+                                  : "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors hover:opacity-80"}
+                                style={isMobile
+                                  ? {background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)', cursor:'pointer', lineHeight:1.2, whiteSpace:'nowrap', fontSize:'11px', padding:'0 10px', minHeight:36}
+                                  : {background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)', cursor:'pointer', lineHeight:1.2, whiteSpace:'nowrap'}}>
+                                <svg width={isMobile ? "12" : "10"} height={isMobile ? "12" : "10"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="10" y1="2" x2="14" y2="2"/></svg>
                                 {tm.label}
                               </button>
                             ))}

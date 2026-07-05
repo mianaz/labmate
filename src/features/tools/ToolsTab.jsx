@@ -85,7 +85,7 @@ function ToolsTab() {
   const fileInputRef = React.useRef(null);
 
   function handleExport() {
-    exportBackup();
+    exportBackup().catch(() => {});
   }
 
   function handleImport(e) {

@@ -557,17 +557,19 @@ function PlateTab() {
       {mode === 'designer' && (
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
-          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-            <span className="text-xs font-bold mono" style={S_MUTED}>{plateType}-{t('wells', lang)}</span>
-            <button type="button" onClick={() => setEnlarged(true)}
-              className="btn-secondary text-xs py-1.5 px-3"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-              </svg>
-              {t('plateEnlarge', lang)}
-            </button>
-          </div>
+          {isMobile && (
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <span className="text-xs font-bold mono" style={S_MUTED}>{plateType}-{t('wells', lang)}</span>
+              <button type="button" onClick={() => setEnlarged(true)}
+                className="btn-secondary text-xs py-1.5 px-3"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                </svg>
+                {t('plateEnlarge', lang)}
+              </button>
+            </div>
+          )}
           <div style={{ position: 'relative' }}>
             <div className="card p-5 overflow-x-auto" ref={plateScrollRef}
               style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}>
@@ -614,16 +616,16 @@ function PlateTab() {
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {WELL_COLORS.map((c, i) => (
                   <button key={i} onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
-                    className={`w-8 h-8 border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
+                    className={`${isMobile ? 'w-8 h-8' : 'w-5 h-5'} border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
                     style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'var(--border)', ringColor: 'var(--primary)'}} />
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-[11px] font-semibold" style={S_MUTED}>{t('plateCustomColor', lang)}:</label>
                 <input type="color" value={customColor} onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
-                  className="w-8 h-8 rounded cursor-pointer border-0 p-0" style={{background:'transparent'}} />
+                  className={`${isMobile ? 'w-8 h-8' : 'w-7 h-7'} rounded cursor-pointer border-0 p-0`} style={{background:'transparent'}} />
                 {useCustomColor && (
-                  <div className="w-8 h-8 border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
+                  <div className={`${isMobile ? 'w-8 h-8' : 'w-5 h-5'} border-2 scale-125`} style={{background: customColor, borderColor: 'var(--text)'}} />
                 )}
               </div>
             </div>
