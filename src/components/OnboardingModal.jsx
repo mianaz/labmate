@@ -38,9 +38,9 @@ function OnboardingModal({ isOpen, onClose }) {
   const title = slide.titleKey ? t(slide.titleKey, lang) : slide.title;
   const body = slide.bodyKey ? t(slide.bodyKey, lang) : slide.body;
 
-  // Shared content — identical markup/copy in both the desktop dialog and the mobile
-  // bottom sheet, only the surrounding chrome differs.
-  const content = (
+  // Mobile-only bottom-sheet content (squared/mono brutalist styling) — kept as its
+  // own copy so the desktop dialog below can stay byte-for-byte identical to main.
+  const mobileContent = (
     <>
       <div className="flex justify-center mb-5">
         <div className="w-20 h-20 flex items-center justify-center" style={{ background: 'var(--primary-light)', border: '2px solid var(--border-strong)' }}>
@@ -89,14 +89,65 @@ function OnboardingModal({ isOpen, onClose }) {
 
   return createPortal(
     <>
-      {/* Desktop / tablet (≥640px) — centered brutalist dialog. Matches the ≥sm split
-          idiom already used in App.jsx's backup-reminder banner. */}
+      {/* Desktop / tablet (≥640px) — byte-identical to main's dialog styling
+          (rounded-2xl card, 1px border, rounded icon, heading font). Do not
+          re-introduce the squared/mono brutalist treatment here — that's
+          mobile-only, see mobileContent below. */}
       <div className="hidden sm:flex fixed inset-0 z-50 items-center justify-center p-4"
         role="dialog" aria-modal="true" aria-label={t('onboardingWelcomeTitle', lang)}>
         <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
-        <div className="relative w-full max-w-md p-6 tab-fade-in"
-          style={{ background: 'var(--card)', border: '2px solid var(--border-strong)', borderRadius: 0, boxShadow: 'var(--shadow-lg)' }}>
-          {content}
+        <div className="relative w-full max-w-md rounded-2xl p-6"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+          {/* Illustration */}
+          <div className="flex justify-center mb-5">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: 'var(--primary-light)' }}>
+              <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke="var(--primary)"
+                strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d={slide.icon} />
+              </svg>
+            </div>
+          </div>
+          {/* Content */}
+          <h2 className="text-xl font-bold text-center mb-2" style={{ fontFamily: 'var(--font-heading)', color: 'var(--text)' }}>
+            {title}
+          </h2>
+          <p className="text-sm text-center mb-6 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            {body}
+          </p>
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2 mb-5">
+            {slides.map((_, i) => (
+              <div key={i} className="transition-all" style={{
+                width: i === step ? '24px' : '8px', height: '4px',
+                background: i === step ? 'var(--primary)' : 'var(--border)',
+              }} />
+            ))}
+          </div>
+          {/* Buttons */}
+          <div className="flex gap-3">
+            {step > 0 ? (
+              <button onClick={() => setStep(step - 1)} className="px-4 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                {t('onboardingPrev', lang)}
+              </button>
+            ) : (
+              <button onClick={handleClose} className="px-4 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                {t('onboardingSkip', lang)}
+              </button>
+            )}
+            {step < slides.length - 1 ? (
+              <button onClick={() => setStep(step + 1)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>
+                {t('onboardingNext', lang)}
+              </button>
+            ) : (
+              <button onClick={handleClose} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
+                style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>
+                {t('onboardingDone', lang)}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -114,7 +165,7 @@ function OnboardingModal({ isOpen, onClose }) {
           }}
         >
           <div className="p-6 pt-8">
-            {content}
+            {mobileContent}
           </div>
         </div>
       </div>

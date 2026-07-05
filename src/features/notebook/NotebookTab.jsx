@@ -240,7 +240,7 @@ function NotebookTab({ onNavigateCalendar }) {
                 style={{ width: '90px', padding: '4px 8px', fontSize: '0.82rem' }} />
               <button onClick={() => { const next = reagents.filter((_, j) => j !== i); updateField('materials.reagents', next); }}
                 aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
             </div>
           ))}
         </div>
@@ -263,7 +263,7 @@ function NotebookTab({ onNavigateCalendar }) {
               </select>
               <button onClick={() => { updateField('materials.equipment', equipment.filter((_, j) => j !== i)); }}
                 aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
             </div>
           ))}
         </div>
@@ -284,7 +284,7 @@ function NotebookTab({ onNavigateCalendar }) {
                 className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem', textDecoration: c.checked ? 'line-through' : 'none', opacity: c.checked ? 0.6 : 1 }} />
               <button onClick={() => { updateField('materials.checklist', checklist.filter((_, j) => j !== i)); }}
                 aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
             </div>
           ))}
         </div>
@@ -384,7 +384,7 @@ function NotebookTab({ onNavigateCalendar }) {
                 style={{ width: '120px', padding: '4px 8px', fontSize: '0.82rem' }} />
               <button onClick={() => updateField('results.figures', res.figures.filter((_, j) => j !== i))}
                 aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
             </div>
           ))}
         </div>

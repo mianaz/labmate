@@ -104,9 +104,8 @@ export default function BottomNav({ activeTab, setActiveTab, onMore, lang }) {
     <nav
       role="tablist"
       aria-label={lang === 'zh' ? '底部导航' : 'Bottom navigation'}
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-40 lg:hidden"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex lg:hidden"
       style={{
-        display: 'flex',
         background: 'var(--nav-bg)',
         borderTop: '2px solid var(--border-strong)',
         height: 'var(--bottom-nav-h)',

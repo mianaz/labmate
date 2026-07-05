@@ -117,7 +117,7 @@ export default function MoreSheet({ isOpen, onClose, activeTab, setActiveTab, la
 
   return (
     <div
-      className="fixed inset-0 z-50 lg:hidden"
+      className="fixed inset-0 z-50 flex lg:hidden"
       role="dialog"
       aria-modal="true"
       aria-label={lang === 'zh' ? '更多' : 'More'}

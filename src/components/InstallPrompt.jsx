@@ -103,12 +103,11 @@ export default function InstallPrompt() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed z-40 lg:hidden mono"
+      className="fixed z-40 flex lg:hidden mono"
       style={{
         bottom: 'calc(var(--fab-b) + 0.5rem)',
         left: '1rem',
         maxWidth: 'calc(100vw - 2rem)',
-        display: 'flex',
         alignItems: 'center',
         gap: '0.6rem',
         background: 'var(--card)',

@@ -53,7 +53,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
                   <span style={{ color: 'var(--text)' }}>Bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
                 </span>
               </a>
-              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)' }}>LabMate</a>
+              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>LabMate</a>
             </div>
           </div>
 

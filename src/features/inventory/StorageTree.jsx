@@ -90,7 +90,7 @@ export function StorageTree({
               <StorageIcon type={loc.type} size={14} />
               <span
                 className="flex-1 font-medium"
-                style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                style={{ color: 'var(--text)', ...(isMobile ? { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : {}) }}
               >
                 {lang === 'zh' ? (loc.nameZh || loc.name) : loc.name}
               </span>
@@ -177,7 +177,7 @@ export function StorageTree({
                   )}
                   <span
                     className="flex-1"
-                    style={{ color: selectedBoxId === box.id ? 'var(--primary)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    style={{ color: selectedBoxId === box.id ? 'var(--primary)' : 'var(--text)', ...(isMobile ? { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : {}) }}
                   >
                     {lang === 'zh' ? (box.nameZh || box.name) : box.name}
                   </span>
