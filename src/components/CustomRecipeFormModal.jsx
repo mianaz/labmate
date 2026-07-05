@@ -87,8 +87,8 @@ function CustomRecipeFormModal({ isOpen, onClose, onSave, initial, isProtocol })
 
   return createPortal(
     React.createElement('div', {className:'fixed inset-0 z-50 flex items-center justify-center p-4', onClick: onClose},
-      React.createElement('div', {className:'absolute inset-0', style:{background:'rgba(0,0,0,0.4)', backdropFilter:'blur(4px)'}}),
-      React.createElement('div', {className:'relative w-full max-w-lg rounded-xl p-6', style:{background:'var(--card)', border:'1px solid var(--border)', boxShadow:'var(--shadow-lg)', maxHeight:'85vh', overflowY:'auto'}, onClick: e => e.stopPropagation()},
+      React.createElement('div', {className:'absolute inset-0', style:{background:'rgba(0,0,0,0.4)'}}),
+      React.createElement('div', {className:'relative w-full max-w-lg p-6', style:{background:'var(--card)', border:'2px solid var(--border-strong)', boxShadow:'var(--shadow-lg)', maxHeight:'85vh', overflowY:'auto'}, onClick: e => e.stopPropagation()},
         React.createElement('h3', {className:'text-lg font-semibold mb-4', style:{fontFamily:'var(--font-heading)', color:'var(--text)'}},
           initial?.id ? t('editCustom', lang) : (isProtocol ? t('addCustomProtocol', lang) : t('addCustomRecipe', lang))
         ),
@@ -232,7 +232,7 @@ function CustomRecipeFormModal({ isOpen, onClose, onSave, initial, isProtocol })
             style:{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}},
             t('customFormCancel', lang)),
           React.createElement('button', {onClick:handleSave, className:'flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold',
-            style:{background:'var(--primary)', color:'white'}},
+            style:{background:'var(--primary)', color:'var(--on-primary)'}},
             t('customFormSave', lang))
         )
       )

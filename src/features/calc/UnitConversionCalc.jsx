@@ -73,10 +73,10 @@ export default function UnitConversionCalc() {
           <div className="flex gap-1.5 flex-wrap">
             {Object.keys(categories).map(k => (
               <button key={k} onClick={() => { setCat(k); setFromUnit(categories[k].units[0]); setToUnit(categories[k].units[1]); setValue(''); }}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                className="px-3 py-1.5 text-xs font-semibold transition-all"
                 style={{
                   background: cat === k ? 'var(--primary)' : 'var(--card)',
-                  color: cat === k ? 'white' : 'var(--text-muted)',
+                  color: cat === k ? 'var(--on-primary)' : 'var(--text-muted)',
                   border: `1px solid ${cat === k ? 'var(--primary)' : 'var(--border)'}`,
                 }}>
                 {categories[k].label()}

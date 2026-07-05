@@ -51,7 +51,7 @@ export default function DeadVolumeCalc() {
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{
               background: preset === p.id ? 'var(--primary)' : 'var(--bg-2)',
-              color: preset === p.id ? 'white' : 'var(--text-muted)',
+              color: preset === p.id ? 'var(--on-primary)' : 'var(--text-muted)',
               border: `1px solid ${preset === p.id ? 'var(--primary)' : 'var(--border)'}`,
             }}>
             {p.label}

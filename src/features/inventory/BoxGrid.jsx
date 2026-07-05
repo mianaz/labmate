@@ -91,20 +91,20 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
           style={{
             width: cellSize,
             height: cellSize,
-            borderRadius: 4,
+            borderRadius: 0,
             cursor: selectMode ? 'crosshair' : 'pointer',
             background: isSelected ? 'var(--primary)' : sample ? colors.bg : 'var(--bg-2)',
             border: isSelected
               ? '2px solid var(--primary)'
               : isExpired
-                ? '2px solid hsl(0,70%,55%)'
+                ? '2px solid var(--danger-border)'
                 : sample
                   ? '2px solid ' + colors.text + '33'
                   : '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: isSelected ? '#fff' : sample ? colors.text : 'var(--text-muted)',
+            color: isSelected ? 'var(--on-primary)' : sample ? colors.text : 'var(--text-muted)',
             fontWeight: sample ? 600 : 400,
             fontSize: cellSize > 30 ? '9px' : '8px',
             textShadow: sample ? '0 0 2px rgba(255,255,255,0.4)' : 'none',
@@ -134,7 +134,7 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
             {lang === 'zh' ? (box.nameZh || box.name) : box.name}
           </span>
           {box.color && (
-            <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: box.color }} />
+            <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 0, background: box.color }} />
           )}
         </div>
         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -163,7 +163,7 @@ export function BoxGrid({ box, samples, onCellClick, lang, selectMode, selectedC
         {legendTypes.map(([type, colors]) => (
           <span
             key={type}
-            className="text-xs px-2 py-0.5 rounded-full"
+            className="text-xs px-2 py-0.5"
             style={{ background: colors.bg, color: colors.text, fontWeight: 500 }}
           >
             {t(SAMPLE_TYPE_LABELS[type], lang)}

@@ -38,7 +38,7 @@ export default function CalcTab({ initialMode }) {
                   className="w-full p-2.5 rounded-lg text-left transition-all"
                   style={{
                     background: mode === m.id ? 'var(--primary)' : 'transparent',
-                    color: mode === m.id ? 'white' : 'var(--text)',
+                    color: mode === m.id ? 'var(--on-primary)' : 'var(--text)',
                     border: mode === m.id ? '1px solid var(--primary)' : '1px solid transparent',
                   }}>
                   <span className="text-base font-semibold block">{m.task}</span>
@@ -65,10 +65,10 @@ export default function CalcTab({ initialMode }) {
           <div className="flex gap-2 overflow-x-auto pb-1" style={{WebkitOverflowScrolling:'touch'}}>
             {modes.map(m => (
               <button key={m.id} onClick={() => setMode(m.id)}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
+                className="px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
                 style={{
                   background: mode === m.id ? 'var(--primary)' : 'var(--card)',
-                  color: mode === m.id ? 'white' : 'var(--text-muted)',
+                  color: mode === m.id ? 'var(--on-primary)' : 'var(--text-muted)',
                   border: `1px solid ${mode === m.id ? 'var(--primary)' : 'var(--border)'}`,
                 }}>{m.task}</button>
             ))}

@@ -37,16 +37,16 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
   }, [updateIndicator]);
 
   return (
-    <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', backdropFilter: 'blur(20px) saturate(1.8)', WebkitBackdropFilter: 'blur(20px) saturate(1.8)', borderColor: 'var(--border)' }}
-      className="sticky top-0 z-40 border-b">
+    <nav role="navigation" aria-label="Main navigation" style={{ background: 'var(--nav-bg)', borderColor: 'var(--border-strong)' }}
+      className="sticky top-0 z-40 border-b-2">
       <div className="max-w-7xl mx-auto px-4">
         {/* Top bar */}
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xl font-bold" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", letterSpacing: '-0.02em' }}>
+            <div className="flex items-center gap-2 text-xl font-bold" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em' }}>
               <img src="favicon.svg" alt="" width="26" height="26" style={{flexShrink:0}} />
               <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>
+                <span style={{ color: 'var(--text)' }}>Bioinfo</span><span style={{ color: 'var(--accent)' }}>Space</span>
               </a>
               <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>LabMate</a>
             </div>
@@ -100,7 +100,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
             ))}
           </div>
           <div className="tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
-          <div className="tab-scroll-hint md:hidden" style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700, opacity: 0.6, transition: 'opacity 0.3s', background: 'linear-gradient(to right, transparent, var(--nav-bg) 60%)' }}>›</div>
+          <div className="tab-scroll-hint md:hidden" style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700, opacity: 0.6, transition: 'opacity 0.3s', background: 'var(--nav-bg)' }}>›</div>
         </div>
       </div>
     </nav>

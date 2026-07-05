@@ -99,13 +99,13 @@ export function TimerBar() {
       {active.map(tmr => {
         const pct = ((tmr.totalSeconds - tmr.remaining) / tmr.totalSeconds) * 100;
         return (
-          <div key={tmr.id} className="rounded-xl p-3 shadow-lg" style={{background:'var(--card)', border:'1px solid var(--border)', backdropFilter:'blur(10px)'}}>
+          <div key={tmr.id} className="p-3 shadow-lg" style={{background:'var(--card)', border:'2px solid var(--border-strong)'}}>
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold truncate" style={{color:'var(--text)', maxWidth:'160px'}}>{tmr.label}</span>
               <span className="mono text-sm font-bold" style={{color: tmr.remaining < 60 ? 'var(--accent)' : 'var(--primary)'}}>{fmtTime(tmr.remaining)}</span>
             </div>
-            <div className="w-full h-1.5 rounded-full overflow-hidden" style={S_BG2}>
-              <div className="h-full rounded-full transition-all" style={{width:`${pct}%`, background:'var(--primary)'}} />
+            <div className="w-full h-1.5 overflow-hidden" style={S_BG2}>
+              <div className="h-full transition-all" style={{width:`${pct}%`, background:'var(--primary)'}} />
             </div>
             <div className="flex gap-1 mt-2">
               {tmr.running ? (
@@ -120,7 +120,7 @@ export function TimerBar() {
         );
       })}
       {done.map(tmr => (
-        <div key={tmr.id} className="rounded-xl p-3 shadow-lg animate-pulse" style={{background:'var(--accent-light)', border:'2px solid var(--accent)'}}>
+        <div key={tmr.id} className="p-3 shadow-lg animate-pulse" style={{background:'var(--accent-light)', border:'2px solid var(--accent)'}}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold" style={{color:'var(--accent)'}}>{tmr.label} — {t('timerDone', lang)}</span>
             <button onClick={() => removeTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--card)', color:'var(--text-muted)'}}>✕</button>
@@ -153,8 +153,8 @@ export function QuickTimerButton() {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
-        style={{background:'var(--primary)', color:'white', opacity: 0.85}} title={t('timerAdd', lang)}>
+        className="fixed bottom-4 right-4 z-50 w-12 h-12 flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
+        style={{background:'var(--primary)', color:'var(--on-primary)', border:'2px solid var(--border-strong)', opacity: 0.92}} title={t('timerAdd', lang)}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8"/>
           <line x1="12" y1="9" x2="12" y2="13"/>
@@ -168,7 +168,7 @@ export function QuickTimerButton() {
   }
 
   return (
-    <div className="fixed bottom-36 right-4 z-50 rounded-xl p-4 shadow-lg" style={{background:'var(--card)', border:'1px solid var(--border)', width:'280px', overflow:'hidden'}}>
+    <div className="fixed bottom-36 right-4 z-50 p-4 shadow-lg" style={{background:'var(--card)', border:'2px solid var(--border-strong)', width:'280px', overflow:'hidden'}}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-bold">{t('timerAdd', lang)}</span>
         <button onClick={() => setOpen(false)} className="text-xs px-2 py-0.5 rounded" style={S_MUTED}>✕</button>
@@ -197,7 +197,7 @@ export function QuickTimerButton() {
             if (m > 0) { addTimer(customLabel || `${m} min`, m * 60); setCustomMin(''); setCustomLabel(''); setOpen(false); }
           }}
             className="px-3 py-1.5 rounded text-xs font-bold"
-            style={{background:'var(--primary)', color:'white', whiteSpace:'nowrap', flexShrink:0}}>
+            style={{background:'var(--primary)', color:'var(--on-primary)', whiteSpace:'nowrap', flexShrink:0}}>
             {t('timerStart', lang)}
           </button>
         </div>

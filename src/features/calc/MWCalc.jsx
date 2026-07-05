@@ -31,10 +31,10 @@ export default function MWCalc() {
         <div className="flex flex-wrap gap-1.5">
           {COMMON_MOLECULES.map(m => (
             <button key={m.name} onClick={() => setFormula(m.formula)}
-              className="px-2.5 py-1 rounded-full text-xs font-semibold transition-all"
+              className="px-2.5 py-1 text-xs font-semibold transition-all"
               style={{
                 background: formula === m.formula ? 'var(--primary)' : 'var(--bg-2)',
-                color: formula === m.formula ? 'white' : 'var(--text-muted)',
+                color: formula === m.formula ? 'var(--on-primary)' : 'var(--text-muted)',
                 border: '1px solid ' + (formula === m.formula ? 'var(--primary)' : 'var(--border)'),
               }}>
               {m.name}
@@ -83,7 +83,7 @@ export default function MWCalc() {
       )}
 
       {result && result.error && (
-        <div className="p-3 rounded-lg text-sm" style={{background:'#fee2e2', color:'#dc2626', border:'1px solid #fca5a5'}}>
+        <div className="p-3 rounded-lg text-sm" style={{background:'var(--danger-bg)', color:'var(--danger-text)', border:'1px solid var(--danger-border)'}}>
           {t('mwParseError', lang)}: {lang === 'en' ? 'Unknown element' : '未知元素'} "{result.sym}"
         </div>
       )}

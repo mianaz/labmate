@@ -26,7 +26,7 @@ function OnboardingModal({ isOpen, onClose }) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }} />
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
       <div className="relative w-full max-w-md rounded-2xl p-6"
         style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)' }}>
         {/* Illustration */}
@@ -48,8 +48,8 @@ function OnboardingModal({ isOpen, onClose }) {
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-5">
           {slides.map((_, i) => (
-            <div key={i} className="rounded-full transition-all" style={{
-              width: i === step ? '24px' : '8px', height: '8px',
+            <div key={i} className="transition-all" style={{
+              width: i === step ? '24px' : '8px', height: '4px',
               background: i === step ? 'var(--primary)' : 'var(--border)',
             }} />
           ))}
@@ -69,12 +69,12 @@ function OnboardingModal({ isOpen, onClose }) {
           )}
           {step < slides.length - 1 ? (
             <button onClick={() => setStep(step + 1)} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ background: 'var(--primary)', color: 'white' }}>
+              style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>
               {t('onboardingNext', lang)}
             </button>
           ) : (
             <button onClick={handleClose} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ background: 'var(--primary)', color: 'white' }}>
+              style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>
               {t('onboardingDone', lang)}
             </button>
           )}

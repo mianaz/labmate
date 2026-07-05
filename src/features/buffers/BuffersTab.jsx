@@ -112,10 +112,10 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
           <div className="flex items-center gap-2 mb-4">
             <input type="text" autoComplete="off" placeholder={t('searchPlaceholder', lang)} value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ fontFamily: "'DM Sans', sans-serif", height: '2.375rem', marginBottom: 0 }}
+              style={{ fontFamily: 'var(--font-body)', height: '2.375rem', marginBottom: 0 }}
               className="flex-1" />
             <button onClick={() => { setEditingRecipe(null); setShowCustomForm(true); }}
-              className="inline-flex items-center justify-center gap-1 px-3 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1 px-3 text-xs font-semibold transition-all whitespace-nowrap"
               style={{background:'var(--accent-light)', color:'var(--accent)', border:'1px solid var(--border)', height: '2.375rem'}}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={S_INLINE_ICON}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               {t('addCustomRecipe', lang)}
@@ -124,10 +124,10 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 filter-tags-scroll">
             {cats.map(c => (
               <button key={c.id} onClick={() => setSelCat(c.id)}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+                className="px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap"
                 style={{
                   background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
-                  color: selCat === c.id ? 'white' : 'var(--text-muted)',
+                  color: selCat === c.id ? 'var(--on-primary)' : 'var(--text-muted)',
                   border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
                 }}>{c.label}</button>
             ))}
@@ -138,7 +138,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {recentRecipes.map(r => (
                   <button key={r.id} onClick={() => handleSelect(r)}
-                    className="px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all"
+                    className="px-2.5 py-1 text-xs whitespace-nowrap transition-all"
                     style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)'}}>
                     {r.name}
                   </button>
@@ -180,9 +180,9 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
             <div className="mb-3">
               <input type="text" placeholder={t('searchPlaceholder', lang)} value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ fontFamily: "'DM Sans', sans-serif", width: '100%', marginBottom: '0.5rem' }} />
+                style={{ fontFamily: 'var(--font-body)', width: '100%', marginBottom: '0.5rem' }} />
               <button onClick={() => { setEditingRecipe(null); setShowCustomForm(true); }}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap"
+                className="px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap"
                 style={{background:'var(--accent-light)', color:'var(--accent)', border:'1px solid var(--border)'}}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={S_INLINE_ICON}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 {t('addCustomRecipe', lang)}
@@ -191,10 +191,10 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
             <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1 filter-tags-scroll" style={{WebkitOverflowScrolling:'touch'}}>
               {cats.map(c => (
                 <button key={c.id} onClick={() => setSelCat(c.id)}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
+                  className="px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0"
                   style={{
                     background: selCat === c.id ? 'var(--primary)' : 'var(--card)',
-                    color: selCat === c.id ? 'white' : 'var(--text-muted)',
+                    color: selCat === c.id ? 'var(--on-primary)' : 'var(--text-muted)',
                     border: `1px solid ${selCat === c.id ? 'var(--primary)' : 'var(--border)'}`,
                   }}>{c.label}</button>
               ))}
@@ -205,7 +205,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
                 <div className="flex gap-1.5 overflow-x-auto pb-1">
                   {recentRecipes.map(r => (
                     <button key={r.id} onClick={() => handleMobileSelect(r)}
-                      className="px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all flex-shrink-0"
+                      className="px-2.5 py-1 text-xs whitespace-nowrap transition-all flex-shrink-0"
                       style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)'}}>
                       {r.name}
                     </button>

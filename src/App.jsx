@@ -183,7 +183,7 @@ function AppInner() {
               <div className="flex gap-2 flex-shrink-0">
                 <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
                   className="px-3 py-1 rounded-md text-xs font-semibold"
-                  style={{ background: 'var(--primary)', color: 'white' }}>{t('backupNow', lang)}</button>
+                  style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>{t('backupNow', lang)}</button>
                 <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
                   className="px-3 py-1 rounded-md text-xs font-semibold"
                   style={{ background: 'transparent', color: 'var(--warning-text)', border: '1px solid var(--warning-border)' }}>{t('dismissReminder', lang)}</button>
@@ -269,7 +269,7 @@ function AppInner() {
         </main>
         <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           <p className="font-semibold">
-            Bioinfo<span style={{ background: 'linear-gradient(135deg, hsl(161 69% 37%), hsl(170 60% 45%), hsl(180 55% 50%))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Space</span>{' '}
+            Bioinfo<span style={{ color: 'var(--accent)' }}>Space</span>{' '}
             LabMate v{__APP_VERSION__}
           </p>
           <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>BioinfoSpace</a></p>

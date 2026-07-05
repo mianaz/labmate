@@ -58,17 +58,17 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
       onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative w-full max-w-2xl mx-4 rounded-2xl overflow-hidden"
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative w-full max-w-2xl mx-4 overflow-hidden"
         role="dialog" aria-modal="true" aria-label="Search recipes"
-        style={{background:'var(--card)', boxShadow:'0 25px 50px -12px rgba(0,0,0,0.25)'}}
+        style={{background:'var(--card)', border:'2px solid var(--border-strong)', boxShadow:'var(--shadow-lg)'}}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center gap-3 p-4 border-b" style={S_BORDER}>
                     <input ref={inputRef} id="global-search" type="search" value={query} onChange={e => setQuery(e.target.value)}
             placeholder={lang === 'en' ? 'Search recipes, reagents, tags...' : '搜索配方、试剂名、标签...'}
             aria-label="Search recipes"
             className="flex-1 text-base border-none outline-none bg-transparent"
-            style={{ fontFamily: "'DM Sans', sans-serif", boxShadow: 'none' }} />
+            style={{ fontFamily: 'var(--font-body)', boxShadow: 'none' }} />
           <kbd className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-400 font-mono">ESC</kbd>
         </div>
 
@@ -91,7 +91,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm truncate">{r.name}</span>
                     <span className="text-[10px] font-semibold" style={{ color: cc.text }}>{r.category}</span>
-                    {r._isCustom && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{background:'var(--accent-light)', color:'var(--accent)'}}>{t('customBadge', lang)}</span>}
+                    {r._isCustom && <span className="text-[9px] font-semibold px-1.5 py-0.5" style={{background:'var(--accent-light)', color:'var(--accent)'}}>{t('customBadge', lang)}</span>}
                   </div>
                   {lang === 'zh' && <p className="text-xs text-gray-500 truncate">{r.nameCn}</p>}
                   {compMatch && (
@@ -110,7 +110,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
               <div className="flex flex-wrap justify-center gap-2 mt-3">
                 {['PBS', 'Tris', 'ChIP', 'WB', 'CRISPR', 'RNA', '转膜', '蛋白纯化'].map(tag => (
                   <button key={tag} onClick={() => setQuery(tag)}
-                    className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-500 hover:bg-primary-light hover:text-primary transition-colors">
+                    className="text-xs px-3 py-1 bg-gray-100 text-gray-500 hover:bg-primary-light hover:text-primary transition-colors">
                     {tag}
                   </button>
                 ))}

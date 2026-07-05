@@ -9,15 +9,15 @@ const INV_KEY = 'labmate_inventory';
 // ── Constants ────────────────────────────────────────────────────────────────
 
 export const SAMPLE_TYPE_COLORS = {
-  cell_line: { bg: '#e0f2ef', text: '#0b6e63' },
-  plasmid:   { bg: '#f3e8ff', text: '#7c3aed' },
-  antibody:  { bg: '#fef0ec', text: '#d4552a' },
-  primer:    { bg: '#eff6ff', text: '#2563eb' },
-  protein:   { bg: '#fef3c7', text: '#92400e' },
-  reagent:   { bg: '#f0fdf4', text: '#166534' },
-  tissue:    { bg: '#fce7f3', text: '#9d174d' },
-  virus:     { bg: '#fef2f2', text: '#991b1b' },
-  other:     { bg: '#f3f4f6', text: '#374151' },
+  cell_line: { bg: 'var(--samp-cell-line-bg)', text: 'var(--samp-cell-line-text)' },
+  plasmid:   { bg: 'var(--samp-plasmid-bg)', text: 'var(--samp-plasmid-text)' },
+  antibody:  { bg: 'var(--samp-antibody-bg)', text: 'var(--samp-antibody-text)' },
+  primer:    { bg: 'var(--samp-primer-bg)', text: 'var(--samp-primer-text)' },
+  protein:   { bg: 'var(--samp-protein-bg)', text: 'var(--samp-protein-text)' },
+  reagent:   { bg: 'var(--samp-reagent-bg)', text: 'var(--samp-reagent-text)' },
+  tissue:    { bg: 'var(--samp-tissue-bg)', text: 'var(--samp-tissue-text)' },
+  virus:     { bg: 'var(--samp-virus-bg)', text: 'var(--samp-virus-text)' },
+  other:     { bg: 'var(--samp-other-bg)', text: 'var(--samp-other-text)' },
 };
 
 export const BOX_CONFIGS = [
@@ -71,18 +71,18 @@ export const VALID_SAMPLE_TYPES = new Set(Object.keys(SAMPLE_TYPE_LABELS));
 // ── Button styles (shared across inventory components) ───────────────────────
 
 export const invBtnStyle = {
-  background: 'var(--primary)', color: 'white', border: 'none',
-  borderRadius: '6px', cursor: 'pointer', padding: '8px 16px',
-  fontSize: '14px', fontWeight: 500,
+  background: 'var(--primary)', color: 'var(--on-primary)', border: '2px solid var(--border-strong)',
+  borderRadius: '0', cursor: 'pointer', padding: '8px 16px',
+  fontSize: '14px', fontWeight: 700,
 };
 export const invBtnSecStyle = {
   background: 'var(--bg-2)', color: 'var(--text)',
-  border: '1px solid var(--border)', borderRadius: '6px',
+  border: '2px solid var(--border-strong)', borderRadius: '0',
   cursor: 'pointer', padding: '8px 16px', fontSize: '14px',
 };
 export const invBtnDangerStyle = {
-  background: '#dc2626', color: 'white', border: 'none',
-  borderRadius: '6px', cursor: 'pointer', padding: '6px 12px',
+  background: 'var(--danger-border)', color: 'var(--on-danger)', border: '2px solid var(--border-strong)',
+  borderRadius: '0', cursor: 'pointer', padding: '6px 12px',
   fontSize: '13px',
 };
 

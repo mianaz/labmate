@@ -6,7 +6,7 @@ import { useExperiments, createEmptyExperiment, exportExperimentsJSON, importExp
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from './ProtocolSelector.jsx';
 
-const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--border)', borderRadius: '9999px' };
+const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
 
 function NotebookTab({ onNavigateCalendar }) {
   const lang = useLang();
@@ -177,8 +177,8 @@ function NotebookTab({ onNavigateCalendar }) {
     e.target.value = '';
   }, [reload, lang, toast]);
 
-  const statusColors = { planned: '#6366f1', 'in-progress': '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' };
-  const priorityColors = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
+  const statusColors = { planned: 'var(--base-c)', 'in-progress': 'var(--base-g)', completed: 'var(--base-a)', cancelled: 'var(--base-t)' };
+  const priorityColors = { high: 'var(--base-t)', medium: 'var(--base-g)', low: 'var(--base-a)' };
 
   // --- Section renderers ---
   const renderSection = (key, icon, labelKey, content) => (
@@ -186,7 +186,7 @@ function NotebookTab({ onNavigateCalendar }) {
       <button onClick={() => toggleSection(key)}
         className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-left font-semibold text-sm transition-colors"
         style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--primary)', color: '#fff', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{icon}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 0, background: 'var(--primary)', color: 'var(--on-primary)', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{icon}</span>
         <span className="flex-1">{t(labelKey, lang)}</span>
         <span style={{ transform: expandedSections[key] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '0.7rem' }}>&#9660;</span>
       </button>
@@ -421,9 +421,9 @@ function NotebookTab({ onNavigateCalendar }) {
       <div className="flex gap-1 mb-3 flex-wrap">
         {['all', 'planned', 'in-progress', 'completed', 'cancelled'].map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
-            className="text-xs rounded-full px-2.5 py-0.5 font-medium transition-colors"
+            className="text-xs px-2.5 py-0.5 font-medium transition-colors"
             style={statusFilter === s
-              ? { background: 'var(--primary)', color: 'white' }
+              ? { background: 'var(--primary)', color: 'var(--on-primary)' }
               : { background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
             {s === 'all' ? t('nbAll', lang) : t('nbStatus' + s.replace(/-./g, m => m[1].toUpperCase()).replace(/^./, c => c.toUpperCase()), lang)}
           </button>
@@ -532,7 +532,7 @@ function NotebookTab({ onNavigateCalendar }) {
       <div className="flex gap-2 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--border)' }}>
         <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>{t('nbExportMd', lang)}</button>
         <div className="flex-1" />
-        <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: '#ef4444' }}>
+        <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: 'var(--danger-text)' }}>
           {t('nbDeleteEntry', lang)}
         </button>
       </div>
@@ -551,7 +551,7 @@ function NotebookTab({ onNavigateCalendar }) {
         <p className="text-sm mb-4">{t('nbDeleteConfirm', lang)}</p>
         <div className="flex gap-2 justify-end">
           <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
-          <button onClick={handleDelete} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem', background: '#ef4444', borderColor: '#ef4444' }}>{t('nbDeleteEntry', lang)}</button>
+          <button onClick={handleDelete} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem', background: 'var(--danger-border)', borderColor: 'var(--danger-border)', color: 'var(--on-danger)' }}>{t('nbDeleteEntry', lang)}</button>
         </div>
       </div>
     </div>

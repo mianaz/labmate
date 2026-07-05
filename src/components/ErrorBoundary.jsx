@@ -15,7 +15,7 @@ class ErrorBoundary extends React.Component {
         React.createElement('button', {
           onClick: () => this.setState({ hasError: false, error: null }),
           className: 'px-4 py-2 rounded-lg text-sm font-medium',
-          style: { background: 'var(--primary)', color: 'white' }
+          style: { background: 'var(--primary)', color: 'var(--on-primary)' }
         }, 'Retry')
       );
     }

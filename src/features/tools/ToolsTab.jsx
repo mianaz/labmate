@@ -116,7 +116,7 @@ function ToolsTab() {
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{
                 background: filter === c ? 'var(--primary)' : 'var(--bg-2)',
-                color: filter === c ? 'white' : 'var(--text-muted)',
+                color: filter === c ? 'var(--on-primary)' : 'var(--text-muted)',
               }}>
               {c === 'all' ? (lang === 'en' ? 'All' : '全部') : t(c, lang)}
             </button>

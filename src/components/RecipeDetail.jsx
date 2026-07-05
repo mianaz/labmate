@@ -35,6 +35,7 @@ function recipeToText(recipe, targetVol, lang) {
 
 // Parse time patterns in step text and return array of {text, seconds, label} matches
 export function parseTimePatternsFromText(text) {
+  if (!text) return [];
   const matches = [];
   // Skip entire text if it's a PCR cycling line (contains °C + cycles/×)
   if (/°C/.test(text) && /[×x]\s*\d+|cycles?|\d+\s*轮/i.test(text)) return matches;
@@ -140,7 +141,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         <div>
           <h2 className="text-xl font-bold">{recipe.name}</h2>
           {lang === 'zh' && <p className="text-sm" style={S_MUTED}>{recipe.nameCn}</p>}
-          {!recipe._isCustom && <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}}>{t('systemBadge', lang)}</span>}
+          {!recipe._isCustom && <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5" style={{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}}>{t('systemBadge', lang)}</span>}
         </div>
         {recipe._isCustom && onEditCustom && (
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -174,8 +175,8 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
           </span>
           {relatedProtos.map(p => (
             <button key={p.id} onClick={() => onCrossNavigate ? onCrossNavigate(p) : null}
-              className="text-xs px-2 py-1 rounded-full font-medium transition-all hover:opacity-80"
-              style={{background:'hsla(168,55%,26%,0.1)', color:'var(--primary)', border:'1px solid hsla(168,55%,26%,0.2)', cursor: onCrossNavigate ? 'pointer' : 'default'}}>
+              className="text-xs px-2 py-1 font-medium transition-all hover:opacity-80"
+              style={{background:'var(--primary-light)', color:'var(--accent)', border:'1px solid var(--border)', cursor: onCrossNavigate ? 'pointer' : 'default'}}>
               {p.name} →
             </button>
           ))}
@@ -213,7 +214,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
             onChange={e => setTargetVol(Math.max(1, +e.target.value))}
             className="w-28" />
           <span className="text-sm mono">{recipe.unit}</span>
-          {scale !== 1 && <span className="text-xs px-2 py-1 rounded-full font-semibold" style={{background:'var(--accent-light)', color:'var(--accent)'}}>×{scale.toFixed(2)}</span>}
+          {scale !== 1 && <span className="text-xs px-2 py-1 font-semibold" style={{background:'var(--accent-light)', color:'var(--accent)'}}>×{scale.toFixed(2)}</span>}
         </div>
       )}
 
@@ -265,12 +266,12 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
             <div className="flex rounded-lg overflow-hidden border ml-auto" style={S_BORDER}>
               <button onClick={() => setShowDetailed(false)}
                 className="px-3 py-1 text-xs font-semibold transition-colors"
-                style={{background: !showDetailed ? 'var(--primary)' : 'var(--card)', color: !showDetailed ? 'white' : 'var(--text-muted)'}}>
+                style={{background: !showDetailed ? 'var(--primary)' : 'var(--card)', color: !showDetailed ? 'var(--on-primary)' : 'var(--text-muted)'}}>
                 {lang === 'en' ? 'Brief' : '简要'}
               </button>
               <button onClick={() => setShowDetailed(true)}
                 className="px-3 py-1 text-xs font-semibold transition-colors"
-                style={{background: showDetailed ? 'var(--primary)' : 'var(--card)', color: showDetailed ? 'white' : 'var(--text-muted)'}}>
+                style={{background: showDetailed ? 'var(--primary)' : 'var(--card)', color: showDetailed ? 'var(--on-primary)' : 'var(--text-muted)'}}>
                 {lang === 'en' ? 'Detailed' : '详细'}
               </button>
             </div>
@@ -294,8 +295,8 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                     <span className="text-xs font-semibold whitespace-nowrap" style={S_MUTED}>
                       {t('stepProgress', lang)}: {doneCount} {lang === 'zh' ? '/' : t('stepOf', lang) + ' '}{totalSteps} {t('stepComplete', lang)}
                     </span>
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{background:'var(--border)'}}>
-                      <div className="h-full rounded-full transition-all" style={{width:`${(doneCount/totalSteps)*100}%`, background:'var(--primary)'}} />
+                    <div className="flex-1 h-1.5 overflow-hidden" style={{background:'var(--border)'}}>
+                      <div className="h-full transition-all" style={{width:`${(doneCount/totalSteps)*100}%`, background:'var(--primary)'}} />
                     </div>
                     {doneCount > 0 && (
                       <button onClick={resetSteps} className="text-xs px-2 py-0.5 rounded font-medium" style={{color:'var(--text-muted)', background:'var(--card)', border:'1px solid var(--border)'}}>
@@ -307,7 +308,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
               })()}
               <div className="protocol-timeline">
                 {recipe.detailedSteps.map((step, i) => {
-                  const text = step[lang] || step.zh;
+                  const text = step[lang] || step.zh || step.en || '';
                   const isH = step.isHeader;
                   const isDone = completedSteps.has(i);
                   const timeMatches = !isH ? parseTimePatternsFromText(text) : [];
@@ -323,8 +324,8 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                         }}>
                         {!isH && (
                           <button onClick={() => toggleStep(i)} className="flex-shrink-0 mt-0.5"
-                            style={{width:'16px', height:'16px', borderRadius:'50%', border: isDone ? 'none' : '2px solid var(--border)', background: isDone ? 'var(--primary)' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0}}>
-                            {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                            style={{width:'16px', height:'16px', borderRadius:0, border: '2px solid var(--border)', background: isDone ? 'var(--primary)' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0}}>
+                            {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style={{stroke:'var(--on-primary)'}} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
                           </button>
                         )}
                         <BoldText text={text} style={{color:'var(--text)', flex:1, ...(isDone && !isH ? {textDecoration:'line-through', textDecorationColor:'var(--text-muted)'} : {})}} />
@@ -342,10 +343,10 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                         )}
                       </div>
                       {safeStop && (
-                        <div className="my-1.5 p-2 rounded-lg text-xs flex items-start gap-2" style={{background:'hsla(45, 90%, 55%, 0.1)', borderLeft:'3px solid hsl(45, 90%, 45%)', marginLeft:'1.5rem'}}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="hsl(45, 90%, 45%)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                        <div className="my-1.5 p-2 text-xs flex items-start gap-2" style={{background:'var(--warning-bg)', borderLeft:'3px solid var(--warning-border)', marginLeft:'1.5rem'}}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{stroke:'var(--warning-border)'}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
                           <div>
-                            <span className="font-bold" style={{color:'hsl(45, 75%, 35%)'}}>{t('safeStop', lang)}</span>
+                            <span className="font-bold" style={{color:'var(--warning-text)'}}>{t('safeStop', lang)}</span>
                             <span style={{color:'var(--text-muted)', marginLeft:'0.5rem'}}>{safeStop.note[lang] || safeStop.note.en}</span>
                           </div>
                         </div>
@@ -424,7 +425,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
           <div className="protocol-timeline">
             {recipe.prepSteps.map((step, i) => (
               <div key={i} className="protocol-step">
-                <span style={S_TEXT}>{renderDynamicStep(step[lang] || step.zh, scale)}</span>
+                <span style={S_TEXT}>{renderDynamicStep(step[lang] || step.zh || step.en || '', scale)}</span>
               </div>
             ))}
           </div>

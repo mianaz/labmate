@@ -38,6 +38,7 @@ export function downloadFile(filename, content, mimeType = 'text/plain') {
 
 // Render dynamic step text with scaled values
 export function renderDynamicStep(text, scale) {
+  if (!text) return '';
   return text.replace(/\{v:([\d.]+):([^}]+)\}/g, (_, amt, unit) => {
     const scaled = parseFloat(amt) * scale;
     const display = scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(2) : scaled < 100 ? scaled.toFixed(1) : Math.round(scaled);

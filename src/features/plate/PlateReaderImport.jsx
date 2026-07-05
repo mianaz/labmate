@@ -170,10 +170,10 @@ export default function PlateReaderImport({ wellData, plateConfig, designerPlate
 
       {parsed && parsed.error && (
         <div className="card p-4 text-sm" style={{
-          borderLeft: '3px solid hsl(0, 70%, 55%)',
+          borderLeft: '3px solid var(--danger-border)',
           background: 'var(--bg-2)',
         }}>
-          <p style={{ color: 'hsl(0, 70%, 45%)' }}>
+          <p style={{ color: 'var(--danger-text)' }}>
             <strong>{t('readerErr', lang)}:</strong>{' '}
             {t('readerErr_' + parsed.error, lang) || t('readerErrUnknown', lang)}
           </p>

@@ -533,7 +533,7 @@ export default function InventoryTab() {
               {Object.entries(invStats.byType).sort((a, b) => b[1] - a[1]).map(([tp, count]) => {
                 const colors = SAMPLE_TYPE_COLORS[tp] || SAMPLE_TYPE_COLORS.other;
                 return (
-                  <span key={tp} className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: colors.bg, color: colors.text }}>
+                  <span key={tp} className="text-xs px-2.5 py-1 font-semibold" style={{ background: colors.bg, color: colors.text }}>
                     {t(SAMPLE_TYPE_LABELS[tp] || tp, lang) + ' ' + count}
                   </span>
                 );
@@ -554,11 +554,11 @@ export default function InventoryTab() {
                     <span className="text-xs" style={{ width: 80, flexShrink: 0, textAlign: 'right', color: 'var(--text)' }}>
                       {lang === 'zh' ? (loc.nameZh || loc.name) : loc.name}
                     </span>
-                    <div style={{ flex: 1, background: 'var(--bg-2)', borderRadius: 6, height: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <div style={{ flex: 1, background: 'var(--bg-2)', borderRadius: 0, height: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
                       <div style={{
                         width: pct + '%', height: '100%',
-                        background: pct < 60 ? '#22c55e' : pct < 85 ? '#eab308' : '#ef4444',
-                        borderRadius: 6, minWidth: pct > 0 ? 2 : 0, transition: 'width 0.3s',
+                        background: pct < 60 ? 'var(--primary)' : pct < 85 ? 'var(--warning-border)' : 'var(--danger-border)',
+                        borderRadius: 0, minWidth: pct > 0 ? 2 : 0, transition: 'width 0.3s',
                       }} />
                     </div>
                     <span className="text-xs font-mono" style={{ width: 50, flexShrink: 0, color: 'var(--text-muted)' }}>
@@ -581,7 +581,7 @@ export default function InventoryTab() {
                 const box = data.boxes.find(b => b.id === s.boxId);
                 return (
                   <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--bg-2)' }}>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: colors.bg, color: colors.text }}>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 0, background: colors.bg, color: colors.text }}>
                       {t(SAMPLE_TYPE_LABELS[s.sampleType], lang)}
                     </span>
                     <span className="text-sm" style={{ color: 'var(--text)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -636,7 +636,7 @@ export default function InventoryTab() {
           {t('invExport', lang)}
         </button>
         {showExportMenu && (
-          <div className="absolute right-0 mt-1 rounded-lg p-1 z-50" style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', minWidth: 200 }}>
+          <div className="absolute right-0 mt-1 p-1 z-50" style={{ background: 'var(--card)', border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow)', minWidth: 200 }}>
             <button onClick={handleExportAllCsv} className="block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80" style={{ color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('invExportAllCsv', lang)}</button>
             {selectedBoxId && (
               <button onClick={handleExportBoxCsv} className="block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80" style={{ color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('invExportBoxCsv', lang)}</button>
@@ -656,7 +656,7 @@ export default function InventoryTab() {
           {t('invImport', lang)}
         </button>
         {showImportMenu && (
-          <div className="absolute right-0 mt-1 rounded-lg p-1 z-50" style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', minWidth: 200 }}>
+          <div className="absolute right-0 mt-1 p-1 z-50" style={{ background: 'var(--card)', border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow)', minWidth: 200 }}>
             <button onClick={() => csvInputRef.current && csvInputRef.current.click()} className="block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80" style={{ color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('invImportCsv', lang)}</button>
             <button onClick={() => jsonInputRef.current && jsonInputRef.current.click()} className="block w-full text-left px-3 py-2 text-sm rounded hover:opacity-80" style={{ color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('invImportJson', lang)}</button>
           </div>
@@ -707,7 +707,7 @@ export default function InventoryTab() {
           {selectedOccupiedCount > 0 && (
             <button
               onClick={handleBulkDelete}
-              style={{ ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: confirmBulkDelete ? '#991b1b' : '#dc2626' }}
+              style={{ ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: 'var(--danger-border)' }}
             >
               {confirmBulkDelete ? t('invBulkDelConfirm', lang) : t('invBulkDel', lang)}
             </button>
@@ -779,7 +779,7 @@ export default function InventoryTab() {
   const allSamplesPage = () => {
     const { _allSamples: allSamples, _uniqueTypes: uniqueTypes, _uniqueLocs: uniqueLocs, _uniqueBoxes: uniqueBoxes, _uniqueOwners: uniqueOwners, _filtered: filtered } = { _allSamples, _uniqueTypes, _uniqueLocs, _uniqueBoxes, _uniqueOwners, _filtered };
     const thStyle = { textAlign: 'left', padding: '6px 8px', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' };
-    const fiStyle = { width: '100%', padding: '3px 6px', fontSize: 11, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)', outline: 'none' };
+    const fiStyle = { width: '100%', padding: '3px 6px', fontSize: 11, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 0, color: 'var(--text)', outline: 'none' };
     const SortArr = (col) => listFilters.sort === col
       ? <span style={{ marginLeft: 3 }}>{listFilters.dir === 'asc' ? '↑' : '↓'}</span>
       : <span style={{ marginLeft: 3, opacity: 0.25 }}>↕</span>;
@@ -808,7 +808,7 @@ export default function InventoryTab() {
             type="text" value={listFilters.name}
             onChange={e => setListFilters(f => ({ ...f, name: e.target.value }))}
             placeholder={t('invSearchName', lang)}
-            style={{ padding: '4px 10px', fontSize: 12, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text)', outline: 'none', marginLeft: 'auto', width: 180 }}
+            style={{ padding: '4px 10px', fontSize: 12, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 0, color: 'var(--text)', outline: 'none', marginLeft: 'auto', width: 180 }}
           />
         </div>
         <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: isMobile ? 400 : 700 }}>
@@ -878,7 +878,7 @@ export default function InventoryTab() {
                 >
                   <td className="py-2 px-2 font-medium" style={{ color: 'var(--text)' }}>{s.name}</td>
                   <td className="py-2 px-2">
-                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 9999, background: colors.bg, color: colors.text, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 0, background: colors.bg, color: colors.text, whiteSpace: 'nowrap' }}>
                       {t(SAMPLE_TYPE_LABELS[s.sampleType], lang)}
                     </span>
                   </td>
@@ -903,10 +903,10 @@ export default function InventoryTab() {
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={() => setShowStats(false)}
     >
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} />
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />
       <div
-        className="relative w-full rounded-xl p-6"
-        style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', maxHeight: '85vh', overflowY: 'auto', maxWidth: 520 }}
+        className="relative w-full p-6"
+        style={{ background: 'var(--card)', border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow-lg)', maxHeight: '85vh', overflowY: 'auto', maxWidth: 520 }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -931,10 +931,10 @@ export default function InventoryTab() {
             {/* Utilization bar */}
             <div>
               <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>{t('invStatsUtilization', lang)}</div>
-              <div style={{ background: 'var(--bg-2)', borderRadius: 8, height: 24, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
+              <div style={{ background: 'var(--bg-2)', borderRadius: 0, height: 24, overflow: 'hidden', border: '1px solid var(--border)', position: 'relative' }}>
                 <div style={{
-                  width: invStats.utilPct + '%', height: '100%', borderRadius: 8, transition: 'width 0.3s',
-                  background: invStats.utilPct < 60 ? '#22c55e' : invStats.utilPct < 85 ? '#eab308' : '#ef4444',
+                  width: invStats.utilPct + '%', height: '100%', borderRadius: 0, transition: 'width 0.3s',
+                  background: invStats.utilPct < 60 ? 'var(--primary)' : invStats.utilPct < 85 ? 'var(--warning-border)' : 'var(--danger-border)',
                 }} />
               </div>
               <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -954,10 +954,10 @@ export default function InventoryTab() {
                         <span className="text-xs" style={{ width: 70, flexShrink: 0, textAlign: 'right', color: 'var(--text)' }}>
                           {t(SAMPLE_TYPE_LABELS[tp] || tp, lang)}
                         </span>
-                        <div style={{ flex: 1, background: 'var(--bg-2)', borderRadius: 6, height: 20, overflow: 'hidden' }}>
+                        <div style={{ flex: 1, background: 'var(--bg-2)', borderRadius: 0, height: 20, overflow: 'hidden' }}>
                           <div style={{
                             width: Math.round(count / invStats.maxTypeCount * 100) + '%',
-                            height: '100%', background: colors.text, borderRadius: 6, minWidth: 2, transition: 'width 0.3s',
+                            height: '100%', background: colors.text, borderRadius: 0, minWidth: 2, transition: 'width 0.3s',
                           }} />
                         </div>
                         <span className="text-xs font-mono" style={{ width: 30, flexShrink: 0, color: 'var(--text-muted)' }}>{count}</span>
@@ -973,7 +973,7 @@ export default function InventoryTab() {
               <div className="rounded-lg p-3" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
                 <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>{t('invStatsExpiring', lang)}</div>
                 {[['7', invStats.expiring7], ['30', invStats.expiring30], ['90', invStats.expiring90]].map(([days, count]) => (
-                  <div key={days} className="flex justify-between text-xs py-1" style={{ color: count > 0 ? '#ef4444' : 'var(--text-muted)' }}>
+                  <div key={days} className="flex justify-between text-xs py-1" style={{ color: count > 0 ? 'var(--danger-text)' : 'var(--text-muted)' }}>
                     <span>{'≤ ' + days + ' ' + t('invStatsDays', lang)}</span>
                     <span className="font-mono font-semibold">{count}</span>
                   </div>
@@ -982,7 +982,7 @@ export default function InventoryTab() {
               <div className="rounded-lg p-3" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
                 <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>{t('invStatsRecentlyAdded', lang)}</div>
                 {[['7', invStats.added7], ['30', invStats.added30]].map(([days, count]) => (
-                  <div key={days} className="flex justify-between text-xs py-1" style={{ color: count > 0 ? '#22c55e' : 'var(--text-muted)' }}>
+                  <div key={days} className="flex justify-between text-xs py-1" style={{ color: count > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>
                     <span>{'≤ ' + days + ' ' + t('invStatsDays', lang)}</span>
                     <span className="font-mono font-semibold">{count}</span>
                   </div>
@@ -1110,21 +1110,21 @@ export default function InventoryTab() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{s.name}</div>
                   <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: colors.bg, color: colors.text }}>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 0, background: colors.bg, color: colors.text }}>
                       {t(SAMPLE_TYPE_LABELS[s.sampleType], lang)}
                     </span>
                     {du !== null && du < 0 && (
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: 'hsla(0,80%,50%,0.15)', color: 'hsl(0,70%,45%)', fontWeight: 600 }}>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 0, background: 'var(--danger-bg)', color: 'var(--danger-text)', fontWeight: 600 }}>
                         {'⚠ ' + t('expired', lang)}
                       </span>
                     )}
                     {du !== null && du >= 0 && du <= 7 && (
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 9999, background: 'hsla(35,90%,50%,0.15)', color: 'hsl(35,80%,40%)', fontWeight: 600 }}>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 0, background: 'var(--warning-bg)', color: 'var(--warning-text)', fontWeight: 600 }}>
                         {'⚠ ' + du + 'd'}
                       </span>
                     )}
                     {du !== null && du > 7 && du <= 30 && (
-                      <span style={{ fontSize: 10, color: 'hsl(35,70%,45%)' }}>{du + 'd'}</span>
+                      <span style={{ fontSize: 10, color: 'var(--warning-text)' }}>{du + 'd'}</span>
                     )}
                     {s.quantity && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.quantity}</span>}
                     {s.owner && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{'· ' + s.owner}</span>}
@@ -1161,7 +1161,7 @@ export default function InventoryTab() {
               onClick={() => { setSelectedBoxId(s.boxId); if (isMobile) setMobileView('grid'); setSearch(''); }}
               style={{ borderBottom: '1px solid var(--bg-2)' }}
             >
-              <span style={{ fontSize: 10, padding: '2px ' + (isMobile ? '6' : '8') + 'px', borderRadius: 9999, background: colors.bg, color: colors.text, flexShrink: isMobile ? 0 : undefined }}>
+              <span style={{ fontSize: 10, padding: '2px ' + (isMobile ? '6' : '8') + 'px', borderRadius: 0, background: colors.bg, color: colors.text, flexShrink: isMobile ? 0 : undefined }}>
                 {t(SAMPLE_TYPE_LABELS[s.sampleType], lang)}
               </span>
               <span className={'text-sm font-medium' + (isMobile ? ' flex-1 truncate' : '')} style={{ color: 'var(--text)' }}>{s.name}</span>

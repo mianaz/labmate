@@ -42,7 +42,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
               return label ? (label[lang] || label.en) : displayCat;
             })()}
           </span>
-          {recipe._isCustom && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+          {recipe._isCustom && <span className="text-[10px] font-semibold px-1.5 py-0.5"
             style={{background:'var(--accent-light)', color:'var(--accent)'}}>{t('customBadge', lang)}</span>}
         </div>
       </div>

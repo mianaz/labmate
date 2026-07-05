@@ -26,12 +26,12 @@ export default function PercentCalc() {
       <div className="flex gap-3 mb-4">
         <button onClick={() => setMode('wv')}
           className="px-4 py-1.5 rounded-lg text-sm font-semibold"
-          style={{background: mode === 'wv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'wv' ? 'white' : 'var(--text-muted)'}}>
+          style={{background: mode === 'wv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'wv' ? 'var(--on-primary)' : 'var(--text-muted)'}}>
           {t('wv', lang)}
         </button>
         <button onClick={() => setMode('vv')}
           className="px-4 py-1.5 rounded-lg text-sm font-semibold"
-          style={{background: mode === 'vv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'vv' ? 'white' : 'var(--text-muted)'}}>
+          style={{background: mode === 'vv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'vv' ? 'var(--on-primary)' : 'var(--text-muted)'}}>
           {t('vv', lang)}
         </button>
       </div>
@@ -40,7 +40,7 @@ export default function PercentCalc() {
         {[{ id: 'solute', l: mode === 'wv' ? t('soluteG', lang) : t('soluteML', lang) }, { id: 'vol', l: t('volML', lang) }, { id: 'perc', l: t('pctLabel', lang) }].map(s => (
           <button key={s.id} onClick={() => setSolve(s.id)}
             className="px-2.5 py-1 rounded-md font-bold"
-            style={{background: solve === s.id ? 'var(--primary)' : 'var(--bg-2)', color: solve === s.id ? 'white' : 'var(--text-muted)'}}>
+            style={{background: solve === s.id ? 'var(--primary)' : 'var(--bg-2)', color: solve === s.id ? 'var(--on-primary)' : 'var(--text-muted)'}}>
             {s.l}
           </button>
         ))}

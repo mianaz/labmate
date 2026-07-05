@@ -6,7 +6,7 @@ import { useExperiments, createEmptyExperiment } from '../../lib/experiments.js'
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from '../notebook/ProtocolSelector.jsx';
 
-const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--border)', borderRadius: '9999px' };
+const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
 
 function CalendarTab({ onNavigateNotebook }) {
   const lang = useLang();
@@ -31,7 +31,7 @@ function CalendarTab({ onNavigateNotebook }) {
 
   const monthNames = ['calJan','calFeb','calMar','calApr','calMay','calJun','calJul','calAug','calSep','calOct','calNov','calDec'];
   const dayNames = ['calSun','calMon','calTue','calWed','calThu','calFri','calSat'];
-  const statusColors = { planned: '#6366f1', 'in-progress': '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' };
+  const statusColors = { planned: 'var(--base-c)', 'in-progress': 'var(--base-g)', completed: 'var(--base-a)', cancelled: 'var(--base-t)' };
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -172,7 +172,7 @@ function CalendarTab({ onNavigateNotebook }) {
           {dayEntries.slice(0, 3).map(e => (
             <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
               className="text-xs px-1 py-0.5 rounded mb-0.5 truncate cursor-pointer transition-opacity hover:opacity-80"
-              style={{ background: e.color || statusColors[e.status] || '#6366f1', color: 'white', fontSize: '0.65rem' }}>
+              style={{ background: e.color || statusColors[e.status] || 'var(--base-c)', color: 'white', fontSize: '0.65rem' }}>
               {lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}
             </div>
           ))}
@@ -236,7 +236,7 @@ function CalendarTab({ onNavigateNotebook }) {
                     {dayEntries.map(e => (
                       <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
                         className="text-xs px-1.5 py-1 rounded mb-0.5 cursor-pointer transition-opacity hover:opacity-80"
-                        style={{ background: e.color || statusColors[e.status] || '#6366f1', color: 'white', fontSize: '0.7rem' }}>
+                        style={{ background: e.color || statusColors[e.status] || 'var(--base-c)', color: 'white', fontSize: '0.7rem' }}>
                         <div className="font-medium truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</div>
                         <div className="opacity-75">{e.startTime} · {e.duration}m</div>
                       </div>
@@ -285,9 +285,9 @@ function CalendarTab({ onNavigateNotebook }) {
             <div>
               <label>{t('calColor', lang)}</label>
               <div className="flex gap-1.5 mt-1 flex-wrap">
-                {['#1D9E75', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'].map(c => (
+                {['#16B364', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'].map(c => (
                   <button key={c} onClick={() => setEditingEvent(prev => ({ ...prev, color: c }))}
-                    style={{ width: 24, height: 24, borderRadius: '50%', background: c, border: editingEvent.color === c ? '3px solid var(--text)' : '2px solid var(--border)', cursor: 'pointer', transition: 'transform 0.15s' }} />
+                    style={{ width: 24, height: 24, borderRadius: 0, background: c, border: editingEvent.color === c ? '3px solid var(--text)' : '2px solid var(--border)', cursor: 'pointer', transition: 'transform 0.15s' }} />
                 ))}
               </div>
             </div>
@@ -324,7 +324,7 @@ function CalendarTab({ onNavigateNotebook }) {
           )}
         </div>
         <div className="flex gap-2 mt-5 justify-between">
-          <button onClick={handleDeleteEvent} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.82rem', color: '#ef4444' }}>
+          <button onClick={handleDeleteEvent} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.82rem', color: 'var(--danger-text)' }}>
             {t('calDeleteEvent', lang)}
           </button>
           <div className="flex gap-2">
@@ -438,7 +438,7 @@ function CalendarTab({ onNavigateNotebook }) {
                 <div key={e.id} onClick={() => handleEventClick(e)}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
                   style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || '#6366f1' }} />
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
                   <span className="text-sm font-medium flex-1 truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</span>
                   <span className="text-xs mono" style={S_MUTED}>{e.date}</span>
                   <span className="text-xs" style={S_MUTED}>{e.startTime || ''}</span>

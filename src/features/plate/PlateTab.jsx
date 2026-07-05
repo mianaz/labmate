@@ -387,8 +387,8 @@ function PlateTab() {
                   className={`well ${isSel ? 'selected' : ''}`}
                   style={{
                     width: ws, height: ws, minWidth: ws,
-                    background: data ? data.color + '30' : '#f9fafb',
-                    borderColor: data ? data.color : '#d1d5db',
+                    background: data ? data.color + '30' : 'var(--bg-2)',
+                    borderColor: data ? data.color : 'var(--border)',
                     borderWidth: data ? 2 : 1,
                     fontSize: fs,
                   }}
@@ -452,7 +452,7 @@ function PlateTab() {
                 className="px-3 py-1.5 text-xs font-semibold transition-colors"
                 style={{
                   background: mode === 'designer' ? 'var(--primary)' : 'var(--card)',
-                  color: mode === 'designer' ? 'white' : 'var(--text-muted)',
+                  color: mode === 'designer' ? 'var(--on-primary)' : 'var(--text-muted)',
                 }}>
                 {t('plateModeDesigner', lang)}
               </button>
@@ -460,7 +460,7 @@ function PlateTab() {
                 className="px-3 py-1.5 text-xs font-semibold transition-colors"
                 style={{
                   background: mode === 'reader' ? 'var(--primary)' : 'var(--card)',
-                  color: mode === 'reader' ? 'white' : 'var(--text-muted)',
+                  color: mode === 'reader' ? 'var(--on-primary)' : 'var(--text-muted)',
                 }}>
                 {t('plateModeReader', lang)}
               </button>
@@ -514,15 +514,15 @@ function PlateTab() {
             <div className="mb-3">
               <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('plateLabelName', lang)}</label>
               <input type="text" value={currentLabel} onChange={e => setCurrentLabel(e.target.value)}
-                placeholder="e.g. 10 µM Drug A" style={{ fontFamily: "'DM Sans', sans-serif" }} />
+                placeholder="e.g. 10 µM Drug A" style={{ fontFamily: 'var(--font-body)' }} />
             </div>
             <div className="mb-3">
               <label className="text-xs font-semibold block mb-1.5" style={S_MUTED}>{t('color', lang)}</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {WELL_COLORS.map((c, i) => (
                   <button key={i} onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
-                    className={`w-5 h-5 rounded-full border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
-                    style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'transparent', ringColor: 'var(--primary)'}} />
+                    className={`w-5 h-5 border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
+                    style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'var(--border)', ringColor: 'var(--primary)'}} />
                 ))}
               </div>
               <div className="flex items-center gap-2">
@@ -530,7 +530,7 @@ function PlateTab() {
                 <input type="color" value={customColor} onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
                   className="w-7 h-7 rounded cursor-pointer border-0 p-0" style={{background:'transparent'}} />
                 {useCustomColor && (
-                  <div className="w-5 h-5 rounded-full border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
+                  <div className="w-5 h-5 border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
                 )}
               </div>
             </div>
@@ -591,12 +591,12 @@ function PlateTab() {
                       <div className="flex gap-2">
                         <button onClick={() => updateParam('direction', 'row')}
                           className="flex-1 px-2 py-1 rounded text-xs font-semibold"
-                          style={{background: templateParams.direction === 'row' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'row' ? 'white' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
+                          style={{background: templateParams.direction === 'row' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'row' ? 'var(--on-primary)' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
                           → {lang === 'en' ? 'Row' : '沿行'}
                         </button>
                         <button onClick={() => updateParam('direction', 'col')}
                           className="flex-1 px-2 py-1 rounded text-xs font-semibold"
-                          style={{background: templateParams.direction === 'col' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'col' ? 'white' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
+                          style={{background: templateParams.direction === 'col' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'col' ? 'var(--on-primary)' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
                           ↓ {lang === 'en' ? 'Column' : '沿列'}
                         </button>
                       </div>

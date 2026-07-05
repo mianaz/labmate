@@ -66,7 +66,7 @@ export default function PeriodicTableCalc() {
                     style={{
                       width: 34, height: 38, padding: '1px 2px',
                       background: isSelected ? 'var(--primary)' : (ELEMENT_CAT_COLORS[el.cat] || '#adb5bd') + (dimmed ? '30' : 'cc'),
-                      color: isSelected ? 'white' : dimmed ? 'var(--text-muted)' : '#1a1a2e',
+                      color: isSelected ? 'var(--on-primary)' : dimmed ? 'var(--text-muted)' : '#1a1a2e',
                       border: isSelected ? '2px solid var(--primary)' : '1px solid ' + (dimmed ? 'transparent' : 'rgba(0,0,0,0.1)'),
                       opacity: dimmed ? 0.4 : 1,
                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

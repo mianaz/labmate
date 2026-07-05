@@ -231,7 +231,7 @@ export function SampleForm({ open, onClose, onSave, onDelete, onDuplicate, initi
               </button>
             ) : (
               <div className="flex gap-2 items-center">
-                <span className="text-xs" style={{ color: '#dc2626' }}>{t('invDeleteConfirm', lang)}</span>
+                <span className="text-xs" style={{ color: 'var(--danger-text)' }}>{t('invDeleteConfirm', lang)}</span>
                 <button
                   style={invBtnDangerStyle}
                   onClick={() => { onDelete(initial.id); onClose(); }}

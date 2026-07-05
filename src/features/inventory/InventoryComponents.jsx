@@ -31,14 +31,14 @@ export function InvModal({ open, onClose, title, children }) {
     >
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+        style={{ background: 'rgba(0,0,0,0.4)' }}
       />
       <div
-        className="relative w-full max-w-md rounded-xl p-6"
+        className="relative w-full max-w-md p-6"
         style={{
           background: 'var(--card)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+          border: '2px solid var(--border-strong)',
+          boxShadow: 'var(--shadow-lg)',
           maxHeight: '85vh',
           overflowY: 'auto',
         }}

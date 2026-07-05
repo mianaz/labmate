@@ -121,7 +121,7 @@ export function StorageTree({
                       }
                     }}
                     className="text-xs px-1"
-                    style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer' }}
                     title={confirmDel === 'loc-' + loc.id ? t('invConfirm', lang) : t('invDeleteLocation', lang)}
                   >
                     {confirmDel === 'loc-' + loc.id ? '!!' : '✕'}
@@ -152,7 +152,7 @@ export function StorageTree({
                   {box.color ? (
                     <span style={{
                       display: 'inline-block', width: 8, height: 8,
-                      borderRadius: 2, background: box.color, flexShrink: 0,
+                      borderRadius: 0, background: box.color, flexShrink: 0,
                     }} />
                   ) : (
                     <svg
@@ -197,7 +197,7 @@ export function StorageTree({
                           }
                         }}
                         className="text-xs px-1"
-                        style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
+                        style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer' }}
                       >
                         {confirmDel === 'box-' + box.id ? '!!' : '✕'}
                       </button>

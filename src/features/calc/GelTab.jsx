@@ -49,7 +49,7 @@ function GelTable({ title, data, color, lang }) {
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i} className="border-b" style={{borderColor:'#f5f3ee'}}>
+            <tr key={i} className="border-b" style={{borderColor:'var(--border)'}}>
               <td className="py-2 font-medium">{row.name}</td>
               <td className="py-2 text-right mono font-semibold" style={{color}}>
                 {row.unit === 'µL' ? row.vol.toFixed(1) : row.vol.toFixed(3)}

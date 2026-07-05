@@ -81,7 +81,7 @@ function RefsTab({ onReplayTour }) {
           </div>
           <button onClick={handleExport}
             className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
-            style={{background:'var(--primary)', color:'white'}}>
+            style={{background:'var(--primary)', color:'var(--on-primary)'}}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             {t('exportBtn', lang)}
           </button>
@@ -110,7 +110,7 @@ function RefsTab({ onReplayTour }) {
         {guideSections.map((sec, i) => (
           <div key={i} className="card p-5">
             <h3 className="text-base font-bold mb-2" style={{fontFamily:'var(--font-heading)'}}>
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold mr-2" style={{background:"var(--primary-light)", color:"var(--primary)"}}>{sec.num}</span>{t(sec.titleKey, lang)}
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold mr-2" style={{background:"var(--primary)", color:"var(--on-primary)"}}>{sec.num}</span>{t(sec.titleKey, lang)}
             </h3>
             <p className="text-sm leading-relaxed" style={S_MUTED}>{t(sec.bodyKey, lang)}</p>
           </div>
@@ -122,7 +122,7 @@ function RefsTab({ onReplayTour }) {
         <div className="mb-8">
           <button onClick={onReplayTour}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all hover:opacity-90"
-            style={{background:'var(--primary)', color:'white'}}>
+            style={{background:'var(--primary)', color:'var(--on-primary)'}}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             {t('replayTour', lang)}
           </button>
