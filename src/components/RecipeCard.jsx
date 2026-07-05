@@ -29,7 +29,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
           <button className={`fav-star text-sm ${fav ? 'active' : ''}`}
             aria-label={fav ? t('removedFav', lang) : t('addedFav', lang)}
             onClick={e => { e.stopPropagation(); toggle(recipe.id); toast.show(fav ? t('removedFav', lang) : t('addedFav', lang), ''); }}
-            style={{color: fav ? 'var(--fav-star)' : 'var(--text-muted)', opacity: fav ? 1 : 0.4, background: 'none', border: 'none', padding: 0, lineHeight: 1}}>
+            style={{color: fav ? 'var(--fav-star)' : 'var(--text-muted)', opacity: fav ? 1 : 0.4, background: 'none', border: 'none', lineHeight: 1, padding: 13, margin: -13, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
             {fav ? '★' : '☆'}
           </button>
           <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: cc.text }}>

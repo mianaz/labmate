@@ -8,12 +8,18 @@ import ProtocolSelector from '../notebook/ProtocolSelector.jsx';
 
 const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
 
+// Parse a 'YYYY-MM-DD' string into a local Date (avoids UTC-parse day-shift bugs).
+function dateStrToLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function CalendarTab({ onNavigateNotebook }) {
   const lang = useLang();
   const toast = useToast();
   const { entries, loading, save, remove, reload } = useExperiments();
   const { recipeById: RECIPE_BY_ID } = useRecipes();
-  const [viewMode, setViewMode] = useState('month');
+  const [viewMode, setViewMode] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 768) ? 'agenda' : 'month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -28,6 +34,15 @@ function CalendarTab({ onNavigateNotebook }) {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // Mobile-only: which day (if any) the compact month picker has selected, to filter the agenda list.
+  const [mobileDayFilter, setMobileDayFilter] = useState(null);
+  // Reconcile viewMode when crossing the mobile/desktop breakpoint at runtime (resize/rotate):
+  // mobile has no 'week' view, desktop has no 'agenda' view.
+  useEffect(() => {
+    if (isMobile && viewMode === 'week') { setViewMode('agenda'); setMobileDayFilter(null); }
+    if (!isMobile && viewMode === 'agenda') { setViewMode('month'); }
+  }, [isMobile, viewMode]);
 
   const monthNames = ['calJan','calFeb','calMar','calApr','calMay','calJun','calJul','calAug','calSep','calOct','calNov','calDec'];
   const dayNames = ['calSun','calMon','calTue','calWed','calThu','calFri','calSat'];
@@ -53,6 +68,27 @@ function CalendarTab({ onNavigateNotebook }) {
     });
     return map;
   }, [entries]);
+
+  // Mobile agenda: upcoming (>= today, non-cancelled) entries grouped by date, chronological.
+  const groupedUpcoming = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const list = entries
+      .filter(e => e.date >= todayStr && e.status !== 'cancelled')
+      .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.startTime || '').localeCompare(b.startTime || ''));
+    const groups = [];
+    list.forEach(e => {
+      const g = groups[groups.length - 1];
+      if (g && g.date === e.date) g.items.push(e);
+      else groups.push({ date: e.date, items: [e] });
+    });
+    return groups;
+  }, [entries]);
+
+  // Mobile agenda: entries for the day selected in the compact month picker (any status, any date — not just upcoming).
+  const dayFilteredEntries = useMemo(() => {
+    if (!mobileDayFilter) return [];
+    return entries.filter(e => e.date === mobileDayFilter).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+  }, [entries, mobileDayFilter]);
 
   const handleDayClick = (dateStr) => {
     const entry = createEmptyExperiment(dateStr);
@@ -251,6 +287,107 @@ function CalendarTab({ onNavigateNotebook }) {
     );
   };
 
+  // --- Mobile compact month picker (day number + dot, no event chips) ---
+  const renderMobileMonthView = () => {
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date().toISOString().slice(0, 10);
+    const cells = [];
+
+    for (let i = 0; i < firstDay; i++) cells.push(<div key={'empty-' + i} style={{ minHeight: '44px' }} />);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const hasEntries = !!(entriesByDate[dateStr] && entriesByDate[dateStr].length);
+      const isToday = dateStr === today;
+      const isSelected = dateStr === mobileDayFilter;
+      cells.push(
+        <button key={d} onClick={() => setMobileDayFilter(prev => prev === dateStr ? null : dateStr)}
+          className="flex flex-col items-center justify-center transition-colors"
+          style={{
+            minHeight: '44px',
+            border: isSelected ? '2px solid var(--border-strong)' : isToday ? '2px solid var(--primary)' : '1px solid var(--border)',
+            background: isSelected ? 'var(--bg-2)' : isToday ? 'var(--primary-light)' : 'var(--card)',
+            cursor: 'pointer',
+          }}>
+          <span className="text-sm" style={{ color: isToday ? 'var(--primary)' : 'var(--text)' }}>{d}</span>
+          <span style={{ width: 5, height: 5, marginTop: 2, background: hasEntries ? 'var(--primary)' : 'transparent' }} />
+        </button>
+      );
+    }
+
+    return (
+      <div>
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
+          {dayNames.map(dn => <div key={dn} className="text-center text-xs font-semibold py-1.5" style={S_MUTED}>{t(dn, lang)}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">{cells}</div>
+      </div>
+    );
+  };
+
+  // Single agenda row — full-width tappable, reused by both the grouped "upcoming" list and the day-filtered list.
+  const renderAgendaRow = (e) => (
+    <div key={e.id} onClick={() => handleEventClick(e)}
+      className="w-full flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors hover:opacity-80"
+      style={{ border: '1px solid var(--border)', background: 'var(--card)', minHeight: '44px' }}>
+      <span className="flex-shrink-0" style={{ width: 10, height: 10, background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</div>
+        <div className="text-xs mono" style={S_MUTED}>{e.startTime || '--:--'} · {e.duration || 0}m</div>
+      </div>
+    </div>
+  );
+
+  // Mobile agenda body: either the day-filtered list (from the month picker) or the full chronological
+  // upcoming list grouped by date header + weekday.
+  const renderMobileAgendaBody = () => {
+    if (mobileDayFilter) {
+      if (dayFilteredEntries.length === 0) {
+        return (
+          <div className="text-center py-8">
+            <p className="text-sm mb-3" style={S_MUTED}>{lang === 'zh' ? '这一天没有实验' : 'No experiments this day'}</p>
+            <button onClick={() => { const entry = createEmptyExperiment(mobileDayFilter); setEditingEvent(entry); setShowEventForm(true); }}
+              className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: '40px' }}>
+              + {t('calNewEvent', lang)}
+            </button>
+          </div>
+        );
+      }
+      return <div className="space-y-1.5">{dayFilteredEntries.map(renderAgendaRow)}</div>;
+    }
+
+    if (groupedUpcoming.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-sm mb-3" style={S_MUTED}>{t('calNoEvents', lang)}</p>
+          <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
+            className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: '40px' }}>
+            + {t('calNewEvent', lang)}
+          </button>
+        </div>
+      );
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return (
+      <div className="space-y-3">
+        {groupedUpcoming.map(g => {
+          const dObj = dateStrToLocalDate(g.date);
+          const label = `${t(dayNames[dObj.getDay()], lang)}, ${t(monthNames[dObj.getMonth()], lang)} ${dObj.getDate()}`;
+          return (
+            <div key={g.date}>
+              <div className="text-xs font-semibold mb-1.5" style={S_MUTED}>
+                {g.date === todayStr ? `${t('calToday', lang)} · ${label}` : label}
+              </div>
+              <div className="space-y-1.5">{g.items.map(renderAgendaRow)}</div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Event form modal
   const eventFormModal = showEventForm && editingEvent && (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
@@ -368,6 +505,13 @@ function CalendarTab({ onNavigateNotebook }) {
     </div>
   );
 
+  // Header label for the day-filtered mobile agenda (e.g. "Mon, Jul 7").
+  let mobileFilterLabel = '';
+  if (mobileDayFilter) {
+    const filterDateObj = dateStrToLocalDate(mobileDayFilter);
+    mobileFilterLabel = `${t(dayNames[filterDateObj.getDay()], lang)}, ${t(monthNames[filterDateObj.getMonth()], lang)} ${filterDateObj.getDate()}`;
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -379,27 +523,46 @@ function CalendarTab({ onNavigateNotebook }) {
       <div className="card p-3 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex gap-1">
-            <button onClick={() => setViewMode('month')}
-              className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-              {t('calMonthView', lang)}
-            </button>
-            <button onClick={() => setViewMode('week')}
-              className={viewMode === 'week' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-              {t('calWeekView', lang)}
-            </button>
+            {isMobile ? (
+              <>
+                <button onClick={() => { setViewMode('agenda'); setMobileDayFilter(null); }}
+                  className={viewMode === 'agenda' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+                  {lang === 'zh' ? '日程' : 'Agenda'}
+                </button>
+                <button onClick={() => { setViewMode('month'); setMobileDayFilter(null); }}
+                  className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+                  {t('calMonthView', lang)}
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setViewMode('month')}
+                  className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+                  {t('calMonthView', lang)}
+                </button>
+                <button onClick={() => setViewMode('week')}
+                  className={viewMode === 'week' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
+                  {t('calWeekView', lang)}
+                </button>
+              </>
+            )}
           </div>
-          <div className="flex items-center gap-1">
-            <button onClick={viewMode === 'month' ? prevMonth : prevWeek}
-              className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8249;</button>
-            <span className="text-sm font-semibold px-2 min-w-[140px] text-center" style={S_TEXT}>
-              {t(monthNames[month], lang)} {year}
-            </span>
-            <button onClick={viewMode === 'month' ? nextMonth : nextWeek}
-              className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8250;</button>
-          </div>
-          <button onClick={goToday} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-            {t('calToday', lang)}
-          </button>
+          {!(isMobile && viewMode === 'agenda') && (
+            <div className="flex items-center gap-1">
+              <button onClick={() => { (viewMode === 'month' ? prevMonth : prevWeek)(); if (isMobile) setMobileDayFilter(null); }}
+                className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8249;</button>
+              <span className="text-sm font-semibold px-2 min-w-[140px] text-center" style={S_TEXT}>
+                {t(monthNames[month], lang)} {year}
+              </span>
+              <button onClick={() => { (viewMode === 'month' ? nextMonth : nextWeek)(); if (isMobile) setMobileDayFilter(null); }}
+                className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8250;</button>
+            </div>
+          )}
+          {!(isMobile && viewMode === 'agenda') && (
+            <button onClick={() => { goToday(); if (isMobile) setMobileDayFilter(null); }} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
+              {t('calToday', lang)}
+            </button>
+          )}
           <div className="flex-1" />
           <button onClick={() => setShowProtocolImport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
             {t('calImportProtocol', lang)}
@@ -414,40 +577,65 @@ function CalendarTab({ onNavigateNotebook }) {
         </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="card p-4">
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
-          </div>
-        ) : viewMode === 'month' ? renderMonthView() : renderWeekView()}
-      </div>
+      {/* Calendar grid — on mobile, skipped entirely in Agenda mode (the Agenda card below is the whole body) */}
+      {!(isMobile && viewMode === 'agenda') && (
+        <div className="card p-4">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
+            </div>
+          ) : isMobile ? renderMobileMonthView() : viewMode === 'month' ? renderMonthView() : renderWeekView()}
+        </div>
+      )}
 
-      {/* Upcoming list */}
-      {entries.length > 0 && (
+      {/* Upcoming list (desktop) / Agenda (mobile) */}
+      {(isMobile || entries.length > 0) && (
         <div className="card p-4 mt-4">
-          <h3 className="text-lg font-semibold mb-3" style={S_TEXT}>
-            {lang === 'zh' ? '即将进行' : 'Upcoming'}
-          </h3>
-          <div className="space-y-1.5">
-            {entries
-              .filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled')
-              .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-              .slice(0, 8)
-              .map(e => (
-                <div key={e.id} onClick={() => handleEventClick(e)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
-                  style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
-                  <span className="text-sm font-medium flex-1 truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</span>
-                  <span className="text-xs mono" style={S_MUTED}>{e.date}</span>
-                  <span className="text-xs" style={S_MUTED}>{e.startTime || ''}</span>
-                </div>
-              ))}
-            {entries.filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled').length === 0 && (
-              <p className="text-sm text-center py-4" style={S_MUTED}>{t('calNoEvents', lang)}</p>
-            )}
-          </div>
+          {isMobile ? (
+            <>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <h3 className="text-lg font-semibold" style={S_TEXT}>
+                  {mobileDayFilter ? mobileFilterLabel : (lang === 'zh' ? '即将进行' : 'Upcoming')}
+                </h3>
+                {mobileDayFilter ? (
+                  <button onClick={() => setMobileDayFilter(null)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                    {lang === 'zh' ? '显示全部' : 'Show all'}
+                  </button>
+                ) : groupedUpcoming.length > 0 ? (
+                  <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
+                    className="btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                    + {t('calNewEvent', lang)}
+                  </button>
+                ) : null}
+              </div>
+              {renderMobileAgendaBody()}
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-semibold mb-3" style={S_TEXT}>
+                {lang === 'zh' ? '即将进行' : 'Upcoming'}
+              </h3>
+              <div className="space-y-1.5">
+                {entries
+                  .filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled')
+                  .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+                  .slice(0, 8)
+                  .map(e => (
+                    <div key={e.id} onClick={() => handleEventClick(e)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+                      style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
+                      <span className="text-sm font-medium flex-1 truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</span>
+                      <span className="text-xs mono" style={S_MUTED}>{e.date}</span>
+                      <span className="text-xs" style={S_MUTED}>{e.startTime || ''}</span>
+                    </div>
+                  ))}
+                {entries.filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled').length === 0 && (
+                  <p className="text-sm text-center py-4" style={S_MUTED}>{t('calNoEvents', lang)}</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

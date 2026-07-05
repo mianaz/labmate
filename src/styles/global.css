@@ -774,3 +774,73 @@ button[class*="rounded-lg"][class*="py-1.5"] {
   .inv-grid-3col { grid-template-columns: 200px 1fr !important; }
   .inv-col-3 { display: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   Mobile shell foundation (Wave 1) — tokens + base rules that
+   the bottom-nav / FAB-cluster / PWA agents build on top of.
+   Do not add bottom-nav or FAB component styles here.
+
+   z-scale: nav / FAB cluster / TimerBar = z-40 · modals & sheets = z-50 ·
+            toast (.toast-container) = z-9000 · grain overlay (decorative) = z-9999
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --bottom-nav-h: 56px;
+  --fab-b: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+/* <1024px matches the bottom nav's `lg:hidden` breakpoint: FABs/nav clear the
+   home indicator AND the bottom nav itself. Desktop (--fab-b default above) unaffected. */
+@media (max-width: 1023px) {
+  :root { --fab-b: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-nav-h) + 1rem); }
+}
+
+/* ── iOS zoom-on-focus fix ─────────────────────────────
+   iOS Safari auto-zooms the page when a focused input's font-size is <16px.
+   Scoped to <768px only — desktop input styling (0.875rem, global.css:313) is untouched. */
+@media (max-width: 767px) {
+  input[type="number"],
+  input[type="text"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Bottom-nav clearance ──────────────────────────────
+   Keeps tab content clear of the fixed bottom nav + safe-area on mobile/tablet.
+   Declared after the existing @media (max-width:640px) main rule (line ~641) so it
+   wins there too (same specificity + !important, later source order) — intentional,
+   since the bottom nav covers the whole <1024px range, not just <640px. */
+@media (max-width: 1023px) {
+  main {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 1rem) !important;
+  }
+}
+
+/* ── Toast fixes ───────────────────────────────────────
+   Long sync/error messages could overflow the viewport or clip unbroken strings. */
+.toast-container { max-width: calc(100vw - 2rem); }
+.toast { word-break: break-word; }
+/* Mobile/tablet: lift the toast stack above the FAB cluster so they never overlap. */
+@media (max-width: 1023px) {
+  .toast-container { bottom: calc(var(--fab-b) + 3.75rem); right: 1rem; }
+}
+
+/* ===== bottom nav / more sheet =====
+   BottomNav.jsx (fixed, lg:hidden, z-40) + MoreSheet.jsx (fixed, lg:hidden, z-50).
+   z-scale (see foundation block above): nav / FAB / TimerBar = z-40 · modals & sheets = z-50 ·
+   toast = z-9000. Tailwind utility classes cover layout/position; this block only adds the
+   bits utilities can't express cleanly (tap feedback + reduced-motion safety). */
+.bottom-nav button:active,
+.more-sheet-panel button:active {
+  background: var(--bg-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav *,
+  .more-sheet-panel * {
+    transition: none !important;
+  }
+}

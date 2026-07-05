@@ -4,11 +4,11 @@
   "description": "Molecular Biology Toolkit",
   "start_url": "/labmate/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1D9E75",
+  "background_color": "#F0EEE6",
+  "theme_color": "#16B364",
   "icons": [
     { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" },
-    { "src": "favicon-192x192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "favicon-512x512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "favicon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "favicon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

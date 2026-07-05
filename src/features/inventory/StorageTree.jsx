@@ -5,16 +5,23 @@ import React, { useState } from 'react';
 import { t } from '../../i18n/index.js';
 import { StorageIcon } from './InventoryComponents.jsx';
 import { invBtnStyle, invBtnSecStyle } from './inventoryUtils.js';
+import { useIsMobile } from '../../hooks/useMediaQuery.js';
 
 export function StorageTree({
   data, selectedBoxId, onSelectBox,
   onAddLocation, onEditLocation, onDeleteLocation,
   onAddBox, onEditBox, onDeleteBox, lang,
 }) {
+  const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState({});
   const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   const [hovered, setHovered] = useState(null);
   const [confirmDel, setConfirmDel] = useState(null);
+  // Edit/add/delete controls must be reachable on touch — hover doesn't exist there.
+  // On mobile they're always rendered at >=40px; on desktop they stay hover-revealed (unchanged).
+  const touchBtn = isMobile
+    ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+    : {};
 
   return (
     <div>
@@ -38,7 +45,7 @@ export function StorageTree({
             if (locId) onAddBox(locId); else onAddLocation();
           }}
           style={{ ...invBtnSecStyle, padding: '4px 8px', fontSize: '11px' }}
-          title={lang === 'en' ? 'Add Box (hover a location to pick it)' : '添加盒子'}
+          title={lang === 'en' ? 'Add Box to first location (or tap a location\'s + to choose)' : '添加盒子（或点击某个位置的 + 选择）'}
         >
           {'+ ' + t('invAddBox', lang)}
         </button>
@@ -81,7 +88,10 @@ export function StorageTree({
                 ▶
               </span>
               <StorageIcon type={loc.type} size={14} />
-              <span className="flex-1 font-medium" style={{ color: 'var(--text)' }}>
+              <span
+                className="flex-1 font-medium"
+                style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
                 {lang === 'zh' ? (loc.nameZh || loc.name) : loc.name}
               </span>
               {loc.temperature && (
@@ -92,12 +102,12 @@ export function StorageTree({
                   {loc.temperature}
                 </span>
               )}
-              {hovered === 'loc-' + loc.id && (
+              {(isMobile || hovered === 'loc-' + loc.id) && (
                 <>
                   <button
                     onClick={e => { e.stopPropagation(); onEditLocation(loc); }}
                     className="text-xs px-1"
-                    style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', ...touchBtn }}
                     title={t('invEditLocation', lang)}
                   >
                     ✎
@@ -105,7 +115,7 @@ export function StorageTree({
                   <button
                     onClick={e => { e.stopPropagation(); onAddBox(loc.id); }}
                     className="text-xs px-1"
-                    style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', ...touchBtn }}
                     title={t('invAddBox', lang)}
                   >
                     +
@@ -121,7 +131,7 @@ export function StorageTree({
                       }
                     }}
                     className="text-xs px-1"
-                    style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', ...touchBtn }}
                     title={confirmDel === 'loc-' + loc.id ? t('invConfirm', lang) : t('invDeleteLocation', lang)}
                   >
                     {confirmDel === 'loc-' + loc.id ? '!!' : '✕'}
@@ -167,22 +177,23 @@ export function StorageTree({
                   )}
                   <span
                     className="flex-1"
-                    style={{ color: selectedBoxId === box.id ? 'var(--primary)' : 'var(--text)' }}
+                    style={{ color: selectedBoxId === box.id ? 'var(--primary)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                   >
                     {lang === 'zh' ? (box.nameZh || box.name) : box.name}
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
+                    style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}
                   >
                     {sampleCount + '/' + totalSlots}
                   </span>
-                  {hovered === 'box-' + box.id && (
+                  {(isMobile || hovered === 'box-' + box.id) && (
                     <>
                       <button
                         onClick={e => { e.stopPropagation(); onEditBox(box); }}
                         className="text-xs px-1"
-                        style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', ...touchBtn }}
+                        title={t('invEditBox', lang)}
                       >
                         ✎
                       </button>
@@ -197,7 +208,8 @@ export function StorageTree({
                           }
                         }}
                         className="text-xs px-1"
-                        style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer' }}
+                        style={{ color: 'var(--danger-text)', background: 'none', border: 'none', cursor: 'pointer', ...touchBtn }}
+                        title={confirmDel === 'box-' + box.id ? t('invConfirm', lang) : t('invDeleteBox', lang)}
                       >
                         {confirmDel === 'box-' + box.id ? '!!' : '✕'}
                       </button>

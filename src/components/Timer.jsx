@@ -95,7 +95,11 @@ export function TimerBar() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2" style={{maxWidth:'320px'}}>
+    <div className="fixed z-40 space-y-2" style={{
+      bottom: 'calc(var(--fab-b) + 3.75rem)',
+      right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+      maxWidth: '320px',
+    }}>
       {active.map(tmr => {
         const pct = ((tmr.totalSeconds - tmr.remaining) / tmr.totalSeconds) * 100;
         return (
@@ -153,8 +157,12 @@ export function QuickTimerButton() {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-50 w-12 h-12 flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
-        style={{background:'var(--primary)', color:'var(--on-primary)', border:'2px solid var(--border-strong)', opacity: 0.92}} title={t('timerAdd', lang)}>
+        className="fixed z-40 w-12 h-12 flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
+        style={{
+          bottom: 'var(--fab-b)',
+          right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+          background:'var(--primary)', color:'var(--on-primary)', border:'2px solid var(--border-strong)',
+        }} title={t('timerAdd', lang)}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="13" r="8"/>
           <line x1="12" y1="9" x2="12" y2="13"/>
@@ -168,7 +176,11 @@ export function QuickTimerButton() {
   }
 
   return (
-    <div className="fixed bottom-36 right-4 z-50 p-4 shadow-lg" style={{background:'var(--card)', border:'2px solid var(--border-strong)', width:'280px', overflow:'hidden'}}>
+    <div className="fixed z-40 p-4 shadow-lg" style={{
+      bottom: 'calc(var(--fab-b) + 3.75rem)',
+      right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+      background:'var(--card)', border:'2px solid var(--border-strong)', width:'280px', overflow:'hidden',
+    }}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-bold">{t('timerAdd', lang)}</span>
         <button onClick={() => setOpen(false)} className="text-xs px-2 py-0.5 rounded" style={S_MUTED}>✕</button>

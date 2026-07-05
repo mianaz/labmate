@@ -1,7 +1,8 @@
 // PlateTab — Full plate designer: well selection, coloring, templates, export
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { PLATE_CONFIGS, WELL_COLORS, ROW_LABELS } from '../../data/plateConfigs.js';
+import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { S_MUTED, S_PRIMARY } from '../../lib/styleConstants.js';
 import { downloadFile } from '../../lib/utils.js';
 import { plateToCSV, plateToSVG } from './plateExport.js';
@@ -25,6 +26,10 @@ function PlateTab() {
   const [isDragging, setIsDragging] = useState(false);
   const [groups, setGroups] = useState([]);
   const [enlarged, setEnlarged] = useState(false);
+  const isMobile = useIsMobile();
+  const plateScrollRef = useRef(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const lastTouchRef = useRef(0); // timestamp guard vs. ghost mousedown replayed after a real touch
 
   const config = PLATE_CONFIGS[plateType];
 
@@ -56,26 +61,82 @@ function PlateTab() {
 
   function handleMouseDown(r, c, e) {
     e.preventDefault();
+    // A real touch replays a synthetic mousedown on the same element shortly after;
+    // ignore it so a tap doesn't toggle the well twice (once on touch, once on the ghost click).
+    if (Date.now() - lastTouchRef.current < 500) return;
     setIsDragging(true);
     toggleWell(r, c);
   }
 
+  function extendSelectionTo(key) {
+    setSelectedWells(prev => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }
+
   function handleMouseEnter(r, c) {
-    if (isDragging) {
-      const key = wellKey(r, c);
-      setSelectedWells(prev => {
-        const next = new Set(prev);
-        next.add(key);
-        return next;
-      });
-    }
+    if (isDragging) extendSelectionTo(wellKey(r, c));
+  }
+
+  // --- Touch equivalents of the mouse drag-select above ---
+  function handleTouchStart(r, c) {
+    lastTouchRef.current = Date.now();
+    setIsDragging(true);
+    toggleWell(r, c);
+  }
+
+  function handleTouchMove(e) {
+    if (!isDragging) return;
+    const touch = e.touches && e.touches[0];
+    if (!touch) return;
+    // Touch doesn't fire per-element "enter" events like the mouse does, so find whichever
+    // well is currently under the finger by coordinates instead.
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    const wellEl = target && target.closest ? target.closest('[data-well-key]') : null;
+    if (wellEl) extendSelectionTo(wellEl.getAttribute('data-well-key'));
+  }
+
+  function handleTouchEnd() {
+    setIsDragging(false);
   }
 
   useEffect(() => {
     function handleUp() { setIsDragging(false); }
     window.addEventListener('mouseup', handleUp);
-    return () => window.removeEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
+    window.addEventListener('touchcancel', handleUp);
+    return () => {
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
+      window.removeEventListener('touchcancel', handleUp);
+    };
   }, []);
+
+  // Close the enlarged plate overlay on Escape
+  useEffect(() => {
+    if (!enlarged) return;
+    function handleKey(e) { if (e.key === 'Escape') setEnlarged(false); }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [enlarged]);
+
+  // Show a "scroll for more" hint on mobile when the inline plate grid overflows its wrapper
+  useEffect(() => {
+    const el = plateScrollRef.current;
+    if (!el) { setShowScrollHint(false); return; }
+    function checkOverflow() { setShowScrollHint(el.scrollWidth > el.clientWidth + 4); }
+    function hideOnScroll() { setShowScrollHint(false); }
+    checkOverflow();
+    el.addEventListener('scroll', hideOnScroll, { passive: true });
+    window.addEventListener('resize', checkOverflow);
+    return () => {
+      el.removeEventListener('scroll', hideOnScroll);
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [plateType, mode]);
 
   function getActiveColor() {
     return useCustomColor ? customColor : WELL_COLORS[currentColor % WELL_COLORS.length];
@@ -361,13 +422,17 @@ function PlateTab() {
   function renderPlateGrid(wellSizeOverride) {
     const ws = wellSizeOverride || config.wellSize;
     const fs = wellSizeOverride ? (wellSizeOverride > 28 ? 10 : wellSizeOverride > 18 ? 8 : 6) : (plateType > 96 ? 6 : plateType > 48 ? 7 : 9);
+    // Row/column header tap targets grow to a real ≥32px hit area on mobile only;
+    // desktop keeps the original compact gutter (unchanged pixel-for-pixel).
+    const rowLabelSize = isMobile ? 32 : 20;
+    const headerHit = isMobile ? 32 : undefined;
     return (
       <div>
-        <div className="flex items-center gap-0.5 mb-1 ml-6">
+        <div className="flex items-center gap-0.5 mb-1" style={{marginLeft: rowLabelSize + 4}}>
           {Array.from({length: config.cols}, (_, c) => (
             <div key={c} onClick={() => selectCol(c)}
-              className="text-center text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold"
-              style={{width: ws, minWidth: ws}}>
+              className="flex items-center justify-center text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold"
+              style={{width: ws, minWidth: ws, minHeight: headerHit}}>
               {c + 1}
             </div>
           ))}
@@ -375,7 +440,8 @@ function PlateTab() {
         {Array.from({length: config.rows}, (_, r) => (
           <div key={r} className="flex items-center gap-0.5 mb-0.5">
             <div onClick={() => selectRow(r)}
-              className="w-5 text-right text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold mr-1">
+              className="flex items-center justify-end text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold mr-1"
+              style={{width: rowLabelSize, minWidth: rowLabelSize, minHeight: headerHit}}>
               {ROW_LABELS[r]}
             </div>
             {Array.from({length: config.cols}, (_, c) => {
@@ -385,15 +451,20 @@ function PlateTab() {
               return (
                 <div key={c}
                   className={`well ${isSel ? 'selected' : ''}`}
+                  data-well-key={key}
                   style={{
                     width: ws, height: ws, minWidth: ws,
                     background: data ? data.color + '30' : 'var(--bg-2)',
                     borderColor: data ? data.color : 'var(--border)',
                     borderWidth: data ? 2 : 1,
                     fontSize: fs,
+                    touchAction: 'none',
                   }}
                   onMouseDown={e => handleMouseDown(r, c, e)}
                   onMouseEnter={() => handleMouseEnter(r, c)}
+                  onTouchStart={() => handleTouchStart(r, c)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                   title={key + (data ? ': ' + data.label : '')}>
                   {ws >= 22 && data && (
                     <span className="truncate px-0.5" style={{color: data.color, fontWeight: 700}}>
@@ -486,8 +557,30 @@ function PlateTab() {
       {mode === 'designer' && (
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
-          <div className="card p-5 overflow-x-auto">
-            {renderPlateGrid()}
+          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+            <span className="text-xs font-bold mono" style={S_MUTED}>{plateType}-{t('wells', lang)}</span>
+            <button type="button" onClick={() => setEnlarged(true)}
+              className="btn-secondary text-xs py-1.5 px-3"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+              </svg>
+              {t('plateEnlarge', lang)}
+            </button>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <div className="card p-5 overflow-x-auto" ref={plateScrollRef}
+              style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}>
+              {renderPlateGrid()}
+            </div>
+            {isMobile && showScrollHint && (
+              <div aria-hidden="true" style={{
+                position: 'absolute', right: 2, top: 2, bottom: 2, width: 24,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700,
+                opacity: 0.6, transition: 'opacity 0.3s', background: 'var(--card)',
+              }}>›</div>
+            )}
           </div>
 
           {/* Legend alongside plate */}
@@ -521,16 +614,16 @@ function PlateTab() {
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {WELL_COLORS.map((c, i) => (
                   <button key={i} onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
-                    className={`w-5 h-5 border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
+                    className={`w-8 h-8 border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
                     style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'var(--border)', ringColor: 'var(--primary)'}} />
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-[11px] font-semibold" style={S_MUTED}>{t('plateCustomColor', lang)}:</label>
                 <input type="color" value={customColor} onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
-                  className="w-7 h-7 rounded cursor-pointer border-0 p-0" style={{background:'transparent'}} />
+                  className="w-8 h-8 rounded cursor-pointer border-0 p-0" style={{background:'transparent'}} />
                 {useCustomColor && (
-                  <div className="w-5 h-5 border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
+                  <div className="w-8 h-8 border-2 scale-125" style={{background: customColor, borderColor: 'var(--text)'}} />
                 )}
               </div>
             </div>
@@ -703,6 +796,37 @@ function PlateTab() {
           </div>
         </div>
       </div>
+      )}
+
+      {enlarged && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setEnlarged(false)}>
+          <div className="relative flex flex-col"
+            role="dialog" aria-modal="true" aria-label={t('plateEnlarge', lang)}
+            style={{
+              width: '100%', height: '100%', maxWidth: '96vw', maxHeight: '96vh', padding: '1rem',
+              background: 'var(--card)', border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow-lg)',
+            }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 mb-3" style={{ flexShrink: 0 }}>
+              <h3 className="text-base font-bold">{plateType}-{t('wells', lang)}</h3>
+              <button type="button" onClick={() => setEnlarged(false)} aria-label={t('plateClose', lang)}
+                className="btn-secondary"
+                style={{ width: 40, height: 40, minWidth: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+              {renderPlateGrid(Math.max(config.wellSize, 42))}
+            </div>
+            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+              {t('plateSelected', lang)}: <span className="mono font-bold" style={{ color: 'var(--accent)' }}>{selectedWells.size}</span> {t('wells', lang)}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

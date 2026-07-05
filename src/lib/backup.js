@@ -20,9 +20,14 @@ export function collectBackupData() {
   return data;
 }
 
-export function exportBackup() {
+export async function exportBackup() {
   const data = collectBackupData();
-  const json = JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: __APP_VERSION__, data }, null, 2);
+  // Notebook/calendar experiments live only in Dexie (no localStorage mirror) —
+  // pull them explicitly so one backup file truly contains everything.
+  let experiments = [];
+  try { experiments = await db.experiments.toArray(); }
+  catch { /* still export the localStorage-mirrored data */ }
+  const json = JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: __APP_VERSION__, schemaVersion: 2, data, experiments }, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -34,12 +39,17 @@ export function exportBackup() {
   db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {});
 }
 
-export function importBackup(fileContent) {
+export async function importBackup(fileContent) {
   const parsed = JSON.parse(fileContent);
   if (!parsed.exportedAt || !parsed.data || typeof parsed.data !== 'object') {
     throw new Error('Invalid backup format');
   }
   let count = 0;
+  // schemaVersion 2 backups carry notebook/calendar experiments; v1 files don't have the field.
+  if (Array.isArray(parsed.experiments) && parsed.experiments.length > 0) {
+    await db.experiments.bulkPut(parsed.experiments);
+    count += parsed.experiments.length;
+  }
   Object.entries(parsed.data).forEach(([key, value]) => {
     if (MERGE_ARRAY_KEYS.includes(key)) {
       let existing = [];

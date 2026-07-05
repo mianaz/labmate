@@ -323,9 +323,12 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                           ...(isDone && !isH ? {opacity: 0.6} : {})
                         }}>
                         {!isH && (
-                          <button onClick={() => toggleStep(i)} className="flex-shrink-0 mt-0.5"
-                            style={{width:'16px', height:'16px', borderRadius:0, border: '2px solid var(--border)', background: isDone ? 'var(--primary)' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0}}>
-                            {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style={{stroke:'var(--on-primary)'}} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                          <button onClick={() => toggleStep(i)} className="flex-shrink-0"
+                            aria-label={isDone ? (lang === 'zh' ? '标记为未完成' : 'Mark step incomplete') : (lang === 'zh' ? '标记为已完成' : 'Mark step complete')}
+                            style={{padding:12, margin:-12, marginTop:-10, border:'none', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                            <span style={{width:'16px', height:'16px', borderRadius:0, border: '2px solid var(--border)', background: isDone ? 'var(--primary)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                              {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style={{stroke:'var(--on-primary)'}} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                            </span>
                           </button>
                         )}
                         <BoldText text={text} style={{color:'var(--text)', flex:1, ...(isDone && !isH ? {textDecoration:'line-through', textDecorationColor:'var(--text-muted)'} : {})}} />
@@ -333,9 +336,9 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                           <span className="flex gap-1 flex-shrink-0 flex-wrap" style={{marginTop:'1px'}}>
                             {timeMatches.slice(0, 2).map((tm, ti) => (
                               <button key={ti} onClick={() => addTimer(recipe.name + ' - ' + tm.label, tm.seconds)}
-                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors hover:opacity-80"
-                                style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)', cursor:'pointer', lineHeight:1.2, whiteSpace:'nowrap'}}>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="10" y1="2" x2="14" y2="2"/></svg>
+                                className="inline-flex items-center gap-1 font-semibold transition-colors hover:opacity-80"
+                                style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)', cursor:'pointer', lineHeight:1.2, whiteSpace:'nowrap', fontSize:'11px', padding:'0 10px', minHeight:36}}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="10" y1="2" x2="14" y2="2"/></svg>
                                 {tm.label}
                               </button>
                             ))}
@@ -382,38 +385,40 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         </div>
       ) : (
         /* Buffer/reagent table view */
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="border-b-2" style={S_BORDER}>
-              <th className="text-left py-2.5 pr-3 font-semibold">{t('reagent', lang)}</th>
-              <th className="text-right py-2.5 px-2 font-semibold">{t('amount', lang)}</th>
-              <th className="text-right py-2.5 px-2 font-semibold">{t('unit', lang)}</th>
-              {recipe.components.some(c => c.note) && <th className="text-left py-2.5 pl-4 font-semibold">{t('notes', lang)}</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {recipe.components.map((c,i) => {
-              const scaled = c.amount * scale;
-              return (
-                <tr key={i} className="border-b" style={S_BORDER}>
-                  <td className="py-2.5 pr-3 font-medium">
-                    {c.linkedRecipe && RECIPE_BY_ID[c.linkedRecipe] && onNavigateRecipe ? (
-                      <button onClick={() => onNavigateRecipe(RECIPE_BY_ID[c.linkedRecipe])} className="font-medium hover:underline inline-flex items-center gap-1"
-                        style={{color:'var(--primary)', background:'none', border:'none', cursor:'pointer', padding:0, font:'inherit'}}>
-                        {c.name}
-                      </button>
-                    ) : c.name}
-                  </td>
-                  <td className="py-2.5 px-2 text-right mono font-semibold" style={S_PRIMARY}>
-                    {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)}
-                  </td>
-                  <td className="py-2.5 px-2 text-right mono" style={S_MUTED}>{c.unit}</td>
-                  {recipe.components.some(comp => comp.note) && <td className="py-2.5 pl-4 text-xs" style={S_MUTED}>{safeText(c.note, lang)}</td>}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b-2" style={S_BORDER}>
+                <th className="text-left py-2.5 pr-3 font-semibold">{t('reagent', lang)}</th>
+                <th className="text-right py-2.5 px-2 font-semibold">{t('amount', lang)}</th>
+                <th className="text-right py-2.5 px-2 font-semibold">{t('unit', lang)}</th>
+                {recipe.components.some(c => c.note) && <th className="text-left py-2.5 pl-4 font-semibold">{t('notes', lang)}</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {recipe.components.map((c,i) => {
+                const scaled = c.amount * scale;
+                return (
+                  <tr key={i} className="border-b" style={S_BORDER}>
+                    <td className="py-2.5 pr-3 font-medium">
+                      {c.linkedRecipe && RECIPE_BY_ID[c.linkedRecipe] && onNavigateRecipe ? (
+                        <button onClick={() => onNavigateRecipe(RECIPE_BY_ID[c.linkedRecipe])} className="font-medium hover:underline inline-flex items-center gap-1"
+                          style={{color:'var(--primary)', background:'none', border:'none', cursor:'pointer', padding:0, font:'inherit'}}>
+                          {c.name}
+                        </button>
+                      ) : c.name}
+                    </td>
+                    <td className="py-2.5 px-2 text-right mono font-semibold" style={S_PRIMARY}>
+                      {scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1)}
+                    </td>
+                    <td className="py-2.5 px-2 text-right mono" style={S_MUTED}>{c.unit}</td>
+                    {recipe.components.some(comp => comp.note) && <td className="py-2.5 pl-4 text-xs" style={S_MUTED}>{safeText(c.note, lang)}</td>}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Preparation steps */}

@@ -1,5 +1,5 @@
 // RefsTab — Guide / usage documentation tab with data export/import and literature references
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { REF_NOTES_EN, REFERENCES } from '../../data/references.js';
 import { S_MUTED, S_TEXT, S_PRIMARY } from '../../lib/styleConstants.js';
@@ -12,7 +12,14 @@ function RefsTab({ onReplayTour }) {
   const lang = useLang();
   const toast = useToast();
   const [refsOpen, setRefsOpen] = useState(false);
+  const [persisted, setPersisted] = useState(null);
   const fileInputRef = React.useRef(null);
+
+  useEffect(() => {
+    if (navigator.storage && navigator.storage.persisted) {
+      navigator.storage.persisted().then(setPersisted).catch(() => {});
+    }
+  }, []);
 
   // ═══════════════════════════════════════════════
   // DATA EXPORT / IMPORT
@@ -26,9 +33,9 @@ function RefsTab({ onReplayTour }) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        const count = importBackup(ev.target.result);
+        const count = await importBackup(ev.target.result);
         toast.show(t('importSuccess', lang).replace('{n}', count));
         setTimeout(() => window.location.reload(), 500);
       } catch {
@@ -136,6 +143,11 @@ function RefsTab({ onReplayTour }) {
           <div>
             <h3 className="text-sm font-bold mb-1">{t('privacyTitle', lang)}</h3>
             <p className="text-xs leading-relaxed" style={S_MUTED}>{t('privacyBody', lang)}</p>
+            {persisted !== null && (
+              <p className="text-xs mono mt-2" style={persisted ? {color:'var(--primary)'} : S_MUTED}>
+                {t(persisted ? 'storagePersistent' : 'storageBestEffort', lang)}
+              </p>
+            )}
           </div>
         </div>
       </div>

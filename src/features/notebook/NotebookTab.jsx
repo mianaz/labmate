@@ -239,7 +239,8 @@ function NotebookTab({ onNavigateCalendar }) {
                 onChange={e => { const next = [...reagents]; next[i] = { ...next[i], location: e.target.value }; updateField('materials.reagents', next); }}
                 style={{ width: '90px', padding: '4px 8px', fontSize: '0.82rem' }} />
               <button onClick={() => { const next = reagents.filter((_, j) => j !== i); updateField('materials.reagents', next); }}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>&times;</button>
+                aria-label={lang === 'zh' ? '删除' : 'Remove'}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
             </div>
           ))}
         </div>
@@ -261,7 +262,8 @@ function NotebookTab({ onNavigateCalendar }) {
                 <option value="pending">{t('nbPending', lang)}</option>
               </select>
               <button onClick={() => { updateField('materials.equipment', equipment.filter((_, j) => j !== i)); }}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>&times;</button>
+                aria-label={lang === 'zh' ? '删除' : 'Remove'}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
             </div>
           ))}
         </div>
@@ -281,7 +283,8 @@ function NotebookTab({ onNavigateCalendar }) {
                 onChange={e => { const next = [...checklist]; next[i] = { ...next[i], item: e.target.value }; updateField('materials.checklist', next); }}
                 className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem', textDecoration: c.checked ? 'line-through' : 'none', opacity: c.checked ? 0.6 : 1 }} />
               <button onClick={() => { updateField('materials.checklist', checklist.filter((_, j) => j !== i)); }}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>&times;</button>
+                aria-label={lang === 'zh' ? '删除' : 'Remove'}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
             </div>
           ))}
         </div>
@@ -380,7 +383,8 @@ function NotebookTab({ onNavigateCalendar }) {
                 onChange={e => { const next = [...res.figures]; next[i] = { ...next[i], notes: e.target.value }; updateField('results.figures', next); }}
                 style={{ width: '120px', padding: '4px 8px', fontSize: '0.82rem' }} />
               <button onClick={() => updateField('results.figures', res.figures.filter((_, j) => j !== i))}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px' }}>&times;</button>
+                aria-label={lang === 'zh' ? '删除' : 'Remove'}
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>&times;</button>
             </div>
           ))}
         </div>
@@ -422,9 +426,12 @@ function NotebookTab({ onNavigateCalendar }) {
         {['all', 'planned', 'in-progress', 'completed', 'cancelled'].map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className="text-xs px-2.5 py-0.5 font-medium transition-colors"
-            style={statusFilter === s
-              ? { background: 'var(--primary)', color: 'var(--on-primary)' }
-              : { background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+            style={{
+              ...(statusFilter === s
+                ? { background: 'var(--primary)', color: 'var(--on-primary)' }
+                : { background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }),
+              ...(isMobile ? { minHeight: 36, padding: '0 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' } : {}),
+            }}>
             {s === 'all' ? t('nbAll', lang) : t('nbStatus' + s.replace(/-./g, m => m[1].toUpperCase()).replace(/^./, c => c.toUpperCase()), lang)}
           </button>
         ))}

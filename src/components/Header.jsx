@@ -12,7 +12,10 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   const updateIndicator = useCallback(() => {
-    if (!tabBarRef.current) return;
+    // offsetParent is null when the tab row (or an ancestor) is display:none —
+    // e.g. below `lg` where the row is `hidden lg:block`. No-op rather than
+    // measuring a zero-size hidden element.
+    if (!tabBarRef.current || tabBarRef.current.offsetParent === null) return;
     const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
     if (activeBtn) {
       const bar = tabBarRef.current.getBoundingClientRect();
@@ -22,7 +25,7 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
   }, []);
 
   useEffect(() => {
-    if (!tabBarRef.current) return;
+    if (!tabBarRef.current || tabBarRef.current.offsetParent === null) return;
     const activeBtn = tabBarRef.current.querySelector('[aria-selected="true"]');
     if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     // Update indicator after scroll settles
@@ -46,15 +49,18 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
             <div className="flex items-center gap-2 text-xl font-bold" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em' }}>
               <img src="favicon.svg" alt="" width="26" height="26" style={{flexShrink:0}} />
               <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                <span style={{ color: 'var(--text)' }}>Bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
+                <span className="hidden sm:inline">
+                  <span style={{ color: 'var(--text)' }}>Bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
+                </span>
               </a>
-              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>LabMate</a>
+              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)' }}>LabMate</a>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Refresh: desktop-only on mobile/tablet — relocated to MoreSheet's settings row */}
             <button onClick={onRefreshRecipes} disabled={isSyncing} title={t('refreshRecipes', lang)}
-              className="inline-flex items-center justify-center px-2 rounded-lg text-sm transition-all border"
+              className="hidden lg:inline-flex items-center justify-center px-2 rounded-lg text-sm transition-all border"
               style={{ borderColor:'var(--border)', background:'var(--card)', color: isSyncing ? 'var(--primary)' : 'var(--text-muted)', opacity: isSyncing ? 0.7 : 1, height: '2.125rem' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={isSyncing ? {animation:'spin 1s linear infinite'} : {}}><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
@@ -65,8 +71,9 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
               <span className="hidden sm:inline">{t('searchPlaceholder', lang).slice(0,12)}...</span>
               <kbd className="text-[10px] px-1 py-0.5 rounded hidden md:inline" style={S_BG2}>⌘K</kbd>
             </button>
+            {/* Language: desktop-only on mobile/tablet — relocated to MoreSheet's settings row */}
             <button onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-              className="inline-flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all border"
+              className="hidden lg:inline-flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all border"
               style={{ borderColor:'var(--border)', color:'var(--primary)', background:'var(--card)', height: '2.125rem' }}>
               {t('langToggle', lang)}
             </button>
@@ -79,8 +86,8 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
             </button>
           </div>
         </div>
-        {/* Tab bar */}
-        <div style={{ position: 'relative' }}>
+        {/* Tab bar — desktop-only; mobile/tablet use BottomNav + MoreSheet instead */}
+        <div className="hidden lg:block" style={{ position: 'relative' }}>
           <div ref={tabBarRef} className="flex gap-0.5 overflow-x-auto -mb-px" role="tablist" aria-label="App sections"
             onScroll={e => { const h = e.currentTarget.parentElement.querySelector('.tab-scroll-hint'); if (h) h.style.opacity = '0'; }}>
             {tabKeys.map(id => (

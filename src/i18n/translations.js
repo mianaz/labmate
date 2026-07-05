@@ -221,10 +221,12 @@ export const translations = {
   toolCatData: { en: 'Data & Image', zh: '数据 & 图像' },
   // Privacy
   privacyTitle: { en: 'Your Data Stays Private', zh: '您的数据完全私密' },
-  privacyBody: { en: 'Bioinfospace LabMate runs entirely in your browser. Your favorites, step progress, timer history, and all personal data are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export it anytime using the button in the Tools tab.', zh: 'Bioinfospace LabMate 完全在您的浏览器中运行。您的收藏、实验进度、计时器历史等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页中导出。' },
+  privacyBody: { en: 'Bioinfospace LabMate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'Bioinfospace LabMate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
+  storagePersistent: { en: 'Storage: persistent — your browser will not auto-evict this data.', zh: '存储：持久化——浏览器不会自动清除这些数据。' },
+  storageBestEffort: { en: 'Storage: best-effort — browsers may clear local data after long inactivity. Export a backup regularly.', zh: '存储：尽力保留——长期不使用时浏览器可能清除本地数据，请定期导出备份。' },
   // Data Export/Import
   exportTitle: { en: 'Export My Data', zh: '导出我的数据' },
-  exportDesc: { en: 'Download all your favorites, step progress, and settings as a JSON file. Use this to back up your data or transfer to another device.', zh: '将所有收藏、实验进度和设置导出为 JSON 文件。用于数据备份或转移到其他设备。' },
+  exportDesc: { en: 'Download all your favorites, step progress, notebook entries, and settings as a single JSON file. Use this to back up your data or transfer to another device.', zh: '将所有收藏、实验进度、实验记录和设置导出为一个 JSON 文件。用于数据备份或转移到其他设备。' },
   exportBtn: { en: 'Download Backup', zh: '下载备份' },
   importTitle: { en: 'Import Data', zh: '导入数据' },
   importDesc: { en: 'Restore data from a previous export. This will merge with your current data (existing items will be overwritten if they conflict).', zh: '从之前的导出文件恢复数据。将与当前数据合并（冲突项将被覆盖）。' },

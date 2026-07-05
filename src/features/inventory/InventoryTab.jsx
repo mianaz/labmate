@@ -606,12 +606,15 @@ export default function InventoryTab() {
   };
 
   // ── Toolbar ──────────────────────────────────────────────────────────────
-  const toolbar = (mobile) => (
+  const toolbar = (mobile) => {
+    // Mobile buttons must grow to >=40px tap targets, never shrink below desktop.
+    const touchH = mobile ? { minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' } : {};
+    return (
     <div className="flex items-center gap-2 mb-3 flex-wrap">
       {invViewMode === 'list' && (
         <button
           onClick={() => setInvViewMode('grid')}
-          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
         >
           {'← ' + t('backNav', lang)}
         </button>
@@ -631,7 +634,7 @@ export default function InventoryTab() {
       <div className="relative" ref={exportMenuRef}>
         <button
           onClick={() => { setShowExportMenu(!showExportMenu); setShowImportMenu(false); }}
-          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
         >
           {t('invExport', lang)}
         </button>
@@ -651,7 +654,7 @@ export default function InventoryTab() {
       <div className="relative" ref={importMenuRef}>
         <button
           onClick={() => { setShowImportMenu(!showImportMenu); setShowExportMenu(false); }}
-          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
         >
           {t('invImport', lang)}
         </button>
@@ -672,6 +675,7 @@ export default function InventoryTab() {
           ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px',
           opacity: undoStackRef.current.length === 0 ? 0.4 : 1,
           cursor: undoStackRef.current.length === 0 ? 'default' : 'pointer',
+          ...touchH,
         }}
       >
         {'↩ ' + t('invUndo', lang)}
@@ -681,7 +685,7 @@ export default function InventoryTab() {
       {invViewMode === 'grid' && selectedBoxId && (
         <button
           onClick={toggleSelectMode}
-          style={{ ...(selectMode ? invBtnStyle : invBtnSecStyle), padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+          style={{ ...(selectMode ? invBtnStyle : invBtnSecStyle), padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
         >
           {selectMode ? t('invCancelSelect', lang) : t('invSelect', lang)}
         </button>
@@ -694,12 +698,12 @@ export default function InventoryTab() {
             {selectedCells.size + t('invSelCount', lang) + (selectedEmptyCount > 0 ? ' (' + selectedEmptyCount + t('invEmptyCount', lang) : '')}
           </span>
           {selectedEmptyCount > 0 && (
-            <button onClick={() => setShowBulkAdd(true)} style={{ ...invBtnStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' }}>+ Add</button>
+            <button onClick={() => setShowBulkAdd(true)} style={{ ...invBtnStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', ...touchH }}>+ Add</button>
           )}
           {selectedOccupiedCount > 0 && (
             <button
               onClick={() => { setShowBulkEdit(true); setBulkForm({ owner: '', sampleType: '', expiryDate: '', tags: '' }); }}
-              style={{ ...invBtnSecStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px' }}
+              style={{ ...invBtnSecStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', ...touchH }}
             >
               {t('invBulkEdit', lang)}
             </button>
@@ -707,7 +711,7 @@ export default function InventoryTab() {
           {selectedOccupiedCount > 0 && (
             <button
               onClick={handleBulkDelete}
-              style={{ ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: 'var(--danger-border)' }}
+              style={{ ...invBtnDangerStyle, padding: mobile ? '4px 8px' : '6px 10px', fontSize: '12px', background: 'var(--danger-border)', ...touchH }}
             >
               {confirmBulkDelete ? t('invBulkDelConfirm', lang) : t('invBulkDel', lang)}
             </button>
@@ -718,14 +722,14 @@ export default function InventoryTab() {
       {/* Stats / Dashboard / List toggle */}
       <button
         onClick={() => setShowStats(true)}
-        style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+        style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
       >
         {t('invStats', lang)}
       </button>
       {!showDashboard && (
         <button
           onClick={showDashboardAgain}
-          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px' }}
+          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', ...touchH }}
         >
           {t('invDashboardShow', lang)}
         </button>
@@ -733,13 +737,14 @@ export default function InventoryTab() {
       {invViewMode === 'grid' && (
         <button
           onClick={() => setInvViewMode('list')}
-          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', whiteSpace: 'nowrap' }}
+          style={{ ...invBtnSecStyle, padding: mobile ? '4px 10px' : '6px 12px', fontSize: mobile ? '12px' : '13px', whiteSpace: 'nowrap', ...touchH }}
         >
           {'☰ ' + t('invAllSamples', lang)}
         </button>
       )}
     </div>
-  );
+    );
+  };
 
   // ── All Samples memoized data ────────────────────────────────────────────
   const { _allSamples, _uniqueTypes, _uniqueLocs, _uniqueBoxes, _uniqueOwners, _filtered } = useMemo(() => {
