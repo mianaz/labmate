@@ -1,6 +1,6 @@
 # LabMate Design System
 
-Design language inherited from the BioinfoSpace main site.
+Design language inherited from the Bioinfospace main site.
 
 ## Typography
 

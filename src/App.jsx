@@ -272,7 +272,7 @@ function AppInner() {
             Bioinfo<span style={{ color: 'var(--accent)' }}>Space</span>{' '}
             LabMate v{__APP_VERSION__}
           </p>
-          <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>BioinfoSpace</a></p>
+          <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Bioinfospace</a></p>
           <p className="mt-1 flex items-center justify-center gap-3">
             <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer"
               className="opacity-50 hover:opacity-80 transition-opacity"

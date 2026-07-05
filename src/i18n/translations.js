@@ -1,6 +1,6 @@
 export const translations = {
   // Nav & Tabs
-  appTitle: { en: 'BioinfoSpace LabMate', zh: 'BioinfoSpace LabMate' },
+  appTitle: { en: 'Bioinfospace LabMate', zh: 'Bioinfospace LabMate' },
   appSubtitle: { en: '', zh: '' },
   tabBuffers: { en: 'Recipes', zh: '配方库' },
   tabProtocols: { en: 'Protocols', zh: '实验方案' },
@@ -214,14 +214,14 @@ export const translations = {
   // External Tools & Links
   toolsTitle: { en: 'Useful Links', zh: '实用链接' },
   toolsSubtitle: { en: 'Curated links to best-in-class free resources — no need to reinvent the wheel', zh: '精选免费最佳工具——不重复造轮子' },
-  toolCatBIS: { en: 'BioInfoSpace Apps', zh: 'BioInfoSpace 应用' },
+  toolCatBIS: { en: 'Bioinfospace Apps', zh: 'Bioinfospace 应用' },
   toolCatPrimer: { en: 'Primer & Sequence', zh: '引物 & 序列' },
   toolCatProtein: { en: 'Protein & Antibody', zh: '蛋白 & 抗体' },
   toolCatGenome: { en: 'Genome & Pathway', zh: '基因组 & 通路' },
   toolCatData: { en: 'Data & Image', zh: '数据 & 图像' },
   // Privacy
   privacyTitle: { en: 'Your Data Stays Private', zh: '您的数据完全私密' },
-  privacyBody: { en: 'BioinfoSpace LabMate runs entirely in your browser. Your favorites, step progress, timer history, and all personal data are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export it anytime using the button in the Tools tab.', zh: 'BioinfoSpace LabMate 完全在您的浏览器中运行。您的收藏、实验进度、计时器历史等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页中导出。' },
+  privacyBody: { en: 'Bioinfospace LabMate runs entirely in your browser. Your favorites, step progress, timer history, and all personal data are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export it anytime using the button in the Tools tab.', zh: 'Bioinfospace LabMate 完全在您的浏览器中运行。您的收藏、实验进度、计时器历史等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页中导出。' },
   // Data Export/Import
   exportTitle: { en: 'Export My Data', zh: '导出我的数据' },
   exportDesc: { en: 'Download all your favorites, step progress, and settings as a JSON file. Use this to back up your data or transfer to another device.', zh: '将所有收藏、实验进度和设置导出为 JSON 文件。用于数据备份或转移到其他设备。' },
@@ -526,7 +526,7 @@ export const translations = {
   // Quick Calculator
   quickCalc: { en: 'Calculator', zh: '计算器' },
   // Onboarding
-  onboardingWelcomeTitle: { en: 'Welcome to BioinfoSpace LabMate', zh: '欢迎使用 BioinfoSpace LabMate' },
+  onboardingWelcomeTitle: { en: 'Welcome to Bioinfospace LabMate', zh: '欢迎使用 Bioinfospace LabMate' },
   onboardingWelcomeBody: { en: 'Your all-in-one molecular biology toolkit. Everything runs locally in your browser — no account needed.', zh: '您的一站式分子生物学工具箱。完全在浏览器中运行——无需账号。' },
   onboardingRecipesTitle: { en: 'Browse Recipes & Protocols', zh: '浏览配方与实验方案' },
   onboardingRecipesBody: { en: 'Verified buffer recipes and step-by-step protocols with built-in timers. Star your favorites for quick access.', zh: '已验证的缓冲液配方和分步实验方案，内置计时器。收藏常用配方快速访问。' },

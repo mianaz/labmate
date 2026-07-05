@@ -122,7 +122,7 @@ function CalendarTab({ onNavigateNotebook }) {
       return `${y}${m}${d}T${pad(h)}${pad(min)}00`;
     };
 
-    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BioinfoSpace LabMate//EN\r\nCALSCALE:GREGORIAN\r\n';
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Bioinfospace LabMate//EN\r\nCALSCALE:GREGORIAN\r\n';
     filtered.forEach(e => {
       const dtStart = formatDT(e.date, e.startTime);
       const dur = e.duration || 60;
