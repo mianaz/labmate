@@ -15,6 +15,7 @@ import InstallPrompt from './components/InstallPrompt.jsx';
 import AgentProvider from './lib/agent/AgentContext.jsx';
 import AgentLauncher from './features/agent/AgentLauncher.jsx';
 import AgentPanel from './features/agent/AgentPanel.jsx';
+import { useAgentAvailability } from './hooks/useAgentAvailability.js';
 
 // Eager load (always needed on first render)
 import BuffersTab from './features/buffers/BuffersTab.jsx';
@@ -93,6 +94,7 @@ function AppInner() {
   const [recipeVersion, setRecipeVersion] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
+  const agentAvailable = useAgentAvailability();
   const toast = useToast();
 
   const refreshRecipes = useCallback(async () => {
@@ -157,8 +159,10 @@ function AppInner() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  // Global ⌘J / Ctrl+J — toggle the agent panel (mirrors the ⌘K handler above)
+  // Global ⌘J / Ctrl+J — toggle the agent panel (mirrors the ⌘K handler above).
+  // Only bound when the agent backend is actually available.
   useEffect(() => {
+    if (!agentAvailable) return;
     function handleKey(e) {
       if ((e.metaKey || e.ctrlKey) && (e.key === 'j' || e.key === 'J')) {
         e.preventDefault();
@@ -167,7 +171,7 @@ function AppInner() {
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, []);
+  }, [agentAvailable]);
 
   // Loading state
   if (loading) {
@@ -335,12 +339,14 @@ function AppInner() {
         <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} lang={lang} />
         <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab}
           lang={lang} setLang={setLang} onRefreshRecipes={refreshRecipes} isSyncing={syncing}
-          onOpenAgent={() => { setMoreOpen(false); setAgentOpen(true); }} />
+          onOpenAgent={agentAvailable ? () => { setMoreOpen(false); setAgentOpen(true); } : undefined} />
         <InstallPrompt />
-        <AgentProvider>
-          <AgentLauncher open={agentOpen} onToggle={() => setAgentOpen(o => !o)} />
-          <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
-        </AgentProvider>
+        {agentAvailable && (
+          <AgentProvider>
+            <AgentLauncher open={agentOpen} onToggle={() => setAgentOpen(o => !o)} />
+            <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
+          </AgentProvider>
+        )}
         <div className="grain" aria-hidden="true" />
       </div>
     </LangContext.Provider>

@@ -30,6 +30,7 @@ export default [
         clearInterval: 'readonly',
         clearTimeout: 'readonly',
         fetch: 'readonly',
+        AbortController: 'readonly',
         URL: 'readonly',
         Blob: 'readonly',
         FileReader: 'readonly',
