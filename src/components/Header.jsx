@@ -47,13 +47,16 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-xl font-bold" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.02em' }}>
-              <img src="favicon.svg" alt="" width="26" height="26" style={{flexShrink:0}} />
+              {/* import.meta.env.BASE_URL (not a bare-relative src) — a relative path
+                  would 404 once the current URL is /labmate/<locale>/<tab> (one
+                  segment deeper than the pre-locale-routing /labmate/<tab> paths). */}
+              <img src={import.meta.env.BASE_URL + 'favicon.svg'} alt="" width="26" height="26" style={{flexShrink:0}} />
               <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                 <span className="hidden sm:inline">
-                  <span style={{ color: 'var(--text)' }}>Bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
+                  <span style={{ color: 'var(--text)' }}>bio</span><span style={{ color: 'var(--accent)' }}>info</span><span style={{ color: 'var(--text)' }}>space</span>
                 </span>
               </a>
-              <a href="/labmate/" style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>LabMate</a>
+              <a href={`${import.meta.env.BASE_URL}${lang}/recipes`} style={{ textDecoration: 'none', color: 'var(--text)', marginLeft: '-0.25rem' }}>labmate</a>
             </div>
           </div>
 

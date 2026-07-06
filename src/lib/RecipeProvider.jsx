@@ -25,7 +25,12 @@ export default function RecipeProvider({ children }) {
 
   // Initial load from local recipes.json
   useEffect(() => {
-    fetch('recipes.json?t=' + Date.now())
+    // Absolute-from-base (not page-relative): a bare relative fetch resolves
+    // against the CURRENT url, which is now one segment deeper under locale-
+    // prefixed routing (/labmate/en/recipes vs. the old /labmate/recipes) and
+    // would 404. import.meta.env.BASE_URL is always '/labmate/' regardless of
+    // route depth.
+    fetch(import.meta.env.BASE_URL + 'recipes.json?t=' + Date.now())
       .then(res => res.json())
       .then(data => {
         setRecipes(data);
@@ -47,7 +52,7 @@ export default function RecipeProvider({ children }) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         data = await res.json();
       } catch {
-        const res2 = await fetch('recipes.json?t=' + Date.now());
+        const res2 = await fetch(import.meta.env.BASE_URL + 'recipes.json?t=' + Date.now());
         data = await res2.json();
       }
       setRecipes(data);

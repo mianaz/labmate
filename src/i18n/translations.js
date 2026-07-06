@@ -1,6 +1,6 @@
 export const translations = {
   // Nav & Tabs
-  appTitle: { en: 'Bioinfospace LabMate', zh: 'Bioinfospace LabMate' },
+  appTitle: { en: 'bioinfospace labmate', zh: 'bioinfospace labmate' },
   appSubtitle: { en: '', zh: '' },
   tabBuffers: { en: 'Recipes', zh: '配方库' },
   tabProtocols: { en: 'Protocols', zh: '实验方案' },
@@ -128,7 +128,7 @@ export const translations = {
   legend: { en: 'Legend', zh: '图例' },
   // Refs
   refsTitle: { en: 'Guide', zh: '使用说明' },
-  refsSubtitle: { en: 'How to use each feature in LabMate', zh: 'LabMate 各功能使用说明' },
+  refsSubtitle: { en: 'How to use each feature in labmate', zh: 'labmate 各功能使用说明' },
   usageGuide: { en: 'Usage Notes', zh: '使用说明' },
   // Theme/Lang
   darkMode: { en: 'Dark', zh: '深色' },
@@ -221,7 +221,7 @@ export const translations = {
   toolCatData: { en: 'Data & Image', zh: '数据 & 图像' },
   // Privacy
   privacyTitle: { en: 'Your Data Stays Private', zh: '您的数据完全私密' },
-  privacyBody: { en: 'Bioinfospace LabMate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'Bioinfospace LabMate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
+  privacyBody: { en: 'bioinfospace labmate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'bioinfospace labmate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
   storagePersistent: { en: 'Storage: persistent — your browser will not auto-evict this data.', zh: '存储：持久化——浏览器不会自动清除这些数据。' },
   storageBestEffort: { en: 'Storage: best-effort — browsers may clear local data after long inactivity. Export a backup regularly.', zh: '存储：尽力保留——长期不使用时浏览器可能清除本地数据，请定期导出备份。' },
   // Data Export/Import
@@ -279,7 +279,7 @@ export const translations = {
   pctSoluteDescVV: { en: 'Volume of liquid solute (v/v)', zh: '需加入液体溶质体积 (v/v)' },
   pctVolDesc: { en: 'Total solution volume', zh: '溶液总体积' },
   // Guide tab sections
-  guideIntro: { en: 'Quick-start guide to every feature in LabMate.', zh: 'LabMate 各功能快速使用指南。' },
+  guideIntro: { en: 'Quick-start guide to every feature in labmate.', zh: 'labmate 各功能快速使用指南。' },
   guideBuffersTitle: { en: 'Recipes', zh: '配方库' },
   guideBuffersBody: {
     en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Use the Target Volume slider to scale any recipe. Star recipes to add them to Favorites for quick access. From a recipe\'s detail view, download the scaled recipe as TXT or copy it to clipboard. Recently viewed recipes appear at the top.',
@@ -528,7 +528,7 @@ export const translations = {
   // Quick Calculator
   quickCalc: { en: 'Calculator', zh: '计算器' },
   // Onboarding
-  onboardingWelcomeTitle: { en: 'Welcome to Bioinfospace LabMate', zh: '欢迎使用 Bioinfospace LabMate' },
+  onboardingWelcomeTitle: { en: 'Welcome to bioinfospace labmate', zh: '欢迎使用 bioinfospace labmate' },
   onboardingWelcomeBody: { en: 'Your all-in-one molecular biology toolkit. Everything runs locally in your browser — no account needed.', zh: '您的一站式分子生物学工具箱。完全在浏览器中运行——无需账号。' },
   onboardingRecipesTitle: { en: 'Browse Recipes & Protocols', zh: '浏览配方与实验方案' },
   onboardingRecipesBody: { en: 'Verified buffer recipes and step-by-step protocols with built-in timers. Star your favorites for quick access.', zh: '已验证的缓冲液配方和分步实验方案，内置计时器。收藏常用配方快速访问。' },
@@ -735,7 +735,7 @@ export const translations = {
   calWeekHours: { en: 'hours', zh: '时' },
 
   // ── Agent: chat UI ──────────────────────────────────────────────────────────
-  agentTitle: { en: 'LabMate Agent', zh: 'LabMate 智能助手' },
+  agentTitle: { en: 'labmate Agent', zh: 'labmate 智能助手' },
   agentIntro: { en: 'Plans experiments by retrieving from the curated protocol library and running the app’s own tools. It never invents protocols or numbers.', zh: '通过检索精选方案库并调用应用自带工具来规划实验。它不会编造方案或数据。' },
   agentRedLine: { en: 'Bio content is retrieval-only: steps and reagents come from the curated library, and all calculations run in deterministic app functions — not the language model.', zh: '生物内容仅来自检索：步骤与试剂取自精选库，所有计算均由确定性的应用函数完成——而非语言模型。' },
   agentOpen: { en: 'Open assistant', zh: '打开助手' },

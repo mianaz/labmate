@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from 'react
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LangContext, t } from './i18n/index.js';
 import { useLocalStorage } from './hooks/useLocalStorage.js';
+import { readCookie } from './lib/cookies.js';
 import db from './lib/db.js';
 import ToastProvider, { useToast } from './components/Toast.jsx';
 import FavProvider from './components/Favorites.jsx';
@@ -59,6 +60,8 @@ const LazySkeleton = () => (
 );
 
 // Tab <-> URL path mapping. /labmate/ basename is applied by BrowserRouter.
+// Paths here are locale-bare; the active locale is prefixed on top (/en/recipes,
+// /zh/recipes) — see SUPPORTED_LOCALES and the Routes block in AppInner below.
 const TAB_TO_PATH = {
   buffers:   '/recipes',
   protocols: '/protocols',
@@ -72,22 +75,75 @@ const TAB_TO_PATH = {
 };
 const PATH_TO_TAB = Object.fromEntries(Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k]));
 
+// Locale-prefixed routing, mirroring the main bioinfospace.com site's /en/, /zh/
+// URL pattern: the URL is the source of truth for the active locale once inside
+// a /:locale route; bare/legacy (unprefixed) paths redirect to the active/stored
+// locale. Kept as a plain array (not derived from i18n) since LabMate only ships
+// these two — see i18n/translations.js.
+const SUPPORTED_LOCALES = ['en', 'zh'];
+
+// Seed theme/lang from the main site's cross-domain cookies (bis_theme/bis_lang,
+// written on .bioinfospace.com by bioinfospace.com — see src/utils/crossDomainCookie.ts
+// and components/theme-provider.tsx / LocaleRouter.tsx in the website repo) — but
+// ONLY as the initial default. useLocalStorage's defaultVal argument is only ever
+// consulted when nothing is stored locally yet (see useIndexedStorage.js), so once
+// the user has toggled theme/lang here, their local choice always wins over the
+// cookie on every later load.
+function getDefaultLang() {
+  const cookieLang = (readCookie('bis_lang') || '').slice(0, 2);
+  if (cookieLang === 'zh') return 'zh';
+  if (cookieLang) return 'en'; // any other bis_lang (de/es/fr/ja/ko/...) maps to en
+  return (navigator.language || '').startsWith('zh') ? 'zh' : 'en';
+}
+
+function getDefaultTheme() {
+  const cookieTheme = readCookie('bis_theme');
+  if (cookieTheme === 'dark' || cookieTheme === 'light') return cookieTheme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 function AppInner() {
   const { loading, syncing, refresh, recipes } = useRecipes();
   const location = useLocation();
   const navigate = useNavigate();
+  // lang/theme declared before activeTab/setActiveTab/switchLocale below, which
+  // close over `lang` to build locale-prefixed paths.
+  const [lang, setLang] = useLocalStorage('lang', getDefaultLang());
+  const [theme, setTheme] = useLocalStorage('theme', getDefaultTheme());
   const activeTab = useMemo(() => {
-    const seg = '/' + (location.pathname.split('/')[1] || '');
+    // location.pathname has the /labmate basename already stripped by BrowserRouter,
+    // so parts[1] is the locale segment (en/zh) and parts[2] is the tab segment —
+    // e.g. '/en/recipes' -> ['', 'en', 'recipes']. Bare/legacy paths (no locale
+    // prefix yet, mid-redirect) fall back to parts[1] as the tab segment so this
+    // still resolves sanely for the one render before the redirect commits.
+    const parts = location.pathname.split('/');
+    const tabSeg = SUPPORTED_LOCALES.includes(parts[1]) ? parts[2] : parts[1];
+    const seg = '/' + (tabSeg || '');
     return PATH_TO_TAB[seg] || 'buffers';
   }, [location.pathname]);
   const setActiveTab = useCallback((tabId) => {
     const path = TAB_TO_PATH[tabId] || '/recipes';
-    navigate(path);
-  }, [navigate]);
+    navigate(`/${lang}${path}`);
+  }, [navigate, lang]);
+  // Language toggle: navigates to swap the locale prefix (URL is the source of
+  // truth, mirroring the main site's useLocalePath/LocaleRouter). The effect
+  // below persists the change to `lang` once the route actually updates.
+  const switchLocale = useCallback((nextLang) => {
+    const bare = TAB_TO_PATH[activeTab] || '/recipes';
+    navigate(`/${nextLang}${bare}`);
+  }, [navigate, activeTab]);
+  // Keep stored `lang` in sync with the URL's locale segment whenever they
+  // diverge (e.g. after switchLocale navigates, or a direct deep link to
+  // /zh/... on a device whose stored preference was 'en'). One-way, URL -> state,
+  // same direction as the main site's LocaleRouter effect.
+  useEffect(() => {
+    const urlLocale = location.pathname.split('/')[1];
+    if (SUPPORTED_LOCALES.includes(urlLocale) && urlLocale !== lang) {
+      setLang(urlLocale);
+    }
+  }, [location.pathname, lang, setLang]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSelected, setSearchSelected] = useState(null);
-  const [lang, setLang] = useLocalStorage('lang', (navigator.language || '').startsWith('zh') ? 'zh' : 'en');
-  const [theme, setTheme] = useLocalStorage('theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
   const [calcInitialMode, setCalcInitialMode] = useState(null);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
@@ -186,11 +242,91 @@ function AppInner() {
     );
   }
 
+  // Tab routes shared by every /:locale branch below (see the Routes block in the
+  // JSX) — written once and reused via SUPPORTED_LOCALES.map so /en/... and /zh/...
+  // both mount the exact same components. Uses locale-RELATIVE Navigate targets
+  // ('recipes', not '/en/recipes') so this list doesn't need to know which locale
+  // branch it's nested under.
+  const renderTabRoutes = () => [
+    <Route key="index" index element={<Navigate to="recipes" replace />} />,
+    <Route key="buffers-alias" path="buffers" element={<Navigate to="recipes" replace />} />,
+    <Route key="recipes" path="recipes" element={
+      <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>
+    } />,
+    <Route key="protocols" path="protocols" element={
+      <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>
+    } />,
+    <Route key="calc" path="calc" element={
+      <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <CalcTab initialMode={calcInitialMode} />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="plate" path="plate" element={
+      <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <PlateTab />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="tools" path="tools" element={
+      <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <ToolsTab />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="inventory" path="inventory" element={
+      <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <InventoryTab />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="notebook" path="notebook" element={
+      <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="calendar" path="calendar" element={
+      <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="guide" path="guide" element={
+      <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
+        <ErrorBoundary>
+          <Suspense fallback={<LazySkeleton />}>
+            <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    } />,
+    <Route key="not-found" path="*" element={<Navigate to="recipes" replace />} />,
+  ];
+
   return (
     <LangContext.Provider value={lang}>
       <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
-          onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />
+          onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={switchLocale} theme={theme} setTheme={setTheme} />
         <Suspense fallback={null}>
           <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
             onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
@@ -238,85 +374,32 @@ function AppInner() {
           )}
           <div key={activeTab} className="tab-fade-in">
             <Routes>
-              <Route path="/" element={<Navigate to="/recipes" replace />} />
-              <Route path="/buffers" element={<Navigate to="/recipes" replace />} />
-              <Route path="/recipes" element={
-                <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>
-              } />
-              <Route path="/protocols" element={
-                <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>
-              } />
-              <Route path="/calc" element={
-                <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <CalcTab initialMode={calcInitialMode} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/plate" element={
-                <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <PlateTab />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/tools" element={
-                <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <ToolsTab />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/inventory" element={
-                <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <InventoryTab />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/notebook" element={
-                <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/calendar" element={
-                <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="/guide" element={
-                <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
-                  <ErrorBoundary>
-                    <Suspense fallback={<LazySkeleton />}>
-                      <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-              } />
-              <Route path="*" element={<Navigate to="/recipes" replace />} />
+              {/* Bare/legacy paths (no locale prefix) redirect to the active/stored
+                  locale — covers old bookmarks/shared links from before locale-
+                  prefixed routing, plus a bare "/" on first-ever visit. */}
+              <Route path="/" element={<Navigate to={`/${lang}/recipes`} replace />} />
+              <Route path="/buffers" element={<Navigate to={`/${lang}/recipes`} replace />} />
+              {Object.values(TAB_TO_PATH).map((path) => (
+                <Route key={`bare${path}`} path={path} element={<Navigate to={`/${lang}${path}`} replace />} />
+              ))}
+
+              {/* Locale-prefixed routes — enumerated (not a `:locale` param) so an
+                  unsupported prefix falls through to the catch-all below instead
+                  of being (wrongly) matched and rendered as a locale here. */}
+              {SUPPORTED_LOCALES.map((loc) => (
+                <Route key={loc} path={`/${loc}`}>
+                  {renderTabRoutes()}
+                </Route>
+              ))}
+
+              <Route path="*" element={<Navigate to={`/${lang}/recipes`} replace />} />
             </Routes>
           </div>
         </main>
         <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           <p className="font-semibold">
-            Bio<span style={{ color: 'var(--accent)' }}>info</span>space{' '}
-            LabMate v{__APP_VERSION__}
+            bio<span style={{ color: 'var(--accent)' }}>info</span>space{' '}
+            labmate v{__APP_VERSION__}
           </p>
           <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Bioinfospace</a></p>
           <p className="mt-1 flex items-center justify-center gap-3">
@@ -338,7 +421,7 @@ function AppInner() {
         <QuickTimerButton />
         <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} lang={lang} />
         <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab}
-          lang={lang} setLang={setLang} onRefreshRecipes={refreshRecipes} isSyncing={syncing}
+          lang={lang} setLang={switchLocale} onRefreshRecipes={refreshRecipes} isSyncing={syncing}
           onOpenAgent={agentAvailable ? () => { setMoreOpen(false); setAgentOpen(true); } : undefined} />
         <InstallPrompt />
         {agentAvailable && (

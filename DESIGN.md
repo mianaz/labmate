@@ -50,8 +50,8 @@ Font tokens (`src/styles/global.css`):
 muted (section eyebrows). **zh disables uppercase + tracking** on those eyebrows
 (`:lang(zh) h4.font-bold { text-transform:none; letter-spacing:0 }`).
 
-**Wordmark:** chevron mark + `Bioinfospace` in JetBrains Mono 700, tri-color split `Bio`(ink) `info`(green)
-`space`(ink) — lowercase "space", **not** capital-S "Space" (brand rule, see `src/components/Logo.tsx` in the
+**Wordmark:** chevron mark + `bioinfospace` in JetBrains Mono 700, tri-color split `bio`(ink) `info`(green)
+`space`(ink) — all-lowercase, including the leading `b` (brand rule, see `src/components/Logo.tsx` in the
 website repo; LabMate's header wordmark follows the same split). Base font size **16px**, body line-height 1.65.
 
 ---

@@ -1,6 +1,6 @@
 {
-  "name": "Bioinfospace LabMate",
-  "short_name": "LabMate",
+  "name": "bioinfospace labmate",
+  "short_name": "labmate",
   "description": "Molecular Biology Toolkit",
   "start_url": "/labmate/",
   "display": "standalone",

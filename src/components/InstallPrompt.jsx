@@ -122,7 +122,7 @@ export default function InstallPrompt() {
       <span style={{ flex: 1, lineHeight: 1.3 }}>
         {iosHint
           ? (lang === 'zh' ? '添加到主屏幕：点击"分享" → "添加到主屏幕"' : 'Add to Home Screen: Share → Add to Home Screen')
-          : (lang === 'zh' ? '安装 LabMate' : 'Install LabMate')}
+          : (lang === 'zh' ? '安装 labmate' : 'Install labmate')}
       </span>
       {!iosHint && (
         <button

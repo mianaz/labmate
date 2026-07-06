@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labmate-v6';
+const CACHE_NAME = 'labmate-v7';
 
 // Install: precache essential shell
 self.addEventListener('install', (event) => {
@@ -83,8 +83,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // App shell (index.html, recipes.json): network-first
-  if (url.pathname.endsWith('/index.html') || url.pathname.endsWith('/recipes.json') ||
+  // App shell: network-first, falling back to the cached shell.
+  // `mode === 'navigate'` (not just an index.html/recipes.json/'/' suffix match)
+  // covers every locale-prefixed deep link (/labmate/en/recipes, /labmate/zh/calc,
+  // etc.) — those URLs don't end in '/' or 'index.html', but a direct load / hard
+  // refresh / PWA relaunch on one is still a full-page navigation request that
+  // needs to fall back to the cached app shell when offline.
+  if (event.request.mode === 'navigate' ||
+      url.pathname.endsWith('/index.html') || url.pathname.endsWith('/recipes.json') ||
       url.pathname.endsWith('/') || url.pathname === url.origin) {
     event.respondWith(
       fetch(event.request)
@@ -95,7 +101,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
     );
     return;
   }
