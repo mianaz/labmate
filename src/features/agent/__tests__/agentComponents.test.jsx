@@ -74,4 +74,13 @@ describe('AgentComposer', () => {
     fireEvent.keyDown(ta, { key: 'Enter' });
     expect(onSend).not.toHaveBeenCalled();
   });
+
+  it('shows a Stop button (not Send) while running and calls onStop', () => {
+    const onStop = vi.fn();
+    render(<AgentComposer onSend={vi.fn()} onStop={onStop} isRunning disabled lang="en" />);
+    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+    const stopBtn = screen.getByRole('button', { name: 'Stop' });
+    fireEvent.click(stopBtn);
+    expect(onStop).toHaveBeenCalled();
+  });
 });

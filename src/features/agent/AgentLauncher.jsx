@@ -13,7 +13,7 @@ export default function AgentLauncher({ open, onToggle }) {
       aria-label={t('agentTitle', lang)}
       aria-expanded={open}
       aria-haspopup="dialog"
-      title={open ? t('agentClose', lang) : t('agentOpen', lang)}
+      title={`${open ? t('agentClose', lang) : t('agentOpen', lang)} · ${t('agentShortcutHint', lang)}`}
       className="fixed z-40 flex items-center justify-center shadow-lg transition-transform hover:scale-110"
       style={{
         bottom: 'calc(var(--fab-b) + 3.75rem)',

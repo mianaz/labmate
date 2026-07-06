@@ -121,18 +121,20 @@ export function makeSSEParser() {
  * @param {string} [o.sessionId]  sent as X-LabMate-Session for per-session limits
  * @param {number} [o.temperature]
  * @param {Function} [o.onDelta]  (text) => void  streaming UI hook
+ * @param {AbortSignal} [o.signal]  aborts the in-flight request (Stop button)
  * @param {typeof fetch} [o.fetchImpl]  override for tests
  */
 export function createOwnerProxy(o = {}) {
   const {
     baseUrl = '/api/labmate/agent', model, sessionId,
-    temperature, onDelta, fetchImpl,
+    temperature, onDelta, signal, fetchImpl,
   } = o;
   const doFetch = fetchImpl || fetch;
 
   return async function callModel(messages, tools) {
     const res = await doFetch(`${baseUrl}/chat`, {
       method: 'POST',
+      ...(signal ? { signal } : {}),
       headers: {
         'Content-Type': 'application/json',
         ...(sessionId ? { 'X-LabMate-Session': sessionId } : {}),

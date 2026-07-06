@@ -2,11 +2,11 @@
 // Enter sends · Shift+Enter newline · IME-safe (won't send mid-composition).
 import { useRef, useState, useCallback } from 'react';
 import { t } from '../../i18n/index.js';
-import { SendIcon } from './icons.jsx';
+import { SendIcon, StopIcon } from './icons.jsx';
 
 const MAX_HEIGHT = 120; // px — ~5 lines before internal scroll
 
-export default function AgentComposer({ onSend, disabled = false, lang = 'en', autoFocus = false }) {
+export default function AgentComposer({ onSend, disabled = false, lang = 'en', autoFocus = false, isRunning = false, onStop }) {
   const [text, setText] = useState('');
   const composingRef = useRef(false);
   const taRef = useRef(null);
@@ -55,24 +55,42 @@ export default function AgentComposer({ onSend, disabled = false, lang = 'en', a
           opacity: disabled ? 0.65 : 1,
         }}
       />
-      <button
-        type="button"
-        onClick={submit}
-        disabled={!canSend}
-        aria-label={t('agentSend', lang)}
-        title={t('agentSend', lang)}
-        className="flex items-center justify-center flex-shrink-0"
-        style={{
-          width: '2.5rem', height: '2.5rem',
-          background: canSend ? 'var(--primary)' : 'var(--bg-2)',
-          color: canSend ? 'var(--on-primary)' : 'var(--text-muted)',
-          border: `2px solid ${canSend ? 'var(--border-strong)' : 'var(--border)'}`,
-          cursor: canSend ? 'pointer' : 'default',
-          transition: 'background var(--duration-fast, 120ms)',
-        }}
-      >
-        <SendIcon size={17} />
-      </button>
+      {isRunning ? (
+        <button
+          type="button"
+          onClick={onStop}
+          aria-label={t('agentStop', lang)}
+          title={t('agentStop', lang)}
+          className="flex items-center justify-center flex-shrink-0"
+          style={{
+            width: '2.5rem', height: '2.5rem',
+            background: 'var(--card)', color: 'var(--danger-text, #b42318)',
+            border: '2px solid var(--border-strong)', cursor: 'pointer',
+            transition: 'background var(--duration-fast, 120ms)',
+          }}
+        >
+          <StopIcon size={15} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!canSend}
+          aria-label={t('agentSend', lang)}
+          title={t('agentSend', lang)}
+          className="flex items-center justify-center flex-shrink-0"
+          style={{
+            width: '2.5rem', height: '2.5rem',
+            background: canSend ? 'var(--primary)' : 'var(--bg-2)',
+            color: canSend ? 'var(--on-primary)' : 'var(--text-muted)',
+            border: `2px solid ${canSend ? 'var(--border-strong)' : 'var(--border)'}`,
+            cursor: canSend ? 'pointer' : 'default',
+            transition: 'background var(--duration-fast, 120ms)',
+          }}
+        >
+          <SendIcon size={17} />
+        </button>
+      )}
     </div>
   );
 }

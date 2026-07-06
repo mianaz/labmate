@@ -22,6 +22,13 @@ export const SendIcon = (p) => (
   <Svg {...p}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></Svg>
 );
 
+// Stop/abort a running turn — a filled square.
+export const StopIcon = ({ size = 18, style } = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={style}>
+    <rect x="6" y="6" width="12" height="12" rx="1.5" />
+  </svg>
+);
+
 export const NewChatIcon = (p) => (
   <Svg {...p}>
     <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />

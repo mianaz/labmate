@@ -42,7 +42,7 @@ export default function AgentPanel({ open, onClose }) {
   const isMobile = useIsMobile();
   const {
     messages, isRunning, streamingText, model, setModel,
-    sendMessage, clear, pendingPermission, resolvePermission,
+    sendMessage, stop, clear, pendingPermission, resolvePermission,
   } = useAgent();
 
   const scrollRef = useRef(null);
@@ -184,6 +184,14 @@ export default function AgentPanel({ open, onClose }) {
               </div>
             );
           }
+          // Muted system note (stopped / step-limit) — centered, not a chat bubble.
+          if (msg._note) {
+            return (
+              <div key={i} className="flex justify-center py-0.5">
+                <span className="mono" style={{ fontSize: '0.66rem', color: 'var(--text-muted)', opacity: 0.85 }}>{msg.content}</span>
+              </div>
+            );
+          }
           // assistant tool-call-only turns have empty content → AgentMessage renders null
           return (
             <AgentMessage key={i} role={msg.role} content={msg.content} error={msg._error} />
@@ -198,7 +206,7 @@ export default function AgentPanel({ open, onClose }) {
 
       {/* Composer */}
       <div className="px-3 py-2.5 flex-shrink-0" style={{ borderTop: '2px solid var(--border)', background: 'var(--card)' }}>
-        <AgentComposer onSend={sendMessage} disabled={isRunning} lang={lang} autoFocus={!isMobile} />
+        <AgentComposer onSend={sendMessage} disabled={isRunning} isRunning={isRunning} onStop={stop} lang={lang} autoFocus={!isMobile} />
         <p className="mt-1.5" style={{ ...S_MUTED, fontSize: '0.62rem', textAlign: 'center' }}>
           {t('agentComposerHint', lang)}
         </p>

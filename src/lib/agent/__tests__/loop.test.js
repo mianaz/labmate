@@ -125,3 +125,40 @@ describe('runAgentTurn — safety rails', () => {
     expect(res.stopReason).toBe('max_steps');
   });
 });
+
+describe('runAgentTurn — abort (Stop button)', () => {
+  it('halts cleanly with stopReason "aborted" when the model call is aborted', async () => {
+    const controller = new AbortController();
+    const callModel = vi.fn(async () => {
+      controller.abort();
+      const e = new Error('aborted'); e.name = 'AbortError'; throw e;
+    });
+    const res = await runAgentTurn({
+      messages: [{ role: 'user', content: 'go' }], callModel, ctx: makeCtx(),
+      signal: controller.signal,
+    });
+    expect(res.stopReason).toBe('aborted');
+    // History stays well-formed: no dangling assistant/tool messages were appended.
+    expect(res.messages).toHaveLength(1);
+    expect(res.messages[0].role).toBe('user');
+  });
+
+  it('never starts a turn when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const callModel = vi.fn(async () => ({ content: 'should not run' }));
+    const res = await runAgentTurn({
+      messages: [{ role: 'user', content: 'go' }], callModel, ctx: makeCtx(),
+      signal: controller.signal,
+    });
+    expect(callModel).not.toHaveBeenCalled();
+    expect(res.stopReason).toBe('aborted');
+  });
+
+  it('re-throws non-abort errors instead of swallowing them', async () => {
+    const callModel = vi.fn(async () => { throw new Error('network down'); });
+    await expect(runAgentTurn({
+      messages: [{ role: 'user', content: 'go' }], callModel, ctx: makeCtx(),
+    })).rejects.toThrow('network down');
+  });
+});

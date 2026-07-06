@@ -55,13 +55,14 @@ function parseArgs(raw) {
  * @param {Function} [o.onPermissionChange] (name, mode) => void  (persist "remember")
  * @param {Function} [o.onEvent]   (event) => void  UI hook: assistant | tool_call | tool_result | permission_denied | done
  * @param {number}   [o.maxSteps]
+ * @param {AbortSignal} [o.signal]  when aborted, the loop halts with stopReason 'aborted'
  * @returns {Promise<{messages:Array, finalText:string, steps:number, stopReason:string}>}
  */
 export async function runAgentTurn(o) {
   const {
     messages, callModel, ctx = {},
     permissions = {}, requestPermission, onPermissionChange,
-    onEvent = () => {}, maxSteps = DEFAULT_MAX_STEPS,
+    onEvent = () => {}, maxSteps = DEFAULT_MAX_STEPS, signal,
   } = o;
 
   const tools = getToolSchemas();
@@ -71,8 +72,19 @@ export async function runAgentTurn(o) {
   let stopReason = 'end_turn';
 
   while (steps < maxSteps) {
+    // User pressed Stop between turns — halt with well-formed history so far.
+    if (signal?.aborted) { stopReason = 'aborted'; break; }
     steps += 1;
-    const assistant = await callModel(convo, tools);
+
+    let assistant;
+    try {
+      assistant = await callModel(convo, tools);
+    } catch (err) {
+      // A Stop aborts the in-flight request; treat it as a clean halt (not an
+      // error) and leave the conversation exactly as it was before this turn.
+      if (signal?.aborted || err?.name === 'AbortError') { stopReason = 'aborted'; break; }
+      throw err;
+    }
     const toolCalls = assistant?.tool_calls || [];
     const content = assistant?.content || '';
 

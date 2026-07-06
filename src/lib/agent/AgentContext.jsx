@@ -15,7 +15,7 @@
 
 import { createContext, useContext, useCallback, useMemo, useRef, useState } from 'react';
 import { useRecipes } from '../RecipeProvider.jsx';
-import { useLang } from '../../i18n/index.js';
+import { t, useLang } from '../../i18n/index.js';
 import db from '../db.js';
 import { saveExperimentRecord } from '../experiments.js';
 import { loadInventoryAsync } from '../../features/inventory/inventoryUtils.js';
@@ -54,6 +54,7 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
 
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
+  const abortRef = useRef(null);
 
   // Tool execution context — closes over the live app data/writers.
   const buildCtx = useCallback(() => ({
@@ -78,7 +79,14 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
     setPendingPermission((prev) => { prev?.resolve?.(decision); return null; });
   }, []);
 
+  // Stop the in-flight turn. The loop halts cleanly (stopReason 'aborted') and
+  // sendMessage appends a muted note; isRunning is cleared in its finally.
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
   const clear = useCallback(() => {
+    abortRef.current?.abort();
     setMessages([]);
     setStreamingText('');
     setPendingPermission((prev) => { prev?.resolve?.('deny'); return null; });
@@ -100,11 +108,15 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
     setIsRunning(true);
     setStreamingText('');
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const sessionId = await getAgentSessionId();
       const permissions = await loadPermissions();
       const callModel = createOwnerProxy({
         baseUrl: apiBase, model, sessionId,
+        signal: controller.signal,
         onDelta: (t) => setStreamingText((s) => s + t),
       });
 
@@ -115,14 +127,23 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
         permissions,
         requestPermission,
         onPermissionChange: (name, mode) => { setPermission(name, mode); },
+        signal: controller.signal,
       });
 
       // Everything the loop appended after the user message (assistant + tool).
       const produced = res.messages.slice(convo.length);
-      setMessages((prev) => [...prev, ...produced]);
+      const notes = [];
+      if (res.stopReason === 'aborted') notes.push({ role: 'assistant', content: t('agentStopped', lang), _note: true });
+      else if (res.stopReason === 'max_steps') notes.push({ role: 'assistant', content: t('agentMaxSteps', lang), _note: true });
+      setMessages((prev) => [...prev, ...produced, ...notes]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: errorText(err, lang), _error: true }]);
+      if (controller.signal.aborted || err?.name === 'AbortError') {
+        setMessages((prev) => [...prev, { role: 'assistant', content: t('agentStopped', lang), _note: true }]);
+      } else {
+        setMessages((prev) => [...prev, { role: 'assistant', content: errorText(err, lang), _error: true }]);
+      }
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setIsRunning(false);
       setStreamingText('');
     }
@@ -131,9 +152,9 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
   const value = useMemo(() => ({
     messages, isRunning, streamingText,
     model, setModel,
-    sendMessage, clear,
+    sendMessage, stop, clear,
     pendingPermission, resolvePermission,
-  }), [messages, isRunning, streamingText, model, sendMessage, clear, pendingPermission, resolvePermission]);
+  }), [messages, isRunning, streamingText, model, sendMessage, stop, clear, pendingPermission, resolvePermission]);
 
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>;
 }
