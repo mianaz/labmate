@@ -733,6 +733,36 @@ export const translations = {
   calEventForm: { en: 'Experiment Details', zh: '实验详情' },
   calSelectProtocol: { en: 'Select a protocol...', zh: '选择方案...' },
   calWeekHours: { en: 'hours', zh: '时' },
+
+  // ── Agent: chat UI ──────────────────────────────────────────────────────────
+  agentTitle: { en: 'LabMate Agent', zh: 'LabMate 智能助手' },
+  agentIntro: { en: 'Plans experiments by retrieving from the curated protocol library and running the app’s own tools. It never invents protocols or numbers.', zh: '通过检索精选方案库并调用应用自带工具来规划实验。它不会编造方案或数据。' },
+  agentRedLine: { en: 'Bio content is retrieval-only: steps and reagents come from the curated library, and all calculations run in deterministic app functions — not the language model.', zh: '生物内容仅来自检索：步骤与试剂取自精选库，所有计算均由确定性的应用函数完成——而非语言模型。' },
+  agentOpen: { en: 'Open assistant', zh: '打开助手' },
+  agentClose: { en: 'Close assistant', zh: '关闭助手' },
+  agentClear: { en: 'New chat', zh: '新对话' },
+  agentModel: { en: 'Model', zh: '模型' },
+  agentPlaceholder: { en: 'Describe an experiment…', zh: '描述实验或提问…' },
+  agentSend: { en: 'Send', zh: '发送' },
+  agentThinking: { en: 'Thinking…', zh: '思考中…' },
+  agentComposerHint: { en: 'Enter to send · Shift+Enter for a new line', zh: 'Enter 发送 · Shift+Enter 换行' },
+  agentYou: { en: 'You', zh: '你' },
+  agentAssistant: { en: 'Assistant', zh: '助手' },
+  agentEmptyExample1: { en: 'Plan a TRIzol RNA extraction for Thursday', zh: '为周四安排一次 TRIzol RNA 提取' },
+  agentEmptyExample2: { en: 'How much 10× PBS to make 500 mL of 1×?', zh: '配 500 mL 1× PBS 需要多少 10× 母液？' },
+  agentToolDetails: { en: 'Details', zh: '详情' },
+  agentRateLimited: { en: 'Rate limit reached. Retry shortly, or switch back to the default model.', zh: '已达速率上限。请稍后重试，或切换回默认模型。' },
+  agentBudgetExceeded: { en: 'The monthly budget for this model is used up. Switch to the default model to continue.', zh: '该模型的本月预算已用尽。请切换到默认模型以继续使用。' },
+
+  // ── Agent: permissions ──────────────────────────────────────────────────────
+  agentPermTitle: { en: 'Tool permissions', zh: '工具权限' },
+  agentPermAuto: { en: 'Auto', zh: '自动' },
+  agentPermAsk: { en: 'Ask', zh: '询问' },
+  agentPermOff: { en: 'Off', zh: '关闭' },
+  agentPermConfirm: { en: 'The agent wants to:', zh: '助手想要执行：' },
+  agentAllowOnce: { en: 'Allow once', zh: '允许一次' },
+  agentAllowRemember: { en: 'Allow & remember', zh: '允许并记住' },
+  agentDeny: { en: 'Deny', zh: '拒绝' },
 };
 
 export const NOTES_EN = {

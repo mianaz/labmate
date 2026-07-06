@@ -77,6 +77,15 @@ function LangIcon() {
   );
 }
 
+function AgentIcon() {
+  return (
+    <RowIcon>
+      <path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z" />
+      <path d="M18 15l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" />
+    </RowIcon>
+  );
+}
+
 const ROW_STYLE_BASE = {
   minHeight: '44px',
   width: '100%',
@@ -91,7 +100,7 @@ const ROW_STYLE_BASE = {
   borderBottom: '1px solid var(--border)',
 };
 
-export default function MoreSheet({ isOpen, onClose, activeTab, setActiveTab, lang, setLang, onRefreshRecipes, isSyncing }) {
+export default function MoreSheet({ isOpen, onClose, activeTab, setActiveTab, lang, setLang, onRefreshRecipes, isSyncing, onOpenAgent }) {
   // Lock body scroll while the sheet is open.
   useEffect(() => {
     if (!isOpen) return;
@@ -164,6 +173,16 @@ export default function MoreSheet({ isOpen, onClose, activeTab, setActiveTab, la
         </div>
 
         <div style={{ borderTop: '2px solid var(--border-strong)' }}>
+          {onOpenAgent && (
+            <button
+              type="button"
+              onClick={() => { onClose(); onOpenAgent(); }}
+              style={{ ...ROW_STYLE_BASE, color: 'var(--primary)', fontWeight: 700 }}
+            >
+              <AgentIcon />
+              <span>{t('agentTitle', lang)}</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onRefreshRecipes}

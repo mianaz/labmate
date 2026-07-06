@@ -36,6 +36,14 @@ function CalendarTab({ onNavigateNotebook }) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // Refresh when the agent schedules timepoints (its writes go straight to Dexie via
+  // a separate useExperiments instance; AgentContext emits this window event).
+  useEffect(() => {
+    const onChange = () => reload();
+    window.addEventListener('labmate:experiments-changed', onChange);
+    return () => window.removeEventListener('labmate:experiments-changed', onChange);
+  }, [reload]);
+
   // Mobile-only: which day (if any) the compact month picker has selected, to filter the agenda list.
   const [mobileDayFilter, setMobileDayFilter] = useState(null);
   // Reconcile viewMode when crossing the mobile/desktop breakpoint at runtime (resize/rotate):

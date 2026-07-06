@@ -35,6 +35,14 @@ function NotebookTab({ onNavigateCalendar }) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  // Refresh when the agent creates experiments (its writes go straight to Dexie via
+  // a separate useExperiments instance; AgentContext emits this window event).
+  useEffect(() => {
+    const onChange = () => reload();
+    window.addEventListener('labmate:experiments-changed', onChange);
+    return () => window.removeEventListener('labmate:experiments-changed', onChange);
+  }, [reload]);
+
   const selected = useMemo(() => entries.find(e => e.id === selectedId), [entries, selectedId]);
 
   useEffect(() => {
