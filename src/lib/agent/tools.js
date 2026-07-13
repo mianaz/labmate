@@ -80,6 +80,7 @@ const getProtocolTool = {
 // ── read: queryInventory ─────────────────────────────────────────────────────────
 const queryInventoryTool = {
   kind: 'read',
+  egress: 'local', // result carries the user's private stock + freezer locations — redact before it leaves the device
   schema: {
     name: 'queryInventory',
     description:
@@ -328,6 +329,16 @@ export function getToolSchemas() {
 /** True if the tool mutates local data / triggers a download (needs permission). */
 export function isWriteTool(name) {
   return TOOLS[name]?.kind === 'write';
+}
+
+/**
+ * Egress policy for a tool's RESULT: 'local' = contains the user's private data
+ * (inventory, notebook, raw analyzer data) and must be redacted before it
+ * reaches a non-local model provider; 'shareable' (default) = safe to send
+ * (curated library content, calculations, write confirmations).
+ */
+export function toolEgress(name) {
+  return TOOLS[name]?.egress || 'shareable';
 }
 
 /** Human-readable preview for a write tool's args (for the permission dialog). */
