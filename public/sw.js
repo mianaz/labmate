@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labmate-v7';
+const CACHE_NAME = 'labmate-v8';
 
 // Install: precache essential shell
 self.addEventListener('install', (event) => {
@@ -38,7 +38,6 @@ self.addEventListener('activate', (event) => {
 // Fetch strategy:
 // - Hashed assets (JS/CSS with hash in filename): cache-first (immutable)
 // - index.html and recipes.json: network-first (always get latest)
-// - Google Fonts: cache-first
 // - Everything else: network-first with cache fallback
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
@@ -49,25 +48,14 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) schemes (e.g. chrome-extension://) — Cache API rejects them
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
+  // Same-origin only. The SW must never fetch or cache a cross-origin payload:
+  // a cross-origin recipes.json (the old raw.githubusercontent.com sync) would
+  // otherwise be network-first cached here, turning an unverified remote into a
+  // persistent poisoned cache. Recipe integrity is enforced app-side at ingestion.
+  if (url.origin !== self.location.origin) return;
+
   // Hashed assets: cache-first (they're immutable by hash)
   if (url.pathname.match(/\/assets\/.*-[a-zA-Z0-9]{8}\.(js|css|png|svg|ico|json)$/)) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
-  // Google Fonts: cache-first
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;

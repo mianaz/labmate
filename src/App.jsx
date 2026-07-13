@@ -154,7 +154,7 @@ function AppInner() {
   const toast = useToast();
 
   const refreshRecipes = useCallback(async () => {
-    toast.show(lang === 'zh' ? '正在同步配方...' : 'Syncing recipes...', 'info');
+    toast.show(lang === 'zh' ? '正在刷新配方...' : 'Refreshing recipes...', 'info');
     try {
       const result = await refresh();
       setRecipeVersion(v => v + 1);
@@ -163,7 +163,7 @@ function AppInner() {
         'success'
       );
     } catch (err) {
-      toast.show(lang === 'zh' ? '同步失败' : 'Sync failed', 'error');
+      toast.show(lang === 'zh' ? '刷新失败' : 'Refresh failed', 'error');
     }
   }, [lang, toast, refresh]);
 

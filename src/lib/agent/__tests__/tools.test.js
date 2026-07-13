@@ -96,17 +96,27 @@ describe('runCalculator', () => {
 });
 
 describe('write tools', () => {
-  it('createExperiment persists a record with verbatim steps', async () => {
+  it('createExperiment derives steps + reagents from the library, ignoring model-supplied content', async () => {
     const ctx = makeCtx();
+    const lib = await executeTool('getProtocol', { id: 'trizol_extraction' }, ctx);
     const r = await executeTool('createExperiment', {
       title: 'RNA prep', protocolRef: 'trizol_extraction', date: '2026-07-06',
-      steps: ['Add TRIzol', 'Incubate 5 min'], reagents: [{ name: 'TRIzol', amount: '1', unit: 'mL' }],
+      // The model tries to smuggle fabricated protocol content — it MUST be ignored.
+      steps: ['ZZZ fabricated step', 'ZZZ another'], reagents: [{ name: 'ZZZ fake reagent', amount: '1', unit: 'mL' }],
     }, ctx);
     expect(r.id).toBeTruthy();
+    expect(r.source).toBe('library');
     const saved = ctx._store.get(r.id);
     expect(saved.procedure.mode).toBe('template');
-    expect(saved.procedure.protocolSteps.map((s) => s.stepText)).toEqual(['Add TRIzol', 'Incubate 5 min']);
-    expect(saved.materials.reagents[0].name).toBe('TRIzol');
+    // Steps come from the curated library, never from the model's arguments.
+    const stepTexts = saved.procedure.protocolSteps.map((s) => s.stepText);
+    expect(stepTexts).toEqual(lib.steps);
+    expect(stepTexts.some((s) => s.startsWith('ZZZ'))).toBe(false);
+    // Reagents come from the library's materials, not the model's fake reagent.
+    const reagentNames = saved.materials.reagents.map((x) => x.name);
+    expect(reagentNames.length).toBeGreaterThan(0);
+    expect(reagentNames).not.toContain('ZZZ fake reagent');
+    expect(saved.provenance).toMatchObject({ source: 'library', verified: true });
   });
 
   it('createExperiment rejects an unknown protocolRef (retrieve-first)', async () => {
@@ -142,8 +152,11 @@ describe('write tools', () => {
     expect(r.error).toBe('not_found');
   });
 
-  it('previews describe write actions', () => {
-    expect(previewTool('createExperiment', { title: 'T', steps: ['a', 'b'] })).toContain('Create notebook entry');
+  it('previews describe write actions with real library content', () => {
+    const ctx = makeCtx();
+    const p = previewTool('createExperiment', { title: 'T', protocolRef: 'trizol_extraction' }, ctx);
+    expect(p).toContain('Create notebook entry');
+    expect(p).toContain('step(s) from the library');
     expect(previewTool('searchProtocols', { query: 'x' })).toBe(''); // reads have no preview
   });
 });

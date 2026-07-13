@@ -16,6 +16,8 @@
 // unit-tested state machine; only the fetch/stream plumbing is browser-coupled.
 // ──────────────────────────────────────────────────────────────────────────────
 
+import { redactMessagesForEgress } from '../egress.js';
+
 // ── pure accumulator ─────────────────────────────────────────────────────────
 export function makeAssembler() {
   const state = { content: '', toolCalls: new Map(), usage: null, stopReason: 'end_turn', error: null };
@@ -140,7 +142,9 @@ export function createOwnerProxy(o = {}) {
         ...(sessionId ? { 'X-LabMate-Session': sessionId } : {}),
       },
       body: JSON.stringify({
-        model, messages,
+        // The owner proxy is a NON-LOCAL provider, so redact 'local' tool
+        // results (inventory locations, quantities, …) before they cross the wire.
+        model, messages: redactMessagesForEgress(messages),
         ...(tools ? { tools } : {}),
         ...(temperature != null ? { temperature } : {}),
       }),

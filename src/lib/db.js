@@ -28,6 +28,21 @@ db.version(2).stores({
   experiments: 'id, date, status, protocolRef',
 });
 
+db.version(3).stores({
+  settings: 'key',
+  customRecipes: 'id, category',
+  customProtocols: 'id',
+  inventory: 'key',
+  favorites: 'key',
+  stepProgress: 'recipeId',
+  experiments: 'id, date, status, protocolRef',
+  // BYO provider keys / OAuth tokens. A DEDICATED table on purpose: the backup
+  // code (backup.js) reads only localStorage + the experiments table, never this
+  // one, so a shared/emailed backup file can never contain a secret. Never store
+  // credentials in localStorage or `settings`, which DO ride the backup.
+  credentials: 'name',
+});
+
 export default db;
 
 // ─── Persistent storage: ask the browser not to evict IndexedDB/localStorage ───

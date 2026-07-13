@@ -5,8 +5,8 @@
 // Provides the tool `ctx` (closing over recipes/lang/inventory/Dexie/download),
 // runs a user turn through runAgentTurn() with the owner-proxy adapter, and
 // surfaces chat state + a permission-request promise for the UI (AgentPanel) to
-// render. NOT mounted in App.jsx yet — mounting has zero visual effect but is
-// deferred until the Phase-1 UI consumes it, so the current bundle stays inert.
+// render. Mounted in App.jsx (AgentProvider wraps AgentPanel) — this is the
+// LIVE agent path the chat UI drives, not a dormant module.
 //
 // Cross-tab refresh: agent writes go straight to Dexie via saveExperimentRecord;
 // we emit a `labmate:experiments-changed` window event so open Notebook/Calendar
@@ -25,6 +25,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { createOwnerProxy } from './providers/ownerProxy.js';
 import { loadPermissions, setPermission } from './permissions.js';
 import { getAgentSessionId } from './session.js';
+import { findUngroundedQuantities } from './grounding.js';
 
 const DEFAULT_MODEL = 'minimax-m3';
 const AGENT_API_BASE = '/api/labmate/agent';
@@ -138,10 +139,21 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
 
       // Everything the loop appended after the user message (assistant + tool).
       const produced = res.messages.slice(convo.length);
+      // Prose backstop: flag unit-bearing quantities the assistant stated that no
+      // tool result (or the user's own message) provided — see grounding.js.
+      const toolText = produced.filter((m) => m.role === 'tool').map((m) => m.content).join('\n');
+      const groundText = `${trimmed}\n${toolText}`;
+      const annotated = produced.map((m) => {
+        if (m.role === 'assistant' && m.content) {
+          const ung = findUngroundedQuantities(m.content, groundText);
+          if (ung.length) return { ...m, _ungrounded: ung };
+        }
+        return m;
+      });
       const notes = [];
       if (res.stopReason === 'aborted') notes.push({ role: 'assistant', content: t('agentStopped', lang), _note: true });
       else if (res.stopReason === 'max_steps') notes.push({ role: 'assistant', content: t('agentMaxSteps', lang), _note: true });
-      setMessages((prev) => [...prev, ...produced, ...notes]);
+      setMessages((prev) => [...prev, ...annotated, ...notes]);
     } catch (err) {
       if (controller.signal.aborted || err?.name === 'AbortError') {
         setMessages((prev) => [...prev, { role: 'assistant', content: t('agentStopped', lang), _note: true }]);

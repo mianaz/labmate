@@ -80,6 +80,7 @@ const getProtocolTool = {
 // ── read: queryInventory ─────────────────────────────────────────────────────────
 const queryInventoryTool = {
   kind: 'read',
+  egress: 'local', // result carries the user's private stock + freezer locations — redact before it leaves the device
   schema: {
     name: 'queryInventory',
     description:
@@ -145,7 +146,7 @@ const runCalculator = {
 };
 
 // ── write: createExperiment ──────────────────────────────────────────────────────
-function buildExperimentEntry({ title, titleZh, protocolRef, date, objectives, steps, reagents }) {
+function buildExperimentEntry({ title, titleZh, protocolRef, date, objectives, steps, reagents, provenance }) {
   const stepList = Array.isArray(steps) ? steps.filter((s) => String(s).trim()) : [];
   return {
     title: title || '',
@@ -153,6 +154,7 @@ function buildExperimentEntry({ title, titleZh, protocolRef, date, objectives, s
     protocolRef: protocolRef || null,
     date: date || undefined,
     status: 'planned',
+    provenance: provenance || null,
     plan: { objectives: objectives || '', notes: '' },
     materials: {
       reagents: (Array.isArray(reagents) ? reagents : []).map((r) => ({
@@ -170,40 +172,55 @@ const createExperiment = {
   schema: {
     name: 'createExperiment',
     description:
-      'Create an editable notebook experiment entry from a retrieved protocol. Writes to local storage only. Requires user permission unless set to auto.',
+      'Create an editable notebook experiment entry from a retrieved protocol. Steps and reagents are taken from the curated library entry (by protocolRef) — you supply only metadata (title, date, objectives), never protocol content. Writes to local storage only. Requires user permission unless set to auto.',
     parameters: {
       type: 'object',
       properties: {
         title: { type: 'string' },
         titleZh: { type: 'string' },
-        protocolRef: { type: 'string', description: 'Recipe id from getProtocol.' },
+        protocolRef: { type: 'string', description: 'Recipe id from searchProtocols/getProtocol. Its steps and reagents are used verbatim from the library — you do not (and cannot) supply them.' },
         date: { type: 'string', description: 'YYYY-MM-DD' },
-        objectives: { type: 'string' },
-        steps: {
-          type: 'array', items: { type: 'string' },
-          description: 'Ordered step texts copied verbatim from the retrieved protocol — do NOT author new steps.',
-        },
-        reagents: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: { name: { type: 'string' }, amount: { type: 'string' }, unit: { type: 'string' }, location: { type: 'string' } },
-          },
-        },
+        objectives: { type: 'string', description: "The user's goal for this run (free-text metadata, not protocol content)." },
       },
       required: ['title', 'protocolRef'],
     },
   },
-  preview(args) {
-    const steps = Array.isArray(args?.steps) ? args.steps.length : 0;
-    const reagents = Array.isArray(args?.reagents) ? args.reagents.length : 0;
-    return `Create notebook entry “${args?.title || 'Untitled'}”${args?.date ? ' on ' + args.date : ''} · ${steps} step(s), ${reagents} reagent(s).`;
+  // Preview derives the REAL protocol title, step count, and reagent names from
+  // the library so the permission dialog shows what will actually be written —
+  // not model-supplied counts the user cannot inspect.
+  preview(args, ctx) {
+    const ref = args?.protocolRef;
+    const proto = ref && ctx?.recipes ? getProtocol(ctx.recipes, ref, ctx.lang) : null;
+    if (proto) {
+      const reagents = (proto.materials || []).map((m) => (typeof m === 'string' ? m : m?.name || '')).filter(Boolean);
+      const rl = reagents.slice(0, 4).join(', ') + (reagents.length > 4 ? '…' : '');
+      return `Create notebook entry “${args?.title || proto.title}”${args?.date ? ' on ' + args.date : ''} from “${proto.title}” — ${(proto.steps || []).length} step(s) from the library${reagents.length ? ' · reagents: ' + rl : ''}.`;
+    }
+    return `Create notebook entry “${args?.title || 'Untitled'}”${args?.date ? ' on ' + args.date : ''}.`;
   },
   async handler(args, ctx) {
-    const bad = invalidProtocolRef(args?.protocolRef, ctx);
+    const ref = args?.protocolRef;
+    const bad = invalidProtocolRef(ref, ctx);
     if (bad) return bad;
-    const saved = await ctx.saveExperiment(buildExperimentEntry(args || {}));
-    return { id: saved.id, title: saved.title, date: saved.date, status: saved.status };
+    // Materialize protocol content from the library — the model never authors
+    // steps or reagents, so a persisted entry can only contain curated content.
+    const proto = getProtocol(ctx.recipes, ref, ctx.lang);
+    if (!proto) {
+      return { error: 'unknown_protocolRef', protocolRef: ref, message: 'No such protocol in the curated library — call searchProtocols/getProtocol first.' };
+    }
+    const steps = proto.steps || [];
+    const reagents = (proto.materials || []).map((m) => ({
+      name: typeof m === 'string' ? m : (m?.name || ''), amount: '', unit: '', location: '',
+    })).filter((r) => r.name);
+    const saved = await ctx.saveExperiment(buildExperimentEntry({
+      title: args?.title, titleZh: args?.titleZh, protocolRef: ref,
+      date: args?.date, objectives: args?.objectives, steps, reagents,
+      // verified:true holds because ctx.recipes can only come from the trusted
+      // same-origin library — RecipeProvider disables the unverified remote path.
+      // When a signed-remote source is re-enabled, gate this on the verify result.
+      provenance: { source: 'library', protocolRef: ref, verified: true },
+    }));
+    return { id: saved.id, title: saved.title, date: saved.date, status: saved.status, source: 'library', stepCount: steps.length };
   },
 };
 
@@ -315,6 +332,16 @@ export function getToolSchemas() {
 /** True if the tool mutates local data / triggers a download (needs permission). */
 export function isWriteTool(name) {
   return TOOLS[name]?.kind === 'write';
+}
+
+/**
+ * Egress policy for a tool's RESULT: 'local' = contains the user's private data
+ * (inventory, notebook, raw analyzer data) and must be redacted before it
+ * reaches a non-local model provider; 'shareable' (default) = safe to send
+ * (curated library content, calculations, write confirmations).
+ */
+export function toolEgress(name) {
+  return TOOLS[name]?.egress || 'shareable';
 }
 
 /** Human-readable preview for a write tool's args (for the permission dialog). */

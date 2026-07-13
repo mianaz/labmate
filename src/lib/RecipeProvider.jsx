@@ -1,7 +1,20 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 
 const BUFFER_CATEGORIES = ['buffer', 'staining', 'media'];
-const GITHUB_RECIPES_URL = 'https://raw.githubusercontent.com/mianaz/labmate-recipes/main/dist/recipes.json';
+
+// Recipe ingestion trust boundary
+// ────────────────────────────────
+// Recipes feed the agent's createExperiment derivation, which stamps
+// provenance.verified — so a poisoned library would launder attacker-authored
+// protocol steps into "verified" experiments (see agent/tools.js). The ONLY
+// trusted source is the same-origin bundled recipes.json, shipped fresh on every
+// deploy. The old cross-origin "sync from GitHub" (raw.githubusercontent.com)
+// had NO integrity check, so it is DISABLED. Re-enable a remote source ONLY
+// behind a fail-closed signed-manifest verifier: an ed25519 detached signature
+// over {version, generatedAt, sha256(recipes.json)}, public key pinned in the
+// bundle, hash checked against the RAW bytes, and a monotonic version floor for
+// rollback protection. Until that ships, the untrusted path stays off.
+const recipesUrl = () => import.meta.env.BASE_URL + 'recipes.json';
 
 const RecipeContext = createContext(null);
 
@@ -30,7 +43,7 @@ export default function RecipeProvider({ children }) {
     // prefixed routing (/labmate/en/recipes vs. the old /labmate/recipes) and
     // would 404. import.meta.env.BASE_URL is always '/labmate/' regardless of
     // route depth.
-    fetch(import.meta.env.BASE_URL + 'recipes.json?t=' + Date.now())
+    fetch(recipesUrl() + '?t=' + Date.now())
       .then(res => res.json())
       .then(data => {
         setRecipes(data);
@@ -42,21 +55,18 @@ export default function RecipeProvider({ children }) {
       });
   }, []);
 
-  // Refresh from GitHub
+  // Reload the trusted same-origin library (each deploy ships the latest recipes).
+  // Deliberately NO cross-origin fetch — an unverified remote payload must never
+  // reach the agent's derivation. See the trust-boundary note above.
   const refresh = useCallback(async () => {
     setSyncing(true);
     try {
-      let data;
-      try {
-        const res = await fetch(GITHUB_RECIPES_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        data = await res.json();
-      } catch {
-        const res2 = await fetch(import.meta.env.BASE_URL + 'recipes.json?t=' + Date.now());
-        data = await res2.json();
-      }
+      const res = await fetch(recipesUrl() + '?t=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const prevLen = recipes.length;
       setRecipes(data);
-      return { total: data.length, newCount: Math.max(0, data.length - recipes.length) };
+      return { total: data.length, newCount: Math.max(0, data.length - prevLen) };
     } catch (err) {
       console.error('Refresh failed:', err);
       throw err;
