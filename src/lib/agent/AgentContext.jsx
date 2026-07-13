@@ -36,6 +36,12 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 
 function errorText(err, lang) {
   const status = err?.status;
+  // The proxy passes an upstream provider failure (e.g. OpenRouter 402/429)
+  // through with the SAME HTTP status as its own budget/rate limits, tagging it
+  // error:'upstream_error'. Branch on that tag first — otherwise a provider-side
+  // 402 shows "monthly budget used up, switch models", which is useless advice
+  // when every model shares one provider account.
+  if (err?.detail?.error === 'upstream_error') return lang === 'zh' ? 'AI 服务暂时不可用，请稍后重试。' : 'The AI provider is temporarily unavailable. Please try again shortly.';
   if (status === 429) return lang === 'zh' ? '已达速率上限。请稍后重试，或切换回默认模型。' : 'Rate limit reached. Retry shortly, or switch back to the default model.';
   if (status === 402) return lang === 'zh' ? '该模型的本月预算已用尽。请切换到默认模型以继续使用。' : 'The monthly budget for this model is used up. Switch to the default model to continue.';
   if (status === 503) return lang === 'zh' ? '智能助手尚未配置。' : 'The agent is not configured yet.';
