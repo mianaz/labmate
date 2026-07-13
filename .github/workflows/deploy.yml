@@ -47,7 +47,9 @@ jobs:
             cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
             git pull --ff-only origin main
             cp recipes.json "$DEST/"
-            cp sw.js "$DEST/" 2>/dev/null || cp public/sw.js "$DEST/"
+            # sw.js is part of the Vite build (public/sw.js -> dist/sw.js) and is
+            # already rsynced above; do NOT re-copy it here — a stale sw.js in this
+            # clone used to clobber the freshly built service worker.
             rm -rf /tmp/labmate-deploy
             # Do NOT add a `?v=...` cache buster to /labmate/assets/ URLs in
             # index.html — lazy-loaded chunks import the main bundle via a
