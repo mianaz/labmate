@@ -752,6 +752,7 @@ export const translations = {
   agentStop: { en: 'Stop', zh: '停止' },
   agentStopped: { en: 'Stopped.', zh: '已停止。' },
   agentMaxSteps: { en: 'Reached the step limit — send another message to continue.', zh: '已达步骤上限——再发一条消息以继续。' },
+  agentUnverifiedValues: { en: 'Values not from a tool — double-check', zh: '数值未经工具核实，请复核' },
   agentThinking: { en: 'Thinking…', zh: '思考中…' },
   agentComposerHint: { en: 'Enter to send · Shift+Enter for a new line', zh: 'Enter 发送 · Shift+Enter 换行' },
   agentShortcutHint: { en: 'Toggle with ⌘J / Ctrl+J', zh: '快捷键 ⌘J / Ctrl+J' },

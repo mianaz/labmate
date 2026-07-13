@@ -194,7 +194,7 @@ export default function AgentPanel({ open, onClose }) {
           }
           // assistant tool-call-only turns have empty content → AgentMessage renders null
           return (
-            <AgentMessage key={i} role={msg.role} content={msg.content} error={msg._error} />
+            <AgentMessage key={i} role={msg.role} content={msg.content} error={msg._error} ungrounded={msg._ungrounded} lang={lang} />
           );
         })}
 

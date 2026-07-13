@@ -2,6 +2,7 @@
 // Renders markdown-lite (line breaks + **bold** + `code`) with NO HTML injection:
 // parseInline() returns tokens we map to React elements, so it is XSS-safe.
 import { parseInline } from './agentFormat.js';
+import { t } from '../../i18n/index.js';
 
 // Render a block of text: split on newlines, format inline markup per line.
 function RichText({ text }) {
@@ -25,7 +26,7 @@ function RichText({ text }) {
   ));
 }
 
-export default function AgentMessage({ role, content, error = false, streaming = false }) {
+export default function AgentMessage({ role, content, error = false, streaming = false, ungrounded, lang = 'en' }) {
   const isUser = role === 'user';
   const text = String(content ?? '');
   if (!text && !streaming) return null; // tool-call-only assistant turns render nothing here
@@ -52,6 +53,15 @@ export default function AgentMessage({ role, content, error = false, streaming =
         <RichText text={text} />
         {streaming && (
           <span aria-hidden="true" className="mono" style={{ opacity: 0.6, marginLeft: '1px' }}>▍</span>
+        )}
+        {!isUser && !error && Array.isArray(ungrounded) && ungrounded.length > 0 && (
+          <div style={{
+            marginTop: '0.45rem', paddingTop: '0.4rem', borderTop: '1px dashed var(--border)',
+            fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', gap: '0.3rem', alignItems: 'flex-start',
+          }}>
+            <span aria-hidden="true">⚠</span>
+            <span>{t('agentUnverifiedValues', lang)}: {ungrounded.join(', ')}</span>
+          </div>
         )}
       </div>
     </div>

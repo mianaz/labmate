@@ -25,6 +25,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { createOwnerProxy } from './providers/ownerProxy.js';
 import { loadPermissions, setPermission } from './permissions.js';
 import { getAgentSessionId } from './session.js';
+import { findUngroundedQuantities } from './grounding.js';
 
 const DEFAULT_MODEL = 'minimax-m3';
 const AGENT_API_BASE = '/api/labmate/agent';
@@ -138,10 +139,21 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
 
       // Everything the loop appended after the user message (assistant + tool).
       const produced = res.messages.slice(convo.length);
+      // Prose backstop: flag unit-bearing quantities the assistant stated that no
+      // tool result (or the user's own message) provided — see grounding.js.
+      const toolText = produced.filter((m) => m.role === 'tool').map((m) => m.content).join('\n');
+      const groundText = `${trimmed}\n${toolText}`;
+      const annotated = produced.map((m) => {
+        if (m.role === 'assistant' && m.content) {
+          const ung = findUngroundedQuantities(m.content, groundText);
+          if (ung.length) return { ...m, _ungrounded: ung };
+        }
+        return m;
+      });
       const notes = [];
       if (res.stopReason === 'aborted') notes.push({ role: 'assistant', content: t('agentStopped', lang), _note: true });
       else if (res.stopReason === 'max_steps') notes.push({ role: 'assistant', content: t('agentMaxSteps', lang), _note: true });
-      setMessages((prev) => [...prev, ...produced, ...notes]);
+      setMessages((prev) => [...prev, ...annotated, ...notes]);
     } catch (err) {
       if (controller.signal.aborted || err?.name === 'AbortError') {
         setMessages((prev) => [...prev, { role: 'assistant', content: t('agentStopped', lang), _note: true }]);
