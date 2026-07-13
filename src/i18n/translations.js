@@ -221,7 +221,7 @@ export const translations = {
   toolCatData: { en: 'Data & Image', zh: '数据 & 图像' },
   // Privacy
   privacyTitle: { en: 'Your Data Stays Private', zh: '您的数据完全私密' },
-  privacyBody: { en: 'bioinfospace labmate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). No data is ever sent to our servers. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'bioinfospace labmate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。数据绝不会发送到服务器。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
+  privacyBody: { en: 'bioinfospace labmate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). None of this data leaves your device — the one exception is the optional AI Assistant (off by default): when you use it, the messages you send are relayed through our server to a language-model provider to generate replies. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'bioinfospace labmate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。这些数据都不会离开你的设备——唯一的例外是可选的 AI 助手（默认关闭）：使用它时，你发送的消息会经我们的服务器转发给语言模型服务商以生成回复。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
   storagePersistent: { en: 'Storage: persistent — your browser will not auto-evict this data.', zh: '存储：持久化——浏览器不会自动清除这些数据。' },
   storageBestEffort: { en: 'Storage: best-effort — browsers may clear local data after long inactivity. Export a backup regularly.', zh: '存储：尽力保留——长期不使用时浏览器可能清除本地数据，请定期导出备份。' },
   // Data Export/Import
@@ -334,6 +334,11 @@ export const translations = {
   guideCustomBody: {
     en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons in the Buffers and Protocols tabs. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports.',
     zh: '使用缓冲液和实验方案标签页中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出中。'
+  },
+  guideAgentTitle: { en: 'AI Assistant', zh: 'AI 智能助手' },
+  guideAgentBody: {
+    en: 'An optional AI planning assistant (toggle with ⌘J / Ctrl+J). Describe an experiment in plain language and it can find a protocol, scale a recipe, run a calculation, and draft a notebook or calendar entry — always asking before it writes anything. It is retrieval-only: steps, reagents, and numbers come from the curated library and the app\'s own calculators, never invented by the language model. Two caveats: it only appears when the site owner has configured a model key server-side (if you don\'t see it, that is expected), and — unlike everything else in labmate — using it sends the messages you type to that server-side model to generate a reply.',
+    zh: '可选的 AI 实验规划助手（快捷键 ⌘J / Ctrl+J）。用自然语言描述实验，它能检索方案、缩放配方、执行计算，并起草实验记录或日历条目——写入前始终会先征询你。它仅做检索：步骤、试剂与数据均取自精选库和应用自带计算器，绝不由语言模型编造。两点说明：仅当站点管理员在服务器端配置了模型密钥时才会出现（看不到属正常）；且——与 labmate 其他功能不同——使用它会将你输入的消息发送到该服务器端模型以生成回复。'
   },
   guideDataSafetyTitle: { en: 'Data Safety', zh: '数据安全' },
   guideDataSafetyBody: {

@@ -60,6 +60,7 @@ function RefsTab({ onReplayTour }) {
     { num: '7', titleKey: 'guideNotebookTitle', bodyKey: 'guideNotebookBody' },
     { num: '8', titleKey: 'guideCalendarTitle', bodyKey: 'guideCalendarBody' },
     { num: '9', titleKey: 'guideToolsTitle', bodyKey: 'guideToolsBody' },
+    { num: '✦', titleKey: 'guideAgentTitle', bodyKey: 'guideAgentBody' },
     { num: '⌘', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
     { num: '+', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
     { num: '!', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
