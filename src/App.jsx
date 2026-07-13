@@ -158,10 +158,15 @@ function AppInner() {
     try {
       const result = await refresh();
       setRecipeVersion(v => v + 1);
-      toast.show(
-        t('recipesUpdated', lang) + ` (${result.total} total${result.newCount > 0 ? ', ' + result.newCount + ' new' : ''})`,
-        'success'
-      );
+      if (result.verified) {
+        toast.show(
+          t('recipesUpdated', lang) + ` (${result.total} total${result.newCount > 0 ? ', ' + result.newCount + ' new' : ''})`,
+          'success'
+        );
+      } else {
+        // Remote unavailable or unverified — we fell back to the trusted local library.
+        toast.show(lang === 'zh' ? '已使用本地配方（远程不可用或未通过校验）' : 'Using local recipes (remote unavailable or unverified)', 'info');
+      }
     } catch (err) {
       toast.show(lang === 'zh' ? '刷新失败' : 'Refresh failed', 'error');
     }

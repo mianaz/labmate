@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <!-- Content Security Policy (enforcing). Same-origin only — the app makes no
-       cross-origin requests (recipes load from the same-origin bundle; the old
-       cross-origin GitHub recipe sync was removed for supply-chain integrity).
-       'unsafe-inline' is required for the app's inline React styles; no eval in the
-       bundle so script-src stays 'self'; font-src allows data: because Vite inlines
-       small @fontsource woff2 subsets. NOTE: frame-ancestors / report-to are
-       header-only (ignored in <meta>) — set those on the nginx response when
-       promoting this. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'" />
+  <!-- Content Security Policy (enforcing). Cross-origin is allow-listed narrowly:
+       connect-src adds raw.githubusercontent.com (the recipe library + its signed
+       manifest, verified fail-closed app-side — see recipeVerify.js) and
+       cloudflareinsights.com (Cloudflare Web Analytics beacon reporting);
+       script-src adds static.cloudflareinsights.com (the beacon script, injected
+       at the Cloudflare edge). 'unsafe-inline' is required for the app's inline
+       React styles; no eval in the bundle. font-src allows data: because Vite
+       inlines small @fontsource woff2 subsets. NOTE: keep connect-src/script-src
+       in sync with the nginx response header; frame-ancestors / report-to are
+       header-only (ignored in <meta>). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://raw.githubusercontent.com https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'" />
   <title>bioinfospace labmate</title>
   <!-- %BASE_URL% (not a bare-relative href) — these must resolve from the app
        root regardless of how many /locale/tab segments deep the current page
