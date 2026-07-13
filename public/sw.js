@@ -66,23 +66,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Google Fonts: cache-first
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
   // App shell: network-first, falling back to the cached shell.
   // `mode === 'navigate'` (not just an index.html/recipes.json/'/' suffix match)
   // covers every locale-prefixed deep link (/labmate/en/recipes, /labmate/zh/calc,
