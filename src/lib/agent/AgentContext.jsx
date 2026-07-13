@@ -5,8 +5,8 @@
 // Provides the tool `ctx` (closing over recipes/lang/inventory/Dexie/download),
 // runs a user turn through runAgentTurn() with the owner-proxy adapter, and
 // surfaces chat state + a permission-request promise for the UI (AgentPanel) to
-// render. NOT mounted in App.jsx yet — mounting has zero visual effect but is
-// deferred until the Phase-1 UI consumes it, so the current bundle stays inert.
+// render. Mounted in App.jsx (AgentProvider wraps AgentPanel) — this is the
+// LIVE agent path the chat UI drives, not a dormant module.
 //
 // Cross-tab refresh: agent writes go straight to Dexie via saveExperimentRecord;
 // we emit a `labmate:experiments-changed` window event so open Notebook/Calendar
