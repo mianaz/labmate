@@ -116,4 +116,8 @@ LabMate implements the shared Bioinfospace **v2 design system — "Lab-Manual Br
 
 The LabMate application source code is licensed under the **MIT License** — free to use, copy, modify, and distribute (including commercially) with attribution. See [LICENSE](LICENSE).
 
-Bundled recipe/protocol data (`recipes.json`) originates from the separate [labmate-recipes](https://github.com/mianaz/labmate-recipes) dataset and is provided under that repository's own terms; some protocols are adapted from manufacturer and published sources and are not claimed as original work.
+Bundled recipe/protocol data (`recipes.json`) comes from the separate [labmate-recipes](https://github.com/mianaz/labmate-recipes) dataset, licensed **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)** (attribution). The underlying procedures are adapted and restated from third-party sources (protocols.io, academic journals, manufacturer manuals) and are not claimed as original work — see that repo's LICENSE for provenance.
+
+## Disclaimer
+
+LabMate is an independent community project and is **not affiliated with, endorsed by, or sponsored by** any of the commercial products, reagents, kits, or instruments it references — including but not limited to Thermo Fisher Scientific, Invitrogen / TRIzol, New England Biolabs, Promega, QIAGEN, Cell Signaling Technology, Abcam, ATCC, 10x Genomics, BioLegend, Tecan, BioTek, and Molecular Devices. All product names and trademarks are the property of their respective owners and are used only to identify the reagents or instruments a protocol or tool refers to. Protocols and calculators are provided for reference, "as is" and without warranty — always follow your institution's safety guidance and the manufacturer's current instructions, and validate before laboratory use.
