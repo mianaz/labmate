@@ -114,6 +114,6 @@ LabMate implements the shared Bioinfospace **v2 design system — "Lab-Manual Br
 
 ## License
 
-The LabMate application source code is licensed under the **PolyForm Noncommercial License 1.0.0** — free to use, modify, and share for any **noncommercial** purpose, as long as you keep the license and attribution notices. Commercial use requires a separate license. See [LICENSE](LICENSE).
+The LabMate application source code is licensed under the **MIT License** — free to use, copy, modify, and distribute (including commercially) with attribution. See [LICENSE](LICENSE).
 
 Bundled recipe/protocol data (`recipes.json`) originates from the separate [labmate-recipes](https://github.com/mianaz/labmate-recipes) dataset and is provided under that repository's own terms; some protocols are adapted from manufacturer and published sources and are not claimed as original work.
