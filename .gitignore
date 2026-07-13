@@ -28,6 +28,17 @@ index.html.pre-deploy-*
 # Legacy vendor libs (now bundled by Vite)
 vendor/
 
+# Native shells (see docs/NATIVE-SHELL.md) — generated in a dev env, not committed
+src-tauri/target/
+src-tauri/gen/
+/android/
+/ios/
+.gradle/
+*.keystore
+*.jks
+DerivedData/
+xcuserdata/
+
 # Internal dev planning docs
 TASKS.md
 REFACTOR_PLAN.md
