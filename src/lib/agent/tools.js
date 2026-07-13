@@ -215,6 +215,9 @@ const createExperiment = {
     const saved = await ctx.saveExperiment(buildExperimentEntry({
       title: args?.title, titleZh: args?.titleZh, protocolRef: ref,
       date: args?.date, objectives: args?.objectives, steps, reagents,
+      // verified:true holds because ctx.recipes can only come from the trusted
+      // same-origin library — RecipeProvider disables the unverified remote path.
+      // When a signed-remote source is re-enabled, gate this on the verify result.
       provenance: { source: 'library', protocolRef: ref, verified: true },
     }));
     return { id: saved.id, title: saved.title, date: saved.date, status: saved.status, source: 'library', stepCount: steps.length };
