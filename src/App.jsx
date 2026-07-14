@@ -7,6 +7,7 @@ import db from './lib/db.js';
 import ToastProvider, { useToast } from './components/Toast.jsx';
 import FavProvider from './components/Favorites.jsx';
 import { TimerProvider, TimerBar, QuickTimerButton } from './components/Timer.jsx';
+import QuickCalculatorButton from './features/calc/QuickCalculatorButton.jsx';
 import RecipeProvider, { useRecipes } from './lib/RecipeProvider.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Header from './components/Header.jsx';
@@ -424,6 +425,7 @@ function AppInner() {
         </footer>
         <TimerBar />
         <QuickTimerButton />
+        <QuickCalculatorButton agentAvailable={agentAvailable} />
         <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} lang={lang} />
         <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab}
           lang={lang} setLang={switchLocale} onRefreshRecipes={refreshRecipes} isSyncing={syncing}

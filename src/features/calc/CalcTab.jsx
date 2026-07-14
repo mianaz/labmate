@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { t, useLang } from '../../i18n/index.js';
+import ScientificCalc from './ScientificCalc.jsx';
 import DilutionCalc from './DilutionCalc.jsx';
 import MassCalc from './MassCalc.jsx';
 import MolarityCalc from './MolarityCalc.jsx';
@@ -16,6 +17,7 @@ export default function CalcTab({ initialMode }) {
 
   const lang = useLang();
   const modes = [
+    { id: 'scientific', task: t('calcTaskScientific', lang), formula: 'sin \u00b7 log \u00b7 x\u02b8' },
     { id: 'dilution', task: t('calcTaskDilution', lang), formula: 'C\u2081V\u2081 = C\u2082V\u2082' },
     { id: 'mass', task: t('calcTaskMass', lang), formula: 'm = MW \u00D7 C \u00D7 V' },
     { id: 'molarity', task: t('calcTaskMolarity', lang), formula: 'M = m / (MW \u00D7 V)' },
@@ -49,6 +51,7 @@ export default function CalcTab({ initialMode }) {
           </div>
         </div>
         <div className="lg:col-span-9">
+          {mode === 'scientific' && <ScientificCalc />}
           {mode === 'dilution' && <DilutionCalc />}
           {mode === 'mass' && <MassCalc />}
           {mode === 'molarity' && <MolarityCalc />}
@@ -74,6 +77,7 @@ export default function CalcTab({ initialMode }) {
             ))}
           </div>
         </div>
+        {mode === 'scientific' && <ScientificCalc />}
         {mode === 'dilution' && <DilutionCalc />}
         {mode === 'mass' && <MassCalc />}
         {mode === 'molarity' && <MolarityCalc />}
