@@ -10,6 +10,7 @@ import {
   unitConvert,
   temperatureConvert,
   calcGel,
+  evalExpression,
 } from '../calculators.js';
 
 // ═══════════════════════════════════════════════
@@ -494,5 +495,68 @@ describe('calcGel', () => {
     for (let i = 0; i < gel10.length; i++) {
       expect(gel20[i].vol).toBeCloseTo(gel10[i].vol * 2, 2);
     }
+  });
+});
+
+// ═══════════════════════════════════════════════
+// Scientific Calculator: evalExpression
+// ═══════════════════════════════════════════════
+
+describe('evalExpression', () => {
+  it('basic arithmetic with precedence', () => {
+    expect(evalExpression('2+3*4')).toBe(14);
+    expect(evalExpression('(2+3)*4')).toBe(20);
+    expect(evalExpression('10/4')).toBe(2.5);
+    expect(evalExpression('7%3')).toBe(1);
+  });
+
+  it('normalizes pretty operators', () => {
+    expect(evalExpression('6×7')).toBe(42);
+    expect(evalExpression('84÷2')).toBe(42);
+    expect(evalExpression('5−2')).toBe(3);
+  });
+
+  it('unary minus binds looser than exponent (-3^2 = -9)', () => {
+    expect(evalExpression('-3^2')).toBe(-9);
+    expect(evalExpression('2^-2')).toBeCloseTo(0.25, 10);
+  });
+
+  it('exponent is right-associative', () => {
+    expect(evalExpression('2^3^2')).toBe(512); // 2^(3^2)
+  });
+
+  it('factorial (postfix)', () => {
+    expect(evalExpression('5!')).toBe(120);
+    expect(evalExpression('3!+1')).toBe(7);
+    expect(() => evalExpression('2.5!')).toThrow();
+  });
+
+  it('constants π and e', () => {
+    expect(evalExpression('π')).toBeCloseTo(Math.PI, 10);
+    expect(evalExpression('pi')).toBeCloseTo(Math.PI, 10);
+    expect(evalExpression('e')).toBeCloseTo(Math.E, 10);
+  });
+
+  it('trig in radians by default, degrees when requested', () => {
+    expect(evalExpression('sin(0)')).toBeCloseTo(0, 10);
+    expect(evalExpression('cos(π)')).toBeCloseTo(-1, 10);
+    expect(evalExpression('sin(30)', { deg: true })).toBeCloseTo(0.5, 10);
+    expect(evalExpression('asin(1)', { deg: true })).toBeCloseTo(90, 10);
+  });
+
+  it('log, ln, sqrt', () => {
+    expect(evalExpression('log(1000)')).toBeCloseTo(3, 10);
+    expect(evalExpression('ln(e)')).toBeCloseTo(1, 10);
+    expect(evalExpression('√(16)')).toBe(4);
+    expect(evalExpression('sqrt(9)+1')).toBe(4);
+  });
+
+  it('throws on malformed input rather than returning garbage', () => {
+    expect(() => evalExpression('2+')).toThrow();
+    expect(() => evalExpression('(2+3')).toThrow();
+    expect(() => evalExpression('2 3')).toThrow();
+    expect(() => evalExpression('')).toThrow();
+    expect(() => evalExpression('1/0')).toThrow(); // non-finite surfaced as error
+    expect(() => evalExpression('foo(2)')).toThrow();
   });
 });

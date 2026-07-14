@@ -268,3 +268,149 @@ export function calcGel(percentage, totalVolume, type = 'resolving') {
     { name: 'TEMED', vol: temedVol * 1000, unit: 'µL' },
   ];
 }
+
+// ══════════════════════════════════════════════
+// Scientific expression evaluator
+// Safe recursive-descent parser (no eval / Function).
+// Grammar (lowest → highest precedence):
+//   expr    := term (('+' | '-') term)*
+//   term    := factor (('*' | '/' | '%') factor)*
+//   factor  := ('-' | '+') factor | power          // unary sign binds looser than ^
+//   power   := postfix ('^' factor)?               // right-associative
+//   postfix := primary ('!')*                       // factorial
+//   primary := number | const | func '(' expr ')' | '(' expr ')'
+// ══════════════════════════════════════════════
+
+function factorial(n) {
+  if (n < 0 || !Number.isInteger(n)) throw new Error('factorial requires a non-negative integer');
+  if (n > 170) return Infinity; // beyond Number range
+  let r = 1;
+  for (let i = 2; i <= n; i++) r *= i;
+  return r;
+}
+
+/**
+ * Evaluate a mathematical expression string.
+ * Supports + - × ÷ ^, %, parentheses, factorial (!), constants (π/pi, e),
+ * and functions: sin cos tan asin acos atan sinh cosh tanh ln log log2 sqrt cbrt exp abs.
+ * @param {string} input
+ * @param {{deg?: boolean}} opts - deg: interpret/return trig angles in degrees (default radians)
+ * @returns {number} the numeric result
+ * @throws {Error} on malformed input
+ */
+export function evalExpression(input, { deg = false } = {}) {
+  const src = String(input)
+    .replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-')
+    .replace(/π/g, 'pi').replace(/√/g, 'sqrt');
+
+  const toRad = (x) => (deg ? (x * Math.PI) / 180 : x);
+  const fromRad = (x) => (deg ? (x * 180) / Math.PI : x);
+  const FUNCS = {
+    sin: (x) => Math.sin(toRad(x)), cos: (x) => Math.cos(toRad(x)), tan: (x) => Math.tan(toRad(x)),
+    asin: (x) => fromRad(Math.asin(x)), acos: (x) => fromRad(Math.acos(x)), atan: (x) => fromRad(Math.atan(x)),
+    sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
+    ln: Math.log, log: Math.log10, log2: Math.log2,
+    sqrt: Math.sqrt, cbrt: Math.cbrt, exp: Math.exp, abs: Math.abs,
+  };
+  const CONSTS = { pi: Math.PI, e: Math.E };
+
+  // Tokenize
+  const tokens = [];
+  let i = 0;
+  while (i < src.length) {
+    const ch = src[i];
+    if (ch === ' ') { i++; continue; }
+    if (/[0-9.]/.test(ch)) {
+      let num = '';
+      while (i < src.length && /[0-9.]/.test(src[i])) num += src[i++];
+      if ((num.match(/\./g) || []).length > 1) throw new Error('malformed number');
+      tokens.push({ type: 'num', value: parseFloat(num) });
+      continue;
+    }
+    if (/[a-z]/i.test(ch)) {
+      let name = '';
+      while (i < src.length && /[a-z0-9]/i.test(src[i])) name += src[i++];
+      tokens.push({ type: 'name', value: name.toLowerCase() });
+      continue;
+    }
+    if ('+-*/%^()!'.includes(ch)) { tokens.push({ type: 'op', value: ch }); i++; continue; }
+    throw new Error('unexpected character: ' + ch);
+  }
+
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const eat = (val) => {
+    const tk = tokens[pos];
+    if (!tk || (val !== undefined && tk.value !== val)) throw new Error('expected ' + val);
+    pos++;
+    return tk;
+  };
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (peek() && (peek().value === '+' || peek().value === '-')) {
+      const op = eat().value;
+      const rhs = parseTerm();
+      val = op === '+' ? val + rhs : val - rhs;
+    }
+    return val;
+  }
+  function parseTerm() {
+    let val = parseFactor();
+    while (peek() && (peek().value === '*' || peek().value === '/' || peek().value === '%')) {
+      const op = eat().value;
+      const rhs = parseFactor();
+      val = op === '*' ? val * rhs : op === '/' ? val / rhs : val % rhs;
+    }
+    return val;
+  }
+  function parseFactor() {
+    if (peek() && (peek().value === '-' || peek().value === '+')) {
+      const op = eat().value;
+      const v = parseFactor();
+      return op === '-' ? -v : v;
+    }
+    return parsePower();
+  }
+  function parsePower() {
+    const base = parsePostfix();
+    if (peek() && peek().value === '^') {
+      eat('^');
+      return Math.pow(base, parseFactor()); // right-associative, allows ^-exp
+    }
+    return base;
+  }
+  function parsePostfix() {
+    let val = parsePrimary();
+    while (peek() && peek().value === '!') { eat('!'); val = factorial(val); }
+    return val;
+  }
+  function parsePrimary() {
+    const tk = peek();
+    if (!tk) throw new Error('unexpected end of expression');
+    if (tk.type === 'num') { eat(); return tk.value; }
+    if (tk.value === '(') { eat('('); const v = parseExpr(); eat(')'); return v; }
+    if (tk.type === 'name') {
+      eat();
+      if (peek() && peek().value === '(') {
+        const fn = FUNCS[tk.value];
+        if (!fn) throw new Error('unknown function: ' + tk.value);
+        eat('('); const arg = parseExpr(); eat(')');
+        return fn(arg);
+      }
+      if (tk.value in CONSTS) return CONSTS[tk.value];
+      throw new Error('unknown identifier: ' + tk.value);
+    }
+    throw new Error('unexpected token: ' + tk.value);
+  }
+
+  if (tokens.length === 0) throw new Error('empty expression');
+  const result = parseExpr();
+  if (pos !== tokens.length) throw new Error('unexpected trailing input');
+  if (!Number.isFinite(result)) {
+    if (Number.isNaN(result)) throw new Error('result is not a number');
+    // ±Infinity (e.g. 1/0) — surface as an error for the UI
+    throw new Error('result is not finite');
+  }
+  return result;
+}
