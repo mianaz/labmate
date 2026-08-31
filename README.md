@@ -121,3 +121,6 @@ Bundled recipe/protocol data (`recipes.json`) comes from the separate [labmate-r
 ## Disclaimer
 
 LabMate is an independent community project and is **not affiliated with, endorsed by, or sponsored by** any of the commercial products, reagents, kits, or instruments it references — including but not limited to Thermo Fisher Scientific, Invitrogen / TRIzol, New England Biolabs, Promega, QIAGEN, Cell Signaling Technology, Abcam, ATCC, 10x Genomics, BioLegend, Tecan, BioTek, and Molecular Devices. All product names and trademarks are the property of their respective owners and are used only to identify the reagents or instruments a protocol or tool refers to. Protocols and calculators are provided for reference, "as is" and without warranty — always follow your institution's safety guidance and the manufacturer's current instructions, and validate before laboratory use.
+
+
+<!-- Security scan triggered at 2026-08-31 17:15:50 -->
