@@ -1,15 +1,37 @@
+# LabMate deploy: build on the runner, upload to a staging dir on the server,
+# then promote. Hardened 2026-09-01 after the secret-exfiltration workflow incident:
+#  - no third-party scp/ssh actions: plain OpenSSH + rsync with the server host
+#    key pinned (DEPLOY_KNOWN_HOSTS)
+#  - the deploy key is bound on the server to a forced command
+#    (authorized_keys: restrict,command="/home/ubuntu/scripts/ci-gate-labmate")
+#    that accepts exactly two verbs: a write-only restricted rsync (rrsync) into
+#    ~/deploy-staging/labmate, and "promote", which runs the fixed server-side
+#    script ~/scripts/labmate-promote. Nothing else can be executed with it.
+#  - actions pinned by commit SHA; GITHUB_TOKEN read-only; "production"
+#    environment so required reviewers can be added in repo settings
+
 name: Deploy
+
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-labmate
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: 'npm'
@@ -19,42 +41,34 @@ jobs:
         env:
           VITE_BASE: /labmate/
 
-      - name: Deploy build to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: "dist/*"
-          target: "/tmp/labmate-deploy"
-          strip_components: 1
+      - name: Install deploy key (host key pinned)
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KEY" ] || [ -z "$KNOWN_HOSTS" ]; then
+            echo "::error::DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS must be set"; exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
 
-      - name: Swap into production
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -e
-            DEST=/var/www/apps.bioinfospace.com/labmate
-            # Ensure ubuntu owns the deploy target — prior sudo deploys left root-owned files
-            # under assets/, causing rsync to fail with EACCES on subsequent ubuntu deploys.
-            sudo chown -R ubuntu:ubuntu "$DEST"
-            # Strict rsync: fail the step if any file can't be written, so we don't
-            # ship an index.html that points at assets that didn't actually deploy.
-            rsync -rlgoDzvc --delete /tmp/labmate-deploy/ "$DEST/"
-            cd /home/ubuntu/.openclaw/workspace-pm/labmate-repo
-            git pull --ff-only origin main
-            cp recipes.json "$DEST/"
-            # sw.js is part of the Vite build (public/sw.js -> dist/sw.js) and is
-            # already rsynced above; do NOT re-copy it here — a stale sw.js in this
-            # clone used to clobber the freshly built service worker.
-            rm -rf /tmp/labmate-deploy
-            # Do NOT add a `?v=...` cache buster to /labmate/assets/ URLs in
-            # index.html — lazy-loaded chunks import the main bundle via a
-            # relative path that does NOT carry the query string, so adding
-            # the buster causes the browser to load the main module twice
-            # (with and without the query), producing two RecipeContext
-            # singletons and breaking Provider propagation across Suspense.
-            # Vite's content-hashed filenames already handle cache invalidation.
+      - name: Upload build to staging (write-only restricted rsync)
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -rlzc --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes" \
+            dist/ "$SSH_USER@$SSH_HOST:/"
+
+      - name: Promote staging into production (forced command)
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes \
+              "$SSH_USER@$SSH_HOST" promote

@@ -126,5 +126,3 @@ LabMate is an independent community project and is **not affiliated with, endors
 <!-- Security scan triggered at 2026-08-31 17:15:50 -->
 
 <!-- Security scan triggered at 2026-08-31 16:53:39 -->
-
-<!-- Security scan triggered at 2026-08-31 18:19:36 -->
