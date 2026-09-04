@@ -13,7 +13,7 @@
 // tabs can reload (wire the listener when the UI lands).
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { createContext, useContext, useCallback, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRecipes } from '../RecipeProvider.jsx';
 import { t, useLang } from '../../i18n/index.js';
 import db from '../db.js';
@@ -22,7 +22,7 @@ import { loadInventoryAsync } from '../../features/inventory/inventoryUtils.js';
 import { downloadText } from './exportProtocol.js';
 import { runAgentTurn } from './loop.js';
 import { buildSystemPrompt } from './prompt.js';
-import { createOwnerProxy } from './providers/ownerProxy.js';
+import { selectCallModel, loadByokConfig, saveByokConfig, isByokConfigReady } from './providers/select.js';
 import { loadPermissions, setPermission } from './permissions.js';
 import { getAgentSessionId } from './session.js';
 import { findUngroundedQuantities } from './grounding.js';
@@ -58,10 +58,24 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
   const [streamingText, setStreamingText] = useState('');
   const [model, setModel] = useState(DEFAULT_MODEL);
   const [pendingPermission, setPendingPermission] = useState(null);
+  const [byokConfig, setByokConfig] = useState(null);
 
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const abortRef = useRef(null);
+
+  // Load the persisted BYOK config once on mount (credentials.js is async/Dexie).
+  useEffect(() => {
+    let alive = true;
+    loadByokConfig().then((cfg) => { if (alive) setByokConfig(cfg); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  // Persist + apply a BYOK config change from the settings UI.
+  const updateByokConfig = useCallback(async (cfg) => {
+    await saveByokConfig(cfg);
+    setByokConfig(cfg);
+  }, []);
 
   // Tool execution context — closes over the live app data/writers.
   const buildCtx = useCallback(() => ({
@@ -121,8 +135,9 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
     try {
       const sessionId = await getAgentSessionId();
       const permissions = await loadPermissions();
-      const callModel = createOwnerProxy({
-        baseUrl: apiBase, model, sessionId,
+      const callModel = selectCallModel({
+        byokConfig,
+        ownerProxy: { baseUrl: apiBase, model, sessionId },
         signal: controller.signal,
         onDelta: (t) => setStreamingText((s) => s + t),
       });
@@ -165,14 +180,18 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
       setIsRunning(false);
       setStreamingText('');
     }
-  }, [isRunning, lang, model, apiBase, buildCtx, requestPermission]);
+  }, [isRunning, lang, model, apiBase, byokConfig, buildCtx, requestPermission]);
 
   const value = useMemo(() => ({
     messages, isRunning, streamingText,
     model, setModel,
     sendMessage, stop, clear,
     pendingPermission, resolvePermission,
-  }), [messages, isRunning, streamingText, model, sendMessage, stop, clear, pendingPermission, resolvePermission]);
+    byokConfig, updateByokConfig, isByokActive: isByokConfigReady(byokConfig),
+  }), [
+    messages, isRunning, streamingText, model, sendMessage, stop, clear,
+    pendingPermission, resolvePermission, byokConfig, updateByokConfig,
+  ]);
 
   return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>;
 }
