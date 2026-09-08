@@ -98,7 +98,14 @@ Recipe and protocol content comes from a separate repo, [`mianaz/labmate-recipes
 
 ## The Assistant
 
-The **Assistant** is capability-gated: its UI (launcher, panel, `⌘/Ctrl-J`) only appears when the backend reports a configured model key — it probes `GET /api/labmate/agent/models` at load and stays hidden otherwise (`VITE_AGENT_ENABLED=1`/`0` forces it). In production the model calls are relayed by the Bioinfospace site backend (an owner-key proxy) — the browser never holds a model key. Bio content is retrieval-only, calculator numbers are computed deterministically, and write actions go through a per-tool permission gate. The core logic in `src/lib/agent/` is provider- and DOM-agnostic and unit-tested with a scripted fake model.
+The **Assistant** is capability-gated: its UI (launcher, panel, `⌘/Ctrl-J`) only appears when at least one model lane is usable — it probes `GET /api/labmate/agent/models` at load AND checks for a saved bring-your-own-key config, staying hidden if neither is available (`VITE_AGENT_ENABLED=1`/`0` forces it). Bio content is retrieval-only, calculator numbers are computed deterministically, and write actions go through a per-tool permission gate. The core logic in `src/lib/agent/` is provider- and DOM-agnostic and unit-tested with a scripted fake model.
+
+Two model lanes:
+
+- **Owner proxy (default).** In production the model calls are relayed by the Bioinfospace site backend (an owner-key proxy) — the browser never holds a model key.
+- **Bring your own key (BYOK).** The gear in the assistant header opens **Provider settings**, where you can point the assistant at your own provider instead: presets for OpenRouter, Groq, DeepSeek, Gemini (OpenAI-compatible), Anthropic (direct), local Ollama / LM Studio, or a fully custom OpenAI-compatible endpoint, with a model-list fetch and a test-connection probe. **Privacy:** with BYOK, chat messages *and tool results* go straight from the browser to the provider you chose (local endpoints excepted — those never leave the device). Results of privacy-sensitive tools (e.g. inventory) are redacted before egress by default (`src/lib/agent/egress.js`); a per-config toggle can disable redaction, with an explicit warning. The key + config are stored in the Dexie `credentials` table (`src/lib/credentials.js`) — on-device only, never in `localStorage`, and excluded from the app backup file.
+
+**Self-hosting note:** the CSP in `index.vite.html` allow-lists `connect-src` for the preset provider hosts and the Ollama/LM Studio localhost ports. A *custom* BYOK endpoint on any other host will be blocked by CSP until you add that host to the `connect-src` list in `index.vite.html` (and to the matching nginx CSP header, if you serve one).
 
 ## Deployment
 

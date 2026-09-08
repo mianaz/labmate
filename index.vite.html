@@ -12,8 +12,13 @@
        React styles; no eval in the bundle. font-src allows data: because Vite
        inlines small @fontsource woff2 subsets. NOTE: keep connect-src/script-src
        in sync with the nginx response header; frame-ancestors / report-to are
-       header-only (ignored in <meta>). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://raw.githubusercontent.com https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'" />
+       header-only (ignored in <meta>).
+       BYOK (assistant "bring your own key") adds the preset provider hosts to
+       connect-src — OpenRouter, Groq, DeepSeek, Gemini, Anthropic — plus the
+       localhost ports for Ollama (11434) and LM Studio (1234). A CUSTOM BYOK
+       endpoint beyond these needs its host appended here (and in the nginx
+       header) when self-hosting — see README "The Assistant". -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://raw.githubusercontent.com https://cloudflareinsights.com https://openrouter.ai https://api.groq.com https://api.deepseek.com https://generativelanguage.googleapis.com https://api.anthropic.com http://localhost:11434 http://localhost:1234; worker-src 'self'; manifest-src 'self'" />
   <title>bioinfospace labmate</title>
   <!-- %BASE_URL% (not a bare-relative href) — these must resolve from the app
        root regardless of how many /locale/tab segments deep the current page
