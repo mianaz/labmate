@@ -82,6 +82,20 @@ describe('AgentPanel wiring', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('replaces the model select with the BYOK model badge when BYOK is active, and the gear opens settings', () => {
+    agentState = {
+      ...agentState,
+      isByokActive: true,
+      byokConfig: { enabled: true, preset: 'groq', baseUrl: 'https://api.groq.com/openai/v1', apiKey: 'k', model: 'llama-3.3-70b' },
+      updateByokConfig: vi.fn(),
+    };
+    renderPanel();
+    expect(screen.queryByRole('combobox', { name: 'Model' })).not.toBeInTheDocument();
+    expect(screen.getByText('llama-3.3-70b')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Provider settings' }));
+    expect(screen.getByText('Bring your own key')).toBeInTheDocument();
+  });
+
   it('shows the empty state (intro + examples) when there are no messages', () => {
     agentState = { ...agentState, messages: [], isRunning: false, streamingText: '', pendingPermission: null };
     renderPanel();

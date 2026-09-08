@@ -777,6 +777,31 @@ export const translations = {
   agentAllowOnce: { en: 'Allow once', zh: '允许一次' },
   agentAllowRemember: { en: 'Allow & remember', zh: '允许并记住' },
   agentDeny: { en: 'Deny', zh: '拒绝' },
+
+  // ── Agent: BYOK provider settings ───────────────────────────────────────────
+  agentByokSettings: { en: 'Provider settings', zh: '模型服务设置' },
+  agentByokTitle: { en: 'Bring your own key', zh: '使用自己的 API 密钥' },
+  agentByokIntro: { en: 'Connect the assistant to your own AI provider or a local model server. Your key is stored only on this device and sent only to the provider you choose.', zh: '将助手连接到你自己的 AI 服务商或本地模型服务。密钥仅保存在本设备上，且只发送给你选择的服务商。' },
+  agentByokEnable: { en: 'Use my own AI provider', zh: '使用我自己的 AI 服务商' },
+  agentByokPreset: { en: 'Provider', zh: '服务商' },
+  agentByokBaseUrl: { en: 'Base URL', zh: '接口地址（Base URL）' },
+  agentByokApiKey: { en: 'API key', zh: 'API 密钥' },
+  agentByokApiKeyLocal: { en: 'Local endpoint — no API key needed.', zh: '本地服务，无需 API 密钥。' },
+  agentByokModel: { en: 'Model', zh: '模型' },
+  agentByokFetchModels: { en: 'Fetch models', zh: '获取模型列表' },
+  agentByokModelsFetched: { en: 'Found {n} models.', zh: '找到 {n} 个模型。' },
+  agentByokFetchFail: { en: 'Could not fetch models', zh: '无法获取模型列表' },
+  agentByokTest: { en: 'Test connection', zh: '测试连接' },
+  agentByokTesting: { en: 'Testing…', zh: '测试中…' },
+  agentByokTestOk: { en: 'Connection OK.', zh: '连接成功。' },
+  agentByokTestFail: { en: 'Connection failed', zh: '连接失败' },
+  agentByokDisclosure: { en: 'With your own key, your chat messages AND tool results (e.g. protocol searches, calculator output) are sent directly from this browser to the provider you chose, under that provider’s privacy policy — not through the LabMate server.', zh: '使用自己的密钥时，你的聊天内容和工具结果（如方案检索、计算器输出）会从浏览器直接发送给你选择的服务商，适用其隐私政策——不经过 LabMate 服务器。' },
+  agentByokLocalNote: { en: 'Local endpoint: requests stay on this device — nothing is sent to a cloud provider, and no redaction is needed.', zh: '本地服务：请求不离开本设备——不会发送到任何云服务商，也无需脱敏。' },
+  agentByokRedaction: { en: 'Redact on-device data before sending (recommended)', zh: '发送前对本机数据脱敏（推荐）' },
+  agentByokRedactionWarn: { en: 'Warning: with redaction off, private on-device data (e.g. exact inventory locations and quantities) is sent to the provider in full.', zh: '警告：关闭脱敏后，本机私密数据（如库存的具体位置和数量）将完整发送给服务商。' },
+  agentByokSave: { en: 'Save', zh: '保存' },
+  agentByokCancel: { en: 'Cancel', zh: '取消' },
+  agentByokActiveBadge: { en: 'Using your own key', zh: '正在使用你自己的密钥' },
 };
 
 export const NOTES_EN = {

@@ -2,7 +2,7 @@
 // the presentational pieces, and hosts the permission dialog. Portaled to <body>.
 // Desktop (≥768px): floating card anchored above the launcher FAB.
 // Mobile (<768px): full-screen overlay. Neither reflows page content (fixed).
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { t, useLang } from '../../i18n/index.js';
 import { useIsMobile } from '../../hooks/useMediaQuery.js';
@@ -12,6 +12,7 @@ import AgentMessage from './AgentMessage.jsx';
 import ToolCallCard from './ToolCallCard.jsx';
 import PermissionDialog from './PermissionDialog.jsx';
 import AgentComposer from './AgentComposer.jsx';
+import AgentSettings, { SettingsGearIcon } from './AgentSettings.jsx';
 import { CloseIcon, NewChatIcon, SparkIcon } from './icons.jsx';
 
 // Roster mirrors the backend registry (agentModels.js). Keys must match exactly.
@@ -43,8 +44,10 @@ export default function AgentPanel({ open, onClose }) {
   const {
     messages, isRunning, streamingText, model, setModel,
     sendMessage, stop, clear, pendingPermission, resolvePermission,
+    byokConfig, isByokActive,
   } = useAgent();
 
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const scrollRef = useRef(null);
 
   // Map each tool result back to the args of the assistant call that produced it.
@@ -120,6 +123,17 @@ export default function AgentPanel({ open, onClose }) {
           {t('agentTitle', lang)}
         </span>
         <div className="flex items-center gap-1.5 ml-auto">
+          {isByokActive ? (
+            // BYOK lane: the saved config decides the model — show it instead of
+            // the owner-proxy roster (which wouldn't apply).
+            <span className="mono" title={t('agentByokActiveBadge', lang)} style={{
+              fontSize: '0.68rem', padding: '0.2rem 0.35rem', background: 'var(--bg-2)',
+              border: '2px solid var(--border)', color: 'var(--accent)', maxWidth: '9.5rem',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {byokConfig?.model}
+            </span>
+          ) : (<>
           <label className="sr-only" htmlFor="agent-model-select">{t('agentModel', lang)}</label>
           <select
             id="agent-model-select"
@@ -136,6 +150,13 @@ export default function AgentPanel({ open, onClose }) {
               <option key={m.key} value={m.key}>{m.label} · {m.badge}</option>
             ))}
           </select>
+          </>)}
+          <button type="button" onClick={() => setSettingsOpen(true)}
+            title={t('agentByokSettings', lang)} aria-label={t('agentByokSettings', lang)}
+            className="flex items-center justify-center"
+            style={{ width: '2rem', height: '2rem', color: 'var(--text-muted)', border: '2px solid var(--border)', background: 'var(--card)' }}>
+            <SettingsGearIcon size={15} />
+          </button>
           <button type="button" onClick={clear} title={t('agentClear', lang)} aria-label={t('agentClear', lang)}
             className="flex items-center justify-center"
             style={{ width: '2rem', height: '2rem', color: 'var(--text-muted)', border: '2px solid var(--border)', background: 'var(--card)' }}>
@@ -212,6 +233,7 @@ export default function AgentPanel({ open, onClose }) {
         </p>
       </div>
 
+      <AgentSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} lang={lang} />
       <PermissionDialog permission={pendingPermission} onResolve={resolvePermission} lang={lang} />
     </div>,
     document.body,
