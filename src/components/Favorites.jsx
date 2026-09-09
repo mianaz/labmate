@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback } from 'react';
+import { createContext, useContext, useCallback, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage.js';
 
 export const FavContext = createContext({ favs: [], toggle: () => {}, isFav: () => false, recent: [], addRecent: () => {} });
@@ -17,8 +17,9 @@ function FavProvider({ children }) {
       return next;
     });
   }, [setRecent]);
+  const value = useMemo(() => ({ favs, toggle, isFav, recent, addRecent }), [favs, toggle, isFav, recent, addRecent]);
   return (
-    <FavContext.Provider value={{ favs, toggle, isFav, recent, addRecent }}>
+    <FavContext.Provider value={value}>
       {children}
     </FavContext.Provider>
   );

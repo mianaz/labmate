@@ -14,9 +14,11 @@ import Header from './components/Header.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import MoreSheet from './components/MoreSheet.jsx';
 import InstallPrompt from './components/InstallPrompt.jsx';
-import AgentProvider from './lib/agent/AgentContext.jsx';
-import AgentLauncher from './features/agent/AgentLauncher.jsx';
-import AgentPanel from './features/agent/AgentPanel.jsx';
+// The agent stack (loop, prompt, proxy, permissions, grounding, tools) only mounts
+// when the backend probe succeeds, so keep it out of the initial chunk.
+const AgentProvider = lazy(() => import('./lib/agent/AgentContext.jsx'));
+const AgentLauncher = lazy(() => import('./features/agent/AgentLauncher.jsx'));
+const AgentPanel = lazy(() => import('./features/agent/AgentPanel.jsx'));
 import { useAgentAvailability } from './hooks/useAgentAvailability.js';
 
 // Eager load (always needed on first render)
@@ -197,11 +199,19 @@ function AppInner() {
       (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
       { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
-    const observe = () => document.querySelectorAll('.scroll-reveal:not(.visible)').forEach(el => observer.observe(el));
+    // Scope to <main> (the only place .scroll-reveal is rendered) and coalesce
+    // mutation bursts into one query per frame: an unscoped, undebounced observer
+    // on document.body re-scanned the whole DOM on every keystroke and timer tick.
+    const root = document.querySelector('main') || document.body;
+    const observe = () => root.querySelectorAll('.scroll-reveal:not(.visible)').forEach(el => observer.observe(el));
     observe();
-    const mo = new MutationObserver(observe);
-    mo.observe(document.body, { childList: true, subtree: true });
-    return () => { observer.disconnect(); mo.disconnect(); };
+    let scheduled = 0;
+    const mo = new MutationObserver(() => {
+      if (scheduled) return;
+      scheduled = requestAnimationFrame(() => { scheduled = 0; observe(); });
+    });
+    mo.observe(root, { childList: true, subtree: true });
+    return () => { observer.disconnect(); mo.disconnect(); if (scheduled) cancelAnimationFrame(scheduled); };
   }, []);
 
   // Sync <html lang>
@@ -432,10 +442,12 @@ function AppInner() {
           onOpenAgent={agentAvailable ? () => { setMoreOpen(false); setAgentOpen(true); } : undefined} />
         <InstallPrompt />
         {agentAvailable && (
-          <AgentProvider>
-            <AgentLauncher open={agentOpen} onToggle={() => setAgentOpen(o => !o)} />
-            <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
-          </AgentProvider>
+          <Suspense fallback={null}>
+            <AgentProvider>
+              <AgentLauncher open={agentOpen} onToggle={() => setAgentOpen(o => !o)} />
+              <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
+            </AgentProvider>
+          </Suspense>
         )}
         <div className="grain" aria-hidden="true" />
       </div>

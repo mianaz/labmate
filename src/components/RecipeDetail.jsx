@@ -134,7 +134,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
   // Find related protocol names (memoized — RECIPES lookup is O(n) per id)
   const relatedProtos = useMemo(() =>
     (recipe.relatedProtocols || []).map(pid => RECIPE_BY_ID[pid]).filter(Boolean),
-    [recipe.id]
+    [recipe.relatedProtocols, RECIPE_BY_ID]
   );
 
   return (

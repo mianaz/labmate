@@ -1,20 +1,27 @@
+import { memo } from 'react';
 import { t, useLang } from '../i18n/index.js';
 import { S_TEXT, S_MUTED } from '../lib/styleConstants.js';
 import { useFavs } from './Favorites.jsx';
 import { useToast } from './Toast.jsx';
 import { PROTOCOL_SUBCAT_BY_ID, CATEGORY_DISPLAY } from '../data/protocolCategories.js';
 
+const CAT_COLORS = {
+  buffer: { bg: 'var(--cat-buffer-bg)', text: 'var(--cat-buffer)' },
+  protocol: { bg: 'var(--cat-protocol-bg)', text: 'var(--cat-protocol)' },
+  staining: { bg: 'var(--cat-staining-bg)', text: 'var(--cat-staining)' },
+  media: { bg: 'var(--cat-media-bg)', text: 'var(--cat-media)' },
+};
+const DISC_KEYS = {
+  molecular: 'discMolecular', cell: 'discCell', protein: 'discProtein', rna_dna: 'discRnaDna',
+  immunology: 'discImmunology', microbiology: 'discMicrobiology', biochemistry: 'discBiochemistry',
+  histology: 'discHistology', genomics: 'discGenomics', general: 'discGeneral',
+};
+
 function RecipeCard({ recipe, onSelect, selected }) {
   const lang = useLang();
   const { isFav, toggle } = useFavs();
   const toast = useToast();
-  const catColors = {
-    buffer: { bg: 'var(--cat-buffer-bg)', text: 'var(--cat-buffer)' },
-    protocol: { bg: 'var(--cat-protocol-bg)', text: 'var(--cat-protocol)' },
-    staining: { bg: 'var(--cat-staining-bg)', text: 'var(--cat-staining)' },
-    media: { bg: 'var(--cat-media-bg)', text: 'var(--cat-media)' },
-  };
-  const cc = catColors[recipe.category] || catColors.buffer;
+  const cc = CAT_COLORS[recipe.category] || CAT_COLORS.buffer;
   const fav = isFav(recipe.id);
   return (
     <div
@@ -35,8 +42,7 @@ function RecipeCard({ recipe, onSelect, selected }) {
           <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: cc.text }}>
             {(() => {
               const disc = (recipe.discipline || [])[0];
-              const discLabels = { molecular: t('discMolecular', lang), cell: t('discCell', lang), protein: t('discProtein', lang), rna_dna: t('discRnaDna', lang), immunology: t('discImmunology', lang), microbiology: t('discMicrobiology', lang), biochemistry: t('discBiochemistry', lang), histology: t('discHistology', lang), genomics: t('discGenomics', lang), general: t('discGeneral', lang) };
-              if (disc && discLabels[disc]) return discLabels[disc];
+              if (disc && DISC_KEYS[disc]) return t(DISC_KEYS[disc], lang);
               const displayCat = recipe.category === 'protocol' ? (PROTOCOL_SUBCAT_BY_ID[recipe.id] || 'protocol') : recipe.category;
               const label = CATEGORY_DISPLAY[displayCat];
               return label ? (label[lang] || label.en) : displayCat;
@@ -51,4 +57,6 @@ function RecipeCard({ recipe, onSelect, selected }) {
   );
 }
 
-export default RecipeCard;
+// The list renders up to ~230 of these; memo so a toast, a favorite toggle or a
+// search keystroke elsewhere doesn't re-render every card.
+export default memo(RecipeCard);

@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { verifyRecipeManifest } from './recipeVerify.js';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 const BUFFER_CATEGORIES = ['buffer', 'staining', 'media'];
 
@@ -16,6 +15,10 @@ const BUFFER_CATEGORIES = ['buffer', 'staining', 'media'];
 //     A monotonic version floor guards against rollback. Any failure — offline,
 //     bad signature, hash mismatch, older version — falls back to the trusted
 //     bundled copy. An unverified remote payload never reaches the agent.
+// No cache-busting query on the same-origin fetch: nginx serves recipes.json with
+// `Cache-Control: no-cache` + an ETag, so a plain request revalidates to a 304,
+// and the service worker's network-first handler caches it under the canonical
+// URL (a random `?t=` made every offline lookup miss — see public/sw.js).
 const recipesUrl = () => import.meta.env.BASE_URL + 'recipes.json';
 const REMOTE_BASE = 'https://raw.githubusercontent.com/mianaz/labmate-recipes/main/dist/';
 const LAST_VERSION_KEY = 'labmate:recipesVersion'; // monotonic floor; localStorage is fine (not a secret)
@@ -30,6 +33,10 @@ export default function RecipeProvider({ children }) {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  // Ids shipped in the trusted bundle. A verified remote payload must still be a
+  // superset of these: user favorites, step progress and notebook entries are keyed
+  // by recipe id, so a library that silently drops ids would orphan that data.
+  const bundledIdsRef = useRef(null);
 
   // Derived data
   const bufferRecipes = useMemo(() => recipes.filter(r => BUFFER_CATEGORIES.includes(r.category)), [recipes]);
@@ -47,9 +54,10 @@ export default function RecipeProvider({ children }) {
     // prefixed routing (/labmate/en/recipes vs. the old /labmate/recipes) and
     // would 404. import.meta.env.BASE_URL is always '/labmate/' regardless of
     // route depth.
-    fetch(recipesUrl() + '?t=' + Date.now())
-      .then(res => res.json())
+    fetch(recipesUrl())
+      .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
       .then(data => {
+        if (!bundledIdsRef.current) bundledIdsRef.current = new Set(data.map(r => r.id));
         setRecipes(data);
         setLoading(false);
       })
@@ -61,9 +69,10 @@ export default function RecipeProvider({ children }) {
 
   // Fall back to the trusted same-origin library.
   const loadLocal = useCallback(async (prevLen) => {
-    const res = await fetch(recipesUrl() + '?t=' + Date.now());
+    const res = await fetch(recipesUrl());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    if (!bundledIdsRef.current) bundledIdsRef.current = new Set(data.map(r => r.id));
     setRecipes(data);
     return { total: data.length, newCount: Math.max(0, data.length - (prevLen ?? recipes.length)), verified: false };
   }, [recipes.length]);
@@ -76,9 +85,12 @@ export default function RecipeProvider({ children }) {
     setSyncing(true);
     const prevLen = recipes.length;
     try {
-      const [manifestRes, recipesRes] = await Promise.all([
-        fetch(REMOTE_BASE + 'manifest.json?t=' + Date.now()),
-        fetch(REMOTE_BASE + 'recipes.json?t=' + Date.now()),
+      // The verifier (ed25519 + sha512) is only needed here, so load it on demand
+      // instead of shipping ~60 KB of crypto in the initial chunk.
+      const [{ verifyRecipeManifest }, manifestRes, recipesRes] = await Promise.all([
+        import('./recipeVerify.js'),
+        fetch(REMOTE_BASE + 'manifest.json', { cache: 'no-cache' }),
+        fetch(REMOTE_BASE + 'recipes.json', { cache: 'no-cache' }),
       ]);
       if (!manifestRes.ok || !recipesRes.ok) throw new Error('remote_unavailable');
       const manifest = await manifestRes.json();
@@ -88,6 +100,10 @@ export default function RecipeProvider({ children }) {
       const lastSeen = Number(localStorage.getItem(LAST_VERSION_KEY) || 0);
       if (result.version < lastSeen) throw new Error('rollback');
       const data = JSON.parse(new TextDecoder().decode(recipesBytes));
+      if (!Array.isArray(data)) throw new Error('bad_payload');
+      const remoteIds = new Set(data.map(r => r?.id));
+      const missing = [...(bundledIdsRef.current || [])].filter(id => !remoteIds.has(id));
+      if (missing.length) throw new Error('missing_ids:' + missing.length);
       setRecipes(data);
       try { localStorage.setItem(LAST_VERSION_KEY, String(result.version)); } catch { /* storage off */ }
       return { total: data.length, newCount: Math.max(0, data.length - prevLen), verified: true };

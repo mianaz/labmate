@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { S_MUTED, S_INLINE_ICON } from '../../lib/styleConstants.js';
 import { loadCustomRecipes, saveCustomRecipes } from '../../hooks/useLocalStorage.js';
@@ -66,7 +66,7 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
         || (r.tags || []).some(t => t.includes(q));
       return matchCat && matchSearch;
     });
-  }, [search, selCat, favs, customRecipes]);
+  }, [search, selCat, favs, customRecipes, BUFFER_RECIPES]);
 
   const lang = useLang();
   const cats = [
@@ -85,12 +85,12 @@ function BuffersTab({ externalSelected, setExternalSelected, onCrossNavigate }) 
   // Recently used section (buffers only)
   const recentRecipes = useMemo(() => {
     return recent.map(id => BUFFER_RECIPES.find(r => r.id === id)).filter(Boolean).slice(0, 4);
-  }, [recent]);
+  }, [recent, BUFFER_RECIPES]);
 
-  function handleSelect(recipe) {
+  const handleSelect = useCallback((recipe) => {
     setSelected(recipe);
     addRecent(recipe.id);
-  }
+  }, [addRecent]);
 
   // Mobile: show detail view when selected (drill-down)
   const [mobileShowDetail, setMobileShowDetail] = useState(false);

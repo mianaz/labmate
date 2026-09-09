@@ -1,5 +1,5 @@
 // Timer system — TimerContext, TimerProvider, useTimers, TimerBar, QuickTimerButton
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { t, useLang } from '../i18n/index.js';
 import { S_MUTED, S_BG2 } from '../lib/styleConstants.js';
 import { useIsMobile } from '../hooks/useMediaQuery.js';
@@ -13,13 +13,18 @@ export const TimerContext = React.createContext();
 export function TimerProvider({ children }) {
   const [timers, setTimers] = useState([]);
 
-  const addTimer = (label, seconds) => {
+  const audioCtxRef = React.useRef(null);
+
+  // Stable mutators: the provider re-renders once a second while a timer runs,
+  // so every consumer (RecipeDetail among them) would otherwise re-render each
+  // tick just because these closures and the context object were recreated.
+  const addTimer = useCallback((label, seconds) => {
     const id = Date.now() + Math.random();
     setTimers(prev => [...prev, { id, label, totalSeconds: seconds, remaining: seconds, running: true, startedAt: Date.now() }]);
     return id;
-  };
+  }, []);
 
-  const removeTimer = (id) => {
+  const removeTimer = useCallback((id) => {
     setTimers(prev => {
       const next = prev.filter(t => t.id !== id);
       // Close AudioContext when no timers remain
@@ -29,12 +34,10 @@ export function TimerProvider({ children }) {
       }
       return next;
     });
-  };
-  const pauseTimer = (id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: false} : t));
-  const resumeTimer = (id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: true} : t));
-  const resetTimer = (id) => setTimers(prev => prev.map(t => t.id === id ? {...t, remaining: t.totalSeconds, running: false} : t));
-
-  const audioCtxRef = React.useRef(null);
+  }, []);
+  const pauseTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: false} : t)), []);
+  const resumeTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: true} : t)), []);
+  const resetTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, remaining: t.totalSeconds, running: false} : t)), []);
   const hasRunning = timers.some(t => t.running && t.remaining > 0);
 
   React.useEffect(() => {
@@ -72,7 +75,11 @@ export function TimerProvider({ children }) {
     return () => clearInterval(interval);
   }, [hasRunning]);
 
-  return React.createElement(TimerContext.Provider, { value: { timers, addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer } }, children);
+  const value = useMemo(
+    () => ({ timers, addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer }),
+    [timers, addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer]
+  );
+  return React.createElement(TimerContext.Provider, { value }, children);
 }
 
 export function useTimers() { return React.useContext(TimerContext); }

@@ -45,9 +45,14 @@ export default defineConfig({
     rollupOptions: {
       input: resolve(__dirname, 'index.vite.html'),
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'dexie': ['dexie'],
+        // Function form: the object form only matched the bare package entry, so
+        // `react-dom/client` (and with it ~500 KB of react-dom source) landed in
+        // the app chunk and was re-downloaded on every deploy.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)) return 'react-vendor';
+          if (id.includes('node_modules/dexie/')) return 'dexie';
+          return undefined;
         },
       },
     },

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labmate-v8';
+const CACHE_NAME = 'labmate-v9';
 
 // Install: precache essential shell
 self.addEventListener('install', (event) => {
@@ -89,7 +89,9 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+        // ignoreSearch: a request that carries a query string (e.g. a tracking or
+        // legacy `?t=` parameter) must still hit the precached canonical entry.
+        .catch(() => caches.match(event.request, { ignoreSearch: true }).then((cached) => cached || caches.match('./index.html')))
     );
     return;
   }

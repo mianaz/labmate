@@ -51,7 +51,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
       if (noteMatch) score += 2;
       return { recipe: r, score, nameMatch, compMatch, tagMatch };
     }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 15);
-  }, [query]);
+  }, [query, RECIPES, cachedCustom]);
 
   if (!isOpen) return null;
 
