@@ -8,10 +8,9 @@ const config: CapacitorConfig = {
   appId: 'com.bioinfospace.labmate',
   appName: 'LabMate',
   webDir: 'dist',
-  server: {
-    // Recipe/protocol content is fetched from the labmate-recipes repo at runtime.
-    allowNavigation: ['raw.githubusercontent.com'],
-  },
+  // No `server.allowNavigation`: the recipe sync uses fetch(), which needs no
+  // navigation allowance, and allowNavigation would expose the native bridge to
+  // every page served from raw.githubusercontent.com (any GitHub user's content).
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',

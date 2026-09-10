@@ -60,9 +60,17 @@ export async function ensurePersistentStorage() {
 }
 
 // ─── Migration: import existing localStorage data on first run ───
+const LS_MIGRATED_FLAG = 'labmate_migrated_from_ls';
+
 export async function migrateFromLocalStorage() {
+  // Fast path: main.jsx awaits this before the first render, so don't open
+  // IndexedDB on the critical path once the migration is known to be done.
+  try { if (localStorage.getItem(LS_MIGRATED_FLAG) === '1') return; } catch { /* storage off */ }
   const migrated = await db.settings.get('_migrated_from_ls');
-  if (migrated) return; // Already migrated
+  if (migrated) {
+    try { localStorage.setItem(LS_MIGRATED_FLAG, '1'); } catch { /* ignore */ }
+    return; // Already migrated
+  }
 
   try {
     // Migrate settings
@@ -117,6 +125,7 @@ export async function migrateFromLocalStorage() {
     }
 
     await db.settings.put({ key: '_migrated_from_ls', value: 'true' });
+    try { localStorage.setItem(LS_MIGRATED_FLAG, '1'); } catch { /* ignore */ }
     console.log('✅ Migrated localStorage → IndexedDB');
   } catch (err) {
     console.error('Migration failed:', err);

@@ -48,6 +48,8 @@ export default [
         IntersectionObserver: 'readonly',
         MutationObserver: 'readonly',
         requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        structuredClone: 'readonly',
         matchMedia: 'readonly',
         // Vite defines
         __APP_VERSION__: 'readonly',

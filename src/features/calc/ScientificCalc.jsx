@@ -1,7 +1,36 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { S_MUTED } from '../../lib/styleConstants.js';
 import { evalExpression } from '../../lib/calculators.js';
+
+// Defined at module scope: an inline component definition gets a new identity
+// every render, which makes React unmount and remount all 34 buttons per keystroke.
+const BTN_STYLES = {
+  num: { background: 'var(--bg)', color: 'var(--text)' },
+  fn: { background: 'var(--bg-2)', color: 'var(--text-muted)', fontSize: '0.9rem' },
+  op: { background: 'var(--primary-light)', color: 'var(--accent)' },
+  eq: { background: 'var(--primary)', color: 'var(--on-primary)' },
+  ctl: { background: 'var(--accent-light)', color: 'var(--accent)', fontSize: '0.9rem' },
+};
+function Btn({ label, onClick, variant = 'num', span = 1, ariaLabel, title }) {
+  const styles = BTN_STYLES[variant];
+  return (
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel || label}
+      title={title}
+      className="flex items-center justify-center font-semibold transition-all hover:opacity-80 active:scale-95"
+      style={{
+        ...styles,
+        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+        fontFamily: 'var(--font-mono)', fontSize: styles.fontSize || '1rem', minHeight: '2.85rem',
+        gridColumn: span > 1 ? `span ${span}` : undefined, cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
 
 // Trim floating-point noise; fall back to exponential for very large/small values.
 function fmtNum(n) {
@@ -60,11 +89,16 @@ export default function ScientificCalc() {
     }
   }, [expr, deg]);
 
-  // Keyboard support — ignored while the user is typing in another field.
+  // Keyboard support — ignored while the user is typing in another field. The
+  // actions are read through a ref so the listener is registered once instead
+  // of being torn down and re-added on every keystroke.
+  const actionsRef = useRef(null);
+  actionsRef.current = { insert, equals, backspace, clearAll };
   useEffect(() => {
     const onKey = (e) => {
       const el = document.activeElement;
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+      const { insert, equals, backspace, clearAll } = actionsRef.current;
       const k = e.key;
       if (/^[0-9]$/.test(k)) insert(k);
       else if (k === '.') insert('.');
@@ -81,33 +115,7 @@ export default function ScientificCalc() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [insert, equals, backspace, clearAll]);
-
-  const Btn = ({ label, onClick, variant = 'num', span = 1, ariaLabel, title }) => {
-    const styles = {
-      num: { background: 'var(--bg)', color: 'var(--text)' },
-      fn: { background: 'var(--bg-2)', color: 'var(--text-muted)', fontSize: '0.9rem' },
-      op: { background: 'var(--primary-light)', color: 'var(--accent)' },
-      eq: { background: 'var(--primary)', color: 'var(--on-primary)' },
-      ctl: { background: 'var(--accent-light)', color: 'var(--accent)', fontSize: '0.9rem' },
-    }[variant];
-    return (
-      <button
-        onClick={onClick}
-        aria-label={ariaLabel || label}
-        title={title}
-        className="flex items-center justify-center font-semibold transition-all hover:opacity-80 active:scale-95"
-        style={{
-          ...styles,
-          border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-          fontFamily: 'var(--font-mono)', fontSize: styles.fontSize || '1rem', minHeight: '2.85rem',
-          gridColumn: span > 1 ? `span ${span}` : undefined, cursor: 'pointer',
-        }}
-      >
-        {label}
-      </button>
-    );
-  };
+  }, []);
 
   return (
     <div className="card p-5 fade-in">

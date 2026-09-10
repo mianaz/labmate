@@ -2,6 +2,39 @@ import React, { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { S_MUTED, S_PRIMARY, S_TEXT } from '../../lib/styleConstants.js';
 
+// Module-scope: defined inside the component it was a new element type every
+// render, so React destroyed and recreated the <input> on each keystroke.
+function InputRow({ label, desc, value, setValue, unit, setUnit, units, isSolveTarget, result, lang }) {
+  return (
+    <div className={`p-3 rounded-lg ${isSolveTarget ? 'bg-primary-light border-2 border-primary' : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="font-bold mono text-base">{label}</span>
+        {desc && <span className="text-xs" style={S_MUTED}>{desc}</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-gray-400">=</span>
+        {isSolveTarget ? (
+          <div className="flex-1 text-center">
+            {result ? (
+              <span className="text-xl font-bold mono" style={S_PRIMARY}>
+                {result.val < 0.001 ? result.val.toExponential(3) : result.val.toFixed(4)}
+              </span>
+            ) : (
+              <span className="text-gray-400 text-sm">{t('enterOther3', lang)}</span>
+            )}
+          </div>
+        ) : (
+          <input type="number" value={value} onChange={e => setValue(e.target.value)}
+            className="flex-1" placeholder="0" step="any" style={{minWidth: 0}} />
+        )}
+        <select value={unit} onChange={e => setUnit(e.target.value)} style={{width:'4.5rem', flexShrink: 0}}>
+          {units.map(u => <option key={u} value={u}>{u}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function DilutionCalc() {
   const lang = useLang();
   const [c1, setC1] = useState('');
@@ -32,36 +65,6 @@ export default function DilutionCalc() {
 
   const result = calculate();
 
-  function InputRow({ label, desc, value, setValue, disabled, unit, setUnit, units, isSolveTarget }) {
-    return (
-      <div className={`p-3 rounded-lg ${isSolveTarget ? 'bg-primary-light border-2 border-primary' : 'bg-gray-50'}`}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="font-bold mono text-base">{label}</span>
-          {desc && <span className="text-xs" style={S_MUTED}>{desc}</span>}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">=</span>
-          {isSolveTarget ? (
-            <div className="flex-1 text-center">
-              {result ? (
-                <span className="text-xl font-bold mono" style={S_PRIMARY}>
-                  {result.val < 0.001 ? result.val.toExponential(3) : result.val.toFixed(4)}
-                </span>
-              ) : (
-                <span className="text-gray-400 text-sm">{t('enterOther3', lang)}</span>
-              )}
-            </div>
-          ) : (
-            <input type="number" value={value} onChange={e => setValue(e.target.value)}
-              className="flex-1" placeholder="0" step="any" style={{minWidth: 0}} />
-          )}
-          <select value={unit} onChange={e => setUnit(e.target.value)} style={{width:'4.5rem', flexShrink: 0}}>
-            {units.map(u => <option key={u} value={u}>{u}</option>)}
-          </select>
-        </div>
-      </div>
-    );
-  }
 
   const concUnits = ['M', 'mM', 'µM', 'nM', '%'];
   const volUnits = ['L', 'mL', 'µL'];
@@ -84,11 +87,11 @@ export default function DilutionCalc() {
       </div>
 
       <div className="space-y-3">
-        <InputRow label="C₁" desc={t('dilC1Desc', lang)} value={c1} setValue={setC1} unit={c1Unit} setUnit={setC1Unit} units={concUnits} isSolveTarget={solve==='c1'} />
-        <InputRow label="V₁" desc={t('dilV1Desc', lang)} value={v1} setValue={setV1} unit={v1Unit} setUnit={setV1Unit} units={volUnits} isSolveTarget={solve==='v1'} />
+        <InputRow result={result} lang={lang} label="C₁" desc={t('dilC1Desc', lang)} value={c1} setValue={setC1} unit={c1Unit} setUnit={setC1Unit} units={concUnits} isSolveTarget={solve==='c1'} />
+        <InputRow result={result} lang={lang} label="V₁" desc={t('dilV1Desc', lang)} value={v1} setValue={setV1} unit={v1Unit} setUnit={setV1Unit} units={volUnits} isSolveTarget={solve==='v1'} />
         <div className="text-center mono text-gray-300 text-lg">=</div>
-        <InputRow label="C₂" desc={t('dilC2Desc', lang)} value={c2} setValue={setC2} unit={c2Unit} setUnit={setC2Unit} units={concUnits} isSolveTarget={solve==='c2'} />
-        <InputRow label="V₂" desc={t('dilV2Desc', lang)} value={v2} setValue={setV2} unit={v2Unit} setUnit={setV2Unit} units={volUnits} isSolveTarget={solve==='v2'} />
+        <InputRow result={result} lang={lang} label="C₂" desc={t('dilC2Desc', lang)} value={c2} setValue={setC2} unit={c2Unit} setUnit={setC2Unit} units={concUnits} isSolveTarget={solve==='c2'} />
+        <InputRow result={result} lang={lang} label="V₂" desc={t('dilV2Desc', lang)} value={v2} setValue={setV2} unit={v2Unit} setUnit={setV2Unit} units={volUnits} isSolveTarget={solve==='v2'} />
       </div>
 
       <div aria-live="polite" aria-atomic="true">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import db from '../lib/db.js';
 
 // Drop-in replacement for useLocalStorage, backed by IndexedDB
@@ -28,15 +28,20 @@ export function useIndexedStorage(key, defaultVal) {
     return () => { cancelled = true; };
   }, [key]);
 
-  function update(newVal) {
-    const next = typeof newVal === 'function' ? newVal(val) : newVal;
+  // Stable identity (consumers put it in useCallback/useMemo deps). Functional
+  // updates resolve against the latest known value via a ref, which also covers
+  // two updates landing before React re-renders.
+  const valRef = useRef(val);
+  valRef.current = val;
+  const update = useCallback((newVal) => {
+    const next = typeof newVal === 'function' ? newVal(valRef.current) : newVal;
+    valRef.current = next;
     setVal(next);
-    // Write to IndexedDB
-    db.settings.put({ key: 'biolab_' + keyRef.current, value: JSON.stringify(next) }).catch(() => {});
-    // Also write to localStorage as fallback
-    try { localStorage.setItem('biolab_' + keyRef.current, JSON.stringify(next)); } catch {}
+    const json = JSON.stringify(next);
+    db.settings.put({ key: 'biolab_' + keyRef.current, value: json }).catch(() => {});
+    try { localStorage.setItem('biolab_' + keyRef.current, json); } catch {}
     return next;
-  }
+  }, []);
 
   return [val, update];
 }

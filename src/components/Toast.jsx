@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 export const ToastContext = createContext({ show: () => {} });
@@ -18,6 +18,11 @@ function currentLang() {
 function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const idRef = useRef(0);
+  const timeoutsRef = useRef(new Set());
+  useEffect(() => {
+    const timeouts = timeoutsRef.current;
+    return () => { timeouts.forEach(clearTimeout); timeouts.clear(); };
+  }, []);
 
   // show(msg, icon, { actionLabel, onAction, duration }) — options is optional and
   // backward-compatible with the original 2-arg show(msg, icon) call sites.
@@ -25,7 +30,11 @@ function ToastProvider({ children }) {
     const { actionLabel, onAction, duration = 3000 } = options;
     const id = ++idRef.current;
     setToasts(prev => [...prev, { id, msg, icon, actionLabel, onAction, duration }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
+    const handle = setTimeout(() => {
+      timeoutsRef.current.delete(handle);
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+    timeoutsRef.current.add(handle);
   }, []);
 
   const dismiss = useCallback((id) => {
@@ -74,8 +83,12 @@ function ToastProvider({ children }) {
     };
   }, [show]);
 
+  // Memoized so a toast appearing or expiring doesn't re-render every useToast()
+  // consumer (every RecipeCard in the list holds one).
+  const value = useMemo(() => ({ show }), [show]);
+
   return (
-    <ToastContext.Provider value={{ show }}>
+    <ToastContext.Provider value={value}>
       {children}
       {createPortal(
         <div className="toast-container">

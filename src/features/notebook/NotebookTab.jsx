@@ -77,10 +77,16 @@ function NotebookTab({ onNavigateCalendar }) {
   const updateField = useCallback((path, value) => {
     setEditingEntry(prev => {
       if (!prev) return prev;
-      const next = JSON.parse(JSON.stringify(prev));
+      // Copy only the containers along `path` (was a full JSON deep clone of the
+      // whole experiment — steps, reagents, figures — on every keystroke).
       const keys = path.split('.');
+      const next = Array.isArray(prev) ? [...prev] : { ...prev };
       let obj = next;
-      for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]];
+      for (let i = 0; i < keys.length - 1; i++) {
+        const cur = obj[keys[i]];
+        obj[keys[i]] = Array.isArray(cur) ? [...cur] : { ...(cur || {}) };
+        obj = obj[keys[i]];
+      }
       obj[keys[keys.length - 1]] = value;
       autoSave(next);
       return next;

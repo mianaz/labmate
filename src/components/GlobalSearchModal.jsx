@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useDeferredValue } from 'react';
 import { createPortal } from 'react-dom';
 import { t, useLang } from '../i18n/index.js';
 import { S_BORDER } from '../lib/styleConstants.js';
@@ -33,17 +33,32 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  const results = useMemo(() => {
-    if (!query || query.length < 1) return [];
-    const q = query.toLowerCase();
+  // Lowercase every searchable field once per library change, not per keystroke
+  // per recipe (the notes alone are ~90 KB of text across the library).
+  const index = useMemo(() => {
     const allRecipes = [...RECIPES, ...cachedCustom.recipes, ...cachedCustom.protocols];
-    return allRecipes.map(r => {
+    return allRecipes.map(r => ({
+      r,
+      name: (r.name || '').toLowerCase(),
+      cn: r.nameCn || '',
+      tags: (r.tags || []).map(t => String(t).toLowerCase()),
+      comps: (r.components || []).map(c => String(c?.name || '').toLowerCase()),
+      notes: (getRecipeNotes(r, 'en') + ' ' + getRecipeNotes(r, 'zh')).toLowerCase(),
+    }));
+  }, [RECIPES, cachedCustom]);
+
+  // Let typing stay responsive; the result list follows a beat behind.
+  const deferredQuery = useDeferredValue(query);
+  const results = useMemo(() => {
+    if (!deferredQuery || deferredQuery.length < 1) return [];
+    const q = deferredQuery.toLowerCase();
+    return index.map(({ r, name, cn, tags, comps, notes }) => {
       let score = 0;
-      const nameMatch = r.name.toLowerCase().includes(q);
-      const cnMatch = (r.nameCn || '').includes(q);
-      const tagMatch = (r.tags || []).some(t => t.toLowerCase().includes(q));
-      const compMatch = (r.components || []).some(c => c.name.toLowerCase().includes(q));
-      const noteMatch = (getRecipeNotes(r, 'en') + ' ' + getRecipeNotes(r, 'zh')).toLowerCase().includes(q);
+      const nameMatch = name.includes(q);
+      const cnMatch = cn.includes(q);
+      const tagMatch = tags.some(t => t.includes(q));
+      const compMatch = comps.some(c => c.includes(q));
+      const noteMatch = notes.includes(q);
       if (nameMatch) score += 10;
       if (cnMatch) score += 8;
       if (tagMatch) score += 5;
@@ -51,7 +66,7 @@ function GlobalSearchModal({ isOpen, onClose, onSelect, onSwitchTab }) {
       if (noteMatch) score += 2;
       return { recipe: r, score, nameMatch, compMatch, tagMatch };
     }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 15);
-  }, [query]);
+  }, [deferredQuery, index]);
 
   if (!isOpen) return null;
 

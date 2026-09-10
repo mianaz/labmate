@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { S_MUTED, S_INLINE_ICON } from '../../lib/styleConstants.js';
 import { loadCustomProtocols, saveCustomProtocols } from '../../hooks/useLocalStorage.js';
@@ -76,16 +76,16 @@ function ProtocolsTab({ externalSelected, setExternalSelected, onCrossNavigate }
       const matchSearch = !q || r.name.toLowerCase().includes(q) || (r.nameCn || '').includes(q) || (r.tags || []).some(t => t.includes(q));
       return matchCat && matchSearch;
     });
-  }, [search, selCat, favs, customProtocols]);
+  }, [search, selCat, favs, customProtocols, PROTOCOL_RECIPES]);
 
   const recentProtocols = useMemo(() => {
     return recent.map(id => PROTOCOL_RECIPES.find(r => r.id === id)).filter(Boolean).slice(0, 4);
-  }, [recent]);
+  }, [recent, PROTOCOL_RECIPES]);
 
-  function handleSelect(recipe) { setSelected(recipe); addRecent(recipe.id); }
+  const handleSelect = useCallback((recipe) => { setSelected(recipe); addRecent(recipe.id); }, [addRecent]);
 
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
-  function handleMobileSelect(recipe) { handleSelect(recipe); setMobileShowDetail(true); }
+  const handleMobileSelect = useCallback((recipe) => { handleSelect(recipe); setMobileShowDetail(true); }, [handleSelect]);
 
   return (
     <div>

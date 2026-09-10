@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════
 // Inventory — StorageTree navigation (JSX)
 // ═══════════════════════════════════════════════
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { t } from '../../i18n/index.js';
 import { StorageIcon } from './InventoryComponents.jsx';
 import { invBtnStyle, invBtnSecStyle } from './inventoryUtils.js';
@@ -16,6 +16,18 @@ export function StorageTree({
   const [expanded, setExpanded] = useState({});
   const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   const [hovered, setHovered] = useState(null);
+  // Index once per data change instead of filtering boxes per location and
+  // samples per box inside render (which also re-ran on every row hover).
+  const boxesByLocation = useMemo(() => {
+    const m = new Map();
+    for (const b of data.boxes) { const arr = m.get(b.locationId); if (arr) arr.push(b); else m.set(b.locationId, [b]); }
+    return m;
+  }, [data.boxes]);
+  const sampleCountByBox = useMemo(() => {
+    const m = new Map();
+    for (const s of data.samples) m.set(s.boxId, (m.get(s.boxId) || 0) + 1);
+    return m;
+  }, [data.samples]);
   const [confirmDel, setConfirmDel] = useState(null);
   // Edit/add/delete controls must be reachable on touch — hover doesn't exist there.
   // On mobile they're always rendered at >=40px; on desktop they stay hover-revealed (unchanged).
@@ -60,7 +72,7 @@ export function StorageTree({
 
       {/* Location tree */}
       {data.locations.map(loc => {
-        const boxes = data.boxes.filter(b => b.locationId === loc.id);
+        const boxes = boxesByLocation.get(loc.id) || [];
         const isExp = expanded[loc.id] !== false;
 
         return (
@@ -142,7 +154,7 @@ export function StorageTree({
 
             {/* Boxes under this location */}
             {isExp && boxes.map(box => {
-              const sampleCount = data.samples.filter(s => s.boxId === box.id).length;
+              const sampleCount = sampleCountByBox.get(box.id) || 0;
               const totalSlots = box.rows * box.cols;
 
               return (
