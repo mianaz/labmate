@@ -77,7 +77,7 @@ export default function InventoryTab() {
 
   // ── Undo stack (in-memory, max 10) ───────────────────────────────────────
   const pushUndo = () => {
-    undoStackRef.current.push(JSON.parse(JSON.stringify(data)));
+    undoStackRef.current.push(typeof structuredClone === 'function' ? structuredClone(data) : JSON.parse(JSON.stringify(data)));
     if (undoStackRef.current.length > 10) undoStackRef.current.shift();
     setUndoCount(c => c + 1);
   };
@@ -89,16 +89,19 @@ export default function InventoryTab() {
     toast.show(t('invUndone', lang));
   };
 
-  // Ctrl+Z / Cmd+Z keyboard shortcut
+  // Ctrl+Z / Cmd+Z keyboard shortcut — handler read through a ref so the window
+  // listener is registered once, not torn down and re-added on every data change.
+  const handleUndoRef = useRef(handleUndo);
+  handleUndoRef.current = handleUndo;
   useEffect(() => {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-        if (undoStackRef.current.length > 0) { e.preventDefault(); handleUndo(); }
+        if (undoStackRef.current.length > 0) { e.preventDefault(); handleUndoRef.current(); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [data, lang]);
+  }, []);
 
   // ── Select mode helpers ──────────────────────────────────────────────────
   const toggleSelectMode = () => { setSelectMode(prev => !prev); setSelectedCells(new Set()); };
@@ -485,15 +488,19 @@ export default function InventoryTab() {
     () => data.samples.slice().sort((a, b) => (b.dateStored || 0) - (a.dateStored || 0)).slice(0, 5),
     [data.samples]
   );
-  const locationOccupancy = useMemo(
-    () => data.locations.map(loc => {
-      const locBoxes = data.boxes.filter(b => b.locationId === loc.id);
+  const locationOccupancy = useMemo(() => {
+    // Was locations × samples × boxes; index samples per box once instead.
+    const samplesPerBox = new Map();
+    for (const s of data.samples) samplesPerBox.set(s.boxId, (samplesPerBox.get(s.boxId) || 0) + 1);
+    const boxesPerLoc = new Map();
+    for (const b of data.boxes) { const arr = boxesPerLoc.get(b.locationId); if (arr) arr.push(b); else boxesPerLoc.set(b.locationId, [b]); }
+    return data.locations.map(loc => {
+      const locBoxes = boxesPerLoc.get(loc.id) || [];
       const totalSlots = locBoxes.reduce((s, b) => s + b.rows * b.cols, 0);
-      const usedSlots = data.samples.filter(s => locBoxes.some(b => b.id === s.boxId)).length;
+      const usedSlots = locBoxes.reduce((s, b) => s + (samplesPerBox.get(b.id) || 0), 0);
       return { name: loc.name, nameZh: loc.nameZh, totalSlots, usedSlots };
-    }),
-    [data]
-  );
+    });
+  }, [data.locations, data.boxes, data.samples]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // SUB-RENDERS
@@ -748,9 +755,12 @@ export default function InventoryTab() {
 
   // ── All Samples memoized data ────────────────────────────────────────────
   const { _allSamples, _uniqueTypes, _uniqueLocs, _uniqueBoxes, _uniqueOwners, _filtered } = useMemo(() => {
+    const locById = new Map(data.locations.map(l => [l.id, l]));
+    const samplesByBox = new Map();
+    for (const s of data.samples) { const arr = samplesByBox.get(s.boxId); if (arr) arr.push(s); else samplesByBox.set(s.boxId, [s]); }
     const allSamples = data.boxes.flatMap(box => {
-      const loc = data.locations.find(l => l.id === box.locationId);
-      return data.samples.filter(s => s.boxId === box.id).map(s => ({
+      const loc = locById.get(box.locationId);
+      return (samplesByBox.get(box.id) || []).map(s => ({
         ...s,
         boxName: lang === 'zh' ? (box.nameZh || box.name) : box.name,
         locName: loc ? (lang === 'zh' ? (loc.nameZh || loc.name) : loc.name) : '',
@@ -778,7 +788,7 @@ export default function InventoryTab() {
         return listFilters.dir === 'desc' ? -cmp : cmp;
       }),
     };
-  }, [data, lang, listFilters, isMobile]);
+  }, [data, lang, listFilters]);
 
   // ── All Samples page ─────────────────────────────────────────────────────
   const allSamplesPage = () => {

@@ -8,10 +8,25 @@ async function migrateFromOldExperimentsDB() {
   if (migrated) return;
 
   try {
+    // indexedDB.open() CREATES the database if it is absent, so this used to run
+    // on every load (the done-flag was only set after a successful copy) and left
+    // an empty phantom 'labmate_experiments' DB behind. Where the browser can
+    // enumerate databases, skip the open entirely when there is nothing to migrate.
+    if (typeof indexedDB.databases === 'function') {
+      const names = (await indexedDB.databases()).map((d) => d.name);
+      if (!names.includes('labmate_experiments')) {
+        await db.settings.put({ key: '_migrated_experiments', value: 'true' });
+        return;
+      }
+    }
     const oldReq = indexedDB.open('labmate_experiments', 1);
     oldReq.onsuccess = async () => {
       const oldDb = oldReq.result;
-      if (!oldDb.objectStoreNames.contains('entries')) { oldDb.close(); return; }
+      if (!oldDb.objectStoreNames.contains('entries')) {
+        oldDb.close();
+        await db.settings.put({ key: '_migrated_experiments', value: 'true' });
+        return;
+      }
       const tx = oldDb.transaction('entries', 'readonly');
       const store = tx.objectStore('entries');
       const getAll = store.getAll();

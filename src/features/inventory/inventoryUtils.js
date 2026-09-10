@@ -136,10 +136,32 @@ export function saveInventory(data) {
         : 'Storage quota exceeded — inventory data could not be saved. Please export a backup from the Tools tab and clear browser data.'
     );
   }
-  // Also write to IndexedDB in the background
+  // Mirror to IndexedDB, coalesced: the structured clone of a large inventory
+  // is main-thread work, and rapid edits (bulk moves, undo) would repeat it per
+  // step. The synchronous localStorage write above stays the read source for
+  // remounts, so a pending mirror never makes the UI stale.
+  scheduleInventoryMirror(data);
+}
+
+let mirrorTimer = null;
+let mirrorPending = null;
+function flushInventoryMirror() {
+  if (mirrorTimer) { clearTimeout(mirrorTimer); mirrorTimer = null; }
+  const data = mirrorPending;
+  mirrorPending = null;
+  if (!data) return;
   db.inventory.put({ key: 'data', value: data }).catch((err) => {
     console.warn('saveInventory IndexedDB write failed:', err);
   });
+}
+function scheduleInventoryMirror(data) {
+  mirrorPending = data;
+  if (mirrorTimer) clearTimeout(mirrorTimer);
+  mirrorTimer = setTimeout(flushInventoryMirror, 300);
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushInventoryMirror);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushInventoryMirror(); });
 }
 
 export function getInvData() {

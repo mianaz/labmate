@@ -1,5 +1,5 @@
 // PlateTab — Full plate designer: well selection, coloring, templates, export
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { PLATE_CONFIGS, WELL_COLORS, ROW_LABELS } from '../../data/plateConfigs.js';
 import { useIsMobile } from '../../hooks/useMediaQuery.js';
@@ -11,6 +11,44 @@ import PlateReaderImport from './PlateReaderImport.jsx';
 
 import DownloadBtn from '../../components/DownloadBtn.jsx';
 import { useToast } from '../../components/Toast.jsx';
+
+function wellKey(r, c) { return `${ROW_LABELS[r]}${c + 1}`; }
+
+// One well. Memoized with primitive props + stable handlers so a drag-select
+// only re-renders the wells whose selection actually changed, instead of
+// rebuilding all 96/384 divs (twice, when the enlarged overlay was open) on
+// every well the cursor crossed.
+const Well = memo(function Well({ id, r, c, ws, fs, color, label, hasData, isSel,
+  onMouseDown, onMouseEnter, onTouchStart, onTouchMove, onTouchEnd }) {
+  return (
+    <div
+      className={`well ${isSel ? 'selected' : ''}`}
+      data-well-key={id}
+      style={{
+        width: ws, height: ws, minWidth: ws,
+        background: hasData ? color + '30' : 'var(--bg-2)',
+        borderColor: hasData ? color : 'var(--border)',
+        borderWidth: hasData ? 2 : 1,
+        fontSize: fs,
+        touchAction: 'none',
+      }}
+      onMouseDown={e => onMouseDown(r, c, e)}
+      onMouseEnter={() => onMouseEnter(r, c)}
+      onTouchStart={() => onTouchStart(r, c)}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      title={id + (hasData ? ': ' + label : '')}>
+      {ws >= 22 && hasData && (
+        <span className="truncate px-0.5" style={{color: color, fontWeight: 700}}>
+          {label.length > 5 ? label.slice(0,4)+'…' : label}
+        </span>
+      )}
+      {ws >= 22 && !hasData && (
+        <span className="text-gray-300">{id}</span>
+      )}
+    </div>
+  );
+});
 
 function PlateTab() {
   const lang = useLang();
@@ -24,6 +62,8 @@ function PlateTab() {
   const [useCustomColor, setUseCustomColor] = useState(false);
   const [currentLabel, setCurrentLabel] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false); // read by the stable pointer handlers below
+  const setDragging = useCallback((v) => { isDraggingRef.current = v; setIsDragging(v); }, []);
   const [groups, setGroups] = useState([]);
   const [enlarged, setEnlarged] = useState(false);
   const isMobile = useIsMobile();
@@ -47,9 +87,9 @@ function PlateTab() {
   // WELL SELECTION HELPERS
   // ═══════════════════════════════════════════════
 
-  function wellKey(r, c) { return `${ROW_LABELS[r]}${c + 1}`; }
-
-  function toggleWell(r, c) {
+  // All pointer handlers are stable (refs + functional setState) so the memoized
+  // <Well> bails out unless its own props changed.
+  const toggleWell = useCallback((r, c) => {
     const key = wellKey(r, c);
     setSelectedWells(prev => {
       const next = new Set(prev);
@@ -57,39 +97,39 @@ function PlateTab() {
       else next.add(key);
       return next;
     });
-  }
+  }, []);
 
-  function handleMouseDown(r, c, e) {
+  const handleMouseDown = useCallback((r, c, e) => {
     e.preventDefault();
     // A real touch replays a synthetic mousedown on the same element shortly after;
     // ignore it so a tap doesn't toggle the well twice (once on touch, once on the ghost click).
     if (Date.now() - lastTouchRef.current < 500) return;
-    setIsDragging(true);
+    setDragging(true);
     toggleWell(r, c);
-  }
+  }, [setDragging, toggleWell]);
 
-  function extendSelectionTo(key) {
+  const extendSelectionTo = useCallback((key) => {
     setSelectedWells(prev => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
       return next;
     });
-  }
+  }, []);
 
-  function handleMouseEnter(r, c) {
-    if (isDragging) extendSelectionTo(wellKey(r, c));
-  }
+  const handleMouseEnter = useCallback((r, c) => {
+    if (isDraggingRef.current) extendSelectionTo(wellKey(r, c));
+  }, [extendSelectionTo]);
 
   // --- Touch equivalents of the mouse drag-select above ---
-  function handleTouchStart(r, c) {
+  const handleTouchStart = useCallback((r, c) => {
     lastTouchRef.current = Date.now();
-    setIsDragging(true);
+    setDragging(true);
     toggleWell(r, c);
-  }
+  }, [setDragging, toggleWell]);
 
-  function handleTouchMove(e) {
-    if (!isDragging) return;
+  const handleTouchMove = useCallback((e) => {
+    if (!isDraggingRef.current) return;
     const touch = e.touches && e.touches[0];
     if (!touch) return;
     // Touch doesn't fire per-element "enter" events like the mouse does, so find whichever
@@ -97,14 +137,14 @@ function PlateTab() {
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     const wellEl = target && target.closest ? target.closest('[data-well-key]') : null;
     if (wellEl) extendSelectionTo(wellEl.getAttribute('data-well-key'));
-  }
+  }, [extendSelectionTo]);
 
-  function handleTouchEnd() {
-    setIsDragging(false);
-  }
+  const handleTouchEnd = useCallback(() => {
+    setDragging(false);
+  }, [setDragging]);
 
   useEffect(() => {
-    function handleUp() { setIsDragging(false); }
+    function handleUp() { setDragging(false); }
     window.addEventListener('mouseup', handleUp);
     window.addEventListener('touchend', handleUp);
     window.addEventListener('touchcancel', handleUp);
@@ -113,7 +153,7 @@ function PlateTab() {
       window.removeEventListener('touchend', handleUp);
       window.removeEventListener('touchcancel', handleUp);
     };
-  }, []);
+  }, [setDragging]);
 
   // Close the enlarged plate overlay on Escape
   useEffect(() => {
@@ -447,34 +487,12 @@ function PlateTab() {
             {Array.from({length: config.cols}, (_, c) => {
               const key = wellKey(r, c);
               const data = wellData[key];
-              const isSel = selectedWells.has(key);
               return (
-                <div key={c}
-                  className={`well ${isSel ? 'selected' : ''}`}
-                  data-well-key={key}
-                  style={{
-                    width: ws, height: ws, minWidth: ws,
-                    background: data ? data.color + '30' : 'var(--bg-2)',
-                    borderColor: data ? data.color : 'var(--border)',
-                    borderWidth: data ? 2 : 1,
-                    fontSize: fs,
-                    touchAction: 'none',
-                  }}
-                  onMouseDown={e => handleMouseDown(r, c, e)}
-                  onMouseEnter={() => handleMouseEnter(r, c)}
-                  onTouchStart={() => handleTouchStart(r, c)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  title={key + (data ? ': ' + data.label : '')}>
-                  {ws >= 22 && data && (
-                    <span className="truncate px-0.5" style={{color: data.color, fontWeight: 700}}>
-                      {data.label.length > 5 ? data.label.slice(0,4)+'…' : data.label}
-                    </span>
-                  )}
-                  {ws >= 22 && !data && (
-                    <span className="text-gray-300">{key}</span>
-                  )}
-                </div>
+                <Well key={c} id={key} r={r} c={c} ws={ws} fs={fs}
+                  hasData={!!data} color={data ? data.color : ''} label={data ? String(data.label ?? '') : ''}
+                  isSel={selectedWells.has(key)}
+                  onMouseDown={handleMouseDown} onMouseEnter={handleMouseEnter}
+                  onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
               );
             })}
           </div>
@@ -573,7 +591,8 @@ function PlateTab() {
           <div style={{ position: 'relative' }}>
             <div className="card p-5 overflow-x-auto" ref={plateScrollRef}
               style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}>
-              {renderPlateGrid()}
+              {/* While the enlarged overlay is open it owns the grid; don't render a second copy underneath. */}
+              {enlarged ? null : renderPlateGrid()}
             </div>
             {isMobile && showScrollHint && (
               <div aria-hidden="true" style={{

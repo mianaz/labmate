@@ -1,5 +1,10 @@
 const CACHE_NAME = 'labmate-v9';
 
+// Filled in at build time by vite.config.js (closeBundle): every hashed JS/CSS
+// chunk of this build, so a freshly installed PWA works offline on every tab,
+// not only the ones the user happened to open before going offline.
+const PRECACHE_ASSETS = /*__PRECACHE_ASSETS__*/[];
+
 // Install: precache essential shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -9,6 +14,7 @@ self.addEventListener('install', (event) => {
         './',
         './index.html',
         './recipes.json',
+        ...PRECACHE_ASSETS,
       ]);
     })
   );
@@ -30,10 +36,25 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => pruneStaleAssets())
   );
   self.clients.claim();
 });
+
+// Hashed assets are cached first-hit-forever, so without pruning every deploy
+// leaves the previous build's chunks in the cache. Drop any /assets/ entry that
+// is not part of this build's precache list.
+async function pruneStaleAssets() {
+  if (!PRECACHE_ASSETS.length) return;
+  const keep = new Set(PRECACHE_ASSETS.map((p) => new URL(p, self.registration.scope).pathname));
+  const cache = await caches.open(CACHE_NAME);
+  const requests = await cache.keys();
+  await Promise.all(requests.map((req) => {
+    const path = new URL(req.url).pathname;
+    if (path.includes('/assets/') && !keep.has(path)) return cache.delete(req);
+    return undefined;
+  }));
+}
 
 // Fetch strategy:
 // - Hashed assets (JS/CSS with hash in filename): cache-first (immutable)
@@ -54,8 +75,11 @@ self.addEventListener('fetch', (event) => {
   // persistent poisoned cache. Recipe integrity is enforced app-side at ingestion.
   if (url.origin !== self.location.origin) return;
 
-  // Hashed assets: cache-first (they're immutable by hash)
-  if (url.pathname.match(/\/assets\/.*-[a-zA-Z0-9]{8}\.(js|css|png|svg|ico|json)$/)) {
+  // Hashed assets: cache-first (they're immutable by hash). Vite's 8-char hashes
+  // use a base64url-style alphabet that includes '-' and '_' (e.g.
+  // react-vendor-DZ7-1DMe.js), so the class must allow them — with [a-zA-Z0-9]
+  // alone those chunks bypassed the cache and the app could not boot offline.
+  if (url.pathname.match(/\/assets\/.*-[A-Za-z0-9_-]{8}\.(js|css|png|svg|ico|json|woff2?)$/)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;

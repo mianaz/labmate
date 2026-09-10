@@ -1,24 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { ELEMENTS, ELEMENT_CAT_COLORS, PT_LAYOUT } from '../../data/periodicTable.js';
+
+// Static 10 × 18 layout — built once, not on every keystroke in the search box.
+const GRID = (() => {
+  const g = Array.from({length: 10}, () => Array(18).fill(null));
+  ELEMENTS.forEach(el => {
+    const pos = PT_LAYOUT[el.z];
+    if (pos) g[pos[0]][pos[1]] = el;
+  });
+  return g;
+})();
 
 export default function PeriodicTableCalc() {
   const lang = useLang();
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
 
-  const filteredZ = search.trim() ? ELEMENTS.filter(el =>
-    el.sym.toLowerCase().includes(search.toLowerCase()) ||
-    el.name.toLowerCase().includes(search.toLowerCase()) ||
-    String(el.z) === search.trim()
-  ).map(el => el.z) : null;
-
-  // Build grid: 10 rows x 18 cols
-  const grid = Array.from({length: 10}, () => Array(18).fill(null));
-  ELEMENTS.forEach(el => {
-    const pos = PT_LAYOUT[el.z];
-    if (pos) grid[pos[0]][pos[1]] = el;
-  });
+  const filteredZ = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    return new Set(ELEMENTS.filter(el =>
+      el.sym.toLowerCase().includes(q) || el.name.toLowerCase().includes(q) || String(el.z) === q
+    ).map(el => el.z));
+  }, [search]);
+  const grid = GRID;
 
   const catLabels = {
     'alkali': 'Alkali Metal', 'alkaline-earth': 'Alkaline Earth', 'transition': 'Transition Metal',
@@ -56,7 +62,7 @@ export default function PeriodicTableCalc() {
               {ri === 7 && <div style={{gridColumn:'1 / -1', height: 6}} />}
               {row.map((el, ci) => {
                 if (!el) return <div key={`${ri}-${ci}`} style={{width: 34, height: 38}} />;
-                const dimmed = filteredZ && !filteredZ.includes(el.z);
+                const dimmed = filteredZ && !filteredZ.has(el.z);
                 const isSelected = selected && selected.z === el.z;
                 return (
                   <div key={el.z}

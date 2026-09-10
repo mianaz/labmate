@@ -34,28 +34,43 @@ function recipeToText(recipe, targetVol, lang) {
   return txt;
 }
 
+// Regexes hoisted to module scope: this runs for every step of a protocol, and
+// the detail view re-renders on each timer tick and volume-scale keystroke.
+// The two global ones are reset before each scan.
+const PCR_DEG_RE = /°C/;
+const PCR_CYCLE_RE = /[×x]\s*\d+|cycles?|\d+\s*轮/i;
+const CENTRIFUGE_RE = /\d+\s*[×x]\s*g\b/i;
+const HAS_TIME_UNIT_RE = /\d+\s*(min|h|s|分|秒|小时)/i;
+const RATIO_S_RE = /\d+S\/\d+S/g;
+const RATIO_A_RE = /A\d+\/\d+/g;
+// English time regex — captures optional range (takes the LAST/max number before unit)
+const EN_TIME_RE = /(?:(\d+(?:\.\d+)?)\s*[-–]\s*)?(\d+(?:\.\d+)?)\s*(min(?:utes?)?|h(?:ours?|rs?)?|s(?:ec(?:onds?)?)?)\b/gi;
+// Chinese time regex — same range-aware pattern
+const ZH_TIME_RE = /(?:(\d+(?:\.\d+)?)\s*[-–]\s*)?(\d+(?:\.\d+)?)\s*(分钟|分|小时|秒)/g;
+const APPROX_RE = /[~≈约大约]/;
+const APPROX_EN_RE = /about|approx/i;
+const ON_OFF_RE = /^\s*(on|off)\b/i;
+
 // Parse time patterns in step text and return array of {text, seconds, label} matches
 export function parseTimePatternsFromText(text) {
   if (!text) return [];
   const matches = [];
   // Skip entire text if it's a PCR cycling line (contains °C + cycles/×)
-  if (/°C/.test(text) && /[×x]\s*\d+|cycles?|\d+\s*轮/i.test(text)) return matches;
+  if (PCR_DEG_RE.test(text) && PCR_CYCLE_RE.test(text)) return matches;
   // Skip centrifuge lines (×g or rpm with no actionable timer)
-  if (/\d+\s*[×x]\s*g\b/i.test(text) && !/\d+\s*(min|h|s|分|秒|小时)/i.test(text)) return matches;
+  if (CENTRIFUGE_RE.test(text) && !HAS_TIME_UNIT_RE.test(text)) return matches;
   // Skip ratio patterns like 28S/18S, A260/280
-  const cleaned = text.replace(/\d+S\/\d+S/g, '').replace(/A\d+\/\d+/g, '');
-  // English time regex — captures optional range (takes the LAST/max number before unit)
-  const enRegex = /(?:(\d+(?:\.\d+)?)\s*[-–]\s*)?(\d+(?:\.\d+)?)\s*(min(?:utes?)?|h(?:ours?|rs?)?|s(?:ec(?:onds?)?)?)\b/gi;
-  // Chinese time regex — same range-aware pattern
-  const zhRegex = /(?:(\d+(?:\.\d+)?)\s*[-–]\s*)?(\d+(?:\.\d+)?)\s*(分钟|分|小时|秒)/g;
+  const cleaned = text.replace(RATIO_S_RE, '').replace(RATIO_A_RE, '');
+  const enRegex = EN_TIME_RE; enRegex.lastIndex = 0;
+  const zhRegex = ZH_TIME_RE; zhRegex.lastIndex = 0;
   let m;
   while ((m = enRegex.exec(cleaned)) !== null) {
     // Skip approximate/informational markers
     const before = cleaned.slice(Math.max(0, m.index - 10), m.index);
-    if (/[~≈约大约]/.test(before) || /about|approx/i.test(before)) continue;
+    if (APPROX_RE.test(before) || APPROX_EN_RE.test(before)) continue;
     // Skip sonication on/off patterns (e.g., "30s on/30s off")
     const after = cleaned.slice(m.index + m[0].length, m.index + m[0].length + 10);
-    if (/^\s*(on|off)\b/i.test(after)) continue;
+    if (ON_OFF_RE.test(after)) continue;
     // Use max of range (group 2) or single value
     const val = parseFloat(m[2]);
     const unit = m[3].toLowerCase();
@@ -69,7 +84,7 @@ export function parseTimePatternsFromText(text) {
   }
   while ((m = zhRegex.exec(cleaned)) !== null) {
     const before = cleaned.slice(Math.max(0, m.index - 10), m.index);
-    if (/[~≈约大约]/.test(before)) continue;
+    if (APPROX_RE.test(before)) continue;
     const val = parseFloat(m[2]);
     const unit = m[3];
     let seconds;
@@ -130,6 +145,14 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
     try { localStorage.removeItem(storageKey); } catch {}
     db.stepProgress.delete(recipe.id).catch(() => {});
   };
+
+  // Timer suggestions per step, computed once per recipe/language rather than
+  // inside the step map on every render.
+  const stepTimeMatches = useMemo(
+    () => (recipe.detailedSteps || []).map(step =>
+      step.isHeader ? [] : parseTimePatternsFromText(step[lang] || step.zh || step.en || '')),
+    [recipe.detailedSteps, lang]
+  );
 
   // Find related protocol names (memoized — RECIPES lookup is O(n) per id)
   const relatedProtos = useMemo(() =>
@@ -313,7 +336,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                   const text = step[lang] || step.zh || step.en || '';
                   const isH = step.isHeader;
                   const isDone = completedSteps.has(i);
-                  const timeMatches = !isH ? parseTimePatternsFromText(text) : [];
+                  const timeMatches = stepTimeMatches[i] || [];
                   // Check for safe stop after this step
                   const safeStop = (recipe.safeStops || []).find(ss => ss.afterStep === i);
                   return (
