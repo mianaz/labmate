@@ -79,3 +79,20 @@ describe('backup secret guard', () => {
     expect(data).toHaveProperty('labmate_monkey');
   });
 });
+
+describe('backup device-local state', () => {
+  it('leaves running timers out of exports and ignores them on import', async () => {
+    localStorage.setItem('labmate_timers', JSON.stringify([{ id: 1, label: 'Blocking', totalSeconds: 60, running: true, endsAt: 1 }]));
+    localStorage.setItem('labmate_theme', 'dark');
+    expect(collectBackupData()).not.toHaveProperty('labmate_timers');
+
+    localStorage.removeItem('labmate_timers');
+    await importBackup(JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      schemaVersion: 2,
+      data: { labmate_theme: 'light', labmate_timers: [{ id: 2, label: 'Old', totalSeconds: 60, running: true, endsAt: 1 }] },
+    }));
+    expect(localStorage.getItem('labmate_theme')).toBe('light');
+    expect(localStorage.getItem('labmate_timers')).toBeNull();
+  });
+});

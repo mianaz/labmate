@@ -31,6 +31,18 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Timer notifications are shown through this worker (Chrome on Android has no
+// page-level Notification constructor). Clicking one returns to the app.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const open = windows.find((c) => c.url.startsWith(self.registration.scope));
+    if (open) return open.focus();
+    return self.clients.openWindow(self.registration.scope);
+  })());
+});
+
 // Activate: clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(

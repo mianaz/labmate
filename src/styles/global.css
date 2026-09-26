@@ -1338,6 +1338,11 @@ tfoot tr { border-top: 1px solid var(--border-strong); }
 .scroll-reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
 .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
 
+/* Finished timer: the card flashes between its tint and the plain card. The text
+   never fades, so it keeps AA contrast throughout (Tailwind's pulse halves opacity). */
+.timer-done { animation: timer-done-flash 1.6s ease-in-out infinite; }
+@keyframes timer-done-flash { 50% { background-color: var(--card); } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

@@ -2,9 +2,9 @@
 
 All notable changes to LabMate will be documented in this file.
 
-## [Unreleased] — UI redesign
+## [Unreleased]
 
-The Bioinfospace v2 "Lab-Manual Brutalism" identity is kept (paper and ink, signal green, square
+**UI redesign.** The Bioinfospace v2 "Lab-Manual Brutalism" identity is kept (paper and ink, signal green, square
 corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-day bench tool. See
 `DESIGN.md`.
 
@@ -31,8 +31,17 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
   with a box picker, keyboard navigation in box grids.
 - Notebook: read-only document view with an explicit Edit mode; Notebook ↔ Calendar links.
 - "Last backup" status in the sidebar and More sheet; "Later" snoozes the reminder for a week.
+- **Keep screen on** toggle in recipes and protocols (remembered) for working at the bench. On phones and
+  tablets the screen also stays on while a timer runs.
 
 ### Fixed
+- **Timers** only counted down while the page had CPU time, so they fell minutes behind or stopped in a
+  background tab or on a locked phone, and a reload lost them. They now run against their end time,
+  catch up the moment the page is visible again, survive a reload and stay in sync across tabs (they are
+  left out of backups). When a timer finished in Chrome on Android with notifications allowed, the whole
+  app went blank; notifications now go through the service worker. Permission is asked when you start a
+  timer, not when it finishes (Safari and Firefox ignored that request). A finished timer's card flashes
+  its background instead of fading its text below AA contrast.
 - "Backup Now" in the reminder opened the Links page instead of downloading a backup.
 - Toasts printed their type ("info", "success") before the message; search results showed the raw
   i18n key `searchContains`.
