@@ -37,6 +37,10 @@ Also app-wide: **bilingual** English / 中文 (carried in the URL), **global sea
 | --- | --- |
 | ![Protocols](screenshots/protocols.png) | ![Inventory](screenshots/inventory.png) |
 
+| Notebook | Calendar |
+| --- | --- |
+| ![Notebook](screenshots/notebook.png) | ![Calendar](screenshots/calendar.png) |
+
 <p align="center"><img src="screenshots/mobile.png" alt="LabMate on mobile" width="300"></p>
 <p align="center"><em>Installable PWA — top bar, bottom navigation and a "More" sheet on phones.</em></p>
 

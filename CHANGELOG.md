@@ -2,6 +2,52 @@
 
 All notable changes to LabMate will be documented in this file.
 
+## [Unreleased] — UI redesign
+
+The Bioinfospace v2 "Lab-Manual Brutalism" identity is kept (paper and ink, signal green, square
+corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-day bench tool. See
+`DESIGN.md`.
+
+### Changed
+- **Navigation:** grouped sidebar on desktop (Library · Tools · My lab · Help) with search, counts,
+  quick timer / calculator / assistant, running timers, backup status and language / theme / refresh.
+  Phones get a top bar, a bottom bar (re-tap pops back to the list) and a regrouped More sheet. The
+  stacked floating buttons are gone; the timer and calculator open as a popover (desktop) or bottom
+  sheet (phones).
+- **Design system:** flat 1px panels, soft interior hairlines, hard shadows only on primary actions and
+  floating surfaces; one set of component classes (buttons, chips, segmented controls, badges, lists,
+  empty states, notices, readouts, facts grids, dialogs) and a shared `PageHeader` and `Dialog`.
+  Removed global CSS hacks that inflated Tailwind spacing.
+- **Recipes & Protocols:** one shared master–detail view — filterable list (search includes reagents,
+  All / ★ / Custom, discipline, recents) and a document-style detail with a facts grid, ×½–×5 scale
+  presets, a step checklist with progress and one-tap timers.
+- **Every other section** (Calculator, Plate designer, Links, Inventory, Notebook, Calendar, Guide) and
+  the search, onboarding and custom-recipe dialogs follow the same patterns, in light and dark, at every
+  width from 360px up. The "Tools" section is now called **Links**.
+- **Global search** is a command palette with ↑ / ↓ / Enter navigation.
+
+### Added
+- Inventory: move a sample to another box/position (undoable), delete toasts with Undo, import dialog
+  with a box picker, keyboard navigation in box grids.
+- Notebook: read-only document view with an explicit Edit mode; Notebook ↔ Calendar links.
+- "Last backup" status in the sidebar and More sheet; "Later" snoozes the reminder for a week.
+
+### Fixed
+- "Backup Now" in the reminder opened the Links page instead of downloading a backup.
+- Toasts printed their type ("info", "success") before the message; search results showed the raw
+  i18n key `searchContains`.
+- Custom protocols never displayed their steps or materials.
+- Calendar used the UTC date for "today", new items, week view and .ics export (a day off outside UTC);
+  week view hid events outside 07:00–19:00; calendar delete had no confirmation.
+- Notebook could drop a pending auto-save when switching entries quickly.
+- Plate designer: relabelled wells stayed in their old label group; labels were merged across mismatched
+  plate sizes; large heatmap values were truncated.
+- Inventory: tap-to-select toggled twice on touch devices; Ctrl/Cmd+Z hijacked text undo in inputs.
+- Scientific calculator swallowed Enter everywhere while open; its keyboard handler was registered twice.
+- Units in uppercase labels could render "µM" as "ΜM"; several contrast failures (axe: no WCAG 2.1 A/AA
+  violations remain); favourite buttons were labelled "Added to favorites" before toggling; duplicate
+  paper-grain overlay.
+
 ## [2.2.0] - 2026-05-12
 
 ### Added

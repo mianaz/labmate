@@ -219,7 +219,7 @@ export default function LibraryView({
                 <input type="search" autoComplete="off" value={search} onChange={e => setSearch(e.target.value)}
                   placeholder={lang === 'zh' ? '名称、试剂或标签' : 'Name, reagent or tag'} aria-label={t('searchPlaceholder', lang)} />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="seg flex-shrink-0" role="group" aria-label={lang === 'zh' ? '范围' : 'Show'}>
                   <button type="button" aria-pressed={scope === 'all'} onClick={() => setScope('all')}>{t('all', lang)}</button>
                   <button type="button" aria-pressed={scope === 'favs'} onClick={() => setScope('favs')} title={t('favorites', lang)}>
@@ -227,9 +227,9 @@ export default function LibraryView({
                   </button>
                   <button type="button" aria-pressed={scope === 'custom'} onClick={() => setScope('custom')}>{t('customBadge', lang)}</button>
                 </div>
-                <select value={disc} onChange={e => setDisc(e.target.value)} className="flex-1 min-w-0"
+                <select value={disc} onChange={e => setDisc(e.target.value)} className="min-w-0"
                   aria-label={lang === 'zh' ? '学科' : 'Discipline'}
-                  style={{ minHeight: '1.875rem', paddingTop: '0.2rem', paddingBottom: '0.2rem', fontSize: '0.75rem' }}>
+                  style={{ flex: '1 1 7.5rem', minHeight: '1.875rem', paddingTop: '0.2rem', paddingBottom: '0.2rem', fontSize: '0.75rem' }}>
                   <option value="all">{lang === 'zh' ? '全部学科' : 'Discipline'}</option>
                   {disciplines.map(d => (
                     <option key={d} value={d}>{t(DISC_KEYS[d], lang)}{discCounts[d] ? ` (${discCounts[d]})` : ''}</option>
