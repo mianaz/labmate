@@ -122,7 +122,9 @@ Defined in `@layer components` (so Tailwind utilities can adjust them). Prefer t
 | Computed values | `.readout` > `.readout-label`, `.readout-value` (`.unit`), `.readout-sub`; `.is-empty` |
 | Facts | `<dl class="meta-grid">` with `<div><dt/><dd/></div>` cells |
 | Layout helpers | `.toolbar`, `.toolbar-spacer`, `.search-field`, `.doc-section(-head)`, `.stat`, `.link` |
-| Dialogs | `.overlay-backdrop` + `.dialog` (centred ≥640px, bottom sheet below); `.sheet`; `.popover` |
+| Dialogs | **`<Dialog title onClose lang size onSubmit footer headActions>`** (`src/components/Dialog.jsx`) — centred ≥640px, bottom sheet below, focus in/out, Escape, scroll lock, optional `<form>` mode. Lower level: `.overlay-backdrop` + `.dialog`, `.sheet`, `.popover` |
+| Inline labels | `label.label-inline` for checkbox/radio rows (the field-label rule is `!important`, so inline styles can't undo it) |
+| Units in caps | wrap units in `.nocase` inside uppercase text — CSS uppercases µ to Greek Μ ("µM" → "ΜM") |
 
 **Form controls** (`input`, `select`, `textarea`) and `label` are styled globally and unlayered: mono,
 1px ink border, green focus ring, ≥36px tall (≥40px on touch), 16px text below 768px (iOS zoom guard).
@@ -168,8 +170,8 @@ Unlayered CSS beats every Tailwind utility. The shell classes (`.app-*`, `.sideb
   single tree.
 - **Calculators** share one anatomy: panel head (name + formula), labelled inputs with unit selects,
   a `.readout` for the result, a `.notice-info` preparation summary.
-- **Dialogs** use `.dialog` with a `.panel-head` (title + close) and a footer (Cancel, then the primary
-  action). Escape closes.
+- **Dialogs** use the shared `Dialog` component: `.panel-head` (title + close), scrollable body, footer
+  with Cancel then the primary action. Escape closes; focus returns to the trigger.
 - **Empty states** explain what the section is for and offer the first action.
 
 ---

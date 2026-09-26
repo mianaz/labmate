@@ -82,7 +82,7 @@ const Well = memo(function Well({ id, r, c, ws, fs, color, label, hasData, isSel
         </>
       )}
       {showText && !hasData && (
-        <span style={{ color: 'var(--text-muted)', opacity: 0.75 }}>{id}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{id}</span>
       )}
     </div>
   );

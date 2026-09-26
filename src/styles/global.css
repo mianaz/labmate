@@ -471,6 +471,7 @@ button:disabled { cursor: not-allowed; }
     border-color: var(--border-strong);
   }
   .chip .chip-count { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; opacity: 0.75; }
+  .chip[aria-pressed="true"] .chip-count, .chip.is-active .chip-count { opacity: 1; } /* AA on the green fill */
   .chip-row { display: flex; flex-wrap: wrap; gap: 0.375rem; }
   .chip-row.is-scroll {
     flex-wrap: nowrap;

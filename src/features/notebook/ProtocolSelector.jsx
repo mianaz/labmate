@@ -1,9 +1,13 @@
+// Protocol picker dialog, used by both the Notebook and the Calendar tab.
 import { useState, useMemo } from 'react';
 import { t } from '../../i18n/index.js';
-import { S_MUTED } from '../../lib/styleConstants.js';
+import Dialog from '../../components/Dialog.jsx';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
+import { normalizeProtocolSteps } from '../../lib/protocolImport.js';
+import { IconSearch, IconChevronRight, IconClipboard } from '../../components/icons.jsx';
 
-export default function ProtocolSelector({ lang, onSelect, onClose }) {
+// Pick a library protocol to import its steps and materials into an experiment.
+export default function ProtocolSelector({ lang, onSelect, onClose, title }) {
   const { protocolRecipes } = useRecipes();
   const [search, setSearch] = useState('');
   const filtered = useMemo(() => {
@@ -16,25 +20,61 @@ export default function ProtocolSelector({ lang, onSelect, onClose }) {
     );
   }, [search, protocolRecipes]);
 
+  // What an import brings in: step and material counts per protocol.
+  const counts = useMemo(() => {
+    const map = {};
+    protocolRecipes.forEach(r => {
+      map[r.id] = { steps: normalizeProtocolSteps(r, lang).length, materials: Array.isArray(r.materials) ? r.materials.length : 0 };
+    });
+    return map;
+  }, [protocolRecipes, lang]);
+
+  const zh = lang === 'zh';
   return (
-    <div>
-      <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-        placeholder={lang === 'zh' ? '搜索方案...' : 'Search protocols...'}
-        className="w-full mb-3" style={{ padding: '6px 10px', fontSize: '0.82rem' }} />
-      <div className="space-y-1" style={{ maxHeight: 400, overflowY: 'auto' }}>
-        {filtered.map(r => (
-          <button key={r.id} onClick={() => onSelect(r)}
-            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:opacity-80"
-            style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--text)' }}>
-            <span className="text-sm font-medium">{lang === 'zh' ? (r.nameCn || r.name) : r.name}</span>
-            {r.duration && <span className="text-xs ml-2" style={S_MUTED}>~{r.duration} min</span>}
-          </button>
-        ))}
-        {filtered.length === 0 && <p className="text-sm text-center py-4" style={S_MUTED}>{t('noResults', lang)}</p>}
+    <Dialog title={title || t('nbImportProtocol', lang)} onClose={onClose} lang={lang} size="lg" bodyClassName=""
+      footer={<button type="button" className="btn" onClick={onClose}>{t('nbCancel', lang)}</button>}>
+      <div className="px-4 py-3 space-y-2" style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--card)', borderBottom: '1px solid var(--rule)' }}>
+        <div className="search-field">
+          <IconSearch size={15} />
+          <input type="search" value={search} onChange={e => setSearch(e.target.value)} data-autofocus
+            aria-label={zh ? '搜索方案' : 'Search protocols'}
+            placeholder={zh ? '搜索方案…' : 'Search protocols…'} />
+        </div>
+        <p className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+          {zh
+            ? `${filtered.length} / ${protocolRecipes.length} 个方案 · 导入步骤和材料`
+            : `${filtered.length} of ${protocolRecipes.length} protocols · imports steps and materials`}
+        </p>
       </div>
-      <div className="mt-3 flex justify-end">
-        <button onClick={onClose} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
-      </div>
-    </div>
+      {filtered.length > 0 ? (
+        <div className="list">
+          {filtered.map(r => {
+            const primary = zh ? (r.nameCn || r.name) : r.name;
+            const secondary = zh ? (r.nameCn ? r.name : '') : (r.nameCn || '');
+            const c = counts[r.id] || { steps: 0, materials: 0 };
+            return (
+              <button key={r.id} type="button" className="list-row" onClick={() => onSelect(r)}>
+                <span className="flex-1 min-w-0">
+                  <span className="list-row-title block truncate">{primary}</span>
+                  {secondary && <span className="list-row-sub block truncate">{secondary}</span>}
+                  <span className="list-row-meta">
+                    <span>{zh ? `${c.steps} 步` : `${c.steps} steps`}</span>
+                    {c.materials > 0 && <span>{zh ? `${c.materials} 项材料` : `${c.materials} materials`}</span>}
+                    {r.duration && <span>~{r.duration} min</span>}
+                  </span>
+                </span>
+                <IconChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="empty">
+          <div className="empty-icon"><IconClipboard size={20} /></div>
+          <div className="empty-title">{t('noResults', lang)}</div>
+          <div className="empty-desc">{zh ? '换个关键词试试，例如 “PCR” 或 “转染”。' : 'Try another term, e.g. “PCR” or “transfection”.'}</div>
+        </div>
+      )}
+    </Dialog>
   );
 }
