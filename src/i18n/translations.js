@@ -16,7 +16,7 @@ export const translations = {
   scientificCalcDesc: { en: 'Expression calculator with trig, logarithms, powers, roots, factorial and constants (π, e). Toggle DEG/RAD for angles.', zh: '支持三角函数、对数、幂、开方、阶乘及常数（π、e）的表达式计算器。可切换角度制/弧度制（DEG/RAD）。' },
   calcKeyboardHint: { en: 'Keyboard: digits, + − * / ^ ( ) . Enter = equals, Esc = clear, Backspace = delete.', zh: '键盘：数字、+ − * / ^ ( ) . 回车 = 等于，Esc = 清除，退格 = 删除。' },
   calcError: { en: 'Error', zh: '错误' },
-  convertCalcDesc: { en: 'Convert between concentration units (M, mM, µM, nM, %) and volume units (L, mL, µL).', zh: '在浓度单位（M、mM、µM、nM、%）与体积单位（L、mL、µL）之间互相换算。' },
+  convertCalcDesc: { en: 'Convert between volume, mass, length, temperature and pressure units.', zh: '在体积、质量、长度、温度和压力单位之间换算。' },
   convertFrom: { en: 'From', zh: '从' },
   convertTo: { en: 'To', zh: '到' },
   convertResult: { en: 'Result', zh: '结果' },
@@ -32,7 +32,7 @@ export const translations = {
   gelCalcMode: { en: 'SDS-PAGE Gel Calculator', zh: 'SDS-PAGE 配胶计算' },
   backToBuffers: { en: 'Back to recipes', zh: '返回配方列表' },
   tabPlate: { en: 'Plate Designer', zh: '多孔板设计' },
-  tabTools: { en: 'Tools', zh: '工具箱' },
+  tabTools: { en: 'Links', zh: '常用链接' },
   tabRefs: { en: 'Guide', zh: '使用说明' },
   // Search
   searchPlaceholder: { en: 'Search recipes, reagents, tags...', zh: '搜索配方、试剂名、标签...' },
@@ -207,7 +207,7 @@ export const translations = {
   deadVolSubtitle: { en: 'Calculate total volume to prepare with dead volume compensation', zh: '根据样品数和用量计算总配制量（含 Dead Volume 补偿）' },
   numSamples: { en: 'Number of samples / reactions', zh: '样品/反应数' },
   volPerSample: { en: 'Volume per sample', zh: '每份用量' },
-  deadVolPercent: { en: 'Dead volume (%)', zh: 'Dead volume (%)' },
+  deadVolPercent: { en: 'Dead volume (%)', zh: '损耗比例 (%)' },
   totalNeeded: { en: 'Total volume needed', zh: '需要配制总量' },
   withoutDead: { en: 'Without dead volume', zh: '不含余量' },
   deadVolAmount: { en: 'Dead volume portion', zh: '余量部分' },
@@ -225,7 +225,7 @@ export const translations = {
   toolCatData: { en: 'Data & Image', zh: '数据 & 图像' },
   // Privacy
   privacyTitle: { en: 'Your Data Stays Private', zh: '您的数据完全私密' },
-  privacyBody: { en: 'bioinfospace labmate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). None of this data leaves your device — the one exception is the optional AI Assistant (off by default): when you use it, the messages you send are relayed through our server to a language-model provider to generate replies. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime using the backup button in the Tools tab.', zh: 'bioinfospace labmate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。这些数据都不会离开你的设备——唯一的例外是可选的 AI 助手（默认关闭）：使用它时，你发送的消息会经我们的服务器转发给语言模型服务商以生成回复。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在工具标签页一键导出全部数据（含实验记录）。' },
+  privacyBody: { en: 'bioinfospace labmate runs entirely in your browser. Your favorites, step progress, notebook entries, inventory, and settings are stored locally on your device using IndexedDB (with localStorage as fallback). None of this data leaves your device — the one exception is the optional AI Assistant (off by default): when you use it, the messages you send are relayed through our server to a language-model provider to generate replies. No account required. No tracking. No cookies beyond essential browser storage. You own your data — export everything, including notebook entries, anytime from the sidebar or Guide → Backup & restore.', zh: 'bioinfospace labmate 完全在您的浏览器中运行。您的收藏、实验进度、实验记录、库存和设置等所有个人数据都使用 IndexedDB（localStorage 作为备用）存储在本地设备上。这些数据都不会离开你的设备——唯一的例外是可选的 AI 助手（默认关闭）：使用它时，你发送的消息会经我们的服务器转发给语言模型服务商以生成回复。无需账号。无追踪。无 Cookie（仅必要的浏览器存储）。数据完全归您所有——可随时在侧边栏或「使用说明 → 备份与恢复」中一键导出全部数据（含实验记录）。' },
   storagePersistent: { en: 'Storage: persistent — your browser will not auto-evict this data.', zh: '存储：持久化——浏览器不会自动清除这些数据。' },
   storageBestEffort: { en: 'Storage: best-effort — browsers may clear local data after long inactivity. Export a backup regularly.', zh: '存储：尽力保留——长期不使用时浏览器可能清除本地数据，请定期导出备份。' },
   // Data Export/Import
@@ -286,8 +286,8 @@ export const translations = {
   guideIntro: { en: 'Quick-start guide to every feature in labmate.', zh: 'labmate 各功能快速使用指南。' },
   guideBuffersTitle: { en: 'Recipes', zh: '配方库' },
   guideBuffersBody: {
-    en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Use the Target Volume slider to scale any recipe. Star recipes to add them to Favorites for quick access. From a recipe\'s detail view, download the scaled recipe as TXT or copy it to clipboard. Recently viewed recipes appear at the top.',
-    zh: '按学科分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。使用"目标体积"滑块缩放配方。点击星标收藏常用配方。在配方详情页可将缩放后的配方下载为 TXT 或复制到剪贴板。最近查看的配方会置顶显示。'
+    en: 'Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Type a target volume or tap ×½ / ×2 / ×5 to scale any recipe — amounts and preparation steps update together. Star recipes to add them to Favorites; filter by discipline, favorites or your own custom recipes. From a recipe\'s detail view, download the scaled recipe as TXT or copy it to clipboard. Recently viewed recipes appear at the top.',
+    zh: '按学科分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。输入目标体积或点击 ×½ / ×2 / ×5 即可换算配方，用量与配制步骤同步更新。点击星标收藏常用配方；可按学科、收藏或自定义筛选。在配方详情页可将缩放后的配方下载为 TXT 或复制到剪贴板。最近查看的配方会置顶显示。'
   },
   guideProtocolsTitle: { en: 'Protocols', zh: '实验方案' },
   guideProtocolsBody: {
@@ -296,8 +296,8 @@ export const translations = {
   },
   guideCalcTitle: { en: 'Calculator', zh: '计算器' },
   guideCalcBody: {
-    en: 'Five calculator modes: (1) Dilution — C₁V₁=C₂V₂ with practical pipetting instructions, (2) Mass — how much powder to weigh for a target molarity, (3) Molarity — find the concentration from a known mass, (4) % Solution — w/v or v/v percentage calculations, (5) Prep Calculator — total volume with dead-volume compensation for multi-sample experiments.',
-    zh: '五种计算模式：(1) 稀释计算 C₁V₁=C₂V₂ 含实际移液指导，(2) 质量计算——根据目标摩尔浓度算称量量，(3) 摩尔浓度——由已知质量求浓度，(4) 百分比溶液——w/v 或 v/v 计算，(5) 配液计算——多样品实验总量（含 Dead Volume 补偿）。'
+    en: 'Nine calculators: Dilution (C₁V₁=C₂V₂ with practical pipetting instructions), Mass (how much powder to weigh for a target molarity), Molarity (concentration from a known mass), Percent (w/v or v/v), Dead volume (master-mix totals with overage), Unit conversion, Molecular weight from a formula, a Periodic table, and a Scientific calculator. A basic quick calculator is always one click away in the sidebar (top bar on phones).',
+    zh: '九种计算器：稀释（C₁V₁=C₂V₂，含实际移液指导）、质量（按目标摩尔浓度计算称量量）、摩尔浓度（由已知质量求浓度）、百分比（w/v 或 v/v）、配液余量（多样品总量含损耗补偿）、单位换算、分子式求分子量、元素周期表与科学计算器。侧边栏（手机上为顶部栏）另有随时可用的快速计算器。'
   },
   guideGelTitle: { en: 'SDS-PAGE Gel Calculator', zh: 'SDS-PAGE 配胶计算' },
   guideGelBody: {
@@ -311,8 +311,8 @@ export const translations = {
   },
   guideShortcutsTitle: { en: 'Keyboard Shortcuts', zh: '键盘快捷键' },
   guideShortcutsBody: {
-    en: 'Press ⌘K (Mac) or Ctrl+K (Windows/Linux) to open the global search. Search across all recipes, protocols, reagents, and tags from any tab.',
-    zh: '按 ⌘K (Mac) 或 Ctrl+K (Windows/Linux) 打开全局搜索。可在任意标签页搜索所有配方、方案、试剂和标签。'
+    en: 'Press ⌘K (Mac) or Ctrl+K (Windows/Linux) to open the global search. Search across all recipes, protocols, reagents, and tags from any page; use ↑ / ↓ and Enter to open a result. ⌘J / Ctrl+J toggles the AI assistant when it is available.',
+    zh: '按 ⌘K (Mac) 或 Ctrl+K (Windows/Linux) 打开全局搜索。可在任意页面搜索所有配方、方案、试剂和标签，用 ↑ / ↓ 与回车打开结果。AI 助手可用时，⌘J / Ctrl+J 可切换助手面板。'
   },
   guideInventoryTitle: { en: 'Sample Inventory', zh: '样品库存' },
   guideInventoryBody: {
@@ -331,13 +331,13 @@ export const translations = {
   },
   guideToolsTitle: { en: 'External Tools & Data Hub', zh: '外部工具 & 数据中心' },
   guideToolsBody: {
-    en: 'Curated directory of external bioinformatics resources grouped by category: sequencing analysis, primer design, protein/structure databases, genome browsers, pathway tools, single-cell atlases, and more. Filter by category to narrow the list. Each card opens the external site in a new tab. This tab also hosts data Export / Import and Cloud Backup setup.',
-    zh: '精选的外部生物信息学资源目录，按类别分组：测序分析、引物设计、蛋白/结构数据库、基因组浏览器、通路工具、单细胞图谱等。可按类别筛选。每张卡片点击后在新标签页打开外部站点。本标签页同时提供数据导出 / 导入及云备份配置入口。'
+    en: 'Curated directory of external bioinformatics resources grouped by category: sequencing analysis, primer design, protein/structure databases, genome browsers, pathway tools, single-cell atlases, and more. Filter by category to narrow the list. Each card opens the external site in a new tab.',
+    zh: '精选的外部生物信息学资源目录，按类别分组：测序分析、引物设计、蛋白/结构数据库、基因组浏览器、通路工具、单细胞图谱等。可按类别筛选。每张卡片点击后在新标签页打开外部站点。'
   },
   guideCustomTitle: { en: 'Custom Recipes & Protocols', zh: '自定义配方和实验方案' },
   guideCustomBody: {
-    en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons in the Buffers and Protocols tabs. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports.',
-    zh: '使用缓冲液和实验方案标签页中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出中。'
+    en: 'Create your own buffer recipes or protocols using the "New Recipe" / "New Protocol" buttons on the Recipes and Protocols pages. Custom items are labeled with a "Custom" badge and appear alongside system recipes. Edit or delete them anytime. Custom recipes are included in data exports.',
+    zh: '使用「配方库」和「实验方案」页面中的"新建配方"/"新建方案"按钮创建自定义配方或方案。自定义条目带有"自定义"标记，与系统配方并列显示。可随时编辑或删除。自定义配方包含在数据导出中。'
   },
   guideAgentTitle: { en: 'AI Assistant', zh: 'AI 智能助手' },
   guideAgentBody: {
@@ -546,9 +546,11 @@ export const translations = {
   onboardingPlateTitle: { en: 'Design Plates & Track Samples', zh: '设计板布局与追踪样品' },
   onboardingPlateBody: { en: 'Multi-well plate designer with templates. Sample inventory with visual grid tracking.', zh: '多孔板设计器含快速模板。样品库存可视化网格追踪。' },
   onboardingToolsTitle: { en: 'Quick Tools & Timer', zh: '快捷工具与计时器' },
-  onboardingToolsBody: { en: 'Floating timer for experiments, quick calculator, and curated links to essential bioinformatics resources.', zh: '实验浮动计时器、快速计算器，以及精选生物信息学资源链接。' },
+  onboardingToolsBody: { en: 'A timer and a quick calculator are always one click away — in the sidebar on a computer, in the top bar on a phone — plus curated links to essential bioinformatics resources.', zh: '计时器和快速计算器随时可用——电脑上在侧边栏，手机上在顶部栏——另有精选生物信息学资源链接。' },
   onboardingPrivacyTitle: { en: 'Your Data Stays Local', zh: '数据完全本地存储' },
-  onboardingPrivacyBody: { en: 'No servers, no tracking, no cookies. Export your data anytime from the Tools tab.', zh: '无服务器、无追踪、无 Cookie。随时在工具标签页导出数据。' },
+  onboardingPrivacyBody: { en: 'No servers, no tracking, no cookies. Back up your data anytime from the sidebar or the Guide page.', zh: '无服务器、无追踪、无 Cookie。随时可在侧边栏或「使用说明」页备份数据。' },
+  onboardingNavTitle: { en: 'Find your way around', zh: '快速找到功能' },
+  onboardingNavBody: { en: 'On a computer every section lives in the sidebar, grouped as Library, Tools and My lab. On a phone the four you use most sit in the bottom bar and the rest are under More.', zh: '电脑上，所有功能都在侧边栏中，按「资料库」「工具」「我的实验室」分组；手机上，最常用的四项在底部导航栏，其余在「更多」里。' },
   onboardingNext: { en: 'Next', zh: '下一步' },
   onboardingPrev: { en: 'Back', zh: '上一步' },
   onboardingSkip: { en: 'Skip', zh: '跳过' },
@@ -777,6 +779,64 @@ export const translations = {
   agentAllowOnce: { en: 'Allow once', zh: '允许一次' },
   agentAllowRemember: { en: 'Allow & remember', zh: '允许并记住' },
   agentDeny: { en: 'Deny', zh: '拒绝' },
+
+  // ── App shell (sidebar / top bar / bottom nav / More sheet) ─────────────────
+  navLibrary: { en: 'Library', zh: '资料库' },
+  navTools: { en: 'Tools', zh: '工具' },
+  navMyLab: { en: 'My lab', zh: '我的实验室' },
+  navHelp: { en: 'Help', zh: '帮助' },
+  navMore: { en: 'More', zh: '更多' },
+  navSettings: { en: 'Settings', zh: '设置' },
+  navMain: { en: 'Main navigation', zh: '主导航' },
+  navSearch: { en: 'Search…', zh: '搜索…' },
+  navSearchShort: { en: 'Search', zh: '搜索' },
+  tabCalcShort: { en: 'Calc', zh: '计算' },
+  tabPlateShort: { en: 'Plate', zh: '孔板' },
+  toolTimer: { en: 'Timer', zh: '计时' },
+  toolCalc: { en: 'Calc', zh: '计算' },
+  toolAssistant: { en: 'Assistant', zh: '助手' },
+  themeLabel: { en: 'Theme', zh: '主题' },
+  themeLight: { en: 'Light', zh: '浅色' },
+  themeDark: { en: 'Dark', zh: '深色' },
+  themeToggle: { en: 'Switch light/dark theme', zh: '切换浅色/深色主题' },
+  languageLabel: { en: 'Language', zh: '语言' },
+  closeLabel: { en: 'Close', zh: '关闭' },
+  backLabel: { en: 'Back', zh: '返回' },
+  backupLast: { en: 'Last backup', zh: '上次备份' },
+  backupNever: { en: 'never', zh: '从未' },
+  backupToday: { en: 'today', zh: '今天' },
+  backupDaysAgo: { en: '{n} d ago', zh: '{n} 天前' },
+  backupDueTitle: { en: 'Back up your data', zh: '请备份您的数据' },
+  backupDueDesc: { en: 'Everything is stored only in this browser.', zh: '所有数据仅保存在此浏览器中。' },
+  backupAction: { en: 'Back up', zh: '备份' },
+  backupLater: { en: 'Later', zh: '稍后' },
+  backupDone: { en: 'Backup downloaded', zh: '备份已下载' },
+  backupFailed: { en: 'Backup failed', zh: '备份失败' },
+  localDataOnly: { en: 'Local data only', zh: '仅本地存储' },
+  pageRecipesDesc: { en: 'Buffers, media and staining solutions — scale any recipe to your working volume.', zh: '缓冲液、培养基与染色液——按目标体积一键换算。' },
+  pageProtocolsDesc: { en: 'Step-by-step bench protocols with built-in timers and progress tracking.', zh: '分步实验方案，内置计时器与进度记录。' },
+  pageCalcDesc: { en: 'Dilution, mass, molarity, unit conversion and more — computed on your device.', zh: '稀释、质量、摩尔浓度、单位换算等，全部在本地计算。' },
+  pageInventoryDesc: { en: 'Freezers, racks and boxes with position-level sample tracking.', zh: '冰箱、架子与冻存盒，按孔位管理样品。' },
+  itemsCount: { en: '{n} items', zh: '{n} 项' },
+  resultsCount: { en: '{n} shown', zh: '显示 {n} 项' },
+  allRecipesBack: { en: 'All recipes', zh: '全部配方' },
+  allProtocolsBack: { en: 'All protocols', zh: '全部方案' },
+  showList: { en: 'Show list', zh: '显示列表' },
+  hideList: { en: 'Hide list', zh: '隐藏列表' },
+  scaleFactor: { en: 'Scale', zh: '倍数' },
+  phLabel: { en: 'pH', zh: 'pH' },
+  defaultVolLabel: { en: 'Base volume', zh: '基准体积' },
+  usedInLabel: { en: 'Used in', zh: '相关实验' },
+  materialsLabel: { en: 'Materials', zh: '所需材料' },
+  stepsLabel: { en: 'Steps', zh: '实验步骤' },
+  prepStepsLabel: { en: 'Preparation', zh: '配制步骤' },
+  componentsLabel: { en: 'Components', zh: '组分' },
+  briefLabel: { en: 'Brief', zh: '简要' },
+  detailedLabel: { en: 'Detailed', zh: '详细' },
+  referenceLabel: { en: 'Reference', zh: '参考文献' },
+  searchContains: { en: 'Contains', zh: '含有' },
+  favAdd: { en: 'Add to favorites', zh: '加入收藏' },
+  favRemove: { en: 'Remove from favorites', zh: '取消收藏' },
 };
 
 export const NOTES_EN = {

@@ -1,19 +1,54 @@
 // RefsTab — Guide / usage documentation tab with data export/import and literature references
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { REF_NOTES_EN, REFERENCES } from '../../data/references.js';
-import { S_MUTED, S_TEXT, S_PRIMARY } from '../../lib/styleConstants.js';
+import { S_MUTED } from '../../lib/styleConstants.js';
 import { safeText } from '../../lib/utils.js';
 import { exportBackup, importBackup } from '../../lib/backup.js';
-
+import { useBackupStatus, describeLastBackup } from '../../hooks/useBackupStatus.js';
+import PageHeader from '../../components/PageHeader.jsx';
+import { IconDownload, IconUpload, IconShield, IconChevronDown, IconReset, IconArrowUpRight, IconBook } from '../../components/icons.jsx';
 import { useToast } from '../../components/Toast.jsx';
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// ═══════════════════════════════════════════════
+// GUIDE SECTIONS CONFIG
+// ═══════════════════════════════════════════════
+
+const GUIDE_SECTIONS = [
+  { titleKey: 'guideBuffersTitle', bodyKey: 'guideBuffersBody' },
+  { titleKey: 'guideProtocolsTitle', bodyKey: 'guideProtocolsBody' },
+  { titleKey: 'guideCalcTitle', bodyKey: 'guideCalcBody' },
+  { titleKey: 'guideGelTitle', bodyKey: 'guideGelBody' },
+  { titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
+  { titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
+  { titleKey: 'guideNotebookTitle', bodyKey: 'guideNotebookBody' },
+  { titleKey: 'guideCalendarTitle', bodyKey: 'guideCalendarBody' },
+  { titleKey: 'guideToolsTitle', bodyKey: 'guideToolsBody' },
+  { titleKey: 'guideAgentTitle', bodyKey: 'guideAgentBody' },
+  { titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
+  { titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
+  { titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
+];
+
+// Square icon tile — same language as the Links monograms.
+function Tile({ children }) {
+  return (
+    <span aria-hidden="true" className="flex items-center justify-center flex-shrink-0"
+      style={{ width: 32, height: 32, background: 'var(--bg-2)', border: '1px solid var(--border)', color: 'var(--accent)' }}>
+      {children}
+    </span>
+  );
+}
 
 function RefsTab({ onReplayTour }) {
   const lang = useLang();
   const toast = useToast();
   const [refsOpen, setRefsOpen] = useState(false);
   const [persisted, setPersisted] = useState(null);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
+  const { lastExport } = useBackupStatus();
 
   useEffect(() => {
     if (navigator.storage && navigator.storage.persisted) {
@@ -47,149 +82,156 @@ function RefsTab({ onReplayTour }) {
   }
 
   // ═══════════════════════════════════════════════
-  // GUIDE SECTIONS CONFIG
-  // ═══════════════════════════════════════════════
-
-  const guideSections = [
-    { num: '1', titleKey: 'guideBuffersTitle', bodyKey: 'guideBuffersBody' },
-    { num: '2', titleKey: 'guideProtocolsTitle', bodyKey: 'guideProtocolsBody' },
-    { num: '3', titleKey: 'guideCalcTitle', bodyKey: 'guideCalcBody' },
-    { num: '4', titleKey: 'guideGelTitle', bodyKey: 'guideGelBody' },
-    { num: '5', titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
-    { num: '6', titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
-    { num: '7', titleKey: 'guideNotebookTitle', bodyKey: 'guideNotebookBody' },
-    { num: '8', titleKey: 'guideCalendarTitle', bodyKey: 'guideCalendarBody' },
-    { num: '9', titleKey: 'guideToolsTitle', bodyKey: 'guideToolsBody' },
-    { num: '✦', titleKey: 'guideAgentTitle', bodyKey: 'guideAgentBody' },
-    { num: '⌘', titleKey: 'guideShortcutsTitle', bodyKey: 'guideShortcutsBody' },
-    { num: '+', titleKey: 'guideCustomTitle', bodyKey: 'guideCustomBody' },
-    { num: '!', titleKey: 'guideDataSafetyTitle', bodyKey: 'guideDataSafetyBody' },
-  ];
-
-  // ═══════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════
 
+  const backupStale = !lastExport || Date.now() - lastExport > WEEK_MS;
+  const oddCount = GUIDE_SECTIONS.length % 2 === 1;
+
   return (
     <div className="fade-in">
-      <div className="card p-6 mb-8">
-        <h2 className="text-xl font-bold mb-1">{t('refsTitle', lang)}</h2>
-        <p className="text-sm" style={S_MUTED}>{t('guideIntro', lang)}</p>
-      </div>
+      <PageHeader tab="refs" title={t('refsTitle', lang)} description={t('guideIntro', lang)}
+        actions={onReplayTour && (
+          <button type="button" onClick={onReplayTour} className="btn">
+            <IconReset size={15} />{t('replayTour', lang)}
+          </button>
+        )} />
 
-      {/* Data Export/Import */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        <div className="card p-5">
-          <div className="flex items-start gap-3 mb-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <div>
-              <h3 className="text-sm font-bold">{t('exportTitle', lang)}</h3>
-              <p className="text-xs mt-1 leading-relaxed" style={S_MUTED}>{t('exportDesc', lang)}</p>
+      {/* Data backup / restore */}
+      <section className="panel" aria-labelledby="guide-data-title" style={{ marginBottom: '1.25rem' }}>
+        <div className="panel-head flex-wrap">
+          <h2 id="guide-data-title" className="panel-title">{lang === 'zh' ? '备份与恢复' : 'Backup & restore'}</h2>
+          <span className="mono text-[11px]" style={{ color: backupStale ? 'var(--warning-text)' : 'var(--text-muted)' }}>
+            {t('backupLast', lang)}: {describeLastBackup(lastExport, t, lang)}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="flex flex-col gap-4 p-4 md:p-5">
+            <div className="flex items-start gap-3">
+              <Tile><IconDownload size={16} /></Tile>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold">{t('exportTitle', lang)}</h3>
+                <p className="text-[13px] mt-1" style={{ ...S_MUTED, lineHeight: 1.55 }}>{t('exportDesc', lang)}</p>
+              </div>
+            </div>
+            <div className="mt-auto" style={{ paddingLeft: 44 }}>
+              <button type="button" onClick={handleExport} className="btn-primary">
+                <IconDownload size={15} />{t('exportBtn', lang)}
+              </button>
             </div>
           </div>
-          <button onClick={handleExport}
-            className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
-            style={{background:'var(--primary)', color:'var(--on-primary)'}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            {t('exportBtn', lang)}
-          </button>
-        </div>
-
-        <div className="card p-5">
-          <div className="flex items-start gap-3 mb-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <div>
-              <h3 className="text-sm font-bold">{t('importTitle', lang)}</h3>
-              <p className="text-xs mt-1 leading-relaxed" style={S_MUTED}>{t('importDesc', lang)}</p>
+          <div className="flex flex-col gap-4 p-4 md:p-5 border-t md:border-t-0 md:border-l border-[var(--rule)]">
+            <div className="flex items-start gap-3">
+              <Tile><IconUpload size={16} /></Tile>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold">{t('importTitle', lang)}</h3>
+                <p className="text-[13px] mt-1" style={{ ...S_MUTED, lineHeight: 1.55 }}>{t('importDesc', lang)}</p>
+              </div>
+            </div>
+            <div className="mt-auto" style={{ paddingLeft: 44 }}>
+              <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+              <button type="button" onClick={() => fileInputRef.current && fileInputRef.current.click()} className="btn">
+                <IconUpload size={15} />{t('importBtn', lang)}
+              </button>
             </div>
           </div>
-          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} style={{display:'none'}} />
-          <button onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            className="w-full px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90"
-            style={{background:'var(--bg-2)', color:'var(--text)', border:'1px solid var(--border)'}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            {t('importBtn', lang)}
-          </button>
         </div>
-      </div>
+        {persisted !== null && (
+          <p className="flex items-start gap-2 px-4 py-2.5 mono text-[11px]" style={{ ...S_MUTED, lineHeight: 1.5, borderTop: '1px solid var(--rule)' }}>
+            <span className="dot" aria-hidden="true" style={{ marginTop: '0.3em', color: persisted ? 'var(--primary)' : 'var(--warning-border)' }} />
+            <span>{t(persisted ? 'storagePersistent' : 'storageBestEffort', lang)}</span>
+          </p>
+        )}
+      </section>
 
-      {/* Feature guide sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-        {guideSections.map((sec, i) => (
-          <div key={i} className="card p-5">
-            <h3 className="text-base font-bold mb-2" style={{fontFamily:'var(--font-heading)'}}>
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold mr-2" style={{background:"var(--primary)", color:"var(--on-primary)"}}>{sec.num}</span>{t(sec.titleKey, lang)}
-            </h3>
-            <p className="text-sm leading-relaxed" style={S_MUTED}>{t(sec.bodyKey, lang)}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Replay Tour button */}
-      {onReplayTour && (
-        <div className="mb-8">
-          <button onClick={onReplayTour}
-            className="px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all hover:opacity-90"
-            style={{background:'var(--primary)', color:'var(--on-primary)'}}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-            {t('replayTour', lang)}
-          </button>
+      {/* Feature guide — one hairline-ruled list */}
+      <section className="panel" aria-labelledby="guide-features-title" style={{ marginBottom: '1.25rem' }}>
+        <div className="panel-head">
+          <h2 id="guide-features-title" className="panel-title">{lang === 'zh' ? '功能指南' : 'Feature guide'}</h2>
+          <span className="mono tabular text-[11px]" style={S_MUTED}>{GUIDE_SECTIONS.length}</span>
         </div>
-      )}
+        <ol className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 1, background: 'var(--rule)' }}>
+          {GUIDE_SECTIONS.map((sec, i) => (
+            <li key={sec.titleKey}
+              className={`flex gap-3 p-4 md:px-5 ${oddCount && i === GUIDE_SECTIONS.length - 1 ? 'md:col-span-2' : ''}`}
+              style={{ background: 'var(--card)' }}>
+              <span aria-hidden="true" className="mono tabular flex-shrink-0"
+                style={{ width: '1.5rem', paddingTop: '0.2rem', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--accent)' }}>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-semibold" style={{ fontSize: '0.9375rem', lineHeight: 1.35 }}>{t(sec.titleKey, lang)}</h3>
+                <p className="text-[13px] mt-1" style={{ ...S_MUTED, lineHeight: 1.6 }}>{t(sec.bodyKey, lang)}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       {/* Privacy statement */}
-      <div className="card p-5 mb-8" style={{background:'var(--bg-2)', borderLeft:'3px solid var(--primary)'}}>
-        <div className="flex items-start gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <div>
-            <h3 className="text-sm font-bold mb-1">{t('privacyTitle', lang)}</h3>
-            <p className="text-xs leading-relaxed" style={S_MUTED}>{t('privacyBody', lang)}</p>
-            {persisted !== null && (
-              <p className="text-xs mono mt-2" style={persisted ? {color:'var(--primary)'} : S_MUTED}>
-                {t(persisted ? 'storagePersistent' : 'storageBestEffort', lang)}
-              </p>
-            )}
-          </div>
+      <div className="notice notice-info" style={{ marginBottom: '1.25rem', padding: '0.875rem 1rem' }}>
+        <IconShield size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }} />
+        <div className="min-w-0">
+          <p className="notice-title">{t('privacyTitle', lang)}</p>
+          <p className="mt-1" style={{ ...S_MUTED, lineHeight: 1.6 }}>{t('privacyBody', lang)}</p>
         </div>
       </div>
 
-      {/* Collapsible literature references — compact list */}
-      <div className="card overflow-hidden">
-        <button onClick={() => setRefsOpen(!refsOpen)}
-          className="w-full flex items-center justify-between p-4 text-left transition-colors"
-          style={{background: refsOpen ? 'var(--primary-light)' : 'var(--card)'}}>
-          <div>
-            <h3 className="text-sm font-bold">{t('guideRefsCollapse', lang)}</h3>
-            <p className="text-xs" style={S_MUTED}>{t('guideRefsCollapseDesc', lang)}</p>
-          </div>
-          <span className="text-lg" style={{color:'var(--text-muted)', transform: refsOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s'}}>▼</span>
-        </button>
+      {/* Collapsible literature references */}
+      <section className="panel">
+        <h2 style={{ margin: 0 }}>
+          <button type="button" onClick={() => setRefsOpen(!refsOpen)}
+            aria-expanded={refsOpen} aria-controls="guide-references"
+            className="w-full flex items-center gap-3 px-4 py-3 text-left bg-transparent hover:bg-[var(--bg-2)]"
+            style={{ border: 0, color: 'var(--text)', fontFamily: 'var(--font-body)', letterSpacing: 0, transition: 'background-color var(--duration-fast) ease' }}>
+            <Tile><IconBook size={16} /></Tile>
+            <span className="flex-1 min-w-0">
+              <span className="flex items-baseline gap-2">
+                <span className="text-sm font-semibold">{t('guideRefsCollapse', lang)}</span>
+                <span className="mono tabular text-[11px]" style={{ ...S_MUTED, fontWeight: 500 }}>{REFERENCES.length}</span>
+              </span>
+              <span className="block text-xs mt-0.5" style={{ ...S_MUTED, fontWeight: 400 }}>{t('guideRefsCollapseDesc', lang)}</span>
+            </span>
+            <IconChevronDown size={16} style={{
+              color: 'var(--text-muted)', flexShrink: 0,
+              transform: refsOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--duration-base) var(--ease-out)',
+            }} />
+          </button>
+        </h2>
         {refsOpen && (
-          <div className="p-4 pt-2">
-            <ol className="space-y-1.5 text-xs" style={S_MUTED}>
-              {REFERENCES.map(ref => (
-                <li key={ref.id} className="leading-relaxed">
-                  <span className="mono font-semibold" style={S_TEXT}>{ref.id}.</span>{' '}
-                  <span>{ref.text}</span>{' '}
-                  <span className="italic" style={S_PRIMARY}>{ref.journal}</span>
-                  {ref.vol && <span> {ref.vol}</span>}
-                  {ref.pages && <span>:{ref.pages}</span>}
-                  {' — '}
-                  <span>{lang === 'en' ? (REF_NOTES_EN[ref.id] || safeText(ref.note, lang)) : safeText(ref.note, lang)}</span>
+          <ol id="guide-references" className="fade-in" style={{ borderTop: '1px solid var(--rule)' }}>
+            {REFERENCES.map((ref, i) => (
+              <li key={ref.id} className="grid gap-3 px-4 py-3"
+                style={{ gridTemplateColumns: '1.75rem minmax(0, 1fr)', borderTop: i ? '1px solid var(--rule)' : 0 }}>
+                <span className="mono tabular" style={{ ...S_MUTED, fontSize: '0.6875rem', fontWeight: 700, paddingTop: '0.15rem' }}>
+                  {String(ref.id).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 text-[13px]" style={{ lineHeight: 1.55 }}>
+                  <p>
+                    {ref.text}{' '}
+                    <em>{ref.journal}</em>
+                    {(ref.vol || ref.pages) && (
+                      <span className="mono" style={{ ...S_MUTED, fontSize: '0.75rem' }}>
+                        {ref.vol && ` ${ref.vol}`}{ref.pages && `:${ref.pages}`}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs mt-1" style={S_MUTED}>
+                    {lang === 'en' ? (REF_NOTES_EN[ref.id] || safeText(ref.note, lang)) : safeText(ref.note, lang)}
+                  </p>
                   {ref.doi && (
-                    <span>{' '}
-                      <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener"
-                        className="mono hover:underline" style={{color:'var(--accent)', fontSize:'0.65rem'}}>
-                        DOI
-                      </a>
-                    </span>
+                    <a href={`https://doi.org/${ref.doi}`} target="_blank" rel="noopener noreferrer"
+                      className="mono inline-flex items-center gap-1 mt-1 hover:underline"
+                      style={{ color: 'var(--accent)', fontSize: '0.6875rem', overflowWrap: 'anywhere' }}>
+                      doi:{ref.doi}<IconArrowUpRight size={11} />
+                    </a>
                   )}
-                </li>
-              ))}
-            </ol>
-          </div>
+                </div>
+              </li>
+            ))}
+          </ol>
         )}
-      </div>
+      </section>
     </div>
   );
 }

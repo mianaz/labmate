@@ -1,20 +1,31 @@
+import { useState } from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import ScientificCalc from '../ScientificCalc.jsx';
-import QuickCalculatorButton from '../QuickCalculatorButton.jsx';
+import QuickCalculatorButton, { QuickCalcPanel } from '../QuickCalculatorButton.jsx';
 import { LangContext } from '../../../i18n/index.js';
 
 afterEach(cleanup);
 
 const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
-const renderFab = () => render(
-  <LangContext.Provider value="en"><QuickCalculatorButton /></LangContext.Provider>
-);
 
-describe('QuickCalculatorButton (floating basic calculator)', () => {
-  it('opens from the FAB and adds 12 + 3 = 15', () => {
+// The app lifts open/closed state into App.jsx (one panel, triggers in the
+// sidebar and the mobile top bar); this harness mirrors that wiring.
+function QuickCalcHarness() {
+  const [open, setOpen] = useState(false);
+  return (
+    <LangContext.Provider value="en">
+      <QuickCalculatorButton open={open} onToggle={() => setOpen(o => !o)} />
+      <QuickCalcPanel open={open} onClose={() => setOpen(false)} />
+    </LangContext.Provider>
+  );
+}
+const renderFab = () => render(<QuickCalcHarness />);
+
+describe('QuickCalculatorButton (quick basic calculator)', () => {
+  it('opens from its trigger and adds 12 + 3 = 15', () => {
     renderFab();
-    click('Calculator'); // open the FAB
+    click('Calculator'); // open the panel
     click('1'); click('2'); click('add'); click('3'); click('equals');
     expect(screen.getByText('15')).toBeInTheDocument();
   });
@@ -43,20 +54,25 @@ describe('QuickCalculatorButton (floating basic calculator)', () => {
   });
 });
 
-describe('QuickCalculatorButton positioning (never overlaps timer / agent FABs)', () => {
-  const bottomOf = (agentAvailable) => {
-    render(
-      <LangContext.Provider value="en"><QuickCalculatorButton agentAvailable={agentAvailable} /></LangContext.Provider>
-    );
-    return screen.getByRole('button', { name: 'Calculator' }).style.bottom;
-  };
-  it('sits one row above the timer when the agent launcher is absent', () => {
-    // Timer is at row 0 (var(--fab-b)); calc takes row 1 (+3.75rem).
-    expect(bottomOf(false)).toContain('3.75rem');
+describe('QuickCalculatorButton panel (docked tool, never a floating FAB)', () => {
+  it('reports its state on the trigger and opens a labelled dialog', () => {
+    renderFab();
+    const trigger = screen.getByRole('button', { name: 'Calculator' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('dialog', { name: 'Calculator' })).not.toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('dialog', { name: 'Calculator' })).toBeInTheDocument();
   });
-  it('sits one row above the agent launcher when it is present', () => {
-    // Timer row 0, agent launcher row 1 (+3.75rem); calc takes row 2 (+7.5rem).
-    expect(bottomOf(true)).toContain('7.5rem');
+
+  it('closes on Escape and from its close button', () => {
+    renderFab();
+    click('Calculator');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Calculator' })).not.toBeInTheDocument();
+    click('Calculator');
+    click('Close');
+    expect(screen.queryByRole('dialog', { name: 'Calculator' })).not.toBeInTheDocument();
   });
 });
 

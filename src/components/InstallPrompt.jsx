@@ -103,34 +103,30 @@ export default function InstallPrompt() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed z-40 flex lg:hidden mono"
+      className="fixed z-40 flex lg:hidden"
       style={{
-        bottom: 'calc(var(--fab-b) + 0.5rem)',
-        left: '1rem',
-        maxWidth: 'calc(100vw - 2rem)',
+        bottom: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 0.75rem)',
+        left: '0.75rem',
+        right: '0.75rem',
         alignItems: 'center',
         gap: '0.6rem',
         background: 'var(--card)',
         color: 'var(--text)',
-        border: '2px solid var(--border-strong)',
-        borderRadius: 0,
+        border: '1px solid var(--border-strong)',
         boxShadow: 'var(--shadow)',
-        padding: '0.55rem 0.7rem',
-        fontSize: '0.78rem',
+        padding: '0.5rem 0.5rem 0.5rem 0.75rem',
+        fontSize: '0.8125rem',
+        animation: 'riseIn var(--duration-slow) var(--ease-out) both',
       }}
     >
-      <span style={{ flex: 1, lineHeight: 1.3 }}>
+      <img src={import.meta.env.BASE_URL + 'favicon.svg'} alt="" width="22" height="22" style={{ flexShrink: 0 }} />
+      <span style={{ flex: 1, lineHeight: 1.35 }}>
         {iosHint
           ? (lang === 'zh' ? '添加到主屏幕：点击"分享" → "添加到主屏幕"' : 'Add to Home Screen: Share → Add to Home Screen')
-          : (lang === 'zh' ? '安装 labmate' : 'Install labmate')}
+          : (lang === 'zh' ? '安装 labmate，离线也能用' : 'Install labmate — works offline')}
       </span>
       {!iosHint && (
-        <button
-          type="button"
-          onClick={handleInstall}
-          className="btn-primary"
-          style={{ padding: '4px 10px', fontSize: '0.72rem', flexShrink: 0 }}
-        >
+        <button type="button" onClick={handleInstall} className="btn-primary btn-sm" style={{ flexShrink: 0 }}>
           {lang === 'zh' ? '安装' : 'Install'}
         </button>
       )}
@@ -138,14 +134,8 @@ export default function InstallPrompt() {
         type="button"
         onClick={dismiss}
         aria-label={lang === 'zh' ? '关闭' : 'Dismiss'}
-        style={{
-          fontWeight: 700,
-          fontSize: '1rem',
-          lineHeight: 1,
-          color: 'var(--text-muted)',
-          padding: '0 0.15rem',
-          flexShrink: 0,
-        }}
+        className="btn-ghost btn-icon btn-sm"
+        style={{ flexShrink: 0 }}
       >
         ×
       </button>

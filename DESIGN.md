@@ -1,142 +1,180 @@
 # LabMate Design System
 
 > **Canonical system:** Bioinfospace **v2 — "Lab-Manual Brutalism × Sequence Telemetry"** (LOCKED 2026-07-04).
-> The single source of truth for the shared design language is **`DESIGN-SPEC-V2.md`** in the Bioinfospace
+> The single source of truth for the shared design *language* is **`DESIGN-SPEC-V2.md`** in the Bioinfospace
 > website repo (`/var/www/bioinfospace.com/docs/DESIGN-SPEC-V2.md`). This file documents how LabMate
-> **realizes** that system in its own stack (React 19 + Vite 6 + **Tailwind v4**, no shadcn). Where the two
-> ever disagree, the canonical spec wins for *language/intent*; the values below are authoritative for
-> *LabMate's implementation* because they are transcribed from the live code.
+> **realizes** that system in its own stack (React 19 + Vite 6 + **Tailwind v4**, no component library).
 >
-> **Ground truth in code:** `src/styles/global.css` (tokens + component CSS) and `src/lib/styleConstants.js`
-> (frozen inline-style objects). Treat those two files as the implementation of this doc — if you change a
-> token, change it there and update this file to match.
+> **Ground truth in code:** `src/styles/global.css` (tokens, component classes, shell) and the shared
+> components in `src/components/` (`Sidebar`, `MobileTopBar`, `BottomNav`, `MoreSheet`, `PageHeader`,
+> `UtilityPanel`, `icons.jsx`). If you change a token or a component class, update this file to match.
 
-The retired **v1 teal** system (Bricolage Grotesque / DM Sans, `hsl(161,69%,37%)` teal, `0.625rem` radius,
-glass-morphism nav) is **gone**. Do not reintroduce teal, rounded corners, blur/glass, or the old fonts.
+The retired **v1 teal** system (Bricolage Grotesque / DM Sans, teal, rounded corners, glass nav) is gone.
+Do not reintroduce teal, rounded corners, blur/glass, or the old fonts.
 
 ---
 
 ## 1. Direction
 
 Swiss industrial-print substrate — matte documentation paper, carbon ink, one saturated accent, visible
-structural rules — fused with a restrained terminal-telemetry layer (monospace as structural infrastructure,
-ATCG base-coded micro-color). The accent is **signal green `#16B364`**, pulled from the FASTA-chevron brand
-mark: simultaneously "molecular biology" (GFP / agar / gel bands) and "phosphor terminal." Radius is **0
-everywhere** (circular things — status dots, spinners, well-plate wells — are the only exemption).
+structural rules — fused with a restrained terminal-telemetry layer (monospace as structural
+infrastructure, ATCG base-coded micro-colour). The accent is **signal green `#16B364`**, pulled from the
+FASTA-chevron brand mark. Radius is **0 everywhere** (circular things — status dots, well-plate wells —
+are the only exemption).
+
+### 2026-09 refinement (LabMate)
+
+The September 2026 redesign keeps the brand intact and changes how densely it is applied. An app you
+use at the bench all day needs calmer surfaces than a marketing site:
+
+| Before | Now |
+|---|---|
+| Every card: 2px ink frame + 4px hard shadow, lifts on hover | Panels: flat, **1px ink frame**, no shadow. Hard offset shadows are reserved for the primary action (`.btn-primary`) and things that float (popovers, dialogs, toasts, floating timers). |
+| All rules ink (`--border: #141712`) in light mode | Three-tier rules: **ink** frames structure (`--border-strong`), **graphite** outlines controls (`--border`, 3.2:1 on paper), **hairlines** divide content (`--rule`, decorative). Dark mode already worked this way. |
+| 9-tab mono top bar + stacked FABs | Grouped **sidebar** on desktop; top bar + bottom nav + More sheet on phones; timer / quick calculator / assistant docked in the shell instead of floating over content. |
+| Each page styled ad hoc (inline styles, 1.85rem in-card titles) | Every page starts with `PageHeader`; one set of component classes (§5). |
+| Global CSS hacks inflating Tailwind spacing (`.space-y-*`, pill padding, `nav button`) | Removed. Tailwind utilities are true to scale again. |
+
+If these refinements are adopted site-wide they belong in `DESIGN-SPEC-V2.md`; until then they are
+LabMate-specific.
 
 ---
 
 ## 2. Typography
 
-Three roles. All Google Fonts; CJK falls back to system gothics (no CJK webfont download).
-
 | Role | Family (`--font-*`) | Weights | Usage |
 |------|---------------------|---------|-------|
-| Display / headings | **Space Grotesk** → IBM Plex Sans → system | 700 (500 light) | h1–h2, big numerals |
-| Body / UI | **IBM Plex Sans** → system | 400 / 600 | paragraphs, labels, buttons, nav |
-| Mono / structural | **JetBrains Mono** → ui-monospace | 400 / 700 | wordmark, eyebrows, nav, metadata, inputs, values, `.mono` |
+| Display / headings | **Space Grotesk** → IBM Plex Sans → system | 700 (500 light) | page titles, document titles, big numerals |
+| Body / UI | **IBM Plex Sans** → system | 400 / 600 | paragraphs, labels, buttons, list titles |
+| Mono / structural | **JetBrains Mono** → ui-monospace | 400 / 700 | wordmark, nav, eyebrows, metadata, inputs, values, units, positions, dates |
 
-Font tokens (`src/styles/global.css`):
-
-```css
---font-heading: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
---font-body:    "IBM Plex Sans", system-ui, -apple-system, sans-serif;
---font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
-```
-
-**Heading behavior** (from global.css): `h1–h4` use `--font-heading`, weight 700, `letter-spacing:-0.02em`,
-`line-height:1.2`. Note two deliberate overrides — `h3.font-semibold/​.font-bold` drop to **body** font at
-0.875rem/600 (they're really UI subheads), and `h4.font-bold/.text-sm` become **mono** 0.68rem/700 uppercase
-muted (section eyebrows). **zh disables uppercase + tracking** on those eyebrows
-(`:lang(zh) h4.font-bold { text-transform:none; letter-spacing:0 }`).
-
-**Wordmark:** chevron mark + `bioinfospace` in JetBrains Mono 700, tri-color split `bio`(ink) `info`(green)
-`space`(ink) — all-lowercase, including the leading `b` (brand rule, see `src/components/Logo.tsx` in the
-website repo; LabMate's header wordmark follows the same split). Base font size **16px**, body line-height 1.65.
+- Page title (`.page-title`): Grotesk 700, 1.875rem desktop / 1.5rem mobile, `-0.025em`.
+- Section title (`.section-title`): Grotesk 700, 1.0625rem.
+- Eyebrows (`.eyebrow`, `.panel-title`, `.page-eyebrow`, `label`, `th`, `dt`): mono 700, 0.6875rem, uppercase,
+  `0.08–0.12em` tracking, `--text-muted`. **zh disables uppercase + tracking** on all of them.
+- Legacy convention kept: `<h4 className="text-sm font-bold">` renders as a mono eyebrow.
+- Numbers that are compared or scaled use `.tabular` (tabular figures).
+- Wordmark: chevron mark + `labmate` (mono 700); `bio`(ink) `info`(green) `space`(ink), all lowercase.
 
 ---
 
 ## 3. Color tokens
 
-All values live in `:root` (light) and `[data-theme="dark"]` (dark) in `global.css`. Theme is controlled
-**exclusively by the `data-theme` attribute** + toggle button — `prefers-color-scheme` is intentionally *not*
-used. Original CSS-var names are preserved for JSX compatibility (do not rename).
-
-### Core — Light (`:root`) / Dark (`[data-theme="dark"]`)
+All values live in `:root` (light) and `[data-theme="dark"]` in `global.css`. Theme is controlled
+**exclusively by the `data-theme` attribute** (seeded from the bioinfospace.com `bis_theme` cookie or
+`prefers-color-scheme` on first visit, then the user's choice). CSS-var names are shared with the JSX — do
+not rename them.
 
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| `--bg` | `#F0EEE6` | `#0D0F0C` | page — matte paper / deactivated-CRT near-black |
-| `--bg-2` | `#E6E3D8` | `#1B1F19` | secondary surfaces, chips, input fill |
-| `--card` | `#FBFAF5` | `#141712` | card surface |
-| `--primary` | `#16B364` | `#24D67B` | signal green — **fills / active bg only** |
-| `--primary-hover` | `#0B7A3E` | `#3DDC84` | hover |
-| `--primary-light` | `#D8F0E1` | `#12281C` | pale green chip fill |
+| `--bg` | `#F0EEE6` | `#0D0F0C` | page — matte paper / deactivated-CRT black |
+| `--bg-2` | `#E6E3D8` | `#1B1F19` | wells, chips, hover |
+| `--bg-3` | `#DCD8CB` | `#242922` | pressed |
+| `--card` | `#FBFAF5` | `#141712` | panels, dialogs |
+| `--primary` | `#16B364` | `#24D67B` | signal green — **fills only** |
+| `--primary-light` | `#D8F0E1` | `#12281C` | selected rows, info notices, readouts |
 | `--accent` | `#0B7A3E` | `#3DDC84` | green **as text / links** (AA on paper) |
-| `--text` | `#141712` | `#E8E9E2` | primary text (15.7:1 / 15.8:1) |
+| `--on-primary` | `#141712` | `#0D0F0C` | text on green |
+| `--text` | `#141712` | `#E8E9E2` | primary text |
 | `--text-muted` | `#57534A` | `#9B9D91` | secondary text (≥6.5:1) |
-| `--border` | `#141712` | `#575B4F` | rules — ink (light) / ash hairline (dark) |
-| `--border-strong` | `#141712` | `#8A8E80` | crisp structural outlines |
-| `--nav-bg` | `#F0EEE6` | `#0D0F0C` | **opaque** nav — no glass |
-| `--shadow-ink` | `#141712` | `rgba(203,212,194,.70)` | hard offset shadow color |
-| `--on-primary` | `#141712` | `#0D0F0C` | text on green fill (6.6:1 / 10.1:1) |
+| `--border-strong` | `#141712` | `#8A8E80` | structural frames (panels, shell edges, table headers) |
+| `--border` | `#8A8578` | `#62665A` | control outlines (3:1 non-text contrast) |
+| `--rule` | `#D5D1C5` | `#272B24` | decorative interior dividers (rows, cells) |
+| `--shadow-ink` | `#141712` | `rgba(203,212,194,.55)` | hard offset shadow colour |
 
-> **Contrast rule baked into `styleConstants.js`:** `--primary` (#16B364) is a *fill* color and fails AA as
-> small text on paper. For green text/links use **`--accent`** (`S_PRIMARY` = `{color:'var(--accent)'}`).
+> **Contrast rule:** `--primary` fails AA as small text on paper. Green text/links use **`--accent`**
+> (`S_PRIMARY` in `styleConstants.js`).
 
-### Semantic & categorical
-
-- **Warning** `--warning-bg/border/text` · **Danger** `--danger-bg/border/text` (`--on-danger` for fill text).
-- **ATCG base micro-accents** — `--base-a`(green) `--base-t`(red) `--base-c`(blue) `--base-g`(amber). Use for
-  category coding / index letters / sequence strips. Never full-bleed; never >4 together outside a strip.
-- **Recipe categories** `--cat-buffer/protocol/staining/media(-bg)`.
-- **Inventory sample types** — 9-way theme-aware pairs `--samp-{cell-line,plasmid,antibody,primer,protein,
-  reagent,tissue,virus,other}-{bg,text}`.
+Semantic and categorical tokens are unchanged: `--warning-*`, `--danger-*` (`--on-danger`), ATCG
+micro-accents `--base-a/t/c/g`, recipe categories `--cat-{buffer,protocol,staining,media}(-bg)`, and
+the nine theme-aware inventory sample pairs `--samp-*-{bg,text}`.
 
 ---
 
 ## 4. Shape, shadow, motion
 
-- **Radius:** `--radius: 0`. Tailwind's entire radius scale is zeroed in `@theme`
-  (`--radius-xs … --radius-3xl: 0`). `rounded-full` stays circular (dots / spinners / wells) — the only exemption.
-- **Shadows:** hard offset, zero blur — `--shadow-sm: 3px 3px 0 var(--shadow-ink)`, `--shadow: 4px 4px 0`,
-  `--shadow-lg: 6px 6px 0`. Tailwind's `shadow-*` scale is repointed to the same hard-offset ink in `@theme`.
-- **Borders:** default **2px** solid `--border`; use `--border-strong` for outer structural outlines (esp. dark).
-- **Motion tokens:** `--ease-out: cubic-bezier(.23,1,.32,1)`, `--ease-snap: cubic-bezier(.2,.85,.15,1)`;
-  durations `--duration-fast 120ms / -base 180ms / -slow 260ms`. CSS-first only (transform/opacity). All
-  motion must have a `prefers-reduced-motion: reduce` fallback.
+- **Radius:** 0. Tailwind's radius scale is zeroed in `@theme`; `rounded-full` stays circular.
+- **Borders:** 1px. Ink (`--border-strong`) for panels and dialogs; 2px only for the shell's structural
+  edges (sidebar right edge, top bar, bottom nav).
+- **Shadows:** hard offset, zero blur — `--shadow-sm 2px`, `--shadow 3px`, `--shadow-lg 5px`. Use them
+  only on `.btn-primary` (2px, presses in on click), popovers/dialogs (`--shadow-lg`), toasts
+  (3px green) and floating timers. Never on ordinary panels or list items.
+- **Motion:** `--ease-out`, `--ease-snap`; `--duration-fast 120ms / -base 180ms / -slow 260ms`.
+  Transform/opacity only, with a global `prefers-reduced-motion` fallback.
 
 ---
 
-## 5. Component patterns (LabMate specifics)
+## 5. Component classes
 
-- **Nav (desktop):** flat paper, `border-bottom: 2px solid var(--border-strong)`, **no** blur/glass; sticky top,
-  z-40. Tab indicator = solid 2px `--primary` ink bar (no gradient/glow), animated via `--ease-out`.
-- **Bottom nav (mobile, `< lg`):** `src/components/BottomNav.jsx` — fixed, `lg:hidden`, z-40, 2px top rule.
-  Desktop keeps the top tab bar. ⚠️ **Gotcha:** never set `display` in an inline `style={}` on an element that
-  relies on `lg:hidden` — inline style beats the utility class and the element leaks onto desktop. Put `flex`
-  in `className` instead. (Same rule for `MoreSheet.jsx`, `InstallPrompt.jsx`.)
-- **Mobile shell tokens:** `--bottom-nav-h: 56px`; `--fab-b` = safe-area + 1rem on desktop, +nav-height below
-  1024px. `main` gets bottom padding to clear the nav on `< lg`. **z-scale:** nav / FAB / TimerBar = 40 ·
-  modals & sheets = 50 · toast = 9000 · decorative grain = 9999.
-- **Cards:** `bg:var(--card)`, `border:2px solid var(--border)`, radius 0, hard offset shadow.
-- **Inputs:** mono font, 2px border, radius 0, green focus ring; **≥16px font on `< 768px`** (iOS zoom-on-focus
-  guard, `global.css`). Desktop input size (0.875rem) is untouched by that rule.
-- **Filter pills / badges:** `S_PILL_PRIMARY` / `S_PILL_ACCENT` — 2px border, square, mono.
-- **Well plate:** circular wells (radius exemption), 2.5px green outline when selected.
-- **Protocol timeline:** left ink rule + dot markers.
+Defined in `@layer components` (so Tailwind utilities can adjust them). Prefer these to inline styles.
 
-**Inline-style discipline:** reuse the frozen objects in `src/lib/styleConstants.js` (`S_MUTED`, `S_TEXT`,
-`S_PRIMARY`, `S_BORDER`, `S_PILL_*`, `S_BG2`, …) instead of re-creating `{color:'var(--…)'}` per render.
+| Need | Class |
+|---|---|
+| Page header | `<PageHeader tab title description actions meta />` — eyebrow comes from the nav group |
+| Framed surface | `.panel` (+ `.panel-head`, `.panel-title`, `.panel-body`); `.card` = panel with 1.25rem padding |
+| Buttons | `.btn` (secondary), `.btn-primary` (one per view), `.btn-ghost`, `.btn-danger`; `.btn-sm`, `.btn-lg`, `.btn-icon` (needs `aria-label`), `.btn-block` |
+| Filters / toggles | `.chip` + `aria-pressed`, inside `.chip-row` (`.is-scroll` for one scrolling row) |
+| 2–4 option switch | `.seg` > `button[aria-pressed]` (active = ink block) |
+| Labels | `.badge` (+ `.badge-green/-warn/-danger`, or `--badge-fg/--badge-bg`), `.dot`, `kbd` |
+| Lists | `.list` > `.list-row` (`.is-selected`), `.list-row-title/-sub/-meta` |
+| Empty states | `.empty` > `.empty-icon`, `.empty-title`, `.empty-desc`, optional button |
+| Callouts | `.notice` + `.notice-info/-warn/-danger`, `.notice-title` |
+| Computed values | `.readout` > `.readout-label`, `.readout-value` (`.unit`), `.readout-sub`; `.is-empty` |
+| Facts | `<dl class="meta-grid">` with `<div><dt/><dd/></div>` cells |
+| Layout helpers | `.toolbar`, `.toolbar-spacer`, `.search-field`, `.doc-section(-head)`, `.stat`, `.link` |
+| Dialogs | **`<Dialog title onClose lang size onSubmit footer headActions>`** (`src/components/Dialog.jsx`) — centred ≥640px, bottom sheet below, focus in/out, Escape, scroll lock, optional `<form>` mode. Lower level: `.overlay-backdrop` + `.dialog`, `.sheet`, `.popover` |
+| Inline labels | `label.label-inline` for checkbox/radio rows (the field-label rule is `!important`, so inline styles can't undo it) |
+| Units in caps | wrap units in `.nocase` inside uppercase text — CSS uppercases µ to Greek Μ ("µM" → "ΜM") |
+
+**Form controls** (`input`, `select`, `textarea`) and `label` are styled globally and unlayered: mono,
+1px ink border, green focus ring, ≥36px tall (≥40px on touch), 16px text below 768px (iOS zoom guard).
+Opt out with `.input-bare`.
+
+**Tables** are styled globally: mono uppercase headers over a 1px ink rule, `--rule` row lines, mono
+for non-first columns (`.table-plain` keeps the body font).
+
+### Cascade layering gotcha
+
+Unlayered CSS beats every Tailwind utility. The shell classes (`.app-*`, `.sidebar-*`, `.nav-*`,
+`.bottom-nav*`, `.library*`) are unlayered, so **don't combine them with responsive `hidden` /
+`lg:hidden` utilities** — control their visibility in `global.css` (as `.app-sidebar`, `.app-topbar` and
+`.bottom-nav` do). Component classes are layered and do work with those utilities. Likewise, never set
+`display` in an inline `style` on an element that relies on a responsive class.
 
 ---
 
-## 6. Cross-platform constraint (do not break)
+## 6. App shell
 
-Desktop (**≥ 1024px**) is the promoted-to-production baseline and must stay visually stable. Mobile work is
-gated with `useIsMobile()` (`max-width: 767px`, `src/hooks/useMediaQuery.js`), `lg:` Tailwind prefixes, or
-`@media (max-width: 1023px)` — **never** ship an ungated style change that also lands on desktop.
+| Width | Navigation | Tools (timer · quick calc · assistant) |
+|---|---|---|
+| **≥ 1024px** | `Sidebar`: brand, search (⌘K), groups **Library** (Recipes, Protocols) · **Tools** (Calculator, Plate designer, Links) · **My lab** (Inventory, Notebook, Calendar) · **Help** (Guide); settings (EN/中文, theme, refresh) and backup status pinned at the bottom | Tool buttons in the sidebar; panels open as a non-modal popover beside it; running timers dock in the sidebar |
+| **< 1024px** | `MobileTopBar` (brand, search, tools) + `BottomNav` (Recipes, Protocols, Calc, Plate, More) + `MoreSheet` (remaining sections, settings, backup) | Icon buttons in the top bar; panels open as bottom sheets; running timers float above the bottom nav |
+
+- Section config (paths, labels, icons, groups) lives in `src/lib/nav.jsx` — the sidebar, bottom nav and
+  More sheet all read from it. Navigation items are real links (`aria-current="page"`).
+- Re-tapping the active bottom-nav item returns to that section's top level (e.g. list from a detail).
+- Backup reminder: shown when the last export is older than 7 days; **Later** snoozes for 7 days
+  (`labmate_backupSnoozedAt`) without faking an export. Desktop: sidebar notice; phones: slim banner.
+- z-scale: shell bars / floating timers = 40 · dialogs, sheets, popovers = 50–51 · toasts = 9000 ·
+  decorative grain = 9999.
+- Content column: max 1320px, 40px side padding on desktop, 16–24px on phones.
 
 ---
 
-*LabMate conforms to Bioinfospace DESIGN-SPEC-V2. Tokens transcribed from `src/styles/global.css` — keep them in sync.*
+## 7. Page patterns
+
+- **Library (Recipes / Protocols)** — `src/features/library/LibraryView.jsx`: sticky filterable list
+  (search, All/★/Custom scope, discipline select, recents) + document-style detail (category eyebrow,
+  title, lede, "Used in" links, facts grid, sections with inline controls: scale presets for recipes,
+  Brief/Detailed + step checklist + one-tap timers for protocols). Phones: list → detail drill-down in a
+  single tree.
+- **Calculators** share one anatomy: panel head (name + formula), labelled inputs with unit selects,
+  a `.readout` for the result, a `.notice-info` preparation summary.
+- **Dialogs** use the shared `Dialog` component: `.panel-head` (title + close), scrollable body, footer
+  with Cancel then the primary action. Escape closes; focus returns to the trigger.
+- **Empty states** explain what the section is for and offer the first action.
+
+---
+
+*LabMate conforms to Bioinfospace DESIGN-SPEC-V2, with the 2026-09 refinements above. Tokens transcribed
+from `src/styles/global.css` — keep them in sync.*

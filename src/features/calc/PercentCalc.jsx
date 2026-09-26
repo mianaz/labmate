@@ -1,6 +1,40 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
-import { S_MUTED, S_MUTED_DIM, S_PRIMARY } from '../../lib/styleConstants.js';
+
+// "Final Volume (mL)" → ['Final Volume', 'mL']: the unit is shown next to the
+// value instead, so the uppercase field label never renders "ML" / "G".
+function splitUnit(text) {
+  const m = /^(.*?)\s*[(（]([^)）]+)[)）]\s*$/.exec(text);
+  return m ? m[1] : text;
+}
+
+const SUFFIX_STYLE = { fontSize: '0.75rem', color: 'var(--text-muted)' };
+
+// One quantity of the percent equation: an input with a fixed unit, or — when
+// it is the unknown being solved for — a readout in the same slot.
+function Field({ id, label, unit, value, setValue, placeholder, isTarget, result, lang }) {
+  if (isTarget) {
+    return (
+      <div className={result ? 'readout' : 'readout is-empty'} aria-live="polite" aria-atomic="true"
+        style={{ padding: '0.5rem 0.75rem 0.5rem 1rem' }}>
+        <div className="readout-label">{label}</div>
+        <div className="readout-value tabular" style={result ? { fontSize: '1.375rem', marginTop: '0.1rem' } : { marginTop: '0.1rem' }}>
+          {result ? <>{result.val.toFixed(4)}<span className="unit">{unit}</span></> : (lang === 'zh' ? '输入其他两个值' : 'Enter the other 2 values')}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id}>{label}</label>
+      <div className="relative">
+        <input id={id} type="number" value={value} onChange={e => setValue(e.target.value)} placeholder={placeholder} step="any"
+          className="w-full" aria-describedby={`${id}-unit`} style={{ paddingRight: '3rem' }} />
+        <span id={`${id}-unit`} className="mono absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={SUFFIX_STYLE}>{unit}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function PercentCalc() {
   const lang = useLang();
@@ -19,63 +53,60 @@ export default function PercentCalc() {
     result = { val: (+solute / +vol) * 100, label: t('percentConc', lang), unit: '%' };
   }
 
+  const soluteUnit = mode === 'wv' ? 'g' : 'mL';
+  const solveOpts = [
+    { id: 'solute', l: splitUnit(mode === 'wv' ? t('soluteG', lang) : t('soluteML', lang)) },
+    { id: 'vol', l: splitUnit(t('volML', lang)) },
+    { id: 'perc', l: splitUnit(t('pctLabel', lang)) },
+  ];
+  const field = { result, lang };
+
   return (
-    <div className="card p-6 max-w-2xl">
-      <h2 className="text-xl font-bold mb-1">{t('percentCalcTitle', lang)}</h2>
-      <p className="text-sm mb-4" style={S_MUTED}>{t('percentCalcDesc', lang)}</p>
-      <div className="flex gap-3 mb-4">
-        <button onClick={() => setMode('wv')}
-          className="px-4 py-1.5 rounded-lg text-sm font-semibold"
-          style={{background: mode === 'wv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'wv' ? 'var(--on-primary)' : 'var(--text-muted)'}}>
-          {t('wv', lang)}
-        </button>
-        <button onClick={() => setMode('vv')}
-          className="px-4 py-1.5 rounded-lg text-sm font-semibold"
-          style={{background: mode === 'vv' ? 'var(--primary)' : 'var(--bg-2)', color: mode === 'vv' ? 'var(--on-primary)' : 'var(--text-muted)'}}>
-          {t('vv', lang)}
-        </button>
+    <section className="panel" aria-labelledby="calc-percent-title">
+      <div className="panel-head">
+        <h2 id="calc-percent-title" className="section-title min-w-0">{t('calcTaskPercent', lang)}</h2>
+        <span className="badge" style={{ textTransform: 'none', letterSpacing: 0, fontSize: '0.6875rem' }}>
+          {mode === 'wv' ? '% (w/v) = g / 100 mL' : '% (v/v) = mL / 100 mL'}
+        </span>
       </div>
-      <div className="flex gap-2 mb-4 text-xs">
-        <span style={S_MUTED}>{t('solveFor', lang)}:</span>
-        {[{ id: 'solute', l: mode === 'wv' ? t('soluteG', lang) : t('soluteML', lang) }, { id: 'vol', l: t('volML', lang) }, { id: 'perc', l: t('pctLabel', lang) }].map(s => (
-          <button key={s.id} onClick={() => setSolve(s.id)}
-            className="px-2.5 py-1 rounded-md font-bold"
-            style={{background: solve === s.id ? 'var(--primary)' : 'var(--bg-2)', color: solve === s.id ? 'var(--on-primary)' : 'var(--text-muted)'}}>
-            {s.l}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-4" aria-live="polite" aria-atomic="true">
-        <div className="p-3 rounded-lg" style={{background: solve === 'perc' ? 'var(--primary-light)' : 'var(--bg-2)', border: solve === 'perc' ? '2px solid var(--primary)' : 'none'}}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('percentConc', lang)}</label>
-          <p className="text-xs mb-1" style={S_MUTED_DIM}>{t('pctPercDesc', lang)}</p>
-          {solve === 'perc' ? (
-            result && <p className="text-2xl font-bold mono text-center" style={S_PRIMARY}>{result.val.toFixed(4)} %</p>
-          ) : (
-            <input type="number" value={perc} onChange={e => setPerc(e.target.value)} placeholder="e.g. 10" step="any" />
-          )}
+      <div className="panel-body space-y-4 @container">
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', maxWidth: '68ch' }}>{t('percentCalcDesc', lang)}</p>
+
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="eyebrow" id="pct-type-label">{lang === 'zh' ? '类型' : 'Type'}</span>
+            <div className="seg" role="group" aria-labelledby="pct-type-label">
+              {[{ id: 'wv', short: 'w/v' }, { id: 'vv', short: 'v/v' }].map(o => (
+                <button key={o.id} type="button" aria-pressed={mode === o.id} onClick={() => setMode(o.id)} title={t(o.id, lang)}
+                  style={{ minHeight: '2.25rem' }}>
+                  <span className="@lg:hidden">{o.short}</span>
+                  <span className="hidden @lg:inline">{t(o.id, lang)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="eyebrow" id="pct-solve-label">{t('solveFor', lang)}</span>
+            <div className="seg" role="group" aria-labelledby="pct-solve-label">
+              {solveOpts.map(s => (
+                <button key={s.id} type="button" aria-pressed={solve === s.id} onClick={() => setSolve(s.id)}
+                  style={{ minHeight: '2.25rem' }}>
+                  {s.l}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="p-3 rounded-lg" style={{background: solve === 'solute' ? 'var(--primary-light)' : 'var(--bg-2)', border: solve === 'solute' ? '2px solid var(--primary)' : 'none'}}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>
-            {mode === 'wv' ? t('soluteMass', lang) : t('soluteVol', lang)}
-          </label>
-          <p className="text-xs mb-1" style={S_MUTED_DIM}>{mode === 'wv' ? t('pctSoluteDescWV', lang) : t('pctSoluteDescVV', lang)}</p>
-          {solve === 'solute' ? (
-            result && <p className="text-2xl font-bold mono text-center" style={S_PRIMARY}>{result.val.toFixed(4)} {result.unit}</p>
-          ) : (
-            <input type="number" value={solute} onChange={e => setSolute(e.target.value)} placeholder="0" step="any" />
-          )}
-        </div>
-        <div className="p-3 rounded-lg" style={{background: solve === 'vol' ? 'var(--primary-light)' : 'var(--bg-2)', border: solve === 'vol' ? '2px solid var(--primary)' : 'none'}}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('finalVol', lang)}</label>
-          <p className="text-xs mb-1" style={S_MUTED_DIM}>{t('pctVolDesc', lang)}</p>
-          {solve === 'vol' ? (
-            result && <p className="text-2xl font-bold mono text-center" style={S_PRIMARY}>{result.val.toFixed(4)} mL</p>
-          ) : (
-            <input type="number" value={vol} onChange={e => setVol(e.target.value)} placeholder="0" step="any" />
-          )}
+
+        <div className="grid gap-x-4 gap-y-3 @lg:grid-cols-3 @lg:items-end">
+          <Field {...field} id="pct-perc" label={splitUnit(t('percentConc', lang))} unit="%" value={perc} setValue={setPerc}
+            placeholder="e.g. 10" isTarget={solve === 'perc'} />
+          <Field {...field} id="pct-solute" label={splitUnit(mode === 'wv' ? t('soluteMass', lang) : t('soluteVol', lang))} unit={soluteUnit}
+            value={solute} setValue={setSolute} placeholder="0" isTarget={solve === 'solute'} />
+          <Field {...field} id="pct-vol" label={splitUnit(t('finalVol', lang))} unit="mL" value={vol} setValue={setVol}
+            placeholder="0" isTarget={solve === 'vol'} />
         </div>
       </div>
-    </div>
+    </section>
   );
 }

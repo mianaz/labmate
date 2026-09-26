@@ -1,39 +1,121 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, useId } from 'react';
 import { t, useLang } from '../../i18n/index.js';
-import { S_MUTED, S_TEXT } from '../../lib/styleConstants.js';
 import { useToast } from '../../components/Toast.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { useExperiments, createEmptyExperiment, exportExperimentsJSON, importExperimentsJSON } from '../../lib/experiments.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from './ProtocolSelector.jsx';
+import Dialog from '../../components/Dialog.jsx';
 import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImport.js';
 import { experimentToMarkdown, experimentFilename, downloadText } from '../../lib/agent/exportProtocol.js';
+import {
+  IconPlus, IconSearch, IconUpload, IconDownload, IconNotebook, IconEdit, IconTrash, IconCalendar,
+  IconChevronLeft, IconChevronDown, IconClose, IconClipboard, IconCheck,
+} from '../../components/icons.jsx';
 
-const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
+// Status → label key + tone (shared visual language with the Calendar tab).
+const STATUSES = [
+  { id: 'planned', key: 'nbStatusPlanned', fg: 'var(--base-c)', bg: 'var(--cat-media-bg)' },
+  { id: 'in-progress', key: 'nbStatusInProgress', fg: 'var(--warning-text)', bg: 'var(--warning-bg)' },
+  { id: 'completed', key: 'nbStatusCompleted', fg: 'var(--accent)', bg: 'var(--primary-light)' },
+  { id: 'cancelled', key: 'nbStatusCancelled', fg: 'var(--text-muted)', bg: 'var(--bg-2)' },
+];
+const STATUS_BY_ID = Object.fromEntries(STATUSES.map(s => [s.id, s]));
+const PRIORITY_KEY = { high: 'nbPriorityHigh', medium: 'nbPriorityMedium', low: 'nbPriorityLow' };
+
+// Cross-tab hand-off: "View in calendar" leaves the entry's date for the Calendar,
+// the Calendar's "Open in Notebook" leaves an entry id for us (sessionStorage,
+// read once on mount, ignored when stale).
+const NOTEBOOK_FOCUS_KEY = 'labmate_notebook_focus';
+const CALENDAR_FOCUS_KEY = 'labmate_calendar_focus';
+function takeHandoff(key) {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    window.sessionStorage.removeItem(key);
+    const value = raw ? JSON.parse(raw) : null;
+    return value && Date.now() - (value.at || 0) < 60000 ? value : null;
+  } catch { return null; }
+}
+function giveHandoff(key, value) {
+  try { window.sessionStorage.setItem(key, JSON.stringify({ ...value, at: Date.now() })); } catch { /* storage off */ }
+}
+
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const pad2 = (n) => String(n).padStart(2, '0');
+// Local calendar date (createEmptyExperiment's default is the UTC date).
+function localToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function addMinutes(time, minutes) {
+  const [h, m] = (time || '').split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return '';
+  const total = h * 60 + m + (Number(minutes) || 0);
+  return `${pad2(Math.floor(total / 60) % 24)}:${pad2(total % 60)}`;
+}
+function formatStamp(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+const displayTitle = (e, lang) => (lang === 'zh' ? (e.titleZh || e.title) : (e.title || e.titleZh)) || '';
+
+// Checkbox rows use label.label-inline (global): <label> is otherwise a mono
+// uppercase field eyebrow. The item text sits in a span at list size.
+const CHECK_TEXT = { fontSize: '0.875rem', fontWeight: 400, lineHeight: 1.5 };
+const FIELD_TEXT = { fontSize: '0.9375rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' };
+const DOC_TITLE = { fontFamily: 'var(--font-heading)', fontSize: '1.625rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 };
+
+function StatusBadge({ status, lang }) {
+  const s = STATUS_BY_ID[status] || STATUS_BY_ID.planned;
+  return <span className="badge" style={{ '--badge-fg': s.fg, '--badge-bg': s.bg }}>{t(s.key, lang)}</span>;
+}
 
 function NotebookTab({ onNavigateCalendar }) {
   const lang = useLang();
+  const zh = lang === 'zh';
   const toast = useToast();
+  const uid = useId();
+  const isMobile = useIsMobile();
   const { entries, loading, save, remove, reload } = useExperiments();
   const { recipeById: RECIPE_BY_ID } = useRecipes();
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [editingEntry, setEditingEntry] = useState(null);
+  const [draft, setDraft] = useState(null); // working copy of the selected entry
+  const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showProtocolImport, setShowProtocolImport] = useState(false);
-  const [showInventorySearch, setShowInventorySearch] = useState(null);
   const [mobileView, setMobileView] = useState('list');
   const [expandedSections, setExpandedSections] = useState({ plan: true, materials: true, procedure: true, results: true });
   const saveTimerRef = useRef(null);
+  const pendingRef = useRef(null);
+  const snapshotRef = useRef(null);
+  const newEntryIdRef = useRef(null);
   const jsonInputRef = useRef(null);
+  const listRef = useRef(null);
+  const revealSelectedRef = useRef(false);
+  const chipRowRef = useRef(null);
+  const [chipFade, setChipFade] = useState({ left: false, right: false });
 
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+  // The status chips scroll sideways in the narrow list column; fade whichever
+  // edge has more chips behind it.
+  const updateChipFade = useCallback(() => {
+    const el = chipRowRef.current;
+    if (!el) return;
+    const left = el.scrollLeft > 2;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    setChipFade(prev => (prev.left === left && prev.right === right ? prev : { left, right }));
   }, []);
+  useEffect(() => { updateChipFade(); });
+  useEffect(() => {
+    window.addEventListener('resize', updateChipFade);
+    return () => window.removeEventListener('resize', updateChipFade);
+  }, [updateChipFade]);
+  const chipMask = chipFade.left || chipFade.right
+    ? `linear-gradient(to right, ${chipFade.left ? 'transparent, #000 2rem' : '#000'}, ${chipFade.right ? '#000 calc(100% - 2rem), transparent' : '#000'})`
+    : null;
 
   // Refresh when the agent creates experiments (its writes go straight to Dexie via
   // a separate useExperiments instance; AgentContext emits this window event).
@@ -43,11 +125,44 @@ function NotebookTab({ onNavigateCalendar }) {
     return () => window.removeEventListener('labmate:experiments-changed', onChange);
   }, [reload]);
 
-  const selected = useMemo(() => entries.find(e => e.id === selectedId), [entries, selectedId]);
+  // Arriving from the Calendar's "Open in Notebook": select that entry.
+  useEffect(() => {
+    const focus = takeHandoff(NOTEBOOK_FOCUS_KEY);
+    if (!focus?.id) return;
+    revealSelectedRef.current = true;
+    setSelectedId(focus.id);
+    setMobileView('editor');
+  }, []);
+
+  const selected = useMemo(() => entries.find(e => e.id === selectedId) || null, [entries, selectedId]);
+
+  // Keep the working copy in step with the stored record (selection loaded, or an
+  // outside write such as the agent or a JSON import) — but never over local
+  // changes that are being edited or still waiting to auto-save.
+  useEffect(() => {
+    if (!selected) return;
+    setDraft(prev => {
+      if (!prev || prev.id !== selected.id) return clone(selected);
+      if (editing || saveTimerRef.current) return prev;
+      return prev.updatedAt === selected.updatedAt ? prev : clone(selected);
+    });
+  }, [selected, editing]);
+
+  const doc = selected && draft && draft.id === selected.id ? draft : null;
 
   useEffect(() => {
-    if (selected && !editingEntry) setEditingEntry(JSON.parse(JSON.stringify(selected)));
-  }, [selectedId]);
+    if (!doc || !revealSelectedRef.current) return;
+    revealSelectedRef.current = false;
+    const row = [...(listRef.current?.querySelectorAll('[data-entry-id]') || [])].find(el => el.dataset.entryId === doc.id);
+    row?.scrollIntoView({ block: 'nearest' });
+  }, [doc]);
+
+  const counts = useMemo(() => {
+    const c = { all: entries.length };
+    STATUSES.forEach(s => { c[s.id] = 0; });
+    entries.forEach(e => { if (c[e.status] != null) c[e.status] += 1; });
+    return c;
+  }, [entries]);
 
   const filteredEntries = useMemo(() => {
     let list = entries;
@@ -66,16 +181,46 @@ function NotebookTab({ onNavigateCalendar }) {
 
   const toggleSection = (key) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
+  // ── Auto-save (debounced), plus explicit flush/discard for Save/Cancel/switching ──
   const autoSave = useCallback((entry) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    // A change to another entry must not swallow the one still waiting.
+    if (pendingRef.current && pendingRef.current.id !== entry.id) save(pendingRef.current);
+    pendingRef.current = entry;
     saveTimerRef.current = setTimeout(async () => {
+      saveTimerRef.current = null;
+      pendingRef.current = null;
       await save(entry);
       toast.show(t('nbAutoSaved', lang));
     }, 1500);
   }, [save, lang, toast]);
 
+  const flushAutoSave = useCallback(() => {
+    if (!saveTimerRef.current) return Promise.resolve();
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    return pending ? save(pending) : Promise.resolve();
+  }, [save]);
+
+  const discardAutoSave = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
+    pendingRef.current = null;
+  }, []);
+
+  // Leaving the tab mid-edit: store what's pending right away.
+  useEffect(() => () => {
+    if (!saveTimerRef.current) return;
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
+    if (pendingRef.current) save(pendingRef.current);
+    pendingRef.current = null;
+  }, [save]);
+
   const updateField = useCallback((path, value) => {
-    setEditingEntry(prev => {
+    setDraft(prev => {
       if (!prev) return prev;
       // Copy only the containers along `path` (was a full JSON deep clone of the
       // whole experiment — steps, reagents, figures — on every keystroke).
@@ -93,48 +238,115 @@ function NotebookTab({ onNavigateCalendar }) {
     });
   }, [autoSave]);
 
+  const openEntry = useCallback((entry) => {
+    if (entry.id === selectedId && doc) {
+      if (isMobile) { setMobileView('editor'); window.scrollTo(0, 0); }
+      return;
+    }
+    flushAutoSave();
+    newEntryIdRef.current = null;
+    setEditing(false);
+    setSelectedId(entry.id);
+    setDraft(clone(entry));
+    if (isMobile) { setMobileView('editor'); window.scrollTo(0, 0); }
+  }, [selectedId, doc, isMobile, flushAutoSave]);
+
   const handleNewEntry = useCallback(async () => {
-    const entry = createEmptyExperiment();
-    const saved = await save(entry);
+    await flushAutoSave();
+    const saved = await save(createEmptyExperiment(localToday()));
+    snapshotRef.current = clone(saved);
+    newEntryIdRef.current = saved.id;
     setSelectedId(saved.id);
-    setEditingEntry(JSON.parse(JSON.stringify(saved)));
-    if (isMobile) setMobileView('editor');
-  }, [save, isMobile]);
+    setDraft(clone(saved));
+    setEditing(true);
+    // Make sure the new entry is visible in the list.
+    setStatusFilter('all');
+    setSearch('');
+    if (isMobile) { setMobileView('editor'); window.scrollTo(0, 0); }
+  }, [save, isMobile, flushAutoSave]);
+
+  const startEdit = useCallback(() => {
+    if (!draft) return;
+    flushAutoSave();
+    snapshotRef.current = clone(draft);
+    setEditing(true);
+  }, [draft, flushAutoSave]);
+
+  const saveEdit = useCallback(async () => {
+    if (!draft) return;
+    discardAutoSave();
+    newEntryIdRef.current = null;
+    await save(draft);
+    setEditing(false);
+    toast.show(zh ? '记录已保存' : 'Entry saved');
+  }, [draft, save, discardAutoSave, toast, zh]);
+
+  const cancelEdit = useCallback(async () => {
+    if (!draft) return;
+    discardAutoSave();
+    if (newEntryIdRef.current === draft.id) {
+      // Cancelling a brand-new entry discards it.
+      newEntryIdRef.current = null;
+      await remove(draft.id);
+      setEditing(false);
+      setSelectedId(null);
+      setDraft(null);
+      if (isMobile) setMobileView('list');
+      return;
+    }
+    const snap = snapshotRef.current;
+    if (snap && snap.id === draft.id && JSON.stringify(snap) !== JSON.stringify(draft)) {
+      setDraft(snap);
+      await save(snap); // auto-save may already have stored some of the discarded edits
+    }
+    setEditing(false);
+  }, [draft, discardAutoSave, remove, save, isMobile]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedId) return;
+    discardAutoSave();
+    newEntryIdRef.current = null;
     await remove(selectedId);
     setSelectedId(null);
-    setEditingEntry(null);
+    setDraft(null);
+    setEditing(false);
     setShowDeleteConfirm(false);
-    toast.show(lang === 'zh' ? '记录已删除' : 'Entry deleted');
-  }, [selectedId, remove, lang, toast]);
+    if (isMobile) setMobileView('list');
+    toast.show(zh ? '记录已删除' : 'Entry deleted');
+  }, [selectedId, remove, discardAutoSave, isMobile, toast, zh]);
 
   const handleImportProtocol = useCallback((recipe) => {
-    if (!editingEntry) return;
+    if (!draft) return;
     const steps = toProcedureSteps(recipe, lang);
     const next = {
-      ...editingEntry,
+      ...draft,
       protocolRef: recipe.id,
-      title: editingEntry.title || recipeTitle(recipe, lang),
-      titleZh: editingEntry.titleZh || (recipe.nameCn || ''),
-      duration: recipe.duration || editingEntry.duration,
-      procedure: { mode: 'template', protocolSteps: steps, freeText: editingEntry.procedure?.freeText || '' }
+      title: draft.title || recipeTitle(recipe, lang),
+      titleZh: draft.titleZh || (recipe.nameCn || ''),
+      duration: recipe.duration || draft.duration,
+      procedure: { mode: 'template', protocolSteps: steps, freeText: draft.procedure?.freeText || '' }
     };
     if (recipe.materials) {
       next.materials = { ...next.materials, reagents: toReagents(recipe) };
     }
-    setEditingEntry(next);
+    setDraft(next);
     autoSave(next);
     setShowProtocolImport(false);
-    toast.show(lang === 'zh' ? '已从方案导入' : 'Imported from protocol');
-  }, [editingEntry, lang, autoSave, toast]);
+    toast.show(zh ? '已从方案导入' : 'Imported from protocol');
+  }, [draft, lang, zh, autoSave, toast]);
 
   const exportMarkdown = useCallback(() => {
-    if (!editingEntry) return;
-    downloadText(experimentToMarkdown(editingEntry), experimentFilename(editingEntry));
+    if (!draft) return;
+    downloadText(experimentToMarkdown(draft), experimentFilename(draft));
     toast.show(t('downloaded', lang));
-  }, [editingEntry, lang, toast]);
+  }, [draft, lang, toast]);
+
+  const viewInCalendar = useCallback(() => {
+    if (!draft) return;
+    flushAutoSave();
+    giveHandoff(CALENDAR_FOCUS_KEY, { id: draft.id, date: draft.date });
+    onNavigateCalendar?.();
+  }, [draft, flushAutoSave, onNavigateCalendar]);
 
   const handleExportJson = useCallback(async () => {
     const json = await exportExperimentsJSON();
@@ -152,416 +364,777 @@ function NotebookTab({ onNavigateCalendar }) {
       const text = await file.text();
       const count = await importExperimentsJSON(text);
       await reload();
-      toast.show((lang === 'zh' ? '已导入 ' : 'Imported ') + count + (lang === 'zh' ? ' 条记录' : ' entries'));
-    } catch (err) {
-      toast.show(lang === 'zh' ? '导入失败' : 'Import failed');
+      toast.show((zh ? '已导入 ' : 'Imported ') + count + (zh ? ' 条记录' : ' entries'));
+    } catch {
+      toast.show(zh ? '导入失败' : 'Import failed');
     }
     e.target.value = '';
-  }, [reload, lang, toast]);
+  }, [reload, zh, toast]);
 
-  const statusColors = { planned: 'var(--base-c)', 'in-progress': 'var(--base-g)', completed: 'var(--base-a)', cancelled: 'var(--base-t)' };
-  const priorityColors = { high: 'var(--base-t)', medium: 'var(--base-g)', low: 'var(--base-a)' };
+  const backToList = () => { setMobileView('list'); window.scrollTo(0, 0); };
+  const clearFilters = () => { setSearch(''); setStatusFilter('all'); };
 
-  // --- Section renderers ---
-  const renderSection = (key, icon, labelKey, content) => (
-    <div className="mb-3" key={key}>
-      <button onClick={() => toggleSection(key)}
-        className="w-full flex items-center gap-2 py-2 px-3 rounded-lg text-left font-semibold text-sm transition-colors"
-        style={{ background: 'var(--bg-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 0, background: 'var(--primary)', color: 'var(--on-primary)', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{icon}</span>
-        <span className="flex-1">{t(labelKey, lang)}</span>
-        <span style={{ transform: expandedSections[key] ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '0.7rem' }}>&#9660;</span>
-      </button>
-      {expandedSections[key] && <div className="mt-2 px-1">{content}</div>}
+  const protocolName = (ref) => {
+    if (!ref) return '';
+    const r = RECIPE_BY_ID[ref];
+    if (!r) return ref;
+    return zh ? (r.nameCn || r.name) : r.name;
+  };
+  const untitled = zh ? '未命名记录' : 'Untitled entry';
+  const statusLabel = (s) => (s === 'all' ? t('nbAll', lang) : t(STATUS_BY_ID[s].key, lang));
+  const removeBtn = (onClick) => (
+    <button type="button" className="btn-ghost btn-icon btn-sm" onClick={onClick} aria-label={zh ? '删除' : 'Remove'}>
+      <IconClose size={14} />
+    </button>
+  );
+  const addBtn = (label, onClick) => (
+    <button type="button" className="btn btn-sm" onClick={onClick}><IconPlus size={13} />{label}</button>
+  );
+  const emptyLine = (text) => (
+    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+      {text}{' '}
+      <button type="button" className="link" onClick={startEdit}>{zh ? '添加' : 'Add'}</button>
+    </p>
+  );
+  const fieldBlock = (label, value) => (
+    <div>
+      <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{label}</div>
+      <p className="detail-text" style={FIELD_TEXT}>{value}</p>
     </div>
   );
 
-  const renderPlanSection = () => renderSection('plan', '1', 'nbPlan', (
-    <div className="space-y-3">
-      <div>
-        <label>{t('nbObjectives', lang)}</label>
-        <textarea value={editingEntry?.plan?.objectives || ''} onChange={e => updateField('plan.objectives', e.target.value)}
-          className="w-full" rows={3} placeholder={lang === 'zh' ? '描述实验目的...' : 'Describe experiment objectives...'} />
-      </div>
-      <div>
-        <label>{t('nbNotes', lang)}</label>
-        <textarea value={editingEntry?.plan?.notes || ''} onChange={e => updateField('plan.notes', e.target.value)}
-          className="w-full" rows={2} placeholder={lang === 'zh' ? '其他备注...' : 'Additional notes...'} />
-      </div>
-    </div>
-  ));
-
-  const renderMaterialsSection = () => {
-    const reagents = editingEntry?.materials?.reagents || [];
-    const equipment = editingEntry?.materials?.equipment || [];
-    const checklist = editingEntry?.materials?.checklist || [];
-    return renderSection('materials', '2', 'nbMaterials', (
-      <div className="space-y-4">
-        {/* Reagents */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-bold">{t('nbReagents', lang)}</h4>
-            <div className="flex gap-1">
-              <button onClick={() => { const next = [...reagents, { name: '', amount: '', unit: '', location: '', inventoryRef: null }]; updateField('materials.reagents', next); }}
-                className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddReagent', lang)}</button>
-            </div>
+  // ── Document sections ──
+  const renderSection = (key, num, labelKey, meta, body, actions) => {
+    const open = expandedSections[key];
+    return (
+      <section className="doc-section" aria-labelledby={`${uid}-sec-${key}`}>
+        <div className="doc-section-head">
+          <div className="flex items-baseline gap-2.5 min-w-0">
+            <span className="mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>{num}</span>
+            <h3 id={`${uid}-sec-${key}`} className="section-title">{t(labelKey, lang)}</h3>
+            {meta && <span className="mono truncate" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{meta}</span>}
           </div>
-          {reagents.map((r, i) => (
-            <div key={i} className="flex gap-2 mb-2 items-center flex-wrap">
-              <input type="text" value={r.name} placeholder={t('nbReagentName', lang)}
-                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], name: e.target.value }; updateField('materials.reagents', next); }}
-                className="flex-1 min-w-[120px]" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
-              <input type="text" value={r.amount} placeholder={t('nbAmount', lang)}
-                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], amount: e.target.value }; updateField('materials.reagents', next); }}
-                style={{ width: '70px', padding: '4px 8px', fontSize: '0.82rem' }} />
-              <input type="text" value={r.unit} placeholder={t('nbUnit', lang)}
-                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], unit: e.target.value }; updateField('materials.reagents', next); }}
-                style={{ width: '50px', padding: '4px 8px', fontSize: '0.82rem' }} />
-              <input type="text" value={r.location} placeholder={t('nbLocation', lang)}
-                onChange={e => { const next = [...reagents]; next[i] = { ...next[i], location: e.target.value }; updateField('materials.reagents', next); }}
-                style={{ width: '90px', padding: '4px 8px', fontSize: '0.82rem' }} />
-              <button onClick={() => { const next = reagents.filter((_, j) => j !== i); updateField('materials.reagents', next); }}
-                aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
-            </div>
-          ))}
-        </div>
-        {/* Equipment */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-bold">{t('nbEquipment', lang)}</h4>
-            <button onClick={() => { const next = [...equipment, { name: '', status: 'pending' }]; updateField('materials.equipment', next); }}
-              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddEquipment', lang)}</button>
+          <div className="flex items-center gap-1 flex-none">
+            {open && actions}
+            <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => toggleSection(key)}
+              aria-expanded={open} aria-controls={`${uid}-body-${key}`}
+              aria-label={`${t(labelKey, lang)} — ${open ? (zh ? '收起' : 'Collapse') : (zh ? '展开' : 'Expand')}`}>
+              <IconChevronDown size={16} style={{ transform: open ? 'none' : 'rotate(-90deg)', transition: 'transform var(--duration-fast) ease' }} />
+            </button>
           </div>
-          {equipment.map((eq, i) => (
-            <div key={i} className="flex gap-2 mb-1.5 items-center">
-              <input type="text" value={eq.name} placeholder={t('nbEquipmentName', lang)}
-                onChange={e => { const next = [...equipment]; next[i] = { ...next[i], name: e.target.value }; updateField('materials.equipment', next); }}
-                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
-              <select value={eq.status} onChange={e => { const next = [...equipment]; next[i] = { ...next[i], status: e.target.value }; updateField('materials.equipment', next); }}
-                style={{ padding: '4px 6px', fontSize: '0.82rem', width: '80px' }}>
-                <option value="ready">{t('nbReady', lang)}</option>
-                <option value="pending">{t('nbPending', lang)}</option>
-              </select>
-              <button onClick={() => { updateField('materials.equipment', equipment.filter((_, j) => j !== i)); }}
-                aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
-            </div>
-          ))}
         </div>
-        {/* Checklist */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-bold">{t('nbChecklist', lang)}</h4>
-            <button onClick={() => { updateField('materials.checklist', [...checklist, { item: '', checked: false }]); }}
-              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddCheckItem', lang)}</button>
-          </div>
-          {checklist.map((c, i) => (
-            <div key={i} className="flex gap-2 mb-1.5 items-center">
-              <input type="checkbox" checked={c.checked}
-                onChange={e => { const next = [...checklist]; next[i] = { ...next[i], checked: e.target.checked }; updateField('materials.checklist', next); }}
-                style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
-              <input type="text" value={c.item}
-                onChange={e => { const next = [...checklist]; next[i] = { ...next[i], item: e.target.value }; updateField('materials.checklist', next); }}
-                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem', textDecoration: c.checked ? 'line-through' : 'none', opacity: c.checked ? 0.6 : 1 }} />
-              <button onClick={() => { updateField('materials.checklist', checklist.filter((_, j) => j !== i)); }}
-                aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
-            </div>
-          ))}
-        </div>
-      </div>
-    ));
+        {open && <div id={`${uid}-body-${key}`}>{body}</div>}
+      </section>
+    );
   };
 
-  const renderProcedureSection = () => {
-    const proc = editingEntry?.procedure || { mode: 'freetext', protocolSteps: [], freeText: '' };
-    return renderSection('procedure', '3', 'nbProcedure', (
+  const renderPlan = () => {
+    const plan = doc.plan || {};
+    const body = editing ? (
       <div className="space-y-3">
-        <div className="flex gap-2 items-center flex-wrap">
-          <button onClick={() => updateField('procedure.mode', 'template')}
-            className={proc.mode === 'template' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
-            {t('nbTemplateMode', lang)}
-          </button>
-          <button onClick={() => updateField('procedure.mode', 'freetext')}
-            className={proc.mode === 'freetext' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
-            {t('nbFreetextMode', lang)}
-          </button>
-          {proc.mode === 'template' && (
-            <button onClick={() => setShowProtocolImport(true)}
-              className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
-              {t('nbImportProtocol', lang)}
-            </button>
+        <div>
+          <label htmlFor={`${uid}-objectives`}>{t('nbObjectives', lang)}</label>
+          <textarea id={`${uid}-objectives`} value={plan.objectives || ''} onChange={e => updateField('plan.objectives', e.target.value)}
+            className="w-full" rows={3} placeholder={zh ? '描述实验目的...' : 'Describe experiment objectives...'} />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-notes`}>{t('nbNotes', lang)}</label>
+          <textarea id={`${uid}-notes`} value={plan.notes || ''} onChange={e => updateField('plan.notes', e.target.value)}
+            className="w-full" rows={2} placeholder={zh ? '其他备注...' : 'Additional notes...'} />
+        </div>
+      </div>
+    ) : (plan.objectives || plan.notes) ? (
+      <div className="space-y-4">
+        {plan.objectives && fieldBlock(t('nbObjectives', lang), plan.objectives)}
+        {plan.notes && fieldBlock(t('nbNotes', lang), plan.notes)}
+      </div>
+    ) : emptyLine(zh ? '尚未填写实验目的和备注。' : 'No objectives or notes yet.');
+    return renderSection('plan', '01', 'nbPlan', null, body);
+  };
+
+  const renderMaterials = () => {
+    const reagents = doc.materials?.reagents || [];
+    const equipment = doc.materials?.equipment || [];
+    const checklist = doc.materials?.checklist || [];
+    const checked = checklist.filter(c => c.checked).length;
+    const meta = [
+      reagents.length ? (zh ? `试剂 ${reagents.length}` : `${reagents.length} reagent${reagents.length === 1 ? '' : 's'}`) : null,
+      equipment.length ? (zh ? `设备 ${equipment.length}` : `${equipment.length} equipment`) : null,
+      checklist.length ? (zh ? `清单 ${checked}/${checklist.length}` : `checklist ${checked}/${checklist.length}`) : null,
+    ].filter(Boolean).join(' · ');
+
+    const setChecked = (i, value) => {
+      const next = [...checklist]; next[i] = { ...next[i], checked: value };
+      updateField('materials.checklist', next);
+    };
+
+    if (!editing) {
+      const empty = !reagents.length && !equipment.length && !checklist.length;
+      const body = empty ? emptyLine(zh ? '尚未列出试剂、设备或检查清单。' : 'No reagents, equipment or checklist yet.') : (
+        <div className="space-y-5">
+          {reagents.length > 0 && (
+            <div>
+              <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{t('nbReagents', lang)}</div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th style={{ paddingLeft: 0 }}>{t('nbReagentName', lang)}</th>
+                      <th>{t('nbAmount', lang)}</th>
+                      <th>{t('nbLocation', lang)}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reagents.map((r, i) => (
+                      <tr key={i}>
+                        <td style={{ paddingLeft: 0 }}>{r.name || '—'}</td>
+                        <td className="tabular" style={{ whiteSpace: 'nowrap' }}>{r.amount ? `${r.amount} ${r.unit || ''}` : '—'}</td>
+                        <td style={{ color: r.location ? 'var(--text)' : 'var(--text-muted)' }}>{r.location || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {equipment.length > 0 && (
+            <div>
+              <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{t('nbEquipment', lang)}</div>
+              <ul>
+                {equipment.map((eq, i) => (
+                  <li key={i} className="flex items-center justify-between gap-3 py-2" style={{ borderTop: i ? '1px solid var(--rule)' : 0, fontSize: '0.875rem' }}>
+                    <span className="min-w-0" style={{ overflowWrap: 'anywhere' }}>{eq.name || '—'}</span>
+                    <span className={`badge ${eq.status === 'ready' ? 'badge-green' : 'badge-warn'}`}>
+                      {eq.status === 'ready' ? t('nbReady', lang) : t('nbPending', lang)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {checklist.length > 0 && (
+            <div>
+              <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{t('nbChecklist', lang)}</div>
+              <ul>
+                {checklist.map((c, i) => (
+                  <li key={i} style={{ borderTop: i ? '1px solid var(--rule)' : 0 }}>
+                    <label className="label-inline flex gap-2.5 py-2" style={{ alignItems: 'flex-start' }}>
+                      <input type="checkbox" checked={!!c.checked} onChange={e => setChecked(i, e.target.checked)} style={{ width: 16, height: 16, marginTop: 3, flexShrink: 0 }} />
+                      <span style={{ ...CHECK_TEXT, color: c.checked ? 'var(--text-muted)' : 'var(--text)', textDecoration: c.checked ? 'line-through' : 'none' }}>
+                        {c.item || '—'}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
-        {proc.mode === 'template' ? (
+      );
+      return renderSection('materials', '02', 'nbMaterials', meta, body);
+    }
+
+    const body = (
+      <div className="space-y-5">
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="eyebrow">{t('nbReagents', lang)}</span>
+            {addBtn(t('nbAddReagent', lang), () => updateField('materials.reagents', [...reagents, { name: '', amount: '', unit: '', location: '', inventoryRef: null }]))}
+          </div>
+          {reagents.length > 0 && (
+            <div className="hidden @xl:grid gap-2 mb-1 grid-cols-[minmax(0,1fr)_5.5rem_4.5rem_9rem_2.25rem]" aria-hidden="true">
+              {['nbReagentName', 'nbAmount', 'nbUnit', 'nbLocation'].map(k => (
+                <span key={k} className="eyebrow" style={{ fontSize: '0.625rem' }}>{t(k, lang)}</span>
+              ))}
+            </div>
+          )}
           <div className="space-y-2">
-            {(proc.protocolSteps || []).length === 0 && (
-              <p className="text-sm py-4 text-center" style={S_MUTED}>
-                {lang === 'zh' ? '点击"从方案导入"加载步骤' : 'Click "Import from Protocol" to load steps'}
-              </p>
-            )}
-            {(proc.protocolSteps || []).map((step, i) => (
-              <div key={i} className="p-2 rounded-lg" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-                <div className="flex gap-2 items-start">
-                  <input type="checkbox" checked={step.completed}
-                    onChange={e => {
-                      const next = [...proc.protocolSteps]; next[i] = { ...next[i], completed: e.target.checked };
-                      updateField('procedure.protocolSteps', next);
-                    }}
-                    style={{ accentColor: 'var(--primary)', marginTop: 4, width: 16, height: 16 }} />
-                  <div className="flex-1">
-                    <p className="text-sm" style={{ opacity: step.completed ? 0.5 : 1, textDecoration: step.completed ? 'line-through' : 'none' }}>
-                      <span className="font-semibold mr-1" style={{ color: 'var(--primary)' }}>{i + 1}.</span>
-                      {step.stepText}
-                    </p>
-                    <div className="flex gap-2 mt-1.5 flex-wrap">
-                      <input type="text" value={step.deviation || ''} placeholder={t('nbDeviation', lang)}
-                        onChange={e => { const next = [...proc.protocolSteps]; next[i] = { ...next[i], deviation: e.target.value }; updateField('procedure.protocolSteps', next); }}
-                        className="flex-1 min-w-[120px]" style={{ padding: '3px 6px', fontSize: '0.75rem' }} />
-                      <input type="text" value={step.actualParams || ''} placeholder={t('nbActualParams', lang)}
-                        onChange={e => { const next = [...proc.protocolSteps]; next[i] = { ...next[i], actualParams: e.target.value }; updateField('procedure.protocolSteps', next); }}
-                        className="flex-1 min-w-[120px]" style={{ padding: '3px 6px', fontSize: '0.75rem' }} />
-                    </div>
-                  </div>
+            {reagents.map((r, i) => {
+              const set = (field, value) => { const next = [...reagents]; next[i] = { ...next[i], [field]: value }; updateField('materials.reagents', next); };
+              return (
+                <div key={i} className="grid gap-2 items-center grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] @xl:grid-cols-[minmax(0,1fr)_5.5rem_4.5rem_9rem_2.25rem]">
+                  <input type="text" value={r.name} placeholder={t('nbReagentName', lang)} aria-label={t('nbReagentName', lang)}
+                    onChange={e => set('name', e.target.value)} className="w-full min-w-0 col-span-4 @xl:col-span-1" />
+                  <input type="text" value={r.amount} placeholder={t('nbAmount', lang)} aria-label={t('nbAmount', lang)}
+                    onChange={e => set('amount', e.target.value)} className="w-full min-w-0" />
+                  <input type="text" value={r.unit} placeholder={t('nbUnit', lang)} aria-label={t('nbUnit', lang)}
+                    onChange={e => set('unit', e.target.value)} className="w-full min-w-0" />
+                  <input type="text" value={r.location} placeholder={t('nbLocation', lang)} aria-label={t('nbLocation', lang)}
+                    onChange={e => set('location', e.target.value)} className="w-full min-w-0" />
+                  {removeBtn(() => updateField('materials.reagents', reagents.filter((_, j) => j !== i)))}
                 </div>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="eyebrow">{t('nbEquipment', lang)}</span>
+            {addBtn(t('nbAddEquipment', lang), () => updateField('materials.equipment', [...equipment, { name: '', status: 'pending' }]))}
+          </div>
+          <div className="space-y-2">
+            {equipment.map((eq, i) => (
+              <div key={i} className="grid gap-2 items-center grid-cols-[minmax(0,1fr)_7.5rem_auto]">
+                <input type="text" value={eq.name} placeholder={t('nbEquipmentName', lang)} aria-label={t('nbEquipmentName', lang)}
+                  onChange={e => { const next = [...equipment]; next[i] = { ...next[i], name: e.target.value }; updateField('materials.equipment', next); }}
+                  className="w-full min-w-0" />
+                <select value={eq.status} aria-label={t('nbStatus', lang)} className="w-full min-w-0"
+                  onChange={e => { const next = [...equipment]; next[i] = { ...next[i], status: e.target.value }; updateField('materials.equipment', next); }}>
+                  <option value="ready">{t('nbReady', lang)}</option>
+                  <option value="pending">{t('nbPending', lang)}</option>
+                </select>
+                {removeBtn(() => updateField('materials.equipment', equipment.filter((_, j) => j !== i)))}
               </div>
             ))}
           </div>
+        </div>
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="eyebrow">{t('nbChecklist', lang)}</span>
+            {addBtn(t('nbAddCheckItem', lang), () => updateField('materials.checklist', [...checklist, { item: '', checked: false }]))}
+          </div>
+          <div className="space-y-2">
+            {checklist.map((c, i) => (
+              <div key={i} className="grid gap-2 items-center grid-cols-[auto_minmax(0,1fr)_auto]">
+                <input type="checkbox" checked={!!c.checked} onChange={e => setChecked(i, e.target.checked)}
+                  aria-label={zh ? '已完成' : 'Done'} style={{ width: 16, height: 16 }} />
+                <input type="text" value={c.item} aria-label={t('nbChecklist', lang)}
+                  onChange={e => { const next = [...checklist]; next[i] = { ...next[i], item: e.target.value }; updateField('materials.checklist', next); }}
+                  className="w-full min-w-0" style={{ textDecoration: c.checked ? 'line-through' : 'none' }} />
+                {removeBtn(() => updateField('materials.checklist', checklist.filter((_, j) => j !== i)))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+    return renderSection('materials', '02', 'nbMaterials', meta, body);
+  };
+
+  const renderProcedure = () => {
+    const proc = doc.procedure || { mode: 'freetext', protocolSteps: [], freeText: '' };
+    const steps = proc.protocolSteps || [];
+    const done = steps.filter(s => s.completed).length;
+    const isTemplate = proc.mode === 'template';
+    const setStep = (i, patch) => {
+      const next = [...steps]; next[i] = { ...next[i], ...patch };
+      updateField('procedure.protocolSteps', next);
+    };
+    const importBtn = (
+      <button type="button" className="btn btn-sm" onClick={() => setShowProtocolImport(true)}>
+        <IconClipboard size={13} />{t('nbImportProtocol', lang)}
+      </button>
+    );
+    const meta = isTemplate && steps.length
+      ? (zh ? `已完成 ${done}/${steps.length}` : `${done}/${steps.length} done`)
+      : (!isTemplate && proc.freeText ? t('nbFreetextMode', lang) : null);
+
+    if (!editing) {
+      let body;
+      if (isTemplate && steps.length) {
+        const pct = Math.round((done / steps.length) * 100);
+        body = (
+          <div>
+            <div style={{ height: 3, background: 'var(--bg-2)', marginTop: '-0.25rem', marginBottom: '0.5rem' }} aria-hidden="true">
+              <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', transition: 'width var(--duration-base) ease' }} />
+            </div>
+            <ol>
+              {steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-3 py-2.5" style={{ borderTop: i ? '1px solid var(--rule)' : 0 }}>
+                  <label className="label-inline flex-none" style={{ padding: 4, margin: '-2px -4px -4px' }}>
+                    <input type="checkbox" checked={!!s.completed} onChange={e => setStep(i, { completed: e.target.checked })}
+                      aria-label={zh ? `第 ${i + 1} 步已完成` : `Step ${i + 1} done`} style={{ width: 16, height: 16, display: 'block' }} />
+                  </label>
+                  <span className="mono flex-none" style={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: '1.45rem', minWidth: '1.4rem', color: s.completed ? 'var(--text-muted)' : 'var(--accent)' }}>
+                    {pad2(i + 1)}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ ...FIELD_TEXT, fontSize: '0.9rem', lineHeight: 1.6, color: s.completed ? 'var(--text-muted)' : 'var(--text)', textDecoration: s.completed ? 'line-through' : 'none', textDecorationColor: 'var(--border)' }}>
+                      {s.stepText}
+                    </p>
+                    {(s.deviation || s.actualParams) && (
+                      <dl className="mt-1 space-y-0.5" style={{ fontSize: '0.75rem' }}>
+                        {s.deviation && (
+                          <div className="flex gap-2">
+                            <dt className="mono flex-none" style={{ fontWeight: 700, color: 'var(--warning-text)' }}>{t('nbDeviation', lang)}</dt>
+                            <dd className="mono" style={{ overflowWrap: 'anywhere' }}>{s.deviation}</dd>
+                          </div>
+                        )}
+                        {s.actualParams && (
+                          <div className="flex gap-2">
+                            <dt className="mono flex-none" style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{t('nbActualParams', lang)}</dt>
+                            <dd className="mono" style={{ overflowWrap: 'anywhere' }}>{s.actualParams}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        );
+      } else if (!isTemplate && proc.freeText) {
+        body = <p className="detail-text" style={FIELD_TEXT}>{proc.freeText}</p>;
+      } else {
+        body = (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              {zh ? '尚未记录步骤。可从方案导入，或' : 'No steps yet. Import them from a protocol or'}{' '}
+              <button type="button" className="link" onClick={startEdit}>{zh ? '手动记录' : 'write them yourself'}</button>.
+            </p>
+            {importBtn}
+          </div>
+        );
+      }
+      return renderSection('procedure', '03', 'nbProcedure', meta, body);
+    }
+
+    const body = (
+      <div className="space-y-3">
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="seg" role="group" aria-label={t('nbProcedure', lang)}>
+            <button type="button" aria-pressed={isTemplate} onClick={() => updateField('procedure.mode', 'template')}>{t('nbTemplateMode', lang)}</button>
+            <button type="button" aria-pressed={!isTemplate} onClick={() => updateField('procedure.mode', 'freetext')}>{t('nbFreetextMode', lang)}</button>
+          </div>
+          {isTemplate && importBtn}
+        </div>
+        {isTemplate ? (
+          steps.length === 0 ? (
+            <p className="py-3" style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+              {zh ? '点击"从方案导入"加载步骤' : 'Click "Import from Protocol" to load steps'}
+            </p>
+          ) : (
+            <ol className="space-y-2">
+              {steps.map((step, i) => (
+                <li key={i} className="p-3" style={{ border: '1px solid var(--rule)', background: step.completed ? 'var(--bg-2)' : 'var(--card)' }}>
+                  <div className="flex gap-3 items-start">
+                    <input type="checkbox" checked={!!step.completed} onChange={e => setStep(i, { completed: e.target.checked })}
+                      aria-label={zh ? `第 ${i + 1} 步已完成` : `Step ${i + 1} done`} style={{ width: 16, height: 16, marginTop: 3, flexShrink: 0 }} />
+                    <span className="mono flex-none" style={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: '1.4rem', color: 'var(--accent)' }}>{pad2(i + 1)}</span>
+                    <p className="flex-1 min-w-0" style={{ fontSize: '0.875rem', lineHeight: 1.55, color: step.completed ? 'var(--text-muted)' : 'var(--text)', textDecoration: step.completed ? 'line-through' : 'none' }}>
+                      {step.stepText}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 mt-2 @md:grid-cols-2" style={{ paddingLeft: '2.4rem' }}>
+                    <input type="text" value={step.deviation || ''} placeholder={t('nbDeviation', lang)} aria-label={t('nbDeviation', lang)}
+                      onChange={e => setStep(i, { deviation: e.target.value })} className="w-full min-w-0" />
+                    <input type="text" value={step.actualParams || ''} placeholder={t('nbActualParams', lang)} aria-label={t('nbActualParams', lang)}
+                      onChange={e => setStep(i, { actualParams: e.target.value })} className="w-full min-w-0" />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )
         ) : (
-          <textarea value={proc.freeText || ''} onChange={e => updateField('procedure.freeText', e.target.value)}
-            className="w-full" rows={8} placeholder={lang === 'zh' ? '自由记录实验步骤...' : 'Record experiment procedure...'} />
+          <textarea value={proc.freeText || ''} onChange={e => updateField('procedure.freeText', e.target.value)} aria-label={t('nbProcedure', lang)}
+            className="w-full" rows={8} placeholder={zh ? '自由记录实验步骤...' : 'Record experiment procedure...'} />
         )}
       </div>
-    ));
+    );
+    return renderSection('procedure', '03', 'nbProcedure', meta, body);
   };
 
-  const renderResultsSection = () => {
-    const res = editingEntry?.results || { summary: '', dataProcessing: '', figures: [], backupStatus: '' };
-    return renderSection('results', '4', 'nbResults', (
+  const renderResults = () => {
+    const res = doc.results || { summary: '', dataProcessing: '', figures: [], backupStatus: '' };
+    const figures = res.figures || [];
+    const meta = figures.length ? (zh ? `图表 ${figures.length}` : `${figures.length} figure${figures.length === 1 ? '' : 's'}`) : null;
+
+    if (!editing) {
+      const empty = !res.summary && !res.dataProcessing && !figures.length && !res.backupStatus;
+      const body = empty ? emptyLine(zh ? '尚未记录结果。' : 'No results recorded yet.') : (
+        <div className="space-y-4">
+          {res.summary && fieldBlock(t('nbSummary', lang), res.summary)}
+          {res.dataProcessing && fieldBlock(t('nbDataProcessing', lang), res.dataProcessing)}
+          {figures.length > 0 && (
+            <div>
+              <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{t('nbFigures', lang)}</div>
+              <ol>
+                {figures.map((f, i) => (
+                  <li key={i} className="flex gap-3 py-2" style={{ borderTop: i ? '1px solid var(--rule)' : 0, fontSize: '0.875rem' }}>
+                    <span className="mono flex-none" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', lineHeight: '1.3rem' }}>
+                      {zh ? `图 ${i + 1}` : `Fig. ${i + 1}`}
+                    </span>
+                    <span className="min-w-0" style={{ overflowWrap: 'anywhere' }}>
+                      {f.description || '—'}
+                      {f.notes && <span style={{ color: 'var(--text-muted)' }}> · {f.notes}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {res.backupStatus && (
+            <div>
+              <div className="eyebrow" style={{ marginBottom: '0.25rem' }}>{t('nbBackupStatus', lang)}</div>
+              <p className="mono" style={{ fontSize: '0.8125rem', overflowWrap: 'anywhere' }}>{res.backupStatus}</p>
+            </div>
+          )}
+        </div>
+      );
+      return renderSection('results', '04', 'nbResults', meta, body);
+    }
+
+    const body = (
       <div className="space-y-3">
         <div>
-          <label>{t('nbSummary', lang)}</label>
-          <textarea value={res.summary || ''} onChange={e => updateField('results.summary', e.target.value)}
-            className="w-full" rows={3} placeholder={lang === 'zh' ? '实验结果总结...' : 'Summarize results...'} />
+          <label htmlFor={`${uid}-summary`}>{t('nbSummary', lang)}</label>
+          <textarea id={`${uid}-summary`} value={res.summary || ''} onChange={e => updateField('results.summary', e.target.value)}
+            className="w-full" rows={3} placeholder={zh ? '实验结果总结...' : 'Summarize results...'} />
         </div>
         <div>
-          <label>{t('nbDataProcessing', lang)}</label>
-          <textarea value={res.dataProcessing || ''} onChange={e => updateField('results.dataProcessing', e.target.value)}
-            className="w-full" rows={2} placeholder={lang === 'zh' ? '数据处理方法和结果...' : 'Data processing methods and results...'} />
+          <label htmlFor={`${uid}-dataproc`}>{t('nbDataProcessing', lang)}</label>
+          <textarea id={`${uid}-dataproc`} value={res.dataProcessing || ''} onChange={e => updateField('results.dataProcessing', e.target.value)}
+            className="w-full" rows={2} placeholder={zh ? '数据处理方法和结果...' : 'Data processing methods and results...'} />
         </div>
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="mb-0">{t('nbFigures', lang)}</label>
-            <button onClick={() => updateField('results.figures', [...(res.figures || []), { description: '', notes: '' }])}
-              className="btn-secondary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>+ {t('nbAddFigure', lang)}</button>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="eyebrow">{t('nbFigures', lang)}</span>
+            {addBtn(t('nbAddFigure', lang), () => updateField('results.figures', [...figures, { description: '', notes: '' }]))}
           </div>
-          {(res.figures || []).map((fig, i) => (
-            <div key={i} className="flex gap-2 mb-1.5 items-center">
-              <input type="text" value={fig.description} placeholder={t('nbFigureDesc', lang)}
-                onChange={e => { const next = [...res.figures]; next[i] = { ...next[i], description: e.target.value }; updateField('results.figures', next); }}
-                className="flex-1" style={{ padding: '4px 8px', fontSize: '0.82rem' }} />
-              <input type="text" value={fig.notes} placeholder={t('nbFigureNotes', lang)}
-                onChange={e => { const next = [...res.figures]; next[i] = { ...next[i], notes: e.target.value }; updateField('results.figures', next); }}
-                style={{ width: '120px', padding: '4px 8px', fontSize: '0.82rem' }} />
-              <button onClick={() => updateField('results.figures', res.figures.filter((_, j) => j !== i))}
-                aria-label={lang === 'zh' ? '删除' : 'Remove'}
-                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '2px', ...(isMobile ? { minWidth: 40, minHeight: 40, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } : {}) }}>&times;</button>
-            </div>
-          ))}
+          <div className="space-y-2">
+            {figures.map((fig, i) => (
+              <div key={i} className="grid gap-2 items-center grid-cols-[minmax(0,1fr)_auto] @lg:grid-cols-[minmax(0,1fr)_10rem_auto]">
+                <input type="text" value={fig.description} placeholder={t('nbFigureDesc', lang)} aria-label={t('nbFigureDesc', lang)}
+                  onChange={e => { const next = [...figures]; next[i] = { ...next[i], description: e.target.value }; updateField('results.figures', next); }}
+                  className="w-full min-w-0 col-span-2 @lg:col-span-1" />
+                <input type="text" value={fig.notes} placeholder={t('nbFigureNotes', lang)} aria-label={t('nbFigureNotes', lang)}
+                  onChange={e => { const next = [...figures]; next[i] = { ...next[i], notes: e.target.value }; updateField('results.figures', next); }}
+                  className="w-full min-w-0" />
+                {removeBtn(() => updateField('results.figures', figures.filter((_, j) => j !== i)))}
+              </div>
+            ))}
+          </div>
         </div>
         <div>
-          <label>{t('nbBackupStatus', lang)}</label>
-          <input type="text" value={res.backupStatus || ''} onChange={e => updateField('results.backupStatus', e.target.value)}
-            className="w-full" placeholder={lang === 'zh' ? '备份位置/状态...' : 'Backup location/status...'} />
+          <label htmlFor={`${uid}-backup`}>{t('nbBackupStatus', lang)}</label>
+          <input id={`${uid}-backup`} type="text" value={res.backupStatus || ''} onChange={e => updateField('results.backupStatus', e.target.value)}
+            className="w-full" placeholder={zh ? '备份位置/状态...' : 'Backup location/status...'} />
         </div>
       </div>
-    ));
+    );
+    return renderSection('results', '04', 'nbResults', meta, body);
   };
 
-  // Protocol import modal
-  const protocolImportModal = showProtocolImport && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
-        <h3 className="text-lg font-semibold mb-3">{t('nbImportProtocol', lang)}</h3>
-        <ProtocolSelector lang={lang} onSelect={handleImportProtocol} onClose={() => setShowProtocolImport(false)} />
-      </div>
-    </div>
-  );
-
-  // Sidebar
-  const sidebar = (
-    <div className="card card-scroll p-3" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-      <div className="flex items-center gap-2 mb-3">
-        <button onClick={handleNewEntry} className="btn-primary flex-1" style={{ padding: '6px 12px', fontSize: '0.82rem' }}>
-          + {t('nbNewEntry', lang)}
-        </button>
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => jsonInputRef.current?.click()} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbImportJson', lang)}>&darr;</button>
-          <input ref={jsonInputRef} type="file" accept=".json" onChange={handleImportJson} style={{ display: 'none' }} />
+  // ── Document header: title + facts (read) or the header fields (edit) ──
+  const renderDocHeader = () => {
+    const title = displayTitle(doc, lang);
+    const other = zh ? (doc.titleZh ? doc.title : '') : (doc.title ? doc.titleZh : '');
+    const shortId = String(doc.id || '').split('_').pop().toUpperCase();
+    if (editing) {
+      return (
+        <div className="space-y-3">
+          <div className="grid gap-3 @md:grid-cols-2">
+            <div>
+              <label htmlFor={`${uid}-title`}>{t('nbEntryTitle', lang)}</label>
+              <input id={`${uid}-title`} type="text" value={doc.title || ''} onChange={e => updateField('title', e.target.value)}
+                className="w-full" placeholder={zh ? '实验标题 (EN)' : 'Experiment title'} data-autofocus />
+            </div>
+            <div>
+              <label htmlFor={`${uid}-titlezh`}>{t('nbEntryTitleZh', lang)}</label>
+              <input id={`${uid}-titlezh`} type="text" value={doc.titleZh || ''} onChange={e => updateField('titleZh', e.target.value)}
+                className="w-full" placeholder={zh ? '中文标题' : 'Chinese title (optional)'} />
+            </div>
+          </div>
+          <div className="grid gap-3 grid-cols-2 @lg:grid-cols-3 @3xl:grid-cols-5">
+            <div>
+              <label htmlFor={`${uid}-date`}>{t('nbDate', lang)}</label>
+              <input id={`${uid}-date`} type="date" value={doc.date || ''} onChange={e => updateField('date', e.target.value)} className="w-full" />
+            </div>
+            <div>
+              <label htmlFor={`${uid}-start`}>{t('nbStartTime', lang)}</label>
+              <input id={`${uid}-start`} type="time" value={doc.startTime || ''} onChange={e => updateField('startTime', e.target.value)} className="w-full" />
+            </div>
+            <div>
+              <label htmlFor={`${uid}-duration`}>{t('nbDuration', lang)}</label>
+              <input id={`${uid}-duration`} type="number" value={doc.duration || ''} onChange={e => updateField('duration', parseInt(e.target.value) || 0)} className="w-full" min="0" />
+            </div>
+            <div>
+              <label htmlFor={`${uid}-status`}>{t('nbStatus', lang)}</label>
+              <select id={`${uid}-status`} value={doc.status || 'planned'} onChange={e => updateField('status', e.target.value)} className="w-full">
+                {STATUSES.map(s => <option key={s.id} value={s.id}>{t(s.key, lang)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor={`${uid}-priority`}>{t('nbPriority', lang)}</label>
+              <select id={`${uid}-priority`} value={doc.priority || 'medium'} onChange={e => updateField('priority', e.target.value)} className="w-full">
+                <option value="high">{t('nbPriorityHigh', lang)}</option>
+                <option value="medium">{t('nbPriorityMedium', lang)}</option>
+                <option value="low">{t('nbPriorityLow', lang)}</option>
+              </select>
+            </div>
+          </div>
+          {doc.protocolRef && (
+            <div className="notice notice-info" style={{ alignItems: 'center' }}>
+              <IconClipboard size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+              <span><span className="notice-title">{t('nbLinkedProtocol', lang)}:</span> {protocolName(doc.protocolRef)}</span>
+            </div>
+          )}
         </div>
-        <button onClick={handleExportJson} className="btn-secondary" style={{ padding: '6px 8px', fontSize: '0.75rem' }} title={t('nbExportJson', lang)}>&uarr;</button>
-      </div>
-      <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-        placeholder={t('nbSearch', lang)} className="w-full mb-2" style={{ padding: '5px 10px', fontSize: '0.82rem' }} />
-      <div className="flex gap-1 mb-3 flex-wrap">
-        {['all', 'planned', 'in-progress', 'completed', 'cancelled'].map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)}
-            className="text-xs px-2.5 py-0.5 font-medium transition-colors"
-            style={{
-              ...(statusFilter === s
-                ? { background: 'var(--primary)', color: 'var(--on-primary)' }
-                : { background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }),
-              ...(isMobile ? { minHeight: 36, padding: '0 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' } : {}),
-            }}>
-            {s === 'all' ? t('nbAll', lang) : t('nbStatus' + s.replace(/-./g, m => m[1].toUpperCase()).replace(/^./, c => c.toUpperCase()), lang)}
+      );
+    }
+    const end = addMinutes(doc.startTime, doc.duration);
+    return (
+      <>
+        <header>
+          <div className="eyebrow flex items-center gap-1.5">
+            <span>{zh ? '实验记录' : 'Entry'}</span><span aria-hidden="true">·</span><span>{shortId}</span>
+          </div>
+          <h2 style={{ ...DOC_TITLE, marginTop: '0.3rem', color: title ? 'var(--text)' : 'var(--text-muted)', overflowWrap: 'anywhere' }}>{title || untitled}</h2>
+          {other && <p style={{ marginTop: '0.2rem', fontSize: '0.9375rem', color: 'var(--text-muted)' }}>{other}</p>}
+        </header>
+        <dl className="meta-grid grid-cols-2 @xl:grid-cols-3 mt-4">
+          <div><dt>{t('nbStatus', lang)}</dt><dd><StatusBadge status={doc.status} lang={lang} /></dd></div>
+          <div><dt>{t('nbDate', lang)}</dt><dd>{doc.date || '—'}</dd></div>
+          <div>
+            <dt>{zh ? '时间' : 'Time'}</dt>
+            <dd><span style={{ whiteSpace: 'nowrap' }}>{doc.startTime ? `${doc.startTime}${end ? `–${end}` : ''}` : '—'}</span>{doc.duration ? <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}> · {doc.duration} min</span> : null}</dd>
+          </div>
+          <div>
+            <dt>{t('nbPriority', lang)}</dt>
+            <dd style={doc.priority === 'high' ? { color: 'var(--danger-text)', fontWeight: 700 } : undefined}>{t(PRIORITY_KEY[doc.priority] || 'nbPriorityMedium', lang)}</dd>
+          </div>
+          <div><dt>{t('nbLinkedProtocol', lang)}</dt><dd style={doc.protocolRef ? undefined : { color: 'var(--text-muted)' }}>{protocolName(doc.protocolRef) || '—'}</dd></div>
+          <div><dt>{zh ? '更新于' : 'Updated'}</dt><dd>{formatStamp(doc.updatedAt)}</dd></div>
+        </dl>
+      </>
+    );
+  };
+
+  const renderToolbar = () => {
+    if (editing) {
+      return (
+        <>
+          <span className="flex items-center gap-2 min-w-0">
+            <span aria-hidden="true" style={{ width: 8, height: 8, background: 'var(--primary)', border: '1px solid var(--border-strong)', flexShrink: 0 }} />
+            <span className="eyebrow" style={{ color: 'var(--text)' }}>{zh ? '编辑中' : 'Editing'}</span>
+            <span className="hidden sm:inline truncate" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {zh ? '· 更改会自动保存' : '· changes auto-save'}
+            </span>
+          </span>
+          <span className="flex items-center gap-2 flex-none">
+            <button type="button" className="btn btn-sm" onClick={cancelEdit}>{t('nbCancel', lang)}</button>
+            <button type="button" className="btn-primary btn-sm" onClick={saveEdit}><IconCheck size={14} />{t('nbSave', lang)}</button>
+          </span>
+        </>
+      );
+    }
+    const calLabel = zh ? '在日历中查看' : 'View in calendar';
+    return (
+      <div className="toolbar w-full" style={{ gap: '0.375rem' }}>
+        {isMobile && (
+          <button type="button" className="btn-ghost btn-sm" onClick={backToList} style={{ paddingLeft: '0.25rem' }}>
+            <IconChevronLeft size={16} />{t('backNav', lang)}
           </button>
-        ))}
+        )}
+        <button type="button" className="btn btn-sm" onClick={startEdit}><IconEdit size={14} />{zh ? '编辑' : 'Edit'}</button>
+        {/* Wide panel: labelled actions. Narrow panel (phones, tablets, 1024–1150px): icons. */}
+        <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={viewInCalendar}><IconCalendar size={14} />{calLabel}</button>
+        <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={exportMarkdown}><IconDownload size={14} />{t('nbExportMd', lang)}</button>
+        <span className="toolbar-spacer" />
+        <button type="button" className="btn-danger btn-sm hidden @lg:inline-flex" onClick={() => setShowDeleteConfirm(true)}><IconTrash size={14} />{t('nbDeleteEntry', lang)}</button>
+        <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={viewInCalendar} aria-label={calLabel} title={calLabel}><IconCalendar size={16} /></button>
+        <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={exportMarkdown} aria-label={t('nbExportMd', lang)} title={t('nbExportMd', lang)}><IconDownload size={16} /></button>
+        <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={() => setShowDeleteConfirm(true)} aria-label={t('nbDeleteEntry', lang)} title={t('nbDeleteEntry', lang)} style={{ color: 'var(--danger-text)' }}>
+          <IconTrash size={16} />
+        </button>
       </div>
-      {loading && <p className="text-sm text-center py-4" style={S_MUTED}>Loading...</p>}
-      {!loading && filteredEntries.length === 0 && (
-        <div className="text-center py-8">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{margin:'0 auto 8px'}}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-          <p className="text-sm" style={S_MUTED}>{t('nbNoEntries', lang)}</p>
-          <p className="text-xs mt-1" style={S_MUTED}>{t('nbNoEntriesHint', lang)}</p>
-        </div>
-      )}
-      <div className="space-y-1">
-        {filteredEntries.map(entry => {
-          const isSelected = entry.id === selectedId;
-          const title = lang === 'zh' ? (entry.titleZh || entry.title || '\u2014') : (entry.title || '\u2014');
-          return (
-            <button key={entry.id} onClick={() => { setSelectedId(entry.id); setEditingEntry(JSON.parse(JSON.stringify(entry))); if (isMobile) setMobileView('editor'); }}
-              className="w-full text-left px-3 py-2.5 rounded-lg transition-all"
-              style={{
-                background: isSelected ? 'var(--primary-light)' : 'transparent',
-                border: isSelected ? '1px solid var(--primary)' : '1px solid transparent',
-                color: 'var(--text)'
-              }}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs" style={{ color: statusColors[entry.status] || 'var(--text-muted)' }}>&#9679;</span>
-                <span className="text-sm font-medium truncate flex-1">{title || (lang === 'zh' ? '未命名' : 'Untitled')}</span>
-                <span className="text-xs" style={{ color: priorityColors[entry.priority] || 'var(--text-muted)' }}>&#9679;</span>
-              </div>
-              <div className="flex items-center gap-2 mt-0.5 ml-4">
-                <span className="text-xs mono" style={S_MUTED}>{entry.date || ''}</span>
-                {entry.protocolRef && <span className="text-xs px-1.5 py-0 rounded" style={S_PILL_PRIMARY}>&#8226;</span>}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+    );
+  };
 
-  // Editor
-  const editor = editingEntry ? (
-    <div className="card card-scroll p-4" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-      {isMobile && (
-        <button onClick={() => setMobileView('list')} className="mb-3 text-sm font-medium flex items-center gap-1" style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          &larr; {t('backNav', lang)}
-        </button>
-      )}
-      {/* Header fields */}
-      <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
-        <div>
-          <label>{t('nbEntryTitle', lang)}</label>
-          <input type="text" value={editingEntry.title || ''} onChange={e => updateField('title', e.target.value)}
-            className="w-full" placeholder={lang === 'zh' ? '实验标题 (EN)' : 'Experiment title'} />
-        </div>
-        <div>
-          <label>{t('nbEntryTitleZh', lang)}</label>
-          <input type="text" value={editingEntry.titleZh || ''} onChange={e => updateField('titleZh', e.target.value)}
-            className="w-full" placeholder={lang === 'zh' ? '中文标题' : 'Chinese title (optional)'} />
-        </div>
-        <div>
-          <label>{t('nbDate', lang)}</label>
-          <input type="date" value={editingEntry.date || ''} onChange={e => updateField('date', e.target.value)} className="w-full" />
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label>{t('nbStartTime', lang)}</label>
-            <input type="time" value={editingEntry.startTime || ''} onChange={e => updateField('startTime', e.target.value)} className="w-full" />
-          </div>
-          <div style={{ width: 80 }}>
-            <label>{t('nbDuration', lang)}</label>
-            <input type="number" value={editingEntry.duration || ''} onChange={e => updateField('duration', parseInt(e.target.value) || 0)} className="w-full" min="0" />
-          </div>
-        </div>
-        <div>
-          <label>{t('nbStatus', lang)}</label>
-          <select value={editingEntry.status || 'planned'} onChange={e => updateField('status', e.target.value)} className="w-full">
-            <option value="planned">{t('nbStatusPlanned', lang)}</option>
-            <option value="in-progress">{t('nbStatusInProgress', lang)}</option>
-            <option value="completed">{t('nbStatusCompleted', lang)}</option>
-            <option value="cancelled">{t('nbStatusCancelled', lang)}</option>
-          </select>
-        </div>
-        <div>
-          <label>{t('nbPriority', lang)}</label>
-          <select value={editingEntry.priority || 'medium'} onChange={e => updateField('priority', e.target.value)} className="w-full">
-            <option value="high">{t('nbPriorityHigh', lang)}</option>
-            <option value="medium">{t('nbPriorityMedium', lang)}</option>
-            <option value="low">{t('nbPriorityLow', lang)}</option>
-          </select>
-        </div>
+  const detail = doc ? (
+    <article className="panel min-w-0 @container" aria-label={displayTitle(doc, lang) || untitled}>
+      <div className="panel-head sticky z-[2] top-[calc(var(--topbar-h)_+_env(safe-area-inset-top,0px))] lg:top-0"
+        style={{ background: editing ? 'var(--bg-2)' : 'var(--card)', padding: '0.5rem 0.75rem', minHeight: '3rem' }}>
+        {renderToolbar()}
       </div>
-      {editingEntry.protocolRef && (
-        <div className="mb-3 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
-          <span>&rarr;</span>
-          <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEntry.protocolRef]?.name || editingEntry.protocolRef}</span>
-        </div>
-      )}
-      {/* 4 sections */}
-      {renderPlanSection()}
-      {renderMaterialsSection()}
-      {renderProcedureSection()}
-      {renderResultsSection()}
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--border)' }}>
-        <button onClick={exportMarkdown} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>{t('nbExportMd', lang)}</button>
-        <div className="flex-1" />
-        <button onClick={() => setShowDeleteConfirm(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem', color: 'var(--danger-text)' }}>
-          {t('nbDeleteEntry', lang)}
-        </button>
+      <div className="px-4 pt-5 pb-7 @lg:px-7 @lg:pt-6 @lg:pb-8">
+        {renderDocHeader()}
+        {renderPlan()}
+        {renderMaterials()}
+        {renderProcedure()}
+        {renderResults()}
       </div>
-    </div>
+    </article>
   ) : (
-    <div className="card p-8 flex flex-col items-center justify-center" style={{ minHeight: 400 }}>
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{margin:'0 auto 12px'}}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-      <p className="text-sm" style={S_MUTED}>{t('nbSelectEntry', lang)}</p>
-    </div>
-  );
-
-  // Delete confirm
-  const deleteConfirmModal = showDeleteConfirm && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="card p-6 max-w-sm w-full" style={{ background: 'var(--card)' }}>
-        <p className="text-sm mb-4">{t('nbDeleteConfirm', lang)}</p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
-          <button onClick={handleDelete} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem', background: 'var(--danger-border)', borderColor: 'var(--danger-border)', color: 'var(--on-danger)' }}>{t('nbDeleteEntry', lang)}</button>
+    <div className="panel flex items-center justify-center" style={{ minHeight: 420 }}>
+      <div className="empty">
+        <div className="empty-icon"><IconNotebook size={22} /></div>
+        <div className="empty-title">{t('nbSelectEntry', lang)}</div>
+        <div className="empty-desc">
+          {STATUSES.filter(s => counts[s.id]).map(s => `${counts[s.id]} ${t(s.key, lang).toLowerCase()}`).join(' · ')}
         </div>
       </div>
     </div>
   );
+
+  // ── Master list ──
+  const listPanel = (
+    <section className="panel flex flex-col min-w-0 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)]" aria-label={t('nbTitle', lang)}>
+      <div className="p-3 space-y-2.5 flex-none" style={{ borderBottom: '1px solid var(--rule)' }}>
+        <div className="search-field">
+          <IconSearch size={15} />
+          <input type="search" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={t('nbSearch', lang)} aria-label={t('nbSearch', lang)} />
+        </div>
+        <div ref={chipRowRef} className="chip-row is-scroll" role="group" aria-label={t('nbStatus', lang)}
+          onScroll={updateChipFade} style={chipMask ? { maskImage: chipMask, WebkitMaskImage: chipMask } : undefined}>
+          {['all', ...STATUSES.map(s => s.id)].map(s => (
+            <button key={s} type="button" className="chip" aria-pressed={statusFilter === s}
+              onClick={(e) => { setStatusFilter(s); e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }}>
+              {s !== 'all' && <span className="dot" aria-hidden="true" style={{ color: STATUS_BY_ID[s].fg }} />}
+              {statusLabel(s)}
+              <span className="chip-count">{counts[s]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2 px-3.5 flex-none" style={{ minHeight: '2rem', borderBottom: '1px solid var(--rule)' }}>
+        <span className="panel-title" aria-live="polite">
+          {filteredEntries.length === entries.length
+            ? (zh ? `${entries.length} 条记录` : `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`)
+            : (zh ? `${filteredEntries.length} / ${entries.length} 条记录` : `${filteredEntries.length} of ${entries.length} entries`)}
+        </span>
+        <span className="mono" style={{ fontSize: '0.625rem', color: 'var(--text-muted)' }}>{zh ? '按日期 ↓' : 'by date ↓'}</span>
+      </div>
+      {filteredEntries.length === 0 ? (
+        <div className="empty" style={{ padding: '2rem 1.25rem' }}>
+          <div className="empty-icon"><IconSearch size={20} /></div>
+          <div className="empty-title">{zh ? '没有匹配的记录' : 'No matching entries'}</div>
+          <div className="empty-desc">{zh ? '换个关键词或状态试试。' : 'Try another search term or status.'}</div>
+          <button type="button" className="btn btn-sm" onClick={clearFilters}>{zh ? '清除筛选' : 'Clear filters'}</button>
+        </div>
+      ) : (
+        <div ref={listRef} className="list flex-1 min-h-0 overflow-y-auto">
+          {filteredEntries.map(entry => {
+            const isSelected = entry.id === selectedId;
+            const title = displayTitle(entry, lang);
+            const proto = protocolName(entry.protocolRef);
+            return (
+              <button key={entry.id} type="button" data-entry-id={entry.id} onClick={() => openEntry(entry)}
+                className={`list-row${isSelected ? ' is-selected' : ''}`} aria-current={isSelected ? 'true' : undefined}>
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="list-row-title flex-1 min-w-0 truncate" style={title ? undefined : { color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {title || untitled}
+                    </span>
+                    <StatusBadge status={entry.status} lang={lang} />
+                  </span>
+                  <span className="list-row-meta" style={{ flexWrap: 'nowrap', gap: '0.375rem' }}>
+                    <span className="flex-none">{entry.date || '—'}</span>
+                    {entry.priority === 'high' && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="flex-none" style={{ color: 'var(--danger-text)', fontWeight: 700 }}>{zh ? '高优先级' : 'high priority'}</span>
+                      </>
+                    )}
+                    {proto && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="truncate min-w-0">{proto}</span>
+                      </>
+                    )}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+
+  // ── First run: nothing recorded yet ──
+  const firstRun = (
+    <div className="panel">
+      <div className="empty" style={{ padding: '3rem 1.5rem 2.5rem' }}>
+        <div className="empty-icon"><IconNotebook size={22} /></div>
+        <div className="empty-title">{t('nbNoEntries', lang)}</div>
+        <div className="empty-desc" style={{ maxWidth: '46ch' }}>
+          {zh
+            ? '为每个实验建一条记录：写下计划、导入方案步骤、边做边勾选，并记录结果。数据只保存在本浏览器中。'
+            : 'Give each experiment a record: plan it, import a protocol’s steps, tick them off at the bench and log the results. Records stay in this browser.'}
+        </div>
+        <div className="flex flex-wrap justify-center gap-2" style={{ marginTop: '0.75rem' }}>
+          <button type="button" className="btn-primary" onClick={handleNewEntry} style={{ marginTop: 0 }}><IconPlus size={15} />{t('nbNewEntry', lang)}</button>
+          <button type="button" className="btn" onClick={() => jsonInputRef.current?.click()} style={{ marginTop: 0 }}><IconUpload size={15} />{t('nbImportJson', lang)}</button>
+        </div>
+      </div>
+      <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 1, background: 'var(--rule)', borderTop: '1px solid var(--rule)' }}>
+        {[
+          ['01', 'nbPlan', zh ? '实验目的与备注' : 'Objectives and notes'],
+          ['02', 'nbMaterials', zh ? '试剂、设备与检查清单' : 'Reagents, equipment, checklist'],
+          ['03', 'nbProcedure', zh ? '从方案导入步骤，逐步勾选' : 'Protocol steps you tick off as you go'],
+          ['04', 'nbResults', zh ? '总结、数据处理与图表' : 'Summary, data processing, figures'],
+        ].map(([num, key, desc]) => (
+          <li key={key} className="px-4 py-3.5" style={{ background: 'var(--card)' }}>
+            <div className="flex items-baseline gap-2">
+              <span className="mono" style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--accent)' }}>{num}</span>
+              <span className="eyebrow" style={{ color: 'var(--text)' }}>{t(key, lang)}</span>
+            </div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.2rem', lineHeight: 1.45 }}>{desc}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+
+  const showFirstRun = !loading && entries.length === 0;
+  const mobileDetail = isMobile && mobileView === 'editor' && doc;
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold" style={S_TEXT}>{t('nbTitle', lang)}</h2>
-        <p className="text-sm mt-1" style={S_MUTED}>{t('nbSubtitle', lang)}</p>
-      </div>
-      {isMobile ? (
-        mobileView === 'list' ? sidebar : editor
+      {mobileDetail ? (
+        <PageHeader tab="notebook" title={t('nbTitle', lang)} />
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: '320px 1fr' }}>
-          {sidebar}
-          {editor}
+        <PageHeader tab="notebook" title={t('nbTitle', lang)} description={t('nbSubtitle', lang)}
+          meta={entries.length ? (zh ? `${entries.length} 条记录` : `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`) : null}
+          actions={(
+            <>
+              <button type="button" className="btn" onClick={() => jsonInputRef.current?.click()} aria-label={t('nbImportJson', lang)}>
+                <IconUpload size={15} />
+                <span className="sm:hidden">{zh ? '导入' : 'Import'}</span>
+                <span className="hidden sm:inline">{t('nbImportJson', lang)}</span>
+              </button>
+              <button type="button" className="btn" onClick={handleExportJson} disabled={entries.length === 0} aria-label={t('nbExportJson', lang)}>
+                <IconDownload size={15} />
+                <span className="sm:hidden">{zh ? '导出' : 'Export'}</span>
+                <span className="hidden sm:inline">{t('nbExportJson', lang)}</span>
+              </button>
+              <button type="button" className="btn-primary" onClick={handleNewEntry}>
+                <IconPlus size={15} />{t('nbNewEntry', lang)}
+              </button>
+            </>
+          )} />
+      )}
+      <input ref={jsonInputRef} type="file" accept=".json" onChange={handleImportJson} className="hidden" tabIndex={-1} aria-hidden="true" />
+
+      {loading && entries.length === 0 ? (
+        <div className="panel"><div className="empty"><span className="mono" style={{ fontSize: '0.75rem' }}>{zh ? '加载中…' : 'Loading…'}</span></div></div>
+      ) : showFirstRun ? firstRun : isMobile ? (
+        mobileDetail ? detail : listPanel
+      ) : (
+        <div className="grid gap-4 items-start md:grid-cols-[280px_minmax(0,1fr)] lg:grid-cols-[320px_minmax(0,1fr)]">
+          {listPanel}
+          {detail}
         </div>
       )}
-      {protocolImportModal}
-      {deleteConfirmModal}
+
+      {showProtocolImport && (
+        <ProtocolSelector lang={lang} onSelect={handleImportProtocol} onClose={() => setShowProtocolImport(false)} title={t('nbImportProtocol', lang)} />
+      )}
+      {showDeleteConfirm && (
+        <Dialog title={t('nbDeleteEntry', lang)} onClose={() => setShowDeleteConfirm(false)} lang={lang} size="sm"
+          footer={(
+            <>
+              <button type="button" className="btn" onClick={() => setShowDeleteConfirm(false)} data-autofocus>{t('nbCancel', lang)}</button>
+              <button type="button" className="btn-danger" onClick={handleDelete}><IconTrash size={14} />{t('nbDeleteEntry', lang)}</button>
+            </>
+          )}>
+          <p style={{ fontSize: '0.875rem' }}>{t('nbDeleteConfirm', lang)}</p>
+          {doc && <p className="mono" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', overflowWrap: 'anywhere' }}>{displayTitle(doc, lang) || untitled} · {doc.date}</p>}
+        </Dialog>
+      )}
     </div>
   );
 }

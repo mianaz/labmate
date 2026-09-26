@@ -48,11 +48,10 @@ export default function AgentComposer({ onSend, disabled = false, lang = 'en', a
         onCompositionEnd={() => { composingRef.current = false; }}
         placeholder={t('agentPlaceholder', lang)}
         aria-label={t('agentPlaceholder', lang)}
-        className="flex-1 mono px-2.5 py-2 text-sm resize-none"
+        className="flex-1 resize-none"
         style={{
-          background: 'var(--bg-2)', border: '2px solid var(--border)', color: 'var(--text)',
-          lineHeight: 1.45, maxHeight: MAX_HEIGHT + 'px', minWidth: 0,
-          opacity: disabled ? 0.65 : 1,
+          lineHeight: 1.45, maxHeight: MAX_HEIGHT + 'px', minWidth: 0, minHeight: '2.5rem',
+          fontFamily: 'var(--font-body)', opacity: disabled ? 0.65 : 1,
         }}
       />
       {isRunning ? (
@@ -61,13 +60,8 @@ export default function AgentComposer({ onSend, disabled = false, lang = 'en', a
           onClick={onStop}
           aria-label={t('agentStop', lang)}
           title={t('agentStop', lang)}
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: '2.5rem', height: '2.5rem',
-            background: 'var(--card)', color: 'var(--danger-text, #b42318)',
-            border: '2px solid var(--border-strong)', cursor: 'pointer',
-            transition: 'background var(--duration-fast, 120ms)',
-          }}
+          className="btn-danger btn-icon flex-shrink-0"
+          style={{ width: '2.5rem', height: '2.5rem' }}
         >
           <StopIcon size={15} />
         </button>
@@ -78,15 +72,8 @@ export default function AgentComposer({ onSend, disabled = false, lang = 'en', a
           disabled={!canSend}
           aria-label={t('agentSend', lang)}
           title={t('agentSend', lang)}
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: '2.5rem', height: '2.5rem',
-            background: canSend ? 'var(--primary)' : 'var(--bg-2)',
-            color: canSend ? 'var(--on-primary)' : 'var(--text-muted)',
-            border: `2px solid ${canSend ? 'var(--border-strong)' : 'var(--border)'}`,
-            cursor: canSend ? 'pointer' : 'default',
-            transition: 'background var(--duration-fast, 120ms)',
-          }}
+          className={`${canSend ? 'btn-primary' : 'btn'} btn-icon flex-shrink-0`}
+          style={{ width: '2.5rem', height: '2.5rem' }}
         >
           <SendIcon size={17} />
         </button>

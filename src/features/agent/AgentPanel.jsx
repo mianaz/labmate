@@ -1,6 +1,6 @@
 // AgentPanel — the chat surface. Consumes useAgent() + useLang(), maps state to
 // the presentational pieces, and hosts the permission dialog. Portaled to <body>.
-// Desktop (≥768px): floating card anchored above the launcher FAB.
+// Desktop (≥768px): floating card docked bottom-right (above the bottom nav below 1024px).
 // Mobile (<768px): full-screen overlay. Neither reflows page content (fixed).
 import { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -25,7 +25,7 @@ function ThinkingDots({ lang }) {
   return (
     <div className="flex justify-start">
       <div className="flex items-center gap-1.5 px-3 py-2"
-        style={{ background: 'var(--card)', border: '2px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+        style={{ background: 'var(--card)', border: '1px solid var(--border-strong)' }}>
         {[0, 1, 2].map((i) => (
           <span key={i} className="rounded-full animate-pulse" style={{
             width: '6px', height: '6px', background: 'var(--text-muted)', animationDelay: `${i * 0.18}s`,
@@ -93,9 +93,9 @@ export default function AgentPanel({ open, onClose }) {
     : {
         position: 'fixed',
         right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
-        bottom: 'calc(var(--fab-b) + 3.75rem + 3.5rem)',
+        bottom: 'var(--agent-b)',
         width: 'min(400px, calc(100vw - 2rem))',
-        height: 'min(620px, calc(100dvh - 11rem))',
+        height: 'min(640px, calc(100dvh - var(--agent-b) - 1rem))',
       };
 
   const hasMessages = messages.length > 0;
@@ -107,14 +107,14 @@ export default function AgentPanel({ open, onClose }) {
       style={{
         ...shellStyle,
         background: 'var(--card)',
-        border: '2px solid var(--border-strong)',
+        border: isMobile ? 'none' : '1px solid var(--border-strong)',
         boxShadow: isMobile ? 'none' : 'var(--shadow-lg)',
         paddingBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : 0,
       }}
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0"
-        style={{ borderBottom: '2px solid var(--border)' }}>
+        style={{ borderBottom: '1px solid var(--border-strong)', minHeight: '3rem' }}>
         <span style={{ color: 'var(--accent)', flexShrink: 0 }}><SparkIcon size={18} /></span>
         <span className="mono font-bold text-sm" style={{ color: 'var(--text)', letterSpacing: '-0.01em' }}>
           {t('agentTitle', lang)}
@@ -127,23 +127,18 @@ export default function AgentPanel({ open, onClose }) {
             onChange={(e) => setModel(e.target.value)}
             className="mono"
             title={t('agentModel', lang)}
-            style={{
-              fontSize: '0.68rem', padding: '0.2rem 0.35rem', background: 'var(--bg-2)',
-              border: '2px solid var(--border)', color: 'var(--text)', maxWidth: '9.5rem',
-            }}
+            style={{ fontSize: '0.6875rem', minHeight: '1.875rem', paddingTop: '0.2rem', paddingBottom: '0.2rem', maxWidth: '9.5rem' }}
           >
             {MODELS.map((m) => (
               <option key={m.key} value={m.key}>{m.label} · {m.badge}</option>
             ))}
           </select>
           <button type="button" onClick={clear} title={t('agentClear', lang)} aria-label={t('agentClear', lang)}
-            className="flex items-center justify-center"
-            style={{ width: '2rem', height: '2rem', color: 'var(--text-muted)', border: '2px solid var(--border)', background: 'var(--card)' }}>
+            className="btn-ghost btn-icon btn-sm">
             <NewChatIcon size={15} />
           </button>
           <button type="button" onClick={onClose} title={t('agentClose', lang)} aria-label={t('agentClose', lang)}
-            className="flex items-center justify-center"
-            style={{ width: '2rem', height: '2rem', color: 'var(--text-muted)', border: '2px solid var(--border)', background: 'var(--card)' }}>
+            className="btn-ghost btn-icon btn-sm">
             <CloseIcon size={16} />
           </button>
         </div>
@@ -161,8 +156,8 @@ export default function AgentPanel({ open, onClose }) {
             <div className="space-y-1.5 mb-4">
               {[t('agentEmptyExample1', lang), t('agentEmptyExample2', lang)].map((ex) => (
                 <button key={ex} type="button" onClick={() => sendMessage(ex)}
-                  className="block w-full text-left text-xs px-2.5 py-2"
-                  style={{ background: 'var(--bg-2)', border: '2px solid var(--border)', color: 'var(--text)' }}>
+                  className="btn w-full"
+                  style={{ justifyContent: 'flex-start', textAlign: 'left', whiteSpace: 'normal', padding: '0.5rem 0.75rem', fontWeight: 500 }}>
                   {ex}
                 </button>
               ))}
@@ -205,7 +200,7 @@ export default function AgentPanel({ open, onClose }) {
       </div>
 
       {/* Composer */}
-      <div className="px-3 py-2.5 flex-shrink-0" style={{ borderTop: '2px solid var(--border)', background: 'var(--card)' }}>
+      <div className="px-3 py-2.5 flex-shrink-0" style={{ borderTop: '1px solid var(--border-strong)', background: 'var(--card)' }}>
         <AgentComposer onSend={sendMessage} disabled={isRunning} isRunning={isRunning} onStop={stop} lang={lang} autoFocus={!isMobile} />
         <p className="mt-1.5" style={{ ...S_MUTED, fontSize: '0.62rem', textAlign: 'center' }}>
           {t('agentComposerHint', lang)}

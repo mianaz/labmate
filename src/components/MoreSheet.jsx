@@ -1,210 +1,128 @@
-// MoreSheet — brutalist bottom sheet for secondary tabs + settings (mobile/tablet, <lg).
-import { useEffect } from 'react';
+// MoreSheet — phones/tablets (<1024px) bottom sheet: the sections that don't fit
+// in the bottom bar (same grouping as the desktop sidebar) plus settings and
+// backup status. Hidden ≥1024px by CSS (lg:hidden on the wrapper).
+import { useEffect, useRef } from 'react';
 import { t } from '../i18n/index.js';
+import { NAV_GROUPS, BOTTOM_NAV_TABS, TABS, tabHref, isPlainClick } from '../lib/nav.jsx';
+import { describeLastBackup } from '../hooks/useBackupStatus.js';
+import { IconClose, IconRefresh, IconSpark, IconDownload, IconChevronRight, IconGithub } from './icons.jsx';
 
-const SECONDARY_TABS = [
-  { id: 'tools', label: 'tabTools' },
-  { id: 'inventory', label: 'tabInventory' },
-  { id: 'notebook', label: 'tabNotebook' },
-  { id: 'calendar', label: 'tabCalendar' },
-  { id: 'refs', label: 'tabRefs' },
-];
+const ROW = 'flex items-center gap-3 w-full px-4 text-left';
+const ROW_STYLE = { minHeight: '3rem', borderBottom: '1px solid var(--rule)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' };
 
-function RowIcon({ children }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
-      {children}
-    </svg>
-  );
-}
+export default function MoreSheet({
+  isOpen, onClose, activeTab, setActiveTab, lang, setLang, theme, setTheme,
+  onRefreshRecipes, isSyncing, onOpenAgent, backup,
+}) {
+  const panelRef = useRef(null);
 
-const ICONS = {
-  tools: (
-    <RowIcon>
-      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z" />
-    </RowIcon>
-  ),
-  inventory: (
-    <RowIcon>
-      <rect x="2" y="4" width="20" height="4" />
-      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-      <line x1="10" y1="13" x2="14" y2="13" />
-    </RowIcon>
-  ),
-  // Reused from NotebookTab's empty-state book icon for visual consistency.
-  notebook: (
-    <RowIcon>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <line x1="8" y1="7" x2="16" y2="7" />
-      <line x1="8" y1="11" x2="14" y2="11" />
-    </RowIcon>
-  ),
-  calendar: (
-    <RowIcon>
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </RowIcon>
-  ),
-  refs: (
-    <RowIcon>
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </RowIcon>
-  ),
-};
-
-function RefreshIcon({ spinning }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, ...(spinning ? { animation: 'spin 1s linear infinite' } : {}) }}>
-      <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-    </svg>
-  );
-}
-
-function LangIcon() {
-  return (
-    <RowIcon>
-      <circle cx="12" cy="12" r="10" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </RowIcon>
-  );
-}
-
-function AgentIcon() {
-  return (
-    <RowIcon>
-      <path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z" />
-      <path d="M18 15l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" />
-    </RowIcon>
-  );
-}
-
-const ROW_STYLE_BASE = {
-  minHeight: '44px',
-  width: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  paddingLeft: '1.25rem',
-  paddingRight: '1.25rem',
-  fontFamily: 'var(--font-mono)',
-  fontSize: '0.85rem',
-  textAlign: 'left',
-  borderBottom: '1px solid var(--border)',
-};
-
-export default function MoreSheet({ isOpen, onClose, activeTab, setActiveTab, lang, setLang, onRefreshRecipes, isSyncing, onOpenAgent }) {
-  // Lock body scroll while the sheet is open.
+  // Lock body scroll while open; Escape closes; focus moves into the sheet.
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return undefined;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prevOverflow; };
-  }, [isOpen]);
-
-  // Close on Escape.
-  useEffect(() => {
-    if (!isOpen) return;
+    panelRef.current?.focus({ preventScroll: true });
     function handleKey(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  function go(tabId) {
-    setActiveTab(tabId);
-    onClose();
-  }
+  const groups = NAV_GROUPS
+    .map(g => ({ ...g, tabs: g.tabs.filter(id => !BOTTOM_NAV_TABS.includes(id)) }))
+    .filter(g => g.tabs.length > 0);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex lg:hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label={lang === 'zh' ? '更多' : 'More'}
-    >
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, background: 'rgba(20,23,18,0.5)' }}
-      />
-      {/* Panel */}
-      <div
-        className="more-sheet-panel absolute bottom-0 left-0 right-0"
-        style={{
-          background: 'var(--card)',
-          borderTop: '2px solid var(--border-strong)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          maxHeight: '80vh',
-          overflowY: 'auto',
-        }}
-      >
-        <div className="more-sheet-list" role="tablist" aria-label={lang === 'zh' ? '更多导航' : 'More navigation'}>
-          {SECONDARY_TABS.map(tab => {
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => go(tab.id)}
-                style={{
-                  ...ROW_STYLE_BASE,
-                  color: active ? 'var(--primary)' : 'var(--text)',
-                  fontWeight: active ? 700 : 500,
-                  background: active ? 'var(--primary-light)' : 'transparent',
-                }}
-              >
-                {ICONS[tab.id]}
-                <span>{t(tab.label, lang)}</span>
-              </button>
-            );
-          })}
+    <div className="lg:hidden">
+      <div className="overlay-backdrop" onClick={onClose} aria-hidden="true" />
+      <div ref={panelRef} tabIndex={-1} className="sheet" role="dialog" aria-modal="true" aria-label={t('navMore', lang)} style={{ outline: 'none' }}>
+        <div className="sheet-handle" aria-hidden="true" />
+        <div className="sheet-head">
+          <span className="sheet-title">{t('navMore', lang)}</span>
+          <button type="button" onClick={onClose} className="btn-ghost btn-icon btn-sm" aria-label={t('closeLabel', lang)}>
+            <IconClose size={16} />
+          </button>
         </div>
 
-        <div style={{ borderTop: '2px solid var(--border-strong)' }}>
-          {onOpenAgent && (
-            <button
-              type="button"
-              onClick={() => { onClose(); onOpenAgent(); }}
-              style={{ ...ROW_STYLE_BASE, color: 'var(--primary)', fontWeight: 700 }}
-            >
-              <AgentIcon />
-              <span>{t('agentTitle', lang)}</span>
+        <nav aria-label={t('navMore', lang)}>
+          {groups.map(group => (
+            <div key={group.id}>
+              <div className="nav-group-label" style={{ padding: '0.75rem 1rem 0.35rem', borderTop: '1px solid var(--rule)' }}>{t(group.label, lang)}</div>
+              {group.tabs.map(id => {
+                const { Icon, label } = TABS[id];
+                const active = activeTab === id;
+                return (
+                  <a key={id} href={tabHref(id, lang)} className={ROW} aria-current={active ? 'page' : undefined}
+                    onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); setActiveTab(id); onClose(); }}
+                    style={{
+                      ...ROW_STYLE, textDecoration: 'none',
+                      color: 'var(--text)', fontWeight: active ? 700 : 500,
+                      background: active ? 'var(--primary-light)' : 'transparent',
+                      boxShadow: active ? 'inset 3px 0 0 var(--primary)' : 'none',
+                    }}>
+                    <span style={{ color: active ? 'var(--accent)' : 'var(--text-muted)', display: 'inline-flex' }}><Icon size={18} /></span>
+                    <span className="flex-1">{t(label, lang)}</span>
+                    <IconChevronRight size={14} style={{ color: 'var(--text-muted)' }} />
+                  </a>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="nav-group-label" style={{ padding: '0.75rem 1rem 0.35rem', borderTop: '1px solid var(--rule)' }}>{t('navSettings', lang)}</div>
+        <div className={ROW} style={ROW_STYLE}>
+          <span className="flex-1">{t('languageLabel', lang)}</span>
+          <div className="seg" role="group" aria-label={t('languageLabel', lang)}>
+            <button type="button" aria-pressed={lang === 'en'} onClick={() => lang !== 'en' && setLang('en')} lang="en">EN</button>
+            <button type="button" aria-pressed={lang === 'zh'} onClick={() => lang !== 'zh' && setLang('zh')} lang="zh">中文</button>
+          </div>
+        </div>
+        <div className={ROW} style={ROW_STYLE}>
+          <span className="flex-1">{t('themeLabel', lang)}</span>
+          <div className="seg" role="group" aria-label={t('themeLabel', lang)}>
+            <button type="button" aria-pressed={theme !== 'dark'} onClick={() => setTheme('light')}>{t('themeLight', lang)}</button>
+            <button type="button" aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}>{t('themeDark', lang)}</button>
+          </div>
+        </div>
+        <button type="button" onClick={onRefreshRecipes} disabled={isSyncing} className={ROW}
+          style={{ ...ROW_STYLE, color: 'var(--text)', opacity: isSyncing ? 0.6 : 1 }}>
+          <IconRefresh size={18} style={{ color: 'var(--text-muted)', ...(isSyncing ? { animation: 'spin 1s linear infinite' } : {}) }} />
+          <span className="flex-1">{t('refreshRecipes', lang)}</span>
+        </button>
+        {onOpenAgent && (
+          <button type="button" onClick={() => { onClose(); onOpenAgent(); }} className={ROW} style={{ ...ROW_STYLE, color: 'var(--text)' }}>
+            <IconSpark size={18} style={{ color: 'var(--accent)' }} />
+            <span className="flex-1">{t('agentTitle', lang)}</span>
+          </button>
+        )}
+
+        {backup && (
+          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--rule)' }}>
+            <div className="flex-1 min-w-0">
+              <div className="eyebrow">{t('localDataOnly', lang)}</div>
+              <div className="mono" style={{ fontSize: '0.75rem', color: backup.due ? 'var(--warning-text)' : 'var(--text-muted)' }}>
+                {t('backupLast', lang)}: {describeLastBackup(backup.lastExport, t, lang)}
+              </div>
+            </div>
+            <button type="button" className={backup.due ? 'btn-primary btn-sm' : 'btn btn-sm'} onClick={backup.backupNow}>
+              <IconDownload size={14} />{t('backupAction', lang)}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={onRefreshRecipes}
-            disabled={isSyncing}
-            style={{
-              ...ROW_STYLE_BASE,
-              color: isSyncing ? 'var(--primary)' : 'var(--text)',
-              opacity: isSyncing ? 0.7 : 1,
-              fontWeight: 500,
-            }}
-          >
-            <RefreshIcon spinning={isSyncing} />
-            <span>{t('refreshRecipes', lang)}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-            style={{ ...ROW_STYLE_BASE, color: 'var(--primary)', fontWeight: 700, borderBottom: 'none' }}
-          >
-            <LangIcon />
-            <span>{t('langToggle', lang)}</span>
-          </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-wrap px-4 py-3 mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+          <span>labmate v{__APP_VERSION__}</span>
+          <span aria-hidden="true">·</span>
+          <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>bioinfospace.com</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/mianaz/labmate" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1" style={{ color: 'inherit' }}>
+            <IconGithub size={11} />GitHub
+          </a>
         </div>
       </div>
     </div>

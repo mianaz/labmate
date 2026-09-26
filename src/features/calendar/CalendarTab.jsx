@@ -1,40 +1,129 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Fragment, useState, useMemo, useEffect, useCallback, useId } from 'react';
 import { t, useLang } from '../../i18n/index.js';
-import { S_MUTED, S_TEXT } from '../../lib/styleConstants.js';
 import { useToast } from '../../components/Toast.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { useExperiments, createEmptyExperiment } from '../../lib/experiments.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from '../notebook/ProtocolSelector.jsx';
+import Dialog from '../../components/Dialog.jsx';
 import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImport.js';
+import {
+  IconPlus, IconDownload, IconClipboard, IconChevronLeft, IconChevronRight, IconNotebook, IconTrash, IconCheck, IconCalendar,
+} from '../../components/icons.jsx';
 
-const S_PILL_PRIMARY = { background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)', borderRadius: '0' };
+// Status → label key + tone (same visual language as the Notebook tab).
+const STATUSES = [
+  { id: 'planned', key: 'nbStatusPlanned', fg: 'var(--base-c)', bg: 'var(--cat-media-bg)' },
+  { id: 'in-progress', key: 'nbStatusInProgress', fg: 'var(--warning-text)', bg: 'var(--warning-bg)' },
+  { id: 'completed', key: 'nbStatusCompleted', fg: 'var(--accent)', bg: 'var(--primary-light)' },
+  { id: 'cancelled', key: 'nbStatusCancelled', fg: 'var(--text-muted)', bg: 'var(--bg-2)' },
+];
+const STATUS_BY_ID = Object.fromEntries(STATUSES.map(s => [s.id, s]));
 
+// Optional label colour. createEmptyExperiment() stamps DEFAULT_COLOR on every new
+// record, so that value means "none chosen": chips are coloured by status and a
+// chosen label colour shows as a small swatch.
+const DEFAULT_COLOR = '#1D9E75';
+const LABEL_COLORS = [
+  { value: '#16B364', en: 'Green', zh: '绿色' },
+  { value: '#6366f1', en: 'Indigo', zh: '靛蓝' },
+  { value: '#f59e0b', en: 'Amber', zh: '琥珀' },
+  { value: '#ef4444', en: 'Red', zh: '红色' },
+  { value: '#ec4899', en: 'Pink', zh: '粉色' },
+  { value: '#8b5cf6', en: 'Violet', zh: '紫色' },
+  { value: '#06b6d4', en: 'Cyan', zh: '青色' },
+];
+const hasLabelColor = (c) => !!c && String(c).toLowerCase() !== DEFAULT_COLOR.toLowerCase();
+
+const MONTH_KEYS = ['calJan', 'calFeb', 'calMar', 'calApr', 'calMay', 'calJun', 'calJul', 'calAug', 'calSep', 'calOct', 'calNov', 'calDec'];
+const DAY_KEYS = ['calSun', 'calMon', 'calTue', 'calWed', 'calThu', 'calFri', 'calSat'];
+const MAX_CHIPS = 3; // per month cell; with more, show MAX_CHIPS - 1 and "+n more"
+
+// Cross-tab hand-off (see NotebookTab): the Notebook's "View in calendar" leaves
+// { id, date } here; our "Open in Notebook" leaves { id } for the Notebook.
+const NOTEBOOK_FOCUS_KEY = 'labmate_notebook_focus';
+const CALENDAR_FOCUS_KEY = 'labmate_calendar_focus';
+function peekHandoff(key) {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    const value = raw ? JSON.parse(raw) : null;
+    return value && Date.now() - (value.at || 0) < 60000 ? value : null;
+  } catch { return null; }
+}
+function clearHandoff(key) {
+  try { window.sessionStorage.removeItem(key); } catch { /* storage off */ }
+}
+function giveHandoff(key, value) {
+  try { window.sessionStorage.setItem(key, JSON.stringify({ ...value, at: Date.now() })); } catch { /* storage off */ }
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+// Local calendar date string. (toISOString() is UTC, which put events and
+// "today" on the wrong day east/west of Greenwich.)
+const ymd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const isDateStr = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
 // Parse a 'YYYY-MM-DD' string into a local Date (avoids UTC-parse day-shift bugs).
 function dateStrToLocalDate(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   return new Date(y, m - 1, d);
 }
+function addMinutes(time, minutes) {
+  const [h, m] = (time || '').split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return '';
+  const total = h * 60 + m + (Number(minutes) || 0);
+  return `${pad2(Math.floor(total / 60) % 24)}:${pad2(total % 60)}`;
+}
+const timeRange = (e) => (e.startTime ? `${e.startTime}–${addMinutes(e.startTime, e.duration)}` : '--:--');
+const hourOf = (e) => parseInt((e.startTime || '09:00').split(':')[0], 10) || 0;
+const displayTitle = (e, lang) => (lang === 'zh' ? (e.titleZh || e.title) : (e.title || e.titleZh)) || '';
+
+const isNarrow = () => typeof window !== 'undefined' && window.innerWidth < 768;
+
+function StatusBadge({ status, lang }) {
+  const s = STATUS_BY_ID[status] || STATUS_BY_ID.planned;
+  return <span className="badge" style={{ '--badge-fg': s.fg, '--badge-bg': s.bg }}>{t(s.key, lang)}</span>;
+}
+
+// Day number: plain, today (green square) or selected (ink square).
+function dayNumStyle({ today, selected, inMonth = true, size = '1.375rem' }) {
+  const base = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: size, height: size,
+    padding: '0 0.3rem', fontSize: '0.75rem', fontWeight: 600, lineHeight: 1, border: '1px solid transparent',
+    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+  };
+  if (selected) return { ...base, background: 'var(--text)', color: 'var(--bg)', borderColor: 'var(--text)', fontWeight: 700 };
+  if (today) return { ...base, background: 'var(--primary)', color: 'var(--on-primary)', borderColor: 'var(--border-strong)', fontWeight: 700 };
+  // Days outside the month: muted colour + lighter weight (no opacity — it drops below AA contrast).
+  return { ...base, color: inMonth ? 'var(--text)' : 'var(--text-muted)', fontWeight: inMonth ? 600 : 400 };
+}
 
 function CalendarTab({ onNavigateNotebook }) {
   const lang = useLang();
+  const zh = lang === 'zh';
   const toast = useToast();
-  const { entries, loading, save, remove, reload } = useExperiments();
+  const uid = useId();
+  const isMobile = useIsMobile();
+  const { entries, save, remove, reload } = useExperiments();
   const { recipeById: RECIPE_BY_ID } = useRecipes();
-  const [viewMode, setViewMode] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 768) ? 'agenda' : 'month');
-  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Arriving from the Notebook's "View in calendar": open on that entry's date.
+  const [focus] = useState(() => {
+    const f = peekHandoff(CALENDAR_FOCUS_KEY);
+    return f && isDateStr(f.date) ? f : null;
+  });
+  useEffect(() => { clearHandoff(CALENDAR_FOCUS_KEY); }, []);
+
+  const [viewMode, setViewMode] = useState(() => (isNarrow() ? (focus ? 'month' : 'agenda') : 'month'));
+  const [currentDate, setCurrentDate] = useState(() => (focus ? dateStrToLocalDate(focus.date) : new Date()));
+  const [highlightId, setHighlightId] = useState(() => focus?.id || null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showProtocolImport, setShowProtocolImport] = useState(false);
   const [showIcsExport, setShowIcsExport] = useState(false);
-  const [icsRange, setIcsRange] = useState({ from: new Date().toISOString().slice(0, 10), to: '' });
-
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+  const [icsRange, setIcsRange] = useState(() => ({ from: ymd(new Date()), to: '' }));
+  // Mobile-only: which day (if any) the compact month picker has selected, to filter the agenda list.
+  const [mobileDayFilter, setMobileDayFilter] = useState(() => (isNarrow() && focus ? focus.date : null));
 
   // Refresh when the agent schedules timepoints (its writes go straight to Dexie via
   // a separate useExperiments instance; AgentContext emits this window event).
@@ -44,8 +133,6 @@ function CalendarTab({ onNavigateNotebook }) {
     return () => window.removeEventListener('labmate:experiments-changed', onChange);
   }, [reload]);
 
-  // Mobile-only: which day (if any) the compact month picker has selected, to filter the agenda list.
-  const [mobileDayFilter, setMobileDayFilter] = useState(null);
   // Reconcile viewMode when crossing the mobile/desktop breakpoint at runtime (resize/rotate):
   // mobile has no 'week' view, desktop has no 'agenda' view.
   useEffect(() => {
@@ -53,21 +140,40 @@ function CalendarTab({ onNavigateNotebook }) {
     if (!isMobile && viewMode === 'agenda') { setViewMode('month'); }
   }, [isMobile, viewMode]);
 
-  const monthNames = ['calJan','calFeb','calMar','calApr','calMay','calJun','calJul','calAug','calSep','calOct','calNov','calDec'];
-  const dayNames = ['calSun','calMon','calTue','calWed','calThu','calFri','calSat'];
-  const statusColors = { planned: 'var(--base-c)', 'in-progress': 'var(--base-g)', completed: 'var(--base-a)', cancelled: 'var(--base-t)' };
-
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+  const todayStr = ymd(new Date());
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const goToday = () => setCurrentDate(new Date());
+  const monthShort = (d) => (zh ? `${d.getMonth() + 1}月` : t(MONTH_KEYS[d.getMonth()], 'en').slice(0, 3));
+  const longDate = (d) => (zh
+    ? `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 周${t(DAY_KEYS[d.getDay()], 'zh')}`
+    : `${t(DAY_KEYS[d.getDay()], 'en')}, ${t(MONTH_KEYS[d.getMonth()], 'en')} ${d.getDate()}, ${d.getFullYear()}`);
+  const shortDate = (d) => (zh
+    ? `${d.getMonth() + 1}月${d.getDate()}日 周${t(DAY_KEYS[d.getDay()], 'zh')}`
+    : `${t(DAY_KEYS[d.getDay()], 'en')}, ${t(MONTH_KEYS[d.getMonth()], 'en')} ${d.getDate()}`);
+  const untitled = zh ? '未命名实验' : 'Untitled experiment';
+  const protocolName = (ref) => {
+    if (!ref) return '';
+    const r = RECIPE_BY_ID[ref];
+    if (!r) return ref;
+    return zh ? (r.nameCn || r.name) : r.name;
+  };
 
-  const prevWeek = () => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; });
-  const nextWeek = () => setCurrentDate(d => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; });
+  // ── Navigation ──
+  const step = (dir) => {
+    setHighlightId(null);
+    if (viewMode === 'week') setCurrentDate(d => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7 * dir));
+    else setCurrentDate(new Date(year, month + dir, 1));
+    if (isMobile) setMobileDayFilter(null);
+  };
+  const goToday = () => {
+    setHighlightId(null);
+    setCurrentDate(new Date());
+    if (isMobile) setMobileDayFilter(ymd(new Date()));
+  };
+  const showWeekOf = (d) => { setHighlightId(null); setCurrentDate(d); setViewMode('week'); };
 
-  // Get entries by date map
+  // Get entries by date map (each day in start-time order)
   const entriesByDate = useMemo(() => {
     const map = {};
     entries.forEach(e => {
@@ -75,33 +181,53 @@ function CalendarTab({ onNavigateNotebook }) {
       if (!map[e.date]) map[e.date] = [];
       map[e.date].push(e);
     });
+    Object.values(map).forEach(list => list.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || '')));
     return map;
   }, [entries]);
 
-  // Mobile agenda: upcoming (>= today, non-cancelled) entries grouped by date, chronological.
+  // Upcoming (>= today, non-cancelled) in chronological order.
+  const upcomingAll = useMemo(() => entries
+    .filter(e => e.date >= todayStr && e.status !== 'cancelled')
+    .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.startTime || '').localeCompare(b.startTime || '')), [entries, todayStr]);
+
+  // Mobile agenda: upcoming entries grouped by date.
   const groupedUpcoming = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const list = entries
-      .filter(e => e.date >= todayStr && e.status !== 'cancelled')
-      .sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.startTime || '').localeCompare(b.startTime || ''));
     const groups = [];
-    list.forEach(e => {
+    upcomingAll.forEach(e => {
       const g = groups[groups.length - 1];
       if (g && g.date === e.date) g.items.push(e);
       else groups.push({ date: e.date, items: [e] });
     });
     return groups;
-  }, [entries]);
+  }, [upcomingAll]);
 
   // Mobile agenda: entries for the day selected in the compact month picker (any status, any date — not just upcoming).
-  const dayFilteredEntries = useMemo(() => {
-    if (!mobileDayFilter) return [];
-    return entries.filter(e => e.date === mobileDayFilter).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
-  }, [entries, mobileDayFilter]);
+  const dayFilteredEntries = useMemo(() => (mobileDayFilter ? entriesByDate[mobileDayFilter] || [] : []), [entriesByDate, mobileDayFilter]);
 
-  const handleDayClick = (dateStr) => {
-    const entry = createEmptyExperiment(dateStr);
-    setEditingEvent(entry);
+  // Month grid: whole weeks, padded with the neighbouring months' days.
+  const monthDays = useMemo(() => {
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const weeks = Math.ceil((first.getDay() + daysInMonth) / 7);
+    return Array.from({ length: weeks * 7 }, (_, i) => new Date(year, month, 1 - first.getDay() + i));
+  }, [year, month]);
+
+  const weekDays = useMemo(() => {
+    const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay());
+    return Array.from({ length: 7 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+  }, [currentDate]);
+
+  // 07:00–19:00, stretched to include any experiment of this week outside that range.
+  const weekHours = useMemo(() => {
+    let min = 7, max = 19;
+    weekDays.forEach(d => (entriesByDate[ymd(d)] || []).forEach(e => { const h = hourOf(e); min = Math.min(min, h); max = Math.max(max, h); }));
+    min = Math.max(0, min); max = Math.min(23, max);
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  }, [weekDays, entriesByDate]);
+
+  // ── Event form ──
+  const openNewEvent = (dateStr, time) => {
+    setEditingEvent(createEmptyExperiment(dateStr || (isMobile && mobileDayFilter) || todayStr, time));
     setShowEventForm(true);
   };
 
@@ -110,24 +236,39 @@ function CalendarTab({ onNavigateNotebook }) {
     setShowEventForm(true);
   };
 
+  const closeForm = useCallback(() => { setShowEventForm(false); setEditingEvent(null); }, []);
+  const isExisting = !!editingEvent && entries.some(e => e.id === editingEvent.id);
+
   const handleSaveEvent = async () => {
     if (!editingEvent) return;
     await save(editingEvent);
     setShowEventForm(false);
     setEditingEvent(null);
-    toast.show(lang === 'zh' ? '实验已保存' : 'Experiment saved');
+    toast.show(zh ? '实验已保存' : 'Experiment saved');
   };
 
   const handleDeleteEvent = async () => {
     if (!editingEvent?.id) return;
+    if (!window.confirm(t('nbDeleteConfirm', lang))) return;
     await remove(editingEvent.id);
     setShowEventForm(false);
     setEditingEvent(null);
-    toast.show(lang === 'zh' ? '已删除' : 'Deleted');
+    toast.show(zh ? '已删除' : 'Deleted');
+  };
+
+  // Save what's in the form (if anything changed), then show it in the Notebook.
+  const openInNotebook = async () => {
+    if (!editingEvent) return;
+    const stored = entries.find(e => e.id === editingEvent.id);
+    if (!stored || JSON.stringify(stored) !== JSON.stringify(editingEvent)) await save(editingEvent);
+    giveHandoff(NOTEBOOK_FOCUS_KEY, { id: editingEvent.id });
+    setShowEventForm(false);
+    setEditingEvent(null);
+    onNavigateNotebook?.();
   };
 
   const handleProtocolImport = (recipe) => {
-    const entry = createEmptyExperiment();
+    const entry = createEmptyExperiment((isMobile && mobileDayFilter) || todayStr);
     entry.protocolRef = recipe.id;
     entry.title = recipeTitle(recipe, lang);
     entry.titleZh = recipe.nameCn || '';
@@ -145,11 +286,16 @@ function CalendarTab({ onNavigateNotebook }) {
   };
 
   // .ics export
+  const icsCount = useMemo(() => {
+    const to = icsRange.to || '9999-12-31';
+    return entries.filter(e => e.date && e.date >= icsRange.from && e.date <= to).length;
+  }, [entries, icsRange]);
+
   const generateICS = useCallback(() => {
     const from = icsRange.from;
     const to = icsRange.to || '9999-12-31';
     const filtered = entries.filter(e => e.date && e.date >= from && e.date <= to);
-    if (filtered.length === 0) { toast.show(lang === 'zh' ? '无匹配实验' : 'No matching experiments', '⚠️'); return; }
+    if (filtered.length === 0) { toast.show(lang === 'zh' ? '无匹配实验' : 'No matching experiments'); return; }
 
     const pad = (n) => String(n).padStart(2, '0');
     const formatDT = (dateStr, timeStr) => {
@@ -184,160 +330,317 @@ function CalendarTab({ onNavigateNotebook }) {
     toast.show(t('calIcsExported', lang));
   }, [entries, icsRange, lang, toast]);
 
-  // --- Month View ---
-  const renderMonthView = () => {
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date().toISOString().slice(0, 10);
-    const cells = [];
-
-    for (let i = 0; i < firstDay; i++) cells.push(<div key={'empty-' + i} className="p-1 min-h-[60px]" />);
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayEntries = entriesByDate[dateStr] || [];
-      const isToday = dateStr === today;
-      cells.push(
-        <div key={d} onClick={() => handleDayClick(dateStr)}
-          className="p-1 min-h-[60px] rounded-lg cursor-pointer transition-colors"
-          style={{
-            border: isToday ? '2px solid var(--primary)' : '1px solid var(--border)',
-            background: isToday ? 'var(--primary-light)' : 'var(--card)',
-          }}>
-          <div className="text-xs font-semibold mb-0.5" style={{ color: isToday ? 'var(--primary)' : 'var(--text-muted)' }}>{d}</div>
-          {dayEntries.slice(0, 3).map(e => (
-            <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
-              className="text-xs px-1 py-0.5 rounded mb-0.5 truncate cursor-pointer transition-opacity hover:opacity-80"
-              style={{ background: e.color || statusColors[e.status] || 'var(--base-c)', color: 'white', fontSize: '0.65rem' }}>
-              {lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}
-            </div>
-          ))}
-          {dayEntries.length > 3 && <div className="text-xs" style={S_MUTED}>+{dayEntries.length - 3}</div>}
-        </div>
-      );
-    }
-
+  // ── Pieces ──
+  // Event chip: tinted by status with a status bar; optional label-colour swatch.
+  const renderChip = (e, twoLine = false) => {
+    const s = STATUS_BY_ID[e.status] || STATUS_BY_ID.planned;
+    const title = displayTitle(e, lang) || untitled;
+    const cancelled = e.status === 'cancelled';
+    const swatch = hasLabelColor(e.color) && (
+      <span aria-hidden="true" style={{ width: 6, height: 6, flexShrink: 0, background: e.color, outline: '1px solid var(--card)' }} />
+    );
+    const titleEl = (
+      <span className="truncate min-w-0" style={{ fontWeight: 600, color: cancelled ? 'var(--text-muted)' : 'var(--text)', textDecoration: cancelled ? 'line-through' : 'none' }}>
+        {title}
+      </span>
+    );
     return (
-      <div>
-        <div className="grid grid-cols-7 gap-0.5 mb-1">
-          {dayNames.map(d => <div key={d} className="text-center text-xs font-semibold py-1.5" style={S_MUTED}>{t(d, lang)}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">{cells}</div>
-      </div>
+      <button key={e.id} type="button" onClick={() => handleEventClick(e)}
+        className="pointer-events-auto relative flex w-full min-w-0 text-left hover:ring-1 hover:ring-inset hover:ring-[var(--border-strong)]"
+        title={`${e.startTime || ''} ${title} · ${t(s.key, lang)}`}
+        style={{
+          flexDirection: twoLine ? 'column' : 'row', alignItems: twoLine ? 'stretch' : 'center', gap: twoLine ? '0.1rem' : '0.3rem',
+          minHeight: '1.25rem', padding: twoLine ? '0.2rem 0.35rem 0.25rem' : '0 0.35rem', fontSize: '0.6875rem', lineHeight: 1.25,
+          background: s.bg, borderLeft: `3px solid ${s.fg}`, outlineOffset: -2,
+          boxShadow: e.id === highlightId ? 'inset 0 0 0 2px var(--text)' : undefined,
+        }}>
+        {twoLine ? (
+          <>
+            <span className="flex items-center gap-1 min-w-0">{swatch}{titleEl}</span>
+            <span className="mono truncate" style={{ fontSize: '0.625rem', color: 'var(--text-muted)' }}>
+              {e.startTime || '--:--'} · {e.duration || 0} min
+            </span>
+          </>
+        ) : (
+          <>
+            {swatch}
+            {e.startTime && <span className="mono flex-none" style={{ fontSize: '0.625rem', color: 'var(--text-muted)' }}>{e.startTime}</span>}
+            {titleEl}
+          </>
+        )}
+        <span className="sr-only">, {t(s.key, lang)}</span>
+      </button>
     );
   };
 
-  // --- Week View ---
-  const renderWeekView = () => {
-    const start = new Date(currentDate);
-    start.setDate(start.getDate() - start.getDay());
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      days.push(d);
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    const hours = Array.from({ length: 13 }, (_, i) => i + 7); // 7am to 7pm
+  const periodLabel = (() => {
+    if (viewMode !== 'week') return { main: t(MONTH_KEYS[month], lang), year };
+    const a = weekDays[0], b = weekDays[6];
+    const sameMonth = a.getMonth() === b.getMonth();
+    const main = zh
+      ? `${a.getMonth() + 1}月${a.getDate()}日 – ${sameMonth ? '' : `${b.getMonth() + 1}月`}${b.getDate()}日`
+      : `${monthShort(a)} ${a.getDate()} – ${sameMonth ? '' : `${monthShort(b)} `}${b.getDate()}`;
+    return { main, year: b.getFullYear() };
+  })();
 
-    return (
-      <div className="overflow-x-auto">
-        <div className="grid" style={{ gridTemplateColumns: `50px repeat(7, 1fr)`, minWidth: isMobile ? '600px' : 'auto' }}>
-          {/* Header row */}
-          <div />
-          {days.map(d => {
-            const dateStr = d.toISOString().slice(0, 10);
-            const isToday = dateStr === today;
-            return (
-              <div key={dateStr} className="text-center py-1.5 text-xs font-semibold"
-                style={{ color: isToday ? 'var(--primary)' : 'var(--text-muted)', background: isToday ? 'var(--primary-light)' : 'transparent', borderRadius: 'var(--radius)' }}>
-                {t(dayNames[d.getDay()], lang)} {d.getDate()}
+  const periodHeading = (size = '1.25rem') => (
+    <h2 className="flex items-baseline gap-2 min-w-0" aria-live="polite" style={{ margin: 0 }}>
+      <span style={{ fontFamily: 'var(--font-heading)', fontSize: size, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{periodLabel.main}</span>
+      <span className="mono" style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>{periodLabel.year}</span>
+    </h2>
+  );
+
+  const prevLabel = viewMode === 'week' ? (zh ? '上一周' : 'Previous week') : (zh ? '上个月' : 'Previous month');
+  const nextLabel = viewMode === 'week' ? (zh ? '下一周' : 'Next week') : (zh ? '下个月' : 'Next month');
+
+  // --- Month View (desktop/tablet) ---
+  const renderMonthView = () => (
+    <div className="panel overflow-hidden">
+      <div className="grid grid-cols-7" style={{ gap: 1, background: 'var(--rule)', borderBottom: '1px solid var(--border-strong)' }}>
+        {DAY_KEYS.map(d => (
+          <div key={d} className="eyebrow" style={{ background: 'var(--card)', padding: '0.45rem 0.625rem' }}>{t(d, lang)}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7" style={{ gap: 1, background: 'var(--rule)' }}>
+        {monthDays.map(d => {
+          const dateStr = ymd(d);
+          const inMonth = d.getMonth() === month;
+          const list = entriesByDate[dateStr] || [];
+          const visible = list.length > MAX_CHIPS ? list.slice(0, MAX_CHIPS - 1) : list;
+          const more = list.length - visible.length;
+          return (
+            <div key={dateStr} className="relative min-w-0" style={{ minHeight: '6.75rem', background: inMonth ? 'var(--card)' : 'var(--bg)' }}>
+              <button type="button" onClick={() => openNewEvent(dateStr)}
+                className="absolute inset-0 w-full h-full transition-colors hover:bg-[var(--bg-2)]"
+                aria-label={`${t('calNewEvent', lang)} · ${longDate(d)}`} style={{ outlineOffset: -2 }} />
+              <div className="relative pointer-events-none flex flex-col gap-[3px] p-1.5">
+                <div className="flex items-center" style={{ height: '1.375rem', marginBottom: 2 }}>
+                  <span className="mono" style={dayNumStyle({ today: dateStr === todayStr, inMonth })}>
+                    {d.getDate() === 1 ? (zh ? `${d.getMonth() + 1}月1日` : `${monthShort(d)} 1`) : d.getDate()}
+                  </span>
+                </div>
+                {visible.map(e => renderChip(e))}
+                {more > 0 && (
+                  <button type="button" onClick={() => showWeekOf(d)}
+                    className="pointer-events-auto self-start mono hover:underline"
+                    style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--text-muted)', padding: '0.05rem 0.35rem', outlineOffset: -2 }}>
+                    {zh ? `还有 ${more} 项` : `+${more} more`}
+                  </button>
+                )}
               </div>
-            );
-          })}
-          {/* Time slots */}
-          {hours.map(h => (
-            <React.Fragment key={h}>
-              <div className="text-xs text-right pr-2 py-2" style={S_MUTED}>{h}:00</div>
-              {days.map(d => {
-                const dateStr = d.toISOString().slice(0, 10);
-                const dayEntries = (entriesByDate[dateStr] || []).filter(e => {
-                  const startH = parseInt((e.startTime || '09:00').split(':')[0]);
-                  return startH === h;
-                });
-                return (
-                  <div key={dateStr + h} onClick={() => { const entry = createEmptyExperiment(dateStr, `${String(h).padStart(2, '0')}:00`); setEditingEvent(entry); setShowEventForm(true); }}
-                    className="py-1 px-0.5 cursor-pointer transition-colors min-h-[36px]"
-                    style={{ borderTop: '1px solid var(--border)' }}>
-                    {dayEntries.map(e => (
-                      <div key={e.id} onClick={ev => { ev.stopPropagation(); handleEventClick(e); }}
-                        className="text-xs px-1.5 py-1 rounded mb-0.5 cursor-pointer transition-opacity hover:opacity-80"
-                        style={{ background: e.color || statusColors[e.status] || 'var(--base-c)', color: 'white', fontSize: '0.7rem' }}>
-                        <div className="font-medium truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</div>
-                        <div className="opacity-75">{e.startTime} · {e.duration}m</div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // --- Mobile compact month picker (day number + dot, no event chips) ---
-  const renderMobileMonthView = () => {
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date().toISOString().slice(0, 10);
-    const cells = [];
-
-    for (let i = 0; i < firstDay; i++) cells.push(<div key={'empty-' + i} style={{ minHeight: '44px' }} />);
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const hasEntries = !!(entriesByDate[dateStr] && entriesByDate[dateStr].length);
-      const isToday = dateStr === today;
-      const isSelected = dateStr === mobileDayFilter;
-      cells.push(
-        <button key={d} onClick={() => setMobileDayFilter(prev => prev === dateStr ? null : dateStr)}
-          className="flex flex-col items-center justify-center transition-colors"
-          style={{
-            minHeight: '44px',
-            border: isSelected ? '2px solid var(--border-strong)' : isToday ? '2px solid var(--primary)' : '1px solid var(--border)',
-            background: isSelected ? 'var(--bg-2)' : isToday ? 'var(--primary-light)' : 'var(--card)',
-            cursor: 'pointer',
-          }}>
-          <span className="text-sm" style={{ color: isToday ? 'var(--primary)' : 'var(--text)' }}>{d}</span>
-          <span style={{ width: 5, height: 5, marginTop: 2, background: hasEntries ? 'var(--primary)' : 'transparent' }} />
-        </button>
-      );
-    }
-
-    return (
-      <div>
-        <div className="grid grid-cols-7 gap-0.5 mb-1">
-          {dayNames.map(dn => <div key={dn} className="text-center text-xs font-semibold py-1.5" style={S_MUTED}>{t(dn, lang)}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">{cells}</div>
-      </div>
-    );
-  };
-
-  // Single agenda row — full-width tappable, reused by both the grouped "upcoming" list and the day-filtered list.
-  const renderAgendaRow = (e) => (
-    <div key={e.id} onClick={() => handleEventClick(e)}
-      className="w-full flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors hover:opacity-80"
-      style={{ border: '1px solid var(--border)', background: 'var(--card)', minHeight: '44px' }}>
-      <span className="flex-shrink-0" style={{ width: 10, height: 10, background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</div>
-        <div className="text-xs mono" style={S_MUTED}>{e.startTime || '--:--'} · {e.duration || 0}m</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
+
+  // --- Week View (desktop/tablet): same hairline grid, one row per hour ---
+  const renderWeekView = () => {
+    const cols = { gridTemplateColumns: '3.5rem repeat(7, minmax(0, 1fr))', gap: 1, background: 'var(--rule)' };
+    return (
+      <div className="panel overflow-hidden">
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: 640 }}>
+            <div className="grid" style={{ ...cols, borderBottom: '1px solid var(--border-strong)' }}>
+              <div style={{ background: 'var(--card)' }} />
+              {weekDays.map(d => (
+                <div key={ymd(d)} className="flex items-center gap-1.5 min-w-0" style={{ background: 'var(--card)', padding: '0.4rem 0.5rem' }}>
+                  <span className="eyebrow">{t(DAY_KEYS[d.getDay()], lang)}</span>
+                  <span className="mono" style={dayNumStyle({ today: ymd(d) === todayStr })}>{d.getDate()}</span>
+                </div>
+              ))}
+            </div>
+            <div className="grid" style={cols}>
+              {weekHours.map(h => (
+                <Fragment key={h}>
+                  <div className="mono" style={{ background: 'var(--card)', fontSize: '0.6875rem', color: 'var(--text-muted)', padding: '0.3rem 0.5rem 0 0', textAlign: 'right' }}>
+                    {pad2(h)}:00
+                  </div>
+                  {weekDays.map(d => {
+                    const dateStr = ymd(d);
+                    const list = (entriesByDate[dateStr] || []).filter(e => hourOf(e) === h);
+                    return (
+                      <div key={dateStr + h} className="relative min-w-0" style={{ minHeight: '2.75rem', background: 'var(--card)' }}>
+                        {/* Mouse shortcut only (tabIndex -1): keyboard users have "New Experiment". */}
+                        <button type="button" tabIndex={-1} onClick={() => openNewEvent(dateStr, `${pad2(h)}:00`)}
+                          className="absolute inset-0 w-full h-full transition-colors hover:bg-[var(--bg-2)]"
+                          aria-label={`${t('calNewEvent', lang)} · ${longDate(d)} ${pad2(h)}:00`} />
+                        <div className="relative pointer-events-none flex flex-col gap-[3px] p-1">
+                          {list.map(e => renderChip(e, true))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const legend = (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5">
+      <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+        {viewMode === 'week'
+          ? (zh ? '点击时间格即可在该时间新建实验' : 'Click an hour slot to schedule an experiment at that time')
+          : (zh ? '点击任意一天即可新建实验' : 'Click a day to schedule an experiment')}
+      </span>
+      <span className="flex-1" />
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1" aria-hidden="true">
+        {STATUSES.map(s => (
+          <span key={s.id} className="inline-flex items-center gap-1.5 mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            <span style={{ width: 11, height: 11, background: s.bg, borderLeft: `3px solid ${s.fg}` }} />
+            {t(s.key, lang)}
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+
+  // Row with a date block (desktop "Upcoming" column).
+  const renderDatedRow = (e) => {
+    const s = STATUS_BY_ID[e.status] || STATUS_BY_ID.planned;
+    const d = dateStrToLocalDate(e.date);
+    const isToday = e.date === todayStr;
+    const proto = protocolName(e.protocolRef);
+    return (
+      <button key={e.id} type="button" className="list-row" onClick={() => handleEventClick(e)}
+        style={{ alignItems: 'flex-start', gap: '0.75rem', boxShadow: `inset 3px 0 0 ${s.fg}` }}>
+        <span className="flex flex-col items-center flex-none" style={{ width: '2.25rem' }}>
+          <span className="mono" style={{ fontSize: '0.5625rem', fontWeight: 700, letterSpacing: zh ? 0 : '0.08em', textTransform: 'uppercase', color: isToday ? 'var(--accent)' : 'var(--text-muted)' }}>
+            {isToday ? t('calToday', lang) : (zh ? `周${t(DAY_KEYS[d.getDay()], 'zh')}` : t(DAY_KEYS[d.getDay()], 'en'))}
+          </span>
+          <span className="mono tabular" style={{ fontSize: '1.125rem', fontWeight: 700, lineHeight: 1.15 }}>{d.getDate()}</span>
+        </span>
+        <span className="flex-1 min-w-0">
+          <span className="list-row-title block truncate">{displayTitle(e, lang) || untitled}</span>
+          <span className="list-row-meta" style={{ flexWrap: 'nowrap', gap: '0.375rem' }}>
+            <span className="flex-none">{timeRange(e)}</span>
+            {proto && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="truncate min-w-0">{proto}</span>
+              </>
+            )}
+          </span>
+        </span>
+        <span className="sr-only">, {t(s.key, lang)}</span>
+      </button>
+    );
+  };
+
+  // Row with a time column (mobile agenda / selected day).
+  const renderAgendaRow = (e) => {
+    const s = STATUS_BY_ID[e.status] || STATUS_BY_ID.planned;
+    const cancelled = e.status === 'cancelled';
+    const proto = protocolName(e.protocolRef);
+    return (
+      <button key={e.id} type="button" className="list-row" onClick={() => handleEventClick(e)}
+        style={{ gap: '0.75rem', boxShadow: `inset 3px 0 0 ${s.fg}`, ...(e.id === highlightId ? { background: 'var(--bg-2)' } : null) }}>
+        <span className="mono tabular flex-none" style={{ width: '2.75rem', fontSize: '0.8125rem', fontWeight: 700 }}>{e.startTime || '--:--'}</span>
+        <span className="flex-1 min-w-0">
+          <span className="list-row-title block truncate" style={cancelled ? { color: 'var(--text-muted)', textDecoration: 'line-through' } : undefined}>
+            {displayTitle(e, lang) || untitled}
+          </span>
+          <span className="list-row-meta" style={{ flexWrap: 'nowrap', gap: '0.375rem' }}>
+            <span className="flex-none">{e.duration || 0} min</span>
+            {proto && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="truncate min-w-0">{proto}</span>
+              </>
+            )}
+          </span>
+        </span>
+        <StatusBadge status={e.status} lang={lang} />
+      </button>
+    );
+  };
+
+  const upcoming = upcomingAll.slice(0, 8);
+  const upcomingPanel = (
+    <section className="panel min-w-0" aria-labelledby={`${uid}-upcoming`}>
+      <div className="panel-head">
+        <h2 id={`${uid}-upcoming`} className="panel-title">{zh ? '即将进行' : 'Upcoming'}</h2>
+        {upcomingAll.length > 0 && (
+          <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            {upcomingAll.length > upcoming.length ? `${upcoming.length} / ${upcomingAll.length}` : upcomingAll.length}
+          </span>
+        )}
+      </div>
+      {upcoming.length > 0 ? (
+        <div className="list">
+          {upcoming.map((e, i) => {
+            const ym = e.date.slice(0, 7);
+            const newMonth = ym !== (i ? upcoming[i - 1].date.slice(0, 7) : todayStr.slice(0, 7));
+            const d = dateStrToLocalDate(e.date);
+            return (
+              <Fragment key={e.id}>
+                {newMonth && (
+                  <div className="eyebrow px-3.5 py-1" style={{ background: 'var(--bg-2)', borderBottom: '1px solid var(--rule)' }}>
+                    {zh ? `${d.getFullYear()}年${d.getMonth() + 1}月` : `${t(MONTH_KEYS[d.getMonth()], 'en')} ${d.getFullYear()}`}
+                  </div>
+                )}
+                {renderDatedRow(e)}
+              </Fragment>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="empty" style={{ padding: '2rem 1.25rem' }}>
+          <div className="empty-icon"><IconCalendar size={20} /></div>
+          <div className="empty-title">{t('calNoEvents', lang)}</div>
+          <div className="empty-desc">{zh ? '点击日历中的任意一天来安排实验。' : 'Click any day in the calendar to schedule an experiment.'}</div>
+        </div>
+      )}
+    </section>
+  );
+
+  // --- Mobile compact month picker (day number + status dots) ---
+  const renderMobileMonthView = () => (
+    <div className="panel overflow-hidden">
+      <div className="panel-head" style={{ padding: '0.375rem 0.375rem', minHeight: 0 }}>
+        <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => step(-1)} aria-label={prevLabel}><IconChevronLeft size={18} /></button>
+        {periodHeading('1.0625rem')}
+        <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => step(1)} aria-label={nextLabel}><IconChevronRight size={18} /></button>
+      </div>
+      <div className="grid grid-cols-7" style={{ gap: 1, background: 'var(--rule)', borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--border-strong)' }}>
+        {DAY_KEYS.map(d => (
+          <div key={d} className="eyebrow text-center" style={{ background: 'var(--card)', padding: '0.3rem 0', fontSize: '0.625rem' }}>{t(d, lang)}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7" style={{ gap: 1, background: 'var(--rule)' }}>
+        {monthDays.map(d => {
+          const dateStr = ymd(d);
+          const inMonth = d.getMonth() === month;
+          const list = entriesByDate[dateStr] || [];
+          const isSelected = dateStr === mobileDayFilter;
+          return (
+            <button key={dateStr} type="button" onClick={() => setMobileDayFilter(prev => (prev === dateStr ? null : dateStr))}
+              aria-pressed={isSelected}
+              aria-label={`${longDate(d)}${list.length ? ` · ${zh ? `${list.length} 个实验` : `${list.length} experiment${list.length === 1 ? '' : 's'}`}` : ''}`}
+              className="flex flex-col items-center gap-1 min-w-0"
+              style={{ minHeight: '3rem', padding: '0.35rem 0 0.3rem', background: inMonth ? 'var(--card)' : 'var(--bg)', outlineOffset: -2 }}>
+              <span className="mono" style={{ ...dayNumStyle({ today: dateStr === todayStr, selected: isSelected, inMonth, size: '1.625rem' }), fontSize: '0.8125rem' }}>
+                {d.getDate()}
+              </span>
+              <span className="flex items-center gap-[2px]" style={{ height: 5 }} aria-hidden="true">
+                {list.slice(0, 3).map(e => (
+                  <span key={e.id} style={{ width: 5, height: 5, background: (STATUS_BY_ID[e.status] || STATUS_BY_ID.planned).fg }} />
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Header label for the day-filtered mobile agenda (e.g. "Mon, Jul 7").
+  const mobileFilterLabel = mobileDayFilter ? shortDate(dateStrToLocalDate(mobileDayFilter)) : '';
 
   // Mobile agenda body: either the day-filtered list (from the month picker) or the full chronological
   // upcoming list grouped by date header + weekday.
@@ -345,303 +648,257 @@ function CalendarTab({ onNavigateNotebook }) {
     if (mobileDayFilter) {
       if (dayFilteredEntries.length === 0) {
         return (
-          <div className="text-center py-8">
-            <p className="text-sm mb-3" style={S_MUTED}>{lang === 'zh' ? '这一天没有实验' : 'No experiments this day'}</p>
-            <button onClick={() => { const entry = createEmptyExperiment(mobileDayFilter); setEditingEvent(entry); setShowEventForm(true); }}
-              className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: '40px' }}>
-              + {t('calNewEvent', lang)}
+          <div className="empty" style={{ padding: '2rem 1.25rem' }}>
+            <div className="empty-title">{zh ? '这一天没有实验' : 'No experiments this day'}</div>
+            <button type="button" className="btn-primary" onClick={() => openNewEvent(mobileDayFilter)}>
+              <IconPlus size={15} />{t('calNewEvent', lang)}
             </button>
           </div>
         );
       }
-      return <div className="space-y-1.5">{dayFilteredEntries.map(renderAgendaRow)}</div>;
+      return <div className="list">{dayFilteredEntries.map(renderAgendaRow)}</div>;
     }
-
     if (groupedUpcoming.length === 0) {
       return (
-        <div className="text-center py-8">
-          <p className="text-sm mb-3" style={S_MUTED}>{t('calNoEvents', lang)}</p>
-          <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
-            className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', minHeight: '40px' }}>
-            + {t('calNewEvent', lang)}
+        <div className="empty">
+          <div className="empty-icon"><IconCalendar size={20} /></div>
+          <div className="empty-title">{t('calNoEvents', lang)}</div>
+          <div className="empty-desc">{zh ? '安排一个实验，或从方案导入。' : 'Schedule an experiment, or start one from a protocol.'}</div>
+          <button type="button" className="btn-primary" onClick={() => openNewEvent()}>
+            <IconPlus size={15} />{t('calNewEvent', lang)}
           </button>
         </div>
       );
     }
-
-    const todayStr = new Date().toISOString().slice(0, 10);
-    return (
-      <div className="space-y-3">
-        {groupedUpcoming.map(g => {
-          const dObj = dateStrToLocalDate(g.date);
-          const label = `${t(dayNames[dObj.getDay()], lang)}, ${t(monthNames[dObj.getMonth()], lang)} ${dObj.getDate()}`;
-          return (
-            <div key={g.date}>
-              <div className="text-xs font-semibold mb-1.5" style={S_MUTED}>
-                {g.date === todayStr ? `${t('calToday', lang)} · ${label}` : label}
-              </div>
-              <div className="space-y-1.5">{g.items.map(renderAgendaRow)}</div>
-            </div>
-          );
-        })}
-      </div>
-    );
+    return groupedUpcoming.map((g, gi) => {
+      const d = dateStrToLocalDate(g.date);
+      return (
+        <div key={g.date}>
+          <div className="eyebrow px-3.5 py-1.5" style={{ background: 'var(--bg-2)', borderTop: gi ? '1px solid var(--rule)' : 0, borderBottom: '1px solid var(--rule)', color: g.date === todayStr ? 'var(--text)' : undefined }}>
+            {g.date === todayStr ? `${t('calToday', lang)} · ${shortDate(d)}` : shortDate(d)}
+          </div>
+          <div className="list">{g.items.map(renderAgendaRow)}</div>
+        </div>
+      );
+    });
   };
 
-  // Event form modal
+  // ── Dialogs ──
+  const setField = (field, value) => setEditingEvent(prev => ({ ...prev, [field]: value }));
   const eventFormModal = showEventForm && editingEvent && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="card p-6 w-full max-w-md max-h-[85vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
-        <h3 className="text-lg font-semibold mb-4">{t('calEventForm', lang)}</h3>
-        <div className="space-y-3">
-          <div>
-            <label>{t('nbEntryTitle', lang)}</label>
-            <input type="text" value={editingEvent.title || ''} onChange={e => setEditingEvent(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full" placeholder={lang === 'zh' ? '实验标题' : 'Experiment title'} />
-          </div>
-          <div>
-            <label>{t('nbEntryTitleZh', lang)}</label>
-            <input type="text" value={editingEvent.titleZh || ''} onChange={e => setEditingEvent(prev => ({ ...prev, titleZh: e.target.value }))}
-              className="w-full" placeholder={lang === 'zh' ? '中文标题' : 'Chinese title'} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label>{t('nbDate', lang)}</label>
-              <input type="date" value={editingEvent.date || ''} onChange={e => setEditingEvent(prev => ({ ...prev, date: e.target.value }))} className="w-full" />
-            </div>
-            <div>
-              <label>{t('nbStartTime', lang)}</label>
-              <input type="time" value={editingEvent.startTime || ''} onChange={e => setEditingEvent(prev => ({ ...prev, startTime: e.target.value }))} className="w-full" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label>{t('nbDuration', lang)}</label>
-              <input type="number" value={editingEvent.duration || ''} onChange={e => setEditingEvent(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} className="w-full" min="0" />
-            </div>
-            <div>
-              <label>{t('calColor', lang)}</label>
-              <div className="flex gap-1.5 mt-1 flex-wrap">
-                {['#16B364', '#6366f1', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4'].map(c => (
-                  <button key={c} onClick={() => setEditingEvent(prev => ({ ...prev, color: c }))}
-                    style={{ width: 24, height: 24, borderRadius: 0, background: c, border: editingEvent.color === c ? '3px solid var(--text)' : '2px solid var(--border)', cursor: 'pointer', transition: 'transform 0.15s' }} />
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label>{t('nbStatus', lang)}</label>
-              <select value={editingEvent.status || 'planned'} onChange={e => setEditingEvent(prev => ({ ...prev, status: e.target.value }))} className="w-full">
-                <option value="planned">{t('nbStatusPlanned', lang)}</option>
-                <option value="in-progress">{t('nbStatusInProgress', lang)}</option>
-                <option value="completed">{t('nbStatusCompleted', lang)}</option>
-                <option value="cancelled">{t('nbStatusCancelled', lang)}</option>
-              </select>
-            </div>
-            <div>
-              <label>{t('nbPriority', lang)}</label>
-              <select value={editingEvent.priority || 'medium'} onChange={e => setEditingEvent(prev => ({ ...prev, priority: e.target.value }))} className="w-full">
-                <option value="high">{t('nbPriorityHigh', lang)}</option>
-                <option value="medium">{t('nbPriorityMedium', lang)}</option>
-                <option value="low">{t('nbPriorityLow', lang)}</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label>{t('nbObjectives', lang)}</label>
-            <textarea value={editingEvent.plan?.objectives || ''} onChange={e => setEditingEvent(prev => ({ ...prev, plan: { ...prev.plan, objectives: e.target.value } }))}
-              className="w-full" rows={2} placeholder={lang === 'zh' ? '简述实验目的...' : 'Brief objectives...'} />
-          </div>
-          {editingEvent.protocolRef && (
-            <div className="px-3 py-1.5 rounded-lg text-xs flex items-center gap-2" style={S_PILL_PRIMARY}>
-              <span>→</span>
-              <span>{t('nbLinkedProtocol', lang)}: {RECIPE_BY_ID[editingEvent.protocolRef]?.name || editingEvent.protocolRef}</span>
-            </div>
+    <Dialog title={isExisting ? t('calEditEvent', lang) : t('calNewEvent', lang)} onClose={closeForm} lang={lang} size="md"
+      onSubmit={(ev) => { ev.preventDefault(); handleSaveEvent(); }}
+      headActions={(
+        <button type="button" className="btn-ghost btn-sm" onClick={openInNotebook}>
+          <IconNotebook size={14} />{t('calOpenInNotebook', lang)}
+        </button>
+      )}
+      footer={(
+        <>
+          {isExisting && (
+            <button type="button" className="btn-danger" onClick={handleDeleteEvent}><IconTrash size={14} />{t('calDeleteEvent', lang)}</button>
           )}
+          <span className="flex-1" />
+          <button type="button" className="btn" onClick={closeForm}>{t('nbCancel', lang)}</button>
+          <button type="submit" className="btn-primary"><IconCheck size={14} />{t('nbSave', lang)}</button>
+        </>
+      )}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor={`${uid}-title`}>{t('nbEntryTitle', lang)}</label>
+          <input id={`${uid}-title`} type="text" value={editingEvent.title || ''} onChange={e => setField('title', e.target.value)}
+            className="w-full" placeholder={zh ? '实验标题' : 'Experiment title'} data-autofocus />
         </div>
-        <div className="flex gap-2 mt-5 justify-between">
-          <button onClick={handleDeleteEvent} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.82rem', color: 'var(--danger-text)' }}>
-            {t('calDeleteEvent', lang)}
+        <div>
+          <label htmlFor={`${uid}-titlezh`}>{t('nbEntryTitleZh', lang)}</label>
+          <input id={`${uid}-titlezh`} type="text" value={editingEvent.titleZh || ''} onChange={e => setField('titleZh', e.target.value)}
+            className="w-full" placeholder={zh ? '中文标题' : 'Chinese title'} />
+        </div>
+      </div>
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <div className="col-span-2 sm:col-span-1">
+          <label htmlFor={`${uid}-date`}>{t('nbDate', lang)}</label>
+          <input id={`${uid}-date`} type="date" value={editingEvent.date || ''} onChange={e => setField('date', e.target.value)} className="w-full" />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-start`}>{t('nbStartTime', lang)}</label>
+          <input id={`${uid}-start`} type="time" value={editingEvent.startTime || ''} onChange={e => setField('startTime', e.target.value)} className="w-full" />
+        </div>
+        <div>
+          <label htmlFor={`${uid}-duration`}>{t('nbDuration', lang)}</label>
+          <input id={`${uid}-duration`} type="number" value={editingEvent.duration || ''} onChange={e => setField('duration', parseInt(e.target.value) || 0)} className="w-full" min="0" />
+        </div>
+      </div>
+      <div className="grid gap-3 grid-cols-2">
+        <div>
+          <label htmlFor={`${uid}-status`}>{t('nbStatus', lang)}</label>
+          <select id={`${uid}-status`} value={editingEvent.status || 'planned'} onChange={e => setField('status', e.target.value)} className="w-full">
+            {STATUSES.map(s => <option key={s.id} value={s.id}>{t(s.key, lang)}</option>)}
+          </select>
+        </div>
+        <div>
+          <label htmlFor={`${uid}-priority`}>{t('nbPriority', lang)}</label>
+          <select id={`${uid}-priority`} value={editingEvent.priority || 'medium'} onChange={e => setField('priority', e.target.value)} className="w-full">
+            <option value="high">{t('nbPriorityHigh', lang)}</option>
+            <option value="medium">{t('nbPriorityMedium', lang)}</option>
+            <option value="low">{t('nbPriorityLow', lang)}</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <span id={`${uid}-color`} className="eyebrow block" style={{ marginBottom: '0.35rem' }}>{t('calColor', lang)}</span>
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-labelledby={`${uid}-color`}>
+          <button type="button" className="chip" aria-pressed={!hasLabelColor(editingEvent.color)} onClick={() => setField('color', DEFAULT_COLOR)}>
+            {zh ? '按状态' : 'By status'}
           </button>
-          <div className="flex gap-2">
-            <button onClick={() => { setShowEventForm(false); setEditingEvent(null); }} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
-            <button onClick={handleSaveEvent} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbSave', lang)}</button>
-          </div>
+          {LABEL_COLORS.map(c => {
+            const on = editingEvent.color === c.value;
+            return (
+              <button key={c.value} type="button" aria-pressed={on} aria-label={zh ? c.zh : c.en} title={zh ? c.zh : c.en}
+                onClick={() => setField('color', c.value)}
+                style={{ width: 26, height: 26, background: c.value, border: '1px solid var(--border-strong)', boxShadow: on ? '0 0 0 2px var(--card), 0 0 0 3px var(--text)' : 'none' }} />
+            );
+          })}
         </div>
+        <p style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          {zh ? '日历按状态着色；标签颜色显示为一个小色块。' : 'Calendar chips are coloured by status; a label colour adds a small swatch.'}
+        </p>
       </div>
-    </div>
+      <div>
+        <label htmlFor={`${uid}-objectives`}>{t('nbObjectives', lang)}</label>
+        <textarea id={`${uid}-objectives`} value={editingEvent.plan?.objectives || ''} onChange={e => setEditingEvent(prev => ({ ...prev, plan: { ...prev.plan, objectives: e.target.value } }))}
+          className="w-full" rows={2} placeholder={zh ? '简述实验目的...' : 'Brief objectives...'} />
+      </div>
+      {editingEvent.protocolRef && (
+        <div className="notice notice-info" style={{ alignItems: 'center' }}>
+          <IconClipboard size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <span><span className="notice-title">{t('nbLinkedProtocol', lang)}:</span> {protocolName(editingEvent.protocolRef)}</span>
+        </div>
+      )}
+    </Dialog>
   );
 
-  // ICS export modal
   const icsExportModal = showIcsExport && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="card p-6 max-w-sm w-full" style={{ background: 'var(--card)' }}>
-        <h3 className="text-lg font-semibold mb-3">{t('calExportIcs', lang)}</h3>
-        <div className="space-y-3">
-          <div>
-            <label>{t('calIcsFrom', lang)}</label>
-            <input type="date" value={icsRange.from} onChange={e => setIcsRange(prev => ({ ...prev, from: e.target.value }))} className="w-full" />
-          </div>
-          <div>
-            <label>{t('calIcsTo', lang)}</label>
-            <input type="date" value={icsRange.to} onChange={e => setIcsRange(prev => ({ ...prev, to: e.target.value }))} className="w-full" />
-          </div>
+    <Dialog title={t('calExportIcs', lang)} onClose={() => setShowIcsExport(false)} lang={lang} size="sm"
+      footer={(
+        <>
+          <button type="button" className="btn" onClick={() => setShowIcsExport(false)}>{t('nbCancel', lang)}</button>
+          <button type="button" className="btn-primary" onClick={generateICS}><IconDownload size={14} />{t('calExportIcs', lang)}</button>
+        </>
+      )}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor={`${uid}-ics-from`}>{t('calIcsFrom', lang)}</label>
+          <input id={`${uid}-ics-from`} type="date" value={icsRange.from} onChange={e => setIcsRange(prev => ({ ...prev, from: e.target.value }))} className="w-full" />
         </div>
-        <div className="flex gap-2 mt-4 justify-end">
-          <button onClick={() => setShowIcsExport(false)} className="btn-secondary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('nbCancel', lang)}</button>
-          <button onClick={generateICS} className="btn-primary" style={{ padding: '5px 14px', fontSize: '0.82rem' }}>{t('calExportIcs', lang)}</button>
+        <div>
+          <label htmlFor={`${uid}-ics-to`}>{t('calIcsTo', lang)}</label>
+          <input id={`${uid}-ics-to`} type="date" value={icsRange.to} onChange={e => setIcsRange(prev => ({ ...prev, to: e.target.value }))} className="w-full" />
         </div>
       </div>
-    </div>
+      <p className="mono" style={{ fontSize: '0.75rem', color: icsCount ? 'var(--text-muted)' : 'var(--warning-text)' }} aria-live="polite">
+        {zh
+          ? `范围内共 ${icsCount} 个实验${icsRange.to ? '' : '（不设结束日期）'}`
+          : `${icsCount} experiment${icsCount === 1 ? '' : 's'} in range${icsRange.to ? '' : ' (no end date)'}`}
+      </p>
+    </Dialog>
   );
 
-  const protocolImportModal = showProtocolImport && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.4)' }}>
-      <div className="card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" style={{ background: 'var(--card)' }}>
-        <h3 className="text-lg font-semibold mb-3">{t('calImportProtocol', lang)}</h3>
-        <ProtocolSelector lang={lang} onSelect={handleProtocolImport} onClose={() => setShowProtocolImport(false)} />
-      </div>
-    </div>
+  // ── Layout ──
+  const headerActions = (
+    <>
+      <button type="button" className="btn" onClick={() => setShowProtocolImport(true)} aria-label={t('calImportProtocol', lang)}>
+        <IconClipboard size={15} />
+        <span className="sm:hidden">{zh ? '从方案' : 'From protocol'}</span>
+        <span className="hidden sm:inline">{t('calImportProtocol', lang)}</span>
+      </button>
+      <button type="button" className="btn" onClick={() => setShowIcsExport(true)}>
+        <IconDownload size={15} />{t('calExportIcs', lang)}
+      </button>
+      <button type="button" className="btn-primary" onClick={() => openNewEvent()} aria-label={t('calNewEvent', lang)}>
+        <IconPlus size={15} />
+        <span className="sm:hidden">{zh ? '新建' : 'New'}</span>
+        <span className="hidden sm:inline">{t('calNewEvent', lang)}</span>
+      </button>
+    </>
   );
 
-  // Header label for the day-filtered mobile agenda (e.g. "Mon, Jul 7").
-  let mobileFilterLabel = '';
-  if (mobileDayFilter) {
-    const filterDateObj = dateStrToLocalDate(mobileDayFilter);
-    mobileFilterLabel = `${t(dayNames[filterDateObj.getDay()], lang)}, ${t(monthNames[filterDateObj.getMonth()], lang)} ${filterDateObj.getDate()}`;
-  }
+  const viewSeg = isMobile ? (
+    <div className="seg" role="group" aria-label={zh ? '视图' : 'View'}>
+      <button type="button" aria-pressed={viewMode === 'agenda'} onClick={() => { setViewMode('agenda'); setMobileDayFilter(null); }}>
+        {lang === 'zh' ? '日程' : 'Agenda'}
+      </button>
+      <button type="button" aria-pressed={viewMode === 'month'} onClick={() => { setViewMode('month'); setMobileDayFilter(null); }}>
+        {t('calMonthView', lang)}
+      </button>
+    </div>
+  ) : (
+    <div className="seg" role="group" aria-label={zh ? '视图' : 'View'}>
+      <button type="button" aria-pressed={viewMode === 'month'} onClick={() => setViewMode('month')}>{t('calMonthView', lang)}</button>
+      <button type="button" aria-pressed={viewMode === 'week'} onClick={() => setViewMode('week')}>{t('calWeekView', lang)}</button>
+    </div>
+  );
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold" style={S_TEXT}>{t('calTitle', lang)}</h2>
-        <p className="text-sm mt-1" style={S_MUTED}>{t('calSubtitle', lang)}</p>
-      </div>
+      <PageHeader tab="calendar" title={t('calTitle', lang)} description={t('calSubtitle', lang)}
+        meta={upcomingAll.length ? (zh ? `${upcomingAll.length} 个即将进行` : `${upcomingAll.length} upcoming`) : null}
+        actions={headerActions} />
 
-      {/* Toolbar */}
-      <div className="card p-3 mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex gap-1">
-            {isMobile ? (
-              <>
-                <button onClick={() => { setViewMode('agenda'); setMobileDayFilter(null); }}
-                  className={viewMode === 'agenda' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-                  {lang === 'zh' ? '日程' : 'Agenda'}
-                </button>
-                <button onClick={() => { setViewMode('month'); setMobileDayFilter(null); }}
-                  className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-                  {t('calMonthView', lang)}
-                </button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => setViewMode('month')}
-                  className={viewMode === 'month' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-                  {t('calMonthView', lang)}
-                </button>
-                <button onClick={() => setViewMode('week')}
-                  className={viewMode === 'week' ? 'btn-primary' : 'btn-secondary'} style={{ padding: '5px 14px', fontSize: '0.82rem' }}>
-                  {t('calWeekView', lang)}
-                </button>
-              </>
-            )}
+      {isMobile ? (
+        <>
+          <div className="toolbar mb-3">
+            {viewSeg}
+            <span className="toolbar-spacer" />
+            {viewMode === 'month' && <button type="button" className="btn btn-sm" onClick={goToday}>{t('calToday', lang)}</button>}
           </div>
-          {!(isMobile && viewMode === 'agenda') && (
+          {viewMode === 'month' && renderMobileMonthView()}
+          <section className={`panel${viewMode === 'month' ? ' mt-3' : ''}`} aria-labelledby={`${uid}-agenda`}>
+            <div className="panel-head">
+              <h2 id={`${uid}-agenda`} className="panel-title">{mobileDayFilter ? mobileFilterLabel : (zh ? '即将进行' : 'Upcoming')}</h2>
+              {mobileDayFilter ? (
+                <span className="flex items-center gap-1">
+                  {dayFilteredEntries.length > 0 && (
+                    <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => openNewEvent(mobileDayFilter)} aria-label={t('calNewEvent', lang)}>
+                      <IconPlus size={16} />
+                    </button>
+                  )}
+                  <button type="button" className="btn-ghost btn-sm" onClick={() => setMobileDayFilter(null)}>{zh ? '显示全部' : 'Show all'}</button>
+                </span>
+              ) : upcomingAll.length > 0 && (
+                <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{upcomingAll.length}</span>
+              )}
+            </div>
+            {renderMobileAgendaBody()}
+          </section>
+        </>
+      ) : (
+        <>
+          <div className="toolbar mb-3">
             <div className="flex items-center gap-1">
-              <button onClick={() => { (viewMode === 'month' ? prevMonth : prevWeek)(); if (isMobile) setMobileDayFilter(null); }}
-                className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8249;</button>
-              <span className="text-sm font-semibold px-2 min-w-[140px] text-center" style={S_TEXT}>
-                {t(monthNames[month], lang)} {year}
-              </span>
-              <button onClick={() => { (viewMode === 'month' ? nextMonth : nextWeek)(); if (isMobile) setMobileDayFilter(null); }}
-                className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.9rem' }}>&#8250;</button>
+              <button type="button" className="btn btn-icon btn-sm" onClick={() => step(-1)} aria-label={prevLabel}><IconChevronLeft size={16} /></button>
+              <button type="button" className="btn btn-icon btn-sm" onClick={() => step(1)} aria-label={nextLabel}><IconChevronRight size={16} /></button>
             </div>
-          )}
-          {!(isMobile && viewMode === 'agenda') && (
-            <button onClick={() => { goToday(); if (isMobile) setMobileDayFilter(null); }} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-              {t('calToday', lang)}
-            </button>
-          )}
-          <div className="flex-1" />
-          <button onClick={() => setShowProtocolImport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-            {t('calImportProtocol', lang)}
-          </button>
-          <button onClick={() => setShowIcsExport(true)} className="btn-secondary" style={{ padding: '5px 12px', fontSize: '0.78rem' }}>
-            {t('calExportIcs', lang)}
-          </button>
-          <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
-            className="btn-primary" style={{ padding: '5px 12px', fontSize: '0.82rem' }}>
-            + {t('calNewEvent', lang)}
-          </button>
-        </div>
-      </div>
-
-      {/* Calendar grid — on mobile, skipped entirely in Agenda mode (the Agenda card below is the whole body) */}
-      {!(isMobile && viewMode === 'agenda') && (
-        <div className="card p-4">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
+            {periodHeading()}
+            <button type="button" className="btn btn-sm" onClick={goToday}>{t('calToday', lang)}</button>
+            <span className="toolbar-spacer" />
+            {viewSeg}
+          </div>
+          <div className="grid gap-4 items-start min-[1360px]:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="min-w-0">
+              {viewMode === 'week' ? renderWeekView() : renderMonthView()}
+              {legend}
             </div>
-          ) : isMobile ? renderMobileMonthView() : viewMode === 'month' ? renderMonthView() : renderWeekView()}
-        </div>
-      )}
-
-      {/* Upcoming list (desktop) / Agenda (mobile) */}
-      {(isMobile || entries.length > 0) && (
-        <div className="card p-4 mt-4">
-          {isMobile ? (
-            <>
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <h3 className="text-lg font-semibold" style={S_TEXT}>
-                  {mobileDayFilter ? mobileFilterLabel : (lang === 'zh' ? '即将进行' : 'Upcoming')}
-                </h3>
-                {mobileDayFilter ? (
-                  <button onClick={() => setMobileDayFilter(null)} className="btn-secondary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-                    {lang === 'zh' ? '显示全部' : 'Show all'}
-                  </button>
-                ) : groupedUpcoming.length > 0 ? (
-                  <button onClick={() => { const entry = createEmptyExperiment(); setEditingEvent(entry); setShowEventForm(true); }}
-                    className="btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
-                    + {t('calNewEvent', lang)}
-                  </button>
-                ) : null}
-              </div>
-              {renderMobileAgendaBody()}
-            </>
-          ) : (
-            <>
-              <h3 className="text-lg font-semibold mb-3" style={S_TEXT}>
-                {lang === 'zh' ? '即将进行' : 'Upcoming'}
-              </h3>
-              <div className="space-y-1.5">
-                {entries
-                  .filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled')
-                  .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-                  .slice(0, 8)
-                  .map(e => (
-                    <div key={e.id} onClick={() => handleEventClick(e)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
-                      style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color || statusColors[e.status] || 'var(--base-c)' }} />
-                      <span className="text-sm font-medium flex-1 truncate">{lang === 'zh' ? (e.titleZh || e.title || '—') : (e.title || '—')}</span>
-                      <span className="text-xs mono" style={S_MUTED}>{e.date}</span>
-                      <span className="text-xs" style={S_MUTED}>{e.startTime || ''}</span>
-                    </div>
-                  ))}
-                {entries.filter(e => e.date >= new Date().toISOString().slice(0, 10) && e.status !== 'cancelled').length === 0 && (
-                  <p className="text-sm text-center py-4" style={S_MUTED}>{t('calNoEvents', lang)}</p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+            <div className={entries.length ? 'min-w-0' : 'hidden min-[1360px]:block'}>{upcomingPanel}</div>
+          </div>
+        </>
       )}
 
       {eventFormModal}
       {icsExportModal}
-      {protocolImportModal}
+      {showProtocolImport && (
+        <ProtocolSelector lang={lang} onSelect={handleProtocolImport} onClose={() => setShowProtocolImport(false)} title={t('calImportProtocol', lang)} />
+      )}
     </div>
   );
 }

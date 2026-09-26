@@ -1,23 +1,26 @@
 import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LangContext, t } from './i18n/index.js';
-import { useLocalStorage } from './hooks/useLocalStorage.js';
+import { useLocalStorage, loadCustomRecipes, loadCustomProtocols } from './hooks/useLocalStorage.js';
+import { useBackupStatus, describeLastBackup } from './hooks/useBackupStatus.js';
 import { readCookie } from './lib/cookies.js';
 import db from './lib/db.js';
+import { TAB_TO_PATH, PATH_TO_TAB } from './lib/nav.jsx';
 import ToastProvider, { useToast } from './components/Toast.jsx';
 import FavProvider from './components/Favorites.jsx';
-import { TimerProvider, TimerBar, QuickTimerButton } from './components/Timer.jsx';
-import QuickCalculatorButton from './features/calc/QuickCalculatorButton.jsx';
+import { TimerProvider, TimerBar, QuickTimerPanel } from './components/Timer.jsx';
+import { QuickCalcPanel } from './features/calc/QuickCalculatorButton.jsx';
 import RecipeProvider, { useRecipes } from './lib/RecipeProvider.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import Header from './components/Header.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import MobileTopBar from './components/MobileTopBar.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import MoreSheet from './components/MoreSheet.jsx';
 import InstallPrompt from './components/InstallPrompt.jsx';
+import { IconAlert, IconClose } from './components/icons.jsx';
 // The agent stack (loop, prompt, proxy, permissions, grounding, tools) only mounts
 // when the backend probe succeeds, so keep it out of the initial chunk.
 const AgentProvider = lazy(() => import('./lib/agent/AgentContext.jsx'));
-const AgentLauncher = lazy(() => import('./features/agent/AgentLauncher.jsx'));
 const AgentPanel = lazy(() => import('./features/agent/AgentPanel.jsx'));
 import { useAgentAvailability } from './hooks/useAgentAvailability.js';
 
@@ -42,41 +45,21 @@ import { S_MUTED } from './lib/styleConstants.js';
 import { BUFFER_CATEGORIES } from './data/protocolCategories.js';
 
 const SkeletonLine = ({ width = '100%', height = '0.75rem', style }) => (
-  <div className="skeleton-shimmer rounded" style={{ width, height, ...style }} />
+  <div className="skeleton-shimmer" style={{ width, height, ...style }} />
 );
 
 const LazySkeleton = () => (
-  <div className="space-y-4 py-4">
-    <SkeletonLine width="40%" height="1.5rem" />
+  <div className="space-y-4 py-2" aria-busy="true">
+    <SkeletonLine width="8rem" height="0.7rem" />
+    <SkeletonLine width="40%" height="1.75rem" />
     <div className="card p-5 space-y-3">
       <SkeletonLine width="60%" height="1rem" />
       <SkeletonLine width="100%" />
       <SkeletonLine width="80%" />
       <SkeletonLine width="45%" />
     </div>
-    <div className="card p-5 space-y-3">
-      <SkeletonLine width="50%" height="1rem" />
-      <SkeletonLine width="90%" />
-      <SkeletonLine width="70%" />
-    </div>
   </div>
 );
-
-// Tab <-> URL path mapping. /labmate/ basename is applied by BrowserRouter.
-// Paths here are locale-bare; the active locale is prefixed on top (/en/recipes,
-// /zh/recipes) — see SUPPORTED_LOCALES and the Routes block in AppInner below.
-const TAB_TO_PATH = {
-  buffers:   '/recipes',
-  protocols: '/protocols',
-  calc:      '/calc',
-  plate:     '/plate',
-  tools:     '/tools',
-  inventory: '/inventory',
-  notebook:  '/notebook',
-  calendar:  '/calendar',
-  refs:      '/guide',
-};
-const PATH_TO_TAB = Object.fromEntries(Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k]));
 
 // Locale-prefixed routing, mirroring the main bioinfospace.com site's /en/, /zh/
 // URL pattern: the URL is the source of truth for the active locale once inside
@@ -106,7 +89,7 @@ function getDefaultTheme() {
 }
 
 function AppInner() {
-  const { loading, syncing, refresh, recipes } = useRecipes();
+  const { loading, syncing, refresh, bufferRecipes, protocolRecipes } = useRecipes();
   const location = useLocation();
   const navigate = useNavigate();
   // lang/theme declared before activeTab/setActiveTab/switchLocale below, which
@@ -125,9 +108,11 @@ function AppInner() {
     return PATH_TO_TAB[seg] || 'buffers';
   }, [location.pathname]);
   const setActiveTab = useCallback((tabId) => {
+    // Already there: don't push a duplicate history entry (Back would look broken).
+    if (tabId === activeTab) return;
     const path = TAB_TO_PATH[tabId] || '/recipes';
     navigate(`/${lang}${path}`);
-  }, [navigate, lang]);
+  }, [navigate, lang, activeTab]);
   // Language toggle: navigates to swap the locale prefix (URL is the source of
   // truth, mirroring the main site's useLocalePath/LocaleRouter). The effect
   // below persists the change to `lang` once the route actually updates.
@@ -148,19 +133,44 @@ function AppInner() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSelected, setSearchSelected] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('labmate_onboardingDone'));
-  const [calcInitialMode, setCalcInitialMode] = useState(null);
-  const [showBackupReminder, setShowBackupReminder] = useState(false);
-  const [recipeVersion, setRecipeVersion] = useState(0);
+  const [calcInitialMode] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
+  // One small tool open at a time: 'timer' | 'calc' | null
+  const [utility, setUtility] = useState(null);
   const agentAvailable = useAgentAvailability();
   const toast = useToast();
+  const backupStatus = useBackupStatus();
+
+  // Custom entries count toward the sidebar totals; LibraryView announces edits.
+  const readCustomCounts = () => ({
+    buffers: loadCustomRecipes().filter(r => BUFFER_CATEGORIES.includes(r.category)).length,
+    protocols: loadCustomProtocols().length,
+  });
+  const [customCounts, setCustomCounts] = useState(readCustomCounts);
+  useEffect(() => {
+    const onChange = () => setCustomCounts(readCustomCounts());
+    window.addEventListener('labmate-custom-changed', onChange);
+    return () => window.removeEventListener('labmate-custom-changed', onChange);
+  }, []);
+
+  const toggleUtility = useCallback((name) => setUtility(cur => (cur === name ? null : name)), []);
+  const closeUtility = useCallback(() => setUtility(null), []);
+  const toggleTheme = useCallback(() => setTheme(cur => (cur === 'dark' ? 'light' : 'dark')), [setTheme]);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
+  const toggleAgent = useCallback(() => setAgentOpen(o => !o), []);
+
+  const backup = useMemo(() => ({
+    ...backupStatus,
+    backupNow: () => backupStatus.backupNow()
+      .then(() => toast.show(t('backupDone', lang), '✓'))
+      .catch(() => toast.show(t('backupFailed', lang), '⚠')),
+  }), [backupStatus, toast, lang]);
 
   const refreshRecipes = useCallback(async () => {
     toast.show(lang === 'zh' ? '正在刷新配方...' : 'Refreshing recipes...', 'info');
     try {
       const result = await refresh();
-      setRecipeVersion(v => v + 1);
       if (result.verified) {
         toast.show(
           t('recipesUpdated', lang) + ` (${result.total} total${result.newCount > 0 ? ', ' + result.newCount + ' new' : ''})`,
@@ -175,13 +185,7 @@ function AppInner() {
     }
   }, [lang, toast, refresh]);
 
-  // Auto-backup reminder
-  useEffect(() => {
-    const last = parseInt(localStorage.getItem('labmate_lastExport'), 10);
-    if (!last || Date.now() - last > 7 * 24 * 60 * 60 * 1000) setShowBackupReminder(true);
-  }, []);
-
-  const handleCrossNavigate = useCallback((fromTab, fromSelected, targetRecipe) => {
+  const handleCrossNavigate = useCallback((targetRecipe) => {
     setSearchSelected(targetRecipe);
     const targetTab = BUFFER_CATEGORIES.includes(targetRecipe.category) ? 'buffers' : 'protocols';
     setActiveTab(targetTab);
@@ -191,33 +195,17 @@ function AppInner() {
   useEffect(() => {
     if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     else document.documentElement.removeAttribute('data-theme');
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0D0F0C' : '#F0EEE6');
   }, [theme]);
-
-  // Scroll-reveal observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-    );
-    // Scope to <main> (the only place .scroll-reveal is rendered) and coalesce
-    // mutation bursts into one query per frame: an unscoped, undebounced observer
-    // on document.body re-scanned the whole DOM on every keystroke and timer tick.
-    const root = document.querySelector('main') || document.body;
-    const observe = () => root.querySelectorAll('.scroll-reveal:not(.visible)').forEach(el => observer.observe(el));
-    observe();
-    let scheduled = 0;
-    const mo = new MutationObserver(() => {
-      if (scheduled) return;
-      scheduled = requestAnimationFrame(() => { scheduled = 0; observe(); });
-    });
-    mo.observe(root, { childList: true, subtree: true });
-    return () => { observer.disconnect(); mo.disconnect(); if (scheduled) cancelAnimationFrame(scheduled); };
-  }, []);
 
   // Sync <html lang>
   useEffect(() => {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   }, [lang]);
+
+  // Scroll to top when switching sections
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [activeTab]);
 
   // Global ⌘K / Ctrl+K
   useEffect(() => {
@@ -249,14 +237,24 @@ function AppInner() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-2 rounded-full animate-spin mb-3"
-            style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)' }} />
-          <p className="text-sm" style={S_MUTED}>Loading recipes…</p>
+        <div className="flex flex-col items-center gap-3">
+          <img src={import.meta.env.BASE_URL + 'favicon.svg'} alt="" width="36" height="36" />
+          <div style={{ width: 120, height: 3, background: 'var(--bg-2)', overflow: 'hidden' }}>
+            <div className="skeleton-shimmer" style={{ width: '100%', height: '100%', background: 'var(--primary)' }} />
+          </div>
+          <p className="mono text-xs" style={S_MUTED}>Loading recipes…</p>
         </div>
       </div>
     );
   }
+
+  const panel = (id, element, lazyTab = true) => (
+    <div id={`tabpanel-${id}`}>
+      <ErrorBoundary>
+        {lazyTab ? <Suspense fallback={<LazySkeleton />}>{element}</Suspense> : element}
+      </ErrorBoundary>
+    </div>
+  );
 
   // Tab routes shared by every /:locale branch below (see the Routes block in the
   // JSX) — written once and reused via SUPPORTED_LOCALES.map so /en/... and /zh/...
@@ -266,83 +264,82 @@ function AppInner() {
   const renderTabRoutes = () => [
     <Route key="index" index element={<Navigate to="recipes" replace />} />,
     <Route key="buffers-alias" path="buffers" element={<Navigate to="recipes" replace />} />,
-    <Route key="recipes" path="recipes" element={
-      <div role="tabpanel" id="tabpanel-buffers" aria-labelledby="tab-buffers"><ErrorBoundary><BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('buffers', searchSelected, recipe)} /></ErrorBoundary></div>
-    } />,
-    <Route key="protocols" path="protocols" element={
-      <div role="tabpanel" id="tabpanel-protocols" aria-labelledby="tab-protocols"><ErrorBoundary><ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={(recipe) => handleCrossNavigate('protocols', searchSelected, recipe)} /></ErrorBoundary></div>
-    } />,
-    <Route key="calc" path="calc" element={
-      <div role="tabpanel" id="tabpanel-calc" aria-labelledby="tab-calc">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <CalcTab initialMode={calcInitialMode} />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="plate" path="plate" element={
-      <div role="tabpanel" id="tabpanel-plate" aria-labelledby="tab-plate">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <PlateTab />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="tools" path="tools" element={
-      <div role="tabpanel" id="tabpanel-tools" aria-labelledby="tab-tools">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <ToolsTab />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="inventory" path="inventory" element={
-      <div role="tabpanel" id="tabpanel-inventory" aria-labelledby="tab-inventory">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <InventoryTab />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="notebook" path="notebook" element={
-      <div role="tabpanel" id="tabpanel-notebook" aria-labelledby="tab-notebook">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="calendar" path="calendar" element={
-      <div role="tabpanel" id="tabpanel-calendar" aria-labelledby="tab-calendar">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
-    <Route key="guide" path="guide" element={
-      <div role="tabpanel" id="tabpanel-refs" aria-labelledby="tab-refs">
-        <ErrorBoundary>
-          <Suspense fallback={<LazySkeleton />}>
-            <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />
-          </Suspense>
-        </ErrorBoundary>
-      </div>
-    } />,
+    <Route key="recipes" path="recipes" element={panel('buffers',
+      <BuffersTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={handleCrossNavigate} />, false)} />,
+    <Route key="protocols" path="protocols" element={panel('protocols',
+      <ProtocolsTab externalSelected={searchSelected} setExternalSelected={setSearchSelected} onCrossNavigate={handleCrossNavigate} />, false)} />,
+    <Route key="calc" path="calc" element={panel('calc', <CalcTab initialMode={calcInitialMode} />)} />,
+    <Route key="plate" path="plate" element={panel('plate', <PlateTab />)} />,
+    <Route key="tools" path="tools" element={panel('tools', <ToolsTab />)} />,
+    <Route key="inventory" path="inventory" element={panel('inventory', <InventoryTab />)} />,
+    <Route key="notebook" path="notebook" element={panel('notebook', <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />)} />,
+    <Route key="calendar" path="calendar" element={panel('calendar', <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />)} />,
+    <Route key="guide" path="guide" element={panel('refs',
+      <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />)} />,
     <Route key="not-found" path="*" element={<Navigate to="recipes" replace />} />,
   ];
 
   return (
     <LangContext.Provider value={lang}>
-      <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-        <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
-          onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={switchLocale} theme={theme} setTheme={setTheme} />
+      <div className="app-shell" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
+        <a href="#main" className="skip-link" onClick={(e) => { e.preventDefault(); const m = document.getElementById('main'); m?.focus({ preventScroll: true }); m?.scrollIntoView(); }}>
+          {lang === 'zh' ? '跳到主要内容' : 'Skip to content'}
+        </a>
+        <Sidebar
+          activeTab={activeTab} onNavigate={setActiveTab} lang={lang} setLang={switchLocale}
+          theme={theme} onToggleTheme={toggleTheme} onOpenSearch={() => setSearchOpen(true)}
+          onRefreshRecipes={refreshRecipes} isSyncing={syncing}
+          counts={{ buffers: bufferRecipes.length + customCounts.buffers, protocols: protocolRecipes.length + customCounts.protocols }}
+          backup={backup} utility={utility} onToggleUtility={toggleUtility}
+          agentAvailable={agentAvailable} agentOpen={agentOpen} onToggleAgent={toggleAgent}
+        />
+        <div className="app-main">
+          <MobileTopBar
+            lang={lang} onNavigate={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
+            utility={utility} onToggleUtility={toggleUtility}
+            agentAvailable={agentAvailable} agentOpen={agentOpen} onToggleAgent={toggleAgent}
+          />
+          <main className="app-content" id="main" tabIndex={-1} style={{ outline: 'none' }}>
+            {backup.due && (
+              /* Phones/tablets only — on desktop the reminder lives in the sidebar */
+              <div className="notice notice-warn lg:hidden mb-4" role="status" style={{ alignItems: 'center', padding: '0.5rem 0.5rem 0.5rem 0.75rem' }}>
+                <IconAlert size={16} style={{ color: 'var(--warning-text)', flexShrink: 0 }} />
+                <span className="flex-1 min-w-0 truncate" style={{ fontSize: '0.8125rem', lineHeight: 1.35 }}>
+                  <span className="notice-title">{t('backupLast', lang)}:</span>{' '}
+                  <span className="mono">{describeLastBackup(backup.lastExport, t, lang)}</span>
+                </span>
+                <button type="button" className="btn-primary btn-sm" onClick={backup.backupNow}>{t('backupAction', lang)}</button>
+                <button type="button" className="btn-ghost btn-icon btn-sm" onClick={backup.snooze} aria-label={t('backupLater', lang)}>
+                  <IconClose size={14} />
+                </button>
+              </div>
+            )}
+            <div key={activeTab} className="tab-fade-in">
+              <Routes>
+                {/* Bare/legacy paths (no locale prefix) redirect to the active/stored
+                    locale — covers old bookmarks/shared links from before locale-
+                    prefixed routing, plus a bare "/" on first-ever visit. */}
+                <Route path="/" element={<Navigate to={`/${lang}/recipes`} replace />} />
+                <Route path="/buffers" element={<Navigate to={`/${lang}/recipes`} replace />} />
+                {Object.values(TAB_TO_PATH).map((path) => (
+                  <Route key={`bare${path}`} path={path} element={<Navigate to={`/${lang}${path}`} replace />} />
+                ))}
+
+                {/* Locale-prefixed routes — enumerated (not a `:locale` param) so an
+                    unsupported prefix falls through to the catch-all below instead
+                    of being (wrongly) matched and rendered as a locale here. */}
+                {SUPPORTED_LOCALES.map((loc) => (
+                  <Route key={loc} path={`/${loc}`}>
+                    {renderTabRoutes()}
+                  </Route>
+                ))}
+
+                <Route path="*" element={<Navigate to={`/${lang}/recipes`} replace />} />
+              </Routes>
+            </div>
+          </main>
+        </div>
+
         <Suspense fallback={null}>
           <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
             onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />
@@ -350,106 +347,22 @@ function AppInner() {
         <Suspense fallback={null}>
           <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} />
         </Suspense>
-        <main className="max-w-6xl mx-auto px-6 md:px-10 lg:px-12 py-8 md:py-10">
-          {showBackupReminder && (
-            <>
-              {/* Full banner — sm: and up (≥640px), unchanged from pre-mobile-overhaul */}
-              <div className="hidden sm:flex mb-5 px-5 py-4 rounded-lg items-center justify-between gap-4 text-sm"
-                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
-                <span style={{lineHeight:'1.5'}}>{t('backupReminder', lang)}</span>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
-                    className="px-3 py-1 rounded-md text-xs font-semibold"
-                    style={{ background: 'var(--primary)', color: 'var(--on-primary)' }}>{t('backupNow', lang)}</button>
-                  <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
-                    className="px-3 py-1 rounded-md text-xs font-semibold"
-                    style={{ background: 'transparent', color: 'var(--warning-text)', border: '1px solid var(--warning-border)' }}>{t('dismissReminder', lang)}</button>
-                </div>
-              </div>
-              {/* Slim banner — below sm (<640px): same state/handlers, compact one-liner (≤44px) */}
-              <div className="sm:hidden mb-3 px-3 py-2 flex items-center justify-between gap-3 text-xs"
-                style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', color: 'var(--warning-text)' }}>
-                <span className="truncate" style={{ lineHeight: '1.3' }}>
-                  {lang === 'zh' ? '仅本地存储，请定期备份' : 'Local data only — back up regularly'}
-                </span>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button onClick={() => { setActiveTab('tools'); setShowBackupReminder(false); }}
-                    className="font-semibold py-1"
-                    style={{ color: 'var(--warning-text)', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-                    {lang === 'zh' ? '备份' : 'Back up'}
-                  </button>
-                  <button onClick={() => { localStorage.setItem('labmate_lastExport', String(Date.now())); db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {}); setShowBackupReminder(false); }}
-                    aria-label={lang === 'zh' ? '关闭' : 'Dismiss'}
-                    className="font-bold leading-none px-1 py-1"
-                    style={{ color: 'var(--warning-text)', fontSize: '1rem' }}>
-                    ×
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-          <div key={activeTab} className="tab-fade-in">
-            <Routes>
-              {/* Bare/legacy paths (no locale prefix) redirect to the active/stored
-                  locale — covers old bookmarks/shared links from before locale-
-                  prefixed routing, plus a bare "/" on first-ever visit. */}
-              <Route path="/" element={<Navigate to={`/${lang}/recipes`} replace />} />
-              <Route path="/buffers" element={<Navigate to={`/${lang}/recipes`} replace />} />
-              {Object.values(TAB_TO_PATH).map((path) => (
-                <Route key={`bare${path}`} path={path} element={<Navigate to={`/${lang}${path}`} replace />} />
-              ))}
-
-              {/* Locale-prefixed routes — enumerated (not a `:locale` param) so an
-                  unsupported prefix falls through to the catch-all below instead
-                  of being (wrongly) matched and rendered as a locale here. */}
-              {SUPPORTED_LOCALES.map((loc) => (
-                <Route key={loc} path={`/${loc}`}>
-                  {renderTabRoutes()}
-                </Route>
-              ))}
-
-              <Route path="*" element={<Navigate to={`/${lang}/recipes`} replace />} />
-            </Routes>
-          </div>
-        </main>
-        <footer className="text-center py-8 text-xs border-t scroll-reveal" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
-          <p className="font-semibold">
-            bio<span style={{ color: 'var(--accent)' }}>info</span>space{' '}
-            labmate v{__APP_VERSION__}
-          </p>
-          <p className="mt-1 opacity-50">© {new Date().getFullYear()} <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Bioinfospace</a></p>
-          <p className="mt-1 flex items-center justify-center gap-3">
-            <a href="https://bioinfospace.com" target="_blank" rel="noopener noreferrer"
-              className="opacity-50 hover:opacity-80 transition-opacity"
-              style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
-              bioinfospace.com
-            </a>
-            <span className="opacity-30">|</span>
-            <a href="https://github.com/mianaz/labmate" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 opacity-50 hover:opacity-80 transition-opacity"
-              style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>
-              GitHub
-            </a>
-          </p>
-        </footer>
+        <QuickTimerPanel open={utility === 'timer'} onClose={closeUtility} />
+        <QuickCalcPanel open={utility === 'calc'} onClose={closeUtility} />
         <TimerBar />
-        <QuickTimerButton />
-        <QuickCalculatorButton agentAvailable={agentAvailable} />
-        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} lang={lang} />
-        <MoreSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab}
-          lang={lang} setLang={switchLocale} onRefreshRecipes={refreshRecipes} isSyncing={syncing}
-          onOpenAgent={agentAvailable ? () => { setMoreOpen(false); setAgentOpen(true); } : undefined} />
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} onMore={() => setMoreOpen(true)} moreOpen={moreOpen} lang={lang} />
+        <MoreSheet isOpen={moreOpen} onClose={closeMore} activeTab={activeTab} setActiveTab={setActiveTab}
+          lang={lang} setLang={switchLocale} theme={theme} setTheme={setTheme}
+          onRefreshRecipes={refreshRecipes} isSyncing={syncing} backup={backup}
+          onOpenAgent={agentAvailable ? () => setAgentOpen(true) : undefined} />
         <InstallPrompt />
         {agentAvailable && (
           <Suspense fallback={null}>
             <AgentProvider>
-              <AgentLauncher open={agentOpen} onToggle={() => setAgentOpen(o => !o)} />
               <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
             </AgentProvider>
           </Suspense>
         )}
-        <div className="grain" aria-hidden="true" />
       </div>
     </LangContext.Provider>
   );

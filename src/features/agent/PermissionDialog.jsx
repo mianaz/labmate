@@ -25,14 +25,11 @@ export default function PermissionDialog({ permission, onResolve, lang = 'en' })
       role="dialog" aria-modal="true" aria-label={t('agentPermConfirm', lang)}
       onClick={() => onResolve('deny')}
     >
-      <div className="absolute inset-0" style={{ background: 'rgba(20,23,18,0.55)' }} />
+      <div className="overlay-backdrop" aria-hidden="true" />
       <div
-        className="relative w-full"
+        className="dialog"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: '26rem', background: 'var(--card)',
-          border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow-lg)',
-        }}
+        style={{ maxWidth: '26rem', zIndex: 51 }}
       >
         <div className="px-4 pt-3.5 pb-3">
           <div className="mono" style={{
@@ -50,30 +47,15 @@ export default function PermissionDialog({ permission, onResolve, lang = 'en' })
         </div>
         <div
           className="flex items-center justify-end gap-2 px-4 py-3"
-          style={{ borderTop: '2px solid var(--border)', background: 'var(--bg-2)' }}
+          style={{ borderTop: '1px solid var(--rule)', background: 'var(--bg-2)' }}
         >
-          <button
-            type="button"
-            onClick={() => onResolve('deny')}
-            className="px-3 py-1.5 text-xs font-semibold"
-            style={{ background: 'transparent', color: 'var(--text-muted)', border: '2px solid var(--border)' }}
-          >
+          <button type="button" onClick={() => onResolve('deny')} className="btn-ghost btn-sm">
             {t('agentDeny', lang)}
           </button>
-          <button
-            type="button"
-            onClick={() => onResolve('once')}
-            className="px-3 py-1.5 text-xs font-semibold"
-            style={{ background: 'transparent', color: 'var(--accent)', border: '2px solid var(--border)' }}
-          >
+          <button type="button" onClick={() => onResolve('once')} className="btn btn-sm">
             {t('agentAllowOnce', lang)}
           </button>
-          <button
-            type="button"
-            onClick={() => onResolve('remember')}
-            className="px-3 py-1.5 text-xs font-bold"
-            style={{ background: 'var(--primary)', color: 'var(--on-primary)', border: '2px solid var(--border-strong)' }}
-          >
+          <button type="button" onClick={() => onResolve('remember')} className="btn-primary btn-sm">
             {t('agentAllowRemember', lang)}
           </button>
         </div>
