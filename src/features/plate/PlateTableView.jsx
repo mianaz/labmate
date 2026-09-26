@@ -1,7 +1,8 @@
-// PlateTableView — Table/CSV preview of well plate data
-import React, { useState, useMemo } from 'react';
+// PlateTableView — Table/CSV preview of well plate data (collapsible panel)
+import { useState, useMemo } from 'react';
 import { t } from '../../i18n/index.js';
-import { S_MUTED, S_TEXT, S_BORDER } from '../../lib/styleConstants.js';
+import { S_MUTED } from '../../lib/styleConstants.js';
+import { IconChevronDown } from '../../components/icons.jsx';
 
 function PlateTableView({ wellData, config, lang }) {
   const [showTable, setShowTable] = useState(false);
@@ -33,62 +34,68 @@ function PlateTableView({ wellData, config, lang }) {
   }
 
   const sortArrow = (col) => sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : '';
-
-  if (!showTable) {
-    return (
-      <div className="mt-4 flex justify-center">
-        <button onClick={() => setShowTable(true)}
-          className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-          style={{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}}>
-          {t('plateViewTable', lang)}
-        </button>
-      </div>
-    );
-  }
+  const zh = lang === 'zh';
+  const headers = [
+    { id: 'well', l: zh ? '孔位' : 'Well' },
+    { id: 'row', l: zh ? '行' : 'Row' },
+    { id: 'col', l: zh ? '列' : 'Col' },
+    { id: 'label', l: zh ? '标签' : 'Label' },
+    { id: 'color', l: zh ? '颜色' : 'Color' },
+  ];
 
   return (
-    <div className="mt-4 card p-4 fade-in">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-bold">{t('plateViewTable', lang)}</h4>
-        <button onClick={() => setShowTable(false)}
-          className="text-xs px-3 py-1 rounded-lg"
-          style={{background:'var(--bg-2)', color:'var(--text-muted)', border:'1px solid var(--border)'}}>
-          {t('plateViewGrid', lang)}
-        </button>
-      </div>
-      <div className="overflow-x-auto" style={{maxHeight:'320px', overflowY:'auto'}}>
-        <table className="w-full text-sm">
-          <thead className="sticky top-0" style={{background:'var(--card)'}}>
-            <tr className="border-b" style={S_BORDER}>
-              {[{id:'well',l:'Well'},{id:'row',l:'Row'},{id:'col',l:'Col'},{id:'label',l:'Label'},{id:'color',l:'Color'}].map(h => (
-                <th key={h.id} onClick={() => toggleSort(h.id)}
-                  className="text-left py-2 px-2 text-xs cursor-pointer select-none"
-                  style={S_MUTED}>
-                  {h.l}{sortArrow(h.id)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.well} className="border-b" style={S_BORDER}>
-                <td className="py-1.5 px-2 mono font-semibold text-xs">{r.well}</td>
-                <td className="py-1.5 px-2 text-xs">{r.row}</td>
-                <td className="py-1.5 px-2 text-xs mono">{r.col}</td>
-                <td className="py-1.5 px-2 text-xs font-medium">{r.label}</td>
-                <td className="py-1.5 px-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{background:r.color}} />
-                    <span className="text-[10px] mono" style={S_MUTED}>{r.color}</span>
-                  </div>
-                </td>
+    <section className="panel">
+      <button type="button" onClick={() => setShowTable(s => !s)}
+        aria-expanded={showTable} aria-controls="plate-table-view"
+        className="panel-head w-full text-left bg-transparent hover:bg-[var(--bg-2)]"
+        style={{ border: 0, borderBottom: showTable ? '1px solid var(--rule)' : 0, color: 'var(--text)' }}>
+        <span className="panel-title">{t('plateViewTable', lang)}</span>
+        <span className="flex items-center gap-2 mono tabular text-[11px]" style={S_MUTED}>
+          {rows.length} {lang === 'en' ? 'labeled wells' : '个已标记孔'}
+          <IconChevronDown size={14} style={{ transform: showTable ? 'rotate(180deg)' : 'none', transition: 'transform var(--duration-base) var(--ease-out)' }} />
+        </span>
+      </button>
+
+      {showTable && (
+        <div id="plate-table-view" className="overflow-auto fade-in" style={{ maxHeight: 320 }}>
+          <table className="w-full">
+            <thead className="sticky top-0" style={{ background: 'var(--card)', zIndex: 1 }}>
+              <tr>
+                {headers.map(h => (
+                  <th key={h.id} aria-sort={sortCol === h.id ? (sortAsc ? 'ascending' : 'descending') : 'none'}
+                    style={{ padding: 0, boxShadow: 'inset 0 -1px 0 var(--border-strong)' }}>
+                    <button type="button" onClick={() => toggleSort(h.id)}
+                      className="w-full text-left bg-transparent hover:bg-[var(--bg-2)]"
+                      style={{
+                        padding: '0.55rem 0.75rem', border: 0, font: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit',
+                        color: sortCol === h.id ? 'var(--text)' : 'inherit',
+                      }}>
+                      {h.l}{sortArrow(h.id)}
+                    </button>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-[10px] mt-2" style={S_MUTED}>{rows.length} {lang === 'en' ? 'labeled wells' : '个已标记孔'}</p>
-    </div>
+            </thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.well}>
+                  <td className="mono" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>{r.well}</td>
+                  <td>{r.row}</td>
+                  <td>{r.col}</td>
+                  <td style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 500 }}>{r.label}</td>
+                  <td>
+                    <span className="inline-flex items-center gap-2" style={S_MUTED}>
+                      <span className="rounded-full flex-shrink-0" style={{ width: 10, height: 10, background: r.color }} />
+                      {r.color}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

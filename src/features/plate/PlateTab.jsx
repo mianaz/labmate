@@ -1,18 +1,49 @@
 // PlateTab — Full plate designer: well selection, coloring, templates, export
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, memo, Fragment } from 'react';
+import { createPortal } from 'react-dom';
 import { t, useLang } from '../../i18n/index.js';
 import { PLATE_CONFIGS, WELL_COLORS, ROW_LABELS } from '../../data/plateConfigs.js';
 import { useIsMobile } from '../../hooks/useMediaQuery.js';
-import { S_MUTED, S_PRIMARY } from '../../lib/styleConstants.js';
+import { S_MUTED } from '../../lib/styleConstants.js';
 import { downloadFile } from '../../lib/utils.js';
 import { plateToCSV, plateToSVG } from './plateExport.js';
 import PlateTableView from './PlateTableView.jsx';
 import PlateReaderImport from './PlateReaderImport.jsx';
-
-import DownloadBtn from '../../components/DownloadBtn.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import Icon, { IconClose, IconDownload, IconCopy, IconReset, IconChevronRight, IconAlert } from '../../components/icons.jsx';
 import { useToast } from '../../components/Toast.jsx';
 
+// "Enlarge" — the shared icon set has no expand glyph; drawn on the same base.
+const IconExpand = (p) => (
+  <Icon {...p}><path d="M14 4h6v6" /><path d="M10 20H4v-6" /><path d="M20 4l-6.5 6.5" /><path d="M4 20l6.5-6.5" /></Icon>
+);
+
 function wellKey(r, c) { return `${ROW_LABELS[r]}${c + 1}`; }
+
+// Well diameter bounds per plate type (px). Wells are sized from the plate
+// container's width, capped at MAX so low-density plates don't balloon on wide
+// screens, and never smaller than MIN — past that the plate scrolls sideways
+// inside its own container instead of squeezing the wells.
+const WELL_MAX = { 6: 132, 12: 108, 24: 84, 48: 68, 96: 60, 384: 32 };
+const WELL_MIN = { 6: 44, 12: 36, 24: 30, 48: 24, 96: 20, 384: 13 };
+
+// head = row-label column width / column-label row height.
+function plateMetrics(width, plateType, cols, touch) {
+  const head = touch ? 30 : 22;
+  const pitch = Math.max(0, width - head) / cols;
+  const gap = Math.round(Math.min(12, Math.max(2, pitch * 0.12)));
+  const ws = Math.min(WELL_MAX[plateType] || 60, Math.max(WELL_MIN[plateType] || 14, Math.floor(pitch - gap)));
+  return { ws, gap, head, fs: Math.min(13, Math.max(7, Math.round(ws * 0.2))), axisFs: ws >= 40 ? 11 : 10 };
+}
+
+const SWATCH_RING = '0 0 0 2px var(--card), 0 0 0 4px var(--text)';
+
+// The global <label> style is uppercase, which turns "µM" into "ΜM" — a capital
+// mu that reads as "MM" (millimolar). Keep the micro sign lowercase.
+function keepMicro(text) {
+  if (typeof text !== 'string' || !/[µμ]/.test(text)) return text;
+  return text.split(/([µμ])/).map((part, i) => (i % 2 ? <span key={i} style={{ textTransform: 'none' }}>{part}</span> : part));
+}
 
 // One well. Memoized with primitive props + stable handlers so a drag-select
 // only re-renders the wells whose selection actually changed, instead of
@@ -20,16 +51,22 @@ function wellKey(r, c) { return `${ROW_LABELS[r]}${c + 1}`; }
 // every well the cursor crossed.
 const Well = memo(function Well({ id, r, c, ws, fs, color, label, hasData, isSel,
   onMouseDown, onMouseEnter, onTouchStart, onTouchMove, onTouchEnd }) {
+  const showText = ws >= 22;
   return (
     <div
       className={`well ${isSel ? 'selected' : ''}`}
       data-well-key={id}
       style={{
         width: ws, height: ws, minWidth: ws,
-        background: hasData ? color + '30' : 'var(--bg-2)',
+        flexDirection: 'column',
+        background: hasData
+          ? `color-mix(in srgb, ${color} 22%, var(--card))`
+          : isSel ? 'var(--primary-light)' : 'var(--bg-2)',
         borderColor: hasData ? color : 'var(--border)',
-        borderWidth: hasData ? 2 : 1,
+        borderWidth: hasData ? (ws >= 30 ? 2 : 1.5) : 1,
+        fontFamily: 'var(--font-mono)',
         fontSize: fs,
+        lineHeight: 1.15,
         touchAction: 'none',
       }}
       onMouseDown={e => onMouseDown(r, c, e)}
@@ -38,13 +75,14 @@ const Well = memo(function Well({ id, r, c, ws, fs, color, label, hasData, isSel
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       title={id + (hasData ? ': ' + label : '')}>
-      {ws >= 22 && hasData && (
-        <span className="truncate px-0.5" style={{color: color, fontWeight: 700}}>
-          {label.length > 5 ? label.slice(0,4)+'…' : label}
-        </span>
+      {showText && hasData && (
+        <>
+          {ws >= 44 && <span style={{ fontSize: Math.max(7, fs - 2), color: 'var(--text-muted)' }}>{id}</span>}
+          <span className="truncate" style={{ maxWidth: '86%', fontWeight: 700, color: 'var(--text)' }}>{label}</span>
+        </>
       )}
-      {ws >= 22 && !hasData && (
-        <span className="text-gray-300">{id}</span>
+      {showText && !hasData && (
+        <span style={{ color: 'var(--text-muted)', opacity: 0.75 }}>{id}</span>
       )}
     </div>
   );
@@ -68,8 +106,11 @@ function PlateTab() {
   const [enlarged, setEnlarged] = useState(false);
   const isMobile = useIsMobile();
   const plateScrollRef = useRef(null);
+  const [plateWidth, setPlateWidth] = useState(0);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const lastTouchRef = useRef(0); // timestamp guard vs. ghost mousedown replayed after a real touch
+  const labelInputRef = useRef(null);
+  const refocusLabelRef = useRef(false); // keyboard-activated Confirm → focus back to the label field
 
   const config = PLATE_CONFIGS[plateType];
 
@@ -163,6 +204,23 @@ function PlateTab() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [enlarged]);
 
+  // Size the wells from the plate container's width (it only changes with the
+  // layout, never with the grid inside it, so this can't feed back on itself).
+  useLayoutEffect(() => {
+    const el = plateScrollRef.current;
+    if (!el) return undefined;
+    const measure = () => setPlateWidth(el.clientWidth);
+    measure();
+    const RO = window.ResizeObserver;
+    if (!RO) {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const ro = new RO(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode]);
+
   // Show a "scroll for more" hint on mobile when the inline plate grid overflows its wrapper
   useEffect(() => {
     const el = plateScrollRef.current;
@@ -176,7 +234,7 @@ function PlateTab() {
       el.removeEventListener('scroll', hideOnScroll);
       window.removeEventListener('resize', checkOverflow);
     };
-  }, [plateType, mode]);
+  }, [plateType, mode, plateWidth, enlarged]);
 
   function getActiveColor() {
     return useCustomColor ? customColor : WELL_COLORS[currentColor % WELL_COLORS.length];
@@ -196,15 +254,20 @@ function PlateTab() {
       });
       return next;
     });
-    const existingIdx = groups.findIndex(g => g.label === currentLabel);
-    if (existingIdx === -1) {
-      setGroups(prev => [...prev, { label: currentLabel, color, wells: [...selectedWells] }]);
-    } else {
-      setGroups(prev => prev.map((g, i) => i === existingIdx
+    // Relabelled wells leave their previous group (they used to stay listed under
+    // the old label too, so legend counts / SVG legend / copied layout drifted);
+    // groups emptied that way drop out.
+    setGroups(prev => {
+      const rest = prev
+        .map(g => (g.label === currentLabel ? g : { ...g, wells: g.wells.filter(w => !selectedWells.has(w)) }))
+        .filter(g => g.wells.length > 0);
+      const existingIdx = rest.findIndex(g => g.label === currentLabel);
+      if (existingIdx === -1) return [...rest, { label: currentLabel, color, wells: [...selectedWells] }];
+      return rest.map((g, i) => i === existingIdx
         ? { ...g, wells: [...new Set([...g.wells, ...selectedWells])] }
         : g
-      ));
-    }
+      );
+    });
     setSelectedWells(new Set());
     setCurrentLabel('');
     if (!useCustomColor) setCurrentColor(prev => prev + 1);
@@ -239,6 +302,14 @@ function PlateTab() {
 
   const [templateDialog, setTemplateDialog] = useState(null);
   const [templateParams, setTemplateParams] = useState({});
+
+  // Escape closes the template dialog
+  useEffect(() => {
+    if (!templateDialog) return undefined;
+    function handleKey(e) { if (e.key === 'Escape') setTemplateDialog(null); }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [templateDialog]);
 
   function openTemplate(type) {
     const defaults = {
@@ -456,35 +527,48 @@ function PlateTab() {
   }
 
   // ═══════════════════════════════════════════════
+  // EXPORT
+  // ═══════════════════════════════════════════════
+
+  function copyLayout() {
+    let txt = `${plateType}-well Plate Layout\n${'─'.repeat(40)}\n`;
+    groups.forEach(g => { txt += `■ ${g.label}: ${g.wells.join(', ')}\n`; });
+    if (groups.length === 0) txt += '(empty)\n';
+    navigator.clipboard.writeText(txt);
+    toast.show(t('copied', lang));
+  }
+
+  // ═══════════════════════════════════════════════
   // PLATE GRID RENDERER (shared between normal and enlarged views)
   // ═══════════════════════════════════════════════
 
-  function renderPlateGrid(wellSizeOverride) {
-    const ws = wellSizeOverride || config.wellSize;
-    const fs = wellSizeOverride ? (wellSizeOverride > 28 ? 10 : wellSizeOverride > 18 ? 8 : 6) : (plateType > 96 ? 6 : plateType > 48 ? 7 : 9);
-    // Row/column header tap targets grow to a real ≥32px hit area on mobile only;
-    // desktop keeps the original compact gutter (unchanged pixel-for-pixel).
-    const rowLabelSize = isMobile ? 32 : 20;
-    const headerHit = isMobile ? 32 : undefined;
+  function renderPlateGrid(m) {
+    const { ws, gap, head, fs, axisFs } = m;
+    const axisClass = 'flex items-center justify-center mono font-bold bg-transparent text-[var(--text-muted)] hover:bg-[var(--bg-2)] hover:text-[var(--text)]';
+    const axisStyle = { fontSize: axisFs, border: 0, padding: 0, lineHeight: 1 };
     return (
-      <div>
-        <div className="flex items-center gap-0.5 mb-1" style={{marginLeft: rowLabelSize + 4}}>
-          {Array.from({length: config.cols}, (_, c) => (
-            <div key={c} onClick={() => selectCol(c)}
-              className="flex items-center justify-center text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold"
-              style={{width: ws, minWidth: ws, minHeight: headerHit}}>
-              {c + 1}
-            </div>
-          ))}
-        </div>
-        {Array.from({length: config.rows}, (_, r) => (
-          <div key={r} className="flex items-center gap-0.5 mb-0.5">
-            <div onClick={() => selectRow(r)}
-              className="flex items-center justify-end text-[10px] mono text-gray-400 cursor-pointer hover:text-primary font-bold mr-1"
-              style={{width: rowLabelSize, minWidth: rowLabelSize, minHeight: headerHit}}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `${head}px repeat(${config.cols}, ${ws}px)`,
+        gridTemplateRows: `${head}px repeat(${config.rows}, ${ws}px)`,
+        gap,
+        width: 'max-content',
+        margin: '0 auto',
+      }}>
+        <span aria-hidden="true" />
+        {Array.from({ length: config.cols }, (_, c) => (
+          <button key={`c${c}`} type="button" onClick={() => selectCol(c)} className={axisClass} style={axisStyle}
+            aria-label={lang === 'zh' ? `选择第 ${c + 1} 列` : `Select column ${c + 1}`}>
+            {c + 1}
+          </button>
+        ))}
+        {Array.from({ length: config.rows }, (_, r) => (
+          <Fragment key={r}>
+            <button type="button" onClick={() => selectRow(r)} className={axisClass} style={axisStyle}
+              aria-label={lang === 'zh' ? `选择 ${ROW_LABELS[r]} 行` : `Select row ${ROW_LABELS[r]}`}>
               {ROW_LABELS[r]}
-            </div>
-            {Array.from({length: config.cols}, (_, c) => {
+            </button>
+            {Array.from({ length: config.cols }, (_, c) => {
               const key = wellKey(r, c);
               const data = wellData[key];
               return (
@@ -495,7 +579,7 @@ function PlateTab() {
                   onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} />
               );
             })}
-          </div>
+          </Fragment>
         ))}
       </div>
     );
@@ -506,348 +590,373 @@ function PlateTab() {
   // ═══════════════════════════════════════════════
 
   function renderLegend() {
-    if (groups.length === 0) return null;
     return (
-      <div>
-        <h4 className="text-sm font-bold mb-2">{t('plateLegend', lang)}</h4>
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-          {groups.map((g, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs">
-              <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{background: g.color}} />
-              <span className="font-medium">{g.label}</span>
-              <span className="text-gray-400 mono">({g.wells.length})</span>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3" style={{ borderTop: '1px solid var(--rule)' }}>
+        <span className="eyebrow">{t('plateLegend', lang)}</span>
+        {groups.length === 0 ? (
+          <span className="text-xs" style={S_MUTED}>
+            {lang === 'zh' ? '尚未标记——为选中的孔位命名，或应用一个模板。' : 'Nothing labelled yet — name the selected wells, or apply a template.'}
+          </span>
+        ) : groups.map((g, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5 text-xs">
+            <span className="rounded-full flex-shrink-0" style={{ width: 10, height: 10, background: g.color }} />
+            <span className="font-medium" style={{ color: 'var(--text)' }}>{g.label}</span>
+            <span className="mono tabular" style={S_MUTED}>{g.wells.length}</span>
+          </span>
+        ))}
+        <span className="mono tabular text-[11px] ml-auto" style={S_MUTED}>
+          {lang === 'zh' ? `已标记 ${labelledCount}/${plateType}` : `${labelledCount}/${plateType} labelled`}
+        </span>
       </div>
     );
+  }
+
+  // ═══════════════════════════════════════════════
+  // TEMPLATE DIALOG
+  // ═══════════════════════════════════════════════
+
+  const TEMPLATE_NAMES = {
+    serial: t('plateSerial', lang),
+    dose: t('plateDose', lang),
+    checkerboard: t('plateCheckerboard', lang),
+    control: t('plateControlLayout', lang),
+    antibody: t('plateAntibodyTitration', lang),
+  };
+  const TEMPLATE_DESC = {
+    serial: lang === 'en'
+      ? 'Each step divides the concentration by the dilution factor — one step per column (→ Row) or per row (↓ Column).'
+      : '每一步将浓度除以稀释倍数——沿行方向每列一个梯度，或沿列方向每行一个梯度。',
+    dose: lang === 'en'
+      ? 'One block of rows per drug, diluted across the columns. Replicates set how many rows each drug gets.'
+      : '每种药物占一组行，沿列方向梯度稀释；重复数决定每种药物占几行。',
+    checkerboard: lang === 'en'
+      ? 'Alternates two labels across the plate; replicates set the size of each block.'
+      : '两种标签在整板上交替排列；重复数决定每个方块的大小。',
+    control: lang === 'en'
+      ? 'Places positive controls (top half of last column), negative controls (bottom half of last column), and blanks (first column).'
+      : '在最后一列上半部分放置阳性对照，下半部分放置阴性对照，第一列放置空白。',
+    antibody: lang === 'en'
+      ? 'One row per antibody, diluted across the columns from the starting concentration.'
+      : '每个抗体占一行，从起始浓度沿列方向梯度稀释。',
+  };
+  const repsOptions = <><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></>;
+  const field = (id, label, control) => (
+    <div>
+      <label htmlFor={id}>{keepMicro(label)}</label>
+      {control}
+    </div>
+  );
+
+  function renderTemplateFields() {
+    const p = templateParams;
+    switch (templateDialog) {
+      case 'serial': return (<>
+        {field('tpl-start', t('serialStartConc', lang),
+          <input id="tpl-start" type="text" inputMode="decimal" autoFocus value={p.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full" />)}
+        {field('tpl-factor', t('serialFactor', lang),
+          <input id="tpl-factor" type="text" inputMode="decimal" value={p.factor} onChange={e => updateParam('factor', e.target.value)} className="w-full" />)}
+        <div>
+          <span id="tpl-dir-label" className="eyebrow" style={{ display: 'block', marginBottom: '0.35rem' }}>
+            {lang === 'en' ? 'Direction' : '方向'}
+          </span>
+          <div className="seg" role="group" aria-labelledby="tpl-dir-label">
+            <button type="button" aria-pressed={p.direction === 'row'} onClick={() => updateParam('direction', 'row')}>
+              → {lang === 'en' ? 'Row' : '沿行'}
+            </button>
+            <button type="button" aria-pressed={p.direction === 'col'} onClick={() => updateParam('direction', 'col')}>
+              ↓ {lang === 'en' ? 'Column' : '沿列'}
+            </button>
+          </div>
+        </div>
+        {field('tpl-reps', t('plateReplicates', lang),
+          <select id="tpl-reps" value={p.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full">{repsOptions}</select>)}
+      </>);
+      case 'checkerboard': return (<>
+        <div className="grid grid-cols-2 gap-3">
+          {field('tpl-l1', lang === 'en' ? 'Label 1' : '标签 1',
+            <input id="tpl-l1" type="text" autoFocus value={p.label1} onChange={e => updateParam('label1', e.target.value)} className="w-full" />)}
+          {field('tpl-l2', lang === 'en' ? 'Label 2' : '标签 2',
+            <input id="tpl-l2" type="text" value={p.label2} onChange={e => updateParam('label2', e.target.value)} className="w-full" />)}
+        </div>
+        {field('tpl-reps', t('plateReplicates', lang),
+          <select id="tpl-reps" value={p.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full">{repsOptions}</select>)}
+      </>);
+      case 'dose': return (<>
+        {field('tpl-drugs', t('doseNumDrugs', lang),
+          <input id="tpl-drugs" type="number" autoFocus value={p.drugs} onChange={e => updateParam('drugs', e.target.value)} min={1} max={config.rows} className="w-full" />)}
+        {field('tpl-start', t('serialStartConc', lang),
+          <input id="tpl-start" type="text" inputMode="decimal" value={p.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full" />)}
+        {field('tpl-factor', t('serialFactor', lang),
+          <input id="tpl-factor" type="text" inputMode="decimal" value={p.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full" />)}
+        {field('tpl-reps', t('plateReplicates', lang),
+          <select id="tpl-reps" value={p.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full">{repsOptions}</select>)}
+      </>);
+      case 'antibody': return (<>
+        {field('tpl-abs', t('plateNumAntibodies', lang),
+          <input id="tpl-abs" type="number" autoFocus value={p.antibodies} onChange={e => updateParam('antibodies', e.target.value)} min={1} max={config.rows} className="w-full" />)}
+        {field('tpl-start', t('serialStartConc', lang),
+          <input id="tpl-start" type="text" inputMode="decimal" value={p.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full" />)}
+        {field('tpl-factor', t('serialFactor', lang),
+          <input id="tpl-factor" type="text" inputMode="decimal" value={p.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full" />)}
+      </>);
+      default: return null;
+    }
   }
 
   // ═══════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════
 
+  const metrics = plateMetrics(plateWidth, plateType, config.cols, isMobile);
+  const labelledCount = Object.keys(wellData).length;
+  const selCount = selectedWells.size;
+  const activeColor = getActiveColor();
+  const plateName = lang === 'zh' ? `${plateType} 孔板` : `${plateType}-well plate`;
+
   return (
     <div className="fade-in">
-      <div className="card p-5 mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h2 className="text-xl font-bold mb-1">{t('plateTitle', lang)}</h2>
-            <p className="text-sm" style={S_MUTED}>{t('plateSubtitle', lang)}</p>
+      <PageHeader tab="plate" title={t('plateTitle', lang)} description={t('plateSubtitle', lang)}
+        actions={<>
+          <div className="seg" role="group" aria-label={lang === 'zh' ? '模式' : 'Mode'}>
+            <button type="button" aria-pressed={mode === 'designer'} onClick={() => setMode('designer')}>
+              {t('plateModeDesigner', lang)}
+            </button>
+            <button type="button" aria-pressed={mode === 'reader'} onClick={() => setMode('reader')}>
+              {t('plateModeReader', lang)}
+            </button>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="inline-flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <button onClick={() => setMode('designer')}
-                className="px-3 py-1.5 text-xs font-semibold transition-colors"
-                style={{
-                  background: mode === 'designer' ? 'var(--primary)' : 'var(--card)',
-                  color: mode === 'designer' ? 'var(--on-primary)' : 'var(--text-muted)',
-                }}>
-                {t('plateModeDesigner', lang)}
-              </button>
-              <button onClick={() => setMode('reader')}
-                className="px-3 py-1.5 text-xs font-semibold transition-colors"
-                style={{
-                  background: mode === 'reader' ? 'var(--primary)' : 'var(--card)',
-                  color: mode === 'reader' ? 'var(--on-primary)' : 'var(--text-muted)',
-                }}>
-                {t('plateModeReader', lang)}
-              </button>
+          {mode === 'designer' && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="plate-type-select" className="max-sm:sr-only" style={{ marginBottom: 0 }}>{t('plateType', lang)}</label>
+              <select id="plate-type-select" value={plateType} onChange={e => setPlateType(+e.target.value)} style={{ minWidth: '7rem' }}>
+                {Object.keys(PLATE_CONFIGS).map(k => (
+                  <option key={k} value={k}>{lang === 'zh' ? `${k} 孔` : `${k}-well`}</option>
+                ))}
+              </select>
             </div>
-            {mode === 'designer' && (
-              <>
-                <label className="text-xs font-semibold" style={S_MUTED}>{t('plateType', lang)}:</label>
-                <select value={plateType} onChange={e => setPlateType(+e.target.value)} className="w-28">
-                  {Object.keys(PLATE_CONFIGS).map(k => (
-                    <option key={k} value={k}>{k}-well</option>
-                  ))}
-                </select>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+          )}
+        </>}
+      />
 
       {mode === 'reader' && (
         <PlateReaderImport wellData={wellData} plateConfig={config} designerPlateSize={plateType} />
       )}
 
       {mode === 'designer' && (
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-3">
-          {isMobile && (
-            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-              <span className="text-xs font-bold mono" style={S_MUTED}>{plateType}-{t('wells', lang)}</span>
-              <button type="button" onClick={() => setEnlarged(true)}
-                className="btn-secondary text-xs py-1.5 px-3"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                </svg>
-                {t('plateEnlarge', lang)}
-              </button>
+      <div className="grid grid-cols-1 gap-4 xl:gap-5 items-start md:grid-cols-[minmax(0,1fr)_17.5rem] xl:grid-cols-[minmax(0,1fr)_19rem]">
+        <div className="space-y-4 min-w-0">
+          {/* The plate */}
+          <section className="panel" aria-labelledby="plate-panel-title">
+            <div className="panel-head flex-wrap">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <h2 id="plate-panel-title" className="panel-title">{plateName}</h2>
+                <span className="mono text-[11px] max-sm:hidden" style={S_MUTED}>{config.rows} × {config.cols}</span>
+              </div>
+              <div className="flex items-center gap-1.5 ml-auto">
+                {isMobile && (
+                  <button type="button" onClick={() => setEnlarged(true)} className="btn btn-sm">
+                    <IconExpand size={14} />{t('plateEnlarge', lang)}
+                  </button>
+                )}
+                <button type="button" onClick={clearAll} className="btn-ghost btn-sm">
+                  <IconReset size={14} />{t('plateClear', lang)}
+                </button>
+              </div>
             </div>
-          )}
-          <div style={{ position: 'relative' }}>
-            <div className="card p-5 overflow-x-auto" ref={plateScrollRef}
-              style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain' }}>
-              {/* While the enlarged overlay is open it owns the grid; don't render a second copy underneath. */}
-              {enlarged ? null : renderPlateGrid()}
+            <div className="relative" style={{ padding: isMobile ? '0.75rem' : '1rem 1.25rem 1.25rem' }}>
+              <div ref={plateScrollRef} className="overflow-x-auto"
+                style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorX: 'contain', paddingBottom: 2 }}>
+                {/* While the enlarged overlay is open it owns the grid; don't render a second copy underneath. */}
+                {enlarged ? null : renderPlateGrid(metrics)}
+              </div>
+              {isMobile && showScrollHint && (
+                <div aria-hidden="true" className="flex items-center justify-center" style={{
+                  position: 'absolute', right: 0, top: 0, bottom: 0, width: 24, pointerEvents: 'none',
+                  color: 'var(--text-muted)', background: 'var(--card)', borderLeft: '1px solid var(--rule)',
+                }}>
+                  <IconChevronRight size={14} />
+                </div>
+              )}
             </div>
-            {isMobile && showScrollHint && (
-              <div aria-hidden="true" style={{
-                position: 'absolute', right: 2, top: 2, bottom: 2, width: 24,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                pointerEvents: 'none', color: 'var(--text-muted)', fontSize: 18, fontWeight: 700,
-                opacity: 0.6, transition: 'opacity 0.3s', background: 'var(--card)',
-              }}>›</div>
-            )}
-          </div>
+            {renderLegend()}
+          </section>
 
-          {/* Legend alongside plate */}
-          {groups.length > 0 && (
-            <div className="card p-4 mt-3">
-              {renderLegend()}
-            </div>
-          )}
-
-          {/* Plate View / Table View toggle */}
-          {Object.keys(wellData).length > 0 && (
+          {/* Table view of the labelled wells */}
+          {labelledCount > 0 && (
             <PlateTableView wellData={wellData} config={config} lang={lang} />
           )}
         </div>
 
-        <div className="space-y-4">
-          {/* Assign panel */}
-          <div className="card p-4">
-            <h4 className="text-sm font-bold mb-3">{t('plateMarkTitle', lang)}</h4>
-            <p className="text-xs mb-3" style={S_MUTED}>
-              {t('plateSelected', lang)}: <span className="mono font-bold" style={{color:'var(--accent)'}}>{selectedWells.size}</span> {t('wells', lang)}
-              {selectedWells.size > 0 && <span className="ml-1">({[...selectedWells].slice(0,6).join(', ')}{selectedWells.size > 6 ? '...' : ''})</span>}
-            </p>
-            <div className="mb-3">
-              <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('plateLabelName', lang)}</label>
-              <input type="text" value={currentLabel} onChange={e => setCurrentLabel(e.target.value)}
-                placeholder="e.g. 10 µM Drug A" style={{ fontFamily: 'var(--font-body)' }} />
-            </div>
-            <div className="mb-3">
-              <label className="text-xs font-semibold block mb-1.5" style={S_MUTED}>{t('color', lang)}</label>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {WELL_COLORS.map((c, i) => (
-                  <button key={i} onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
-                    className={`${isMobile ? 'w-8 h-8' : 'w-5 h-5'} border-2 transition-transform ${!useCustomColor && currentColor === i ? 'scale-125 ring-2 ring-offset-1' : ''}`}
-                    style={{background: c, borderColor: !useCustomColor && currentColor === i ? 'var(--text)' : 'var(--border)', ringColor: 'var(--primary)'}} />
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-[11px] font-semibold" style={S_MUTED}>{t('plateCustomColor', lang)}:</label>
-                <input type="color" value={customColor} onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
-                  className={`${isMobile ? 'w-8 h-8' : 'w-7 h-7'} rounded cursor-pointer border-0 p-0`} style={{background:'transparent'}} />
-                {useCustomColor && (
-                  <div className={`${isMobile ? 'w-8 h-8' : 'w-5 h-5'} border-2 scale-125`} style={{background: customColor, borderColor: 'var(--text)'}} />
-                )}
-              </div>
-            </div>
-            <button onClick={assignSelected} className="btn-primary w-full" disabled={!selectedWells.size || !currentLabel}>
-              {t('plateConfirm', lang)}
-            </button>
+        {/* Inspector */}
+        <aside className="panel" aria-label={lang === 'zh' ? '孔位检查器' : 'Well inspector'}>
+          <div className="panel-head">
+            <h2 className="panel-title">{t('plateMarkTitle', lang)}</h2>
+            <span className={`badge tabular ${selCount ? 'badge-green' : ''}`} aria-live="polite">
+              {lang === 'zh' ? `${t('plateSelected', lang)} ${selCount}` : `${selCount} ${t('plateSelected', lang)}`}
+            </span>
           </div>
-
-          {/* Templates */}
-          <div className="card p-4">
-            <h4 className="text-sm font-bold mb-3">{t('plateTemplates', lang)}</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => openTemplate('serial')} className="btn-secondary text-xs py-2 px-2">
-                {t('plateSerial', lang)}
-              </button>
-              <button onClick={() => openTemplate('dose')} className="btn-secondary text-xs py-2 px-2">
-                {t('plateDose', lang)}
-              </button>
-              <button onClick={() => openTemplate('checkerboard')} className="btn-secondary text-xs py-2 px-2">
-                {t('plateCheckerboard', lang)}
-              </button>
-              <button onClick={() => openTemplate('control')} className="btn-secondary text-xs py-2 px-2">
-                {t('plateControlLayout', lang)}
-              </button>
-              <button onClick={() => openTemplate('antibody')} className="btn-secondary text-xs py-2 px-2 col-span-2">
-                {t('plateAntibodyTitration', lang)}
-              </button>
-            </div>
-            <button onClick={clearAll} className="w-full text-sm px-4 py-2 mt-2 rounded-lg border font-semibold transition-colors"
-              style={{borderColor:'var(--border)', color:'var(--text-muted)'}}>
-              {t('plateClear', lang)}
-            </button>
-
-            {/* Inline template config */}
-            {templateDialog && (
-              <div className="mt-3 p-3 rounded-lg border fade-in" style={{background:'var(--bg-2)', borderColor:'var(--primary)'}}>
-                <h5 className="text-xs font-bold mb-2" style={S_PRIMARY}>
-                  {templateDialog === 'serial' ? t('plateSerial', lang) :
-                   templateDialog === 'dose' ? t('plateDose', lang) :
-                   templateDialog === 'checkerboard' ? t('plateCheckerboard', lang) :
-                   templateDialog === 'control' ? t('plateControlLayout', lang) :
-                   t('plateAntibodyTitration', lang)}
-                </h5>
-                <div className="space-y-2">
-                  {templateDialog === 'serial' && (<>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialStartConc', lang)}</label>
-                      <input type="text" value={templateParams.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialFactor', lang)}</label>
-                      <input type="text" value={templateParams.factor} onChange={e => updateParam('factor', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>
-                        {lang === 'en' ? 'Direction' : '方向'}
-                      </label>
-                      <div className="flex gap-2">
-                        <button onClick={() => updateParam('direction', 'row')}
-                          className="flex-1 px-2 py-1 rounded text-xs font-semibold"
-                          style={{background: templateParams.direction === 'row' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'row' ? 'var(--on-primary)' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
-                          → {lang === 'en' ? 'Row' : '沿行'}
-                        </button>
-                        <button onClick={() => updateParam('direction', 'col')}
-                          className="flex-1 px-2 py-1 rounded text-xs font-semibold"
-                          style={{background: templateParams.direction === 'col' ? 'var(--primary)' : 'var(--card)', color: templateParams.direction === 'col' ? 'var(--on-primary)' : 'var(--text-muted)', border:'1px solid var(--border)'}}>
-                          ↓ {lang === 'en' ? 'Column' : '沿列'}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
-                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                      </select>
-                    </div>
-                  </>)}
-                  {templateDialog === 'checkerboard' && (<>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>
-                        {lang === 'en' ? 'Label 1' : '标签 1'}
-                      </label>
-                      <input type="text" value={templateParams.label1} onChange={e => updateParam('label1', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>
-                        {lang === 'en' ? 'Label 2' : '标签 2'}
-                      </label>
-                      <input type="text" value={templateParams.label2} onChange={e => updateParam('label2', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
-                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                      </select>
-                    </div>
-                  </>)}
-                  {templateDialog === 'dose' && (<>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('doseNumDrugs', lang)}</label>
-                      <input type="number" value={templateParams.drugs} onChange={e => updateParam('drugs', e.target.value)} min={1} max={config.rows} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialStartConc', lang)}</label>
-                      <input type="text" value={templateParams.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialFactor', lang)}</label>
-                      <input type="text" value={templateParams.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateReplicates', lang)}</label>
-                      <select value={templateParams.replicates} onChange={e => updateParam('replicates', e.target.value)} className="w-full text-sm">
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                      </select>
-                    </div>
-                  </>)}
-                  {templateDialog === 'control' && (
-                    <p className="text-[11px]" style={S_MUTED}>
-                      {lang === 'en'
-                        ? 'Places positive controls (top half of last column), negative controls (bottom half of last column), and blanks (first column).'
-                        : '在最后一列上半部分放置阳性对照，下半部分放置阴性对照，第一列放置空白。'}
-                    </p>
-                  )}
-                  {templateDialog === 'antibody' && (<>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('plateNumAntibodies', lang)}</label>
-                      <input type="number" value={templateParams.antibodies} onChange={e => updateParam('antibodies', e.target.value)} min={1} max={config.rows} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialStartConc', lang)}</label>
-                      <input type="text" value={templateParams.startConc} onChange={e => updateParam('startConc', e.target.value)} className="w-full text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold block mb-0.5" style={S_MUTED}>{t('serialFactor', lang)}</label>
-                      <input type="text" value={templateParams.dilFactor} onChange={e => updateParam('dilFactor', e.target.value)} className="w-full text-sm" />
-                    </div>
-                  </>)}
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={confirmTemplate} className="btn-primary flex-1 text-sm py-1.5">
-                      {lang === 'en' ? 'Apply' : '应用'}
-                    </button>
-                    <button onClick={() => setTemplateDialog(null)} className="btn-secondary flex-1 text-sm py-1.5">
-                      {lang === 'en' ? 'Cancel' : '取消'}
-                    </button>
-                  </div>
-                </div>
+          <form className="panel-body space-y-4" onSubmit={e => {
+            e.preventDefault();
+            assignSelected();
+            // Confirm disables itself once used; don't strand keyboard focus on <body>.
+            if (refocusLabelRef.current) { refocusLabelRef.current = false; labelInputRef.current?.focus(); }
+          }}>
+            {selCount === 0 ? (
+              <p className="text-xs" style={{ ...S_MUTED, lineHeight: 1.5 }}>
+                {lang === 'zh'
+                  ? '点击或拖动选择孔位；点击行字母或列号可选中整行或整列。'
+                  : 'Click or drag across wells to select them — click a row letter or column number to take the whole row or column.'}
+              </p>
+            ) : (
+              <div className="flex items-start gap-2">
+                <p className="mono text-[11px] flex-1 min-w-0" style={{ ...S_MUTED, lineHeight: 1.5, overflowWrap: 'anywhere' }}>
+                  {[...selectedWells].slice(0, 12).join(' ')}{selCount > 12 ? ` +${selCount - 12}` : ''}
+                </p>
+                <button type="button" className="btn-ghost btn-sm" style={{ marginTop: -4 }} onClick={() => setSelectedWells(new Set())}>
+                  {lang === 'zh' ? '取消选择' : 'Deselect'}
+                </button>
               </div>
             )}
-          </div>
 
-          {/* Export */}
-          <div className="card p-4">
-            <h4 className="text-sm font-bold mb-3">{t('plateExport', lang)}</h4>
-            <div className="space-y-2">
-              
-              <DownloadBtn small label={t('downloadCSV', lang)}
-                onClick={() => downloadFile(`plate_${plateType}well.csv`, plateToCSV(wellData, config), 'text/csv')} />
-              <DownloadBtn small label={t('downloadSVG', lang)} icon=""
-                onClick={() => downloadFile(`plate_${plateType}well.svg`, plateToSVG(wellData, config, groups), 'image/svg+xml')} />
-              <DownloadBtn small label={t('copyLayout', lang)}
-                onClick={() => {
-                  let txt = `${plateType}-well Plate Layout\n${'─'.repeat(40)}\n`;
-                  groups.forEach(g => { txt += `■ ${g.label}: ${g.wells.join(', ')}\n`; });
-                  if (groups.length === 0) txt += '(empty)\n';
-                  navigator.clipboard.writeText(txt);
-                  toast.show(t('copied', lang));
-                }} />
+            <div>
+              <label htmlFor="plate-label-input">{t('plateLabelName', lang)}</label>
+              <input id="plate-label-input" ref={labelInputRef} type="text" value={currentLabel} onChange={e => setCurrentLabel(e.target.value)}
+                placeholder={lang === 'zh' ? '如 10 µM 药物 A' : 'e.g. 10 µM Drug A'} className="w-full" autoComplete="off" />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-2" style={{ marginBottom: '0.5rem' }}>
+                <span id="plate-color-label" className="eyebrow">{t('color', lang)}</span>
+                <span className="mono text-[11px] inline-flex items-center gap-1.5" style={S_MUTED}>
+                  <span className="rounded-full" style={{ width: 10, height: 10, background: activeColor }} />
+                  {activeColor.toUpperCase()}
+                </span>
+              </div>
+              <div className="grid grid-cols-9 gap-1.5" role="group" aria-labelledby="plate-color-label">
+                {WELL_COLORS.map((c, i) => {
+                  const on = !useCustomColor && currentColor % WELL_COLORS.length === i;
+                  return (
+                    <button key={i} type="button" onClick={() => { setCurrentColor(i); setUseCustomColor(false); }}
+                      aria-pressed={on} aria-label={`${t('color', lang)} ${c}`} title={c}
+                      className="aspect-square w-full"
+                      style={{ background: c, border: 0, boxShadow: on ? SWATCH_RING : 'none' }} />
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2.5" style={{ marginTop: '0.75rem' }}>
+                <input id="plate-custom-color" type="color" value={customColor}
+                  onChange={e => { setCustomColor(e.target.value); setUseCustomColor(true); }}
+                  onClick={() => setUseCustomColor(true)}
+                  className="cursor-pointer flex-shrink-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:border-0"
+                  style={{ width: 26, height: 26, padding: 0, border: '1px solid var(--border-strong)', background: 'transparent', boxShadow: useCustomColor ? SWATCH_RING : 'none' }} />
+                <label htmlFor="plate-custom-color" style={{ marginBottom: 0, cursor: 'pointer' }}>{t('plateCustomColor', lang)}</label>
+                <span className="mono text-[11px] ml-auto" style={S_MUTED}>{customColor.toUpperCase()}</span>
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary btn-block" disabled={!selCount || !currentLabel}
+              onClick={e => { if (e.detail === 0) refocusLabelRef.current = true; }}>
+              {t('plateConfirm', lang)}
+            </button>
+          </form>
+
+          <div className="panel-body" style={{ borderTop: '1px solid var(--rule)' }}>
+            <h2 className="panel-title" style={{ marginBottom: '0.75rem' }}>{t('plateTemplates', lang)}</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {['serial', 'dose', 'checkerboard', 'control', 'antibody'].map(type => (
+                <button key={type} type="button" onClick={() => openTemplate(type)}
+                  className={`btn btn-sm ${type === 'antibody' ? 'col-span-2' : ''}`}
+                  aria-haspopup="dialog" aria-expanded={templateDialog === type}>
+                  {TEMPLATE_NAMES[type]}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
+
+          <div className="panel-body" style={{ borderTop: '1px solid var(--rule)' }}>
+            <h2 className="panel-title" style={{ marginBottom: '0.75rem' }}>{t('plateExport', lang)}</h2>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" className="btn btn-sm" aria-label={t('downloadCSV', lang)} title={t('downloadCSV', lang)}
+                onClick={() => downloadFile(`plate_${plateType}well.csv`, plateToCSV(wellData, config), 'text/csv')}>
+                <IconDownload size={14} />CSV
+              </button>
+              <button type="button" className="btn btn-sm" aria-label={t('downloadSVG', lang)} title={t('downloadSVG', lang)}
+                onClick={() => downloadFile(`plate_${plateType}well.svg`, plateToSVG(wellData, config, groups), 'image/svg+xml')}>
+                <IconDownload size={14} />SVG
+              </button>
+              <button type="button" className="btn btn-sm col-span-2" onClick={copyLayout}>
+                <IconCopy size={14} />{t('copyLayout', lang)}
+              </button>
+            </div>
+          </div>
+        </aside>
       </div>
       )}
 
-      {enlarged && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setEnlarged(false)}>
-          <div className="relative flex flex-col"
-            role="dialog" aria-modal="true" aria-label={t('plateEnlarge', lang)}
-            style={{
-              width: '100%', height: '100%', maxWidth: '96vw', maxHeight: '96vh', padding: '1rem',
-              background: 'var(--card)', border: '2px solid var(--border-strong)', boxShadow: 'var(--shadow-lg)',
-            }}
-            onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between gap-3 mb-3" style={{ flexShrink: 0 }}>
-              <h3 className="text-base font-bold">{plateType}-{t('wells', lang)}</h3>
-              <button type="button" onClick={() => setEnlarged(false)} aria-label={t('plateClose', lang)}
-                className="btn-secondary"
-                style={{ width: 40, height: 40, minWidth: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                  <path d="M18 6 6 18M6 6l12 12" />
-                </svg>
+      {templateDialog && createPortal(
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+          role="dialog" aria-modal="true" aria-labelledby="plate-template-title">
+          <div className="overlay-backdrop" onClick={() => setTemplateDialog(null)} aria-hidden="true" />
+          <form className="dialog w-full sm:max-w-md max-h-[92vh] overflow-y-auto" style={{ zIndex: 51 }}
+            onSubmit={e => { e.preventDefault(); confirmTemplate(); }}>
+            <div className="panel-head">
+              <h2 id="plate-template-title" className="section-title">{TEMPLATE_NAMES[templateDialog]}</h2>
+              <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => setTemplateDialog(null)}
+                aria-label={lang === 'zh' ? '关闭' : 'Close'}>
+                <IconClose size={16} />
               </button>
             </div>
-            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-              {renderPlateGrid(Math.max(config.wellSize, 42))}
+            <div className="panel-body space-y-3">
+              <p className="text-[13px]" style={{ ...S_MUTED, lineHeight: 1.55 }}>
+                {TEMPLATE_DESC[templateDialog]}
+                <span className="mono" style={{ color: 'var(--text)', whiteSpace: 'nowrap' }}> · {plateName}</span>
+              </p>
+              {renderTemplateFields()}
+              {labelledCount > 0 && (
+                <div className="notice notice-warn">
+                  <IconAlert size={15} style={{ color: 'var(--warning-text)', flexShrink: 0, marginTop: 2 }} />
+                  <span>{lang === 'zh' ? '应用模板会替换当前布局。' : 'Applying a template replaces the current layout.'}</span>
+                </div>
+              )}
             </div>
-            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
-              {t('plateSelected', lang)}: <span className="mono font-bold" style={{ color: 'var(--accent)' }}>{selectedWells.size}</span> {t('wells', lang)}
-            </p>
+            <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid var(--rule)' }}>
+              <button type="button" className="btn" onClick={() => setTemplateDialog(null)}>
+                {lang === 'en' ? 'Cancel' : '取消'}
+              </button>
+              <button type="submit" className="btn-primary" autoFocus={templateDialog === 'control'}>
+                {lang === 'en' ? 'Apply' : '应用'}
+              </button>
+            </div>
+          </form>
+        </div>,
+        document.body,
+      )}
+
+      {enlarged && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+          role="dialog" aria-modal="true" aria-label={t('plateEnlarge', lang)}>
+          <div className="overlay-backdrop" onClick={() => setEnlarged(false)} aria-hidden="true" />
+          <div className="dialog flex flex-col" style={{ zIndex: 51, width: '100%', height: '100%', maxWidth: '96vw', maxHeight: '96vh' }}>
+            <div className="panel-head" style={{ flexShrink: 0 }}>
+              <h2 className="section-title">{plateName}</h2>
+              <button type="button" onClick={() => setEnlarged(false)} aria-label={t('plateClose', lang)} className="btn-ghost btn-icon btn-sm">
+                <IconClose size={16} />
+              </button>
+            </div>
+            <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: '0.75rem', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+              {renderPlateGrid({ ws: Math.max(config.wellSize, 42), gap: 4, head: 32, fs: 10, axisFs: 11 })}
+            </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ flexShrink: 0, borderTop: '1px solid var(--rule)' }}>
+              <p className="text-xs" style={S_MUTED}>
+                {t('plateSelected', lang)}: <span className="mono font-bold" style={{ color: 'var(--text)' }}>{selCount}</span> {t('wells', lang)}
+              </p>
+              <button type="button" onClick={() => setEnlarged(false)} className="btn-primary btn-sm">
+                {lang === 'zh' ? '完成' : 'Done'}
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

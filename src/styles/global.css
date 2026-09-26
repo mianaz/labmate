@@ -328,9 +328,29 @@ label {
   margin-bottom: 0.35rem;
 }
 :lang(zh) label { text-transform: none !important; letter-spacing: 0.02em !important; }
+/* Inline labels (checkbox/radio rows) read as body text, not as field eyebrows.
+   The eyebrow rule above uses !important, so inline styles can't undo it — use
+   this class instead. */
+label.label-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--text) !important;
+  margin-bottom: 0;
+  cursor: pointer;
+}
 /* Inline labels (checkbox rows etc.) keep their flex/inline display */
 label.flex, label.inline-flex { display: flex; }
 label.inline-flex { display: inline-flex; }
+
+/* Units in uppercase contexts: CSS uppercases µ (micro) to Μ (Greek capital
+   mu), so "µM" would read "MM". Wrap unit text in .nocase (see .unit-safe below). */
+.nocase { text-transform: none !important; }
 
 /* ══════════════════════════════════════════════════════════════
    Focus
@@ -348,7 +368,7 @@ button:focus-visible, a:focus-visible, [role="tab"]:focus-visible, [role="button
 /* Skip link — first focusable element, visible only when focused */
 .skip-link {
   position: fixed;
-  top: 0.5rem;
+  top: -10rem;
   left: 0.5rem;
   z-index: 10000;
   padding: 0.5rem 0.75rem;
@@ -359,9 +379,8 @@ button:focus-visible, a:focus-visible, [role="tab"]:focus-visible, [role="button
   background: var(--primary);
   border: 1px solid var(--border-strong);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-200%);
 }
-.skip-link:focus { transform: none; }
+.skip-link:focus { top: 0.5rem; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 
@@ -418,6 +437,7 @@ button:disabled { cursor: not-allowed; }
     transform: none;
     box-shadow: none;
   }
+  .btn-primary:disabled { opacity: 1; background: var(--bg-2); color: var(--text-muted); border-color: var(--border); }
 
   .btn-sm { min-height: 1.875rem; padding: 0 0.625rem; font-size: 0.75rem; gap: 0.35rem; }
   .btn-lg { min-height: 2.75rem; padding: 0 1.25rem; font-size: 0.875rem; }
