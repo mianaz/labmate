@@ -1,35 +1,55 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
-import { S_MUTED, S_PRIMARY, S_TEXT } from '../../lib/styleConstants.js';
 
-// Module-scope: defined inside the component it was a new element type every
-// render, so React destroyed and recreated the <input> on each keystroke.
-function InputRow({ label, desc, value, setValue, unit, setUnit, units, isSolveTarget, result, lang }) {
-  return (
-    <div className={`p-3 rounded-lg ${isSolveTarget ? 'bg-primary-light border-2 border-primary' : 'bg-gray-50'}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="font-bold mono text-base">{label}</span>
-        {desc && <span className="text-xs" style={S_MUTED}>{desc}</span>}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-gray-400">=</span>
-        {isSolveTarget ? (
-          <div className="flex-1 text-center">
-            {result ? (
-              <span className="text-xl font-bold mono" style={S_PRIMARY}>
-                {result.val < 0.001 ? result.val.toExponential(3) : result.val.toFixed(4)}
-              </span>
-            ) : (
-              <span className="text-gray-400 text-sm">{t('enterOther3', lang)}</span>
-            )}
+const SYM = { c1: 'C₁', v1: 'V₁', c2: 'C₂', v2: 'V₂' };
+const CONC_UNITS = ['M', 'mM', 'µM', 'nM', '%'];
+const VOL_UNITS = ['L', 'mL', 'µL'];
+const unitFactorsC = { M: 1, mM: 1e-3, µM: 1e-6, nM: 1e-9, '%': 1 };
+const unitFactorsV = { L: 1, mL: 1e-3, µL: 1e-6 };
+
+const fmtVal = (v) => (v < 0.001 ? v.toExponential(3) : v.toFixed(4));
+
+// Variable symbol inside a (globally uppercased) field label.
+const SYM_STYLE = { textTransform: 'none', letterSpacing: 0, color: 'var(--text)', fontSize: '0.8125rem', marginRight: '0.45rem' };
+
+// One variable of C₁V₁ = C₂V₂: an input + unit select, or — when it is the
+// unknown being solved for — a readout in the same slot. Module scope: defined
+// inside the component it was a new element type every render, so React
+// destroyed and recreated the <input> on each keystroke.
+function Field({ id, sym, label, value, setValue, unit, setUnit, units, isTarget, result, lang }) {
+  const unitSelect = (
+    <select value={unit} onChange={e => setUnit(e.target.value)} className="shrink-0"
+      aria-label={`${sym} ${lang === 'zh' ? '单位' : 'unit'}`} style={{ width: '5.5rem' }}>
+      {units.map(u => <option key={u} value={u}>{u}</option>)}
+    </select>
+  );
+
+  if (isTarget) {
+    return (
+      <div className={result ? 'readout' : 'readout is-empty'} aria-live="polite" aria-atomic="true"
+        style={{ padding: '0.5rem 0.5rem 0.5rem 1rem' }}>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="readout-label">
+              <span style={SYM_STYLE}>{sym}</span>{label}
+            </div>
+            <div className="readout-value tabular" style={result ? { fontSize: '1.375rem', marginTop: '0.1rem' } : { marginTop: '0.1rem' }}>
+              {result ? fmtVal(result.val) : t('enterOther3', lang)}
+            </div>
           </div>
-        ) : (
-          <input type="number" value={value} onChange={e => setValue(e.target.value)}
-            className="flex-1" placeholder="0" step="any" style={{minWidth: 0}} />
-        )}
-        <select value={unit} onChange={e => setUnit(e.target.value)} style={{width:'4.5rem', flexShrink: 0}}>
-          {units.map(u => <option key={u} value={u}>{u}</option>)}
-        </select>
+          {unitSelect}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id}><span style={SYM_STYLE}>{sym}</span>{label}</label>
+      <div className="flex gap-2">
+        <input id={id} type="number" value={value} onChange={e => setValue(e.target.value)}
+          className="flex-1 min-w-0" placeholder="0" step="any" />
+        {unitSelect}
       </div>
     </div>
   );
@@ -47,9 +67,6 @@ export default function DilutionCalc() {
   const [c2Unit, setC2Unit] = useState('M');
   const [v2Unit, setV2Unit] = useState('mL');
 
-  const unitFactorsC = { M: 1, mM: 1e-3, µM: 1e-6, nM: 1e-9, '%': 1 };
-  const unitFactorsV = { L: 1, mL: 1e-3, µL: 1e-6 };
-
   function calculate() {
     const C1 = +c1 * unitFactorsC[c1Unit];
     const V1 = +v1 * unitFactorsV[v1Unit];
@@ -65,87 +82,79 @@ export default function DilutionCalc() {
 
   const result = calculate();
 
+  let prep = null;
+  if (result) {
+    if (solve === 'v1') {
+      const solventVol = +v2 - result.val;
+      if (solventVol > 0) {
+        prep = (<>
+          {t('dilPrepPipette', lang)} <strong>{fmtVal(result.val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}
+          {t('dilPrepAdd', lang)} <strong>{fmtVal(solventVol)} {v2Unit}</strong> {t('dilPrepSolvent', lang)}{lang === 'zh' ? '，' : ' '}
+          {t('dilPrepReach', lang)} <strong>{(+v2).toFixed(4)} {v2Unit}</strong> {t('dilPrepTotal', lang)}
+        </>);
+      }
+    } else if (solve === 'v2') {
+      const v1Val = +v1;
+      const solventVol = result.val - v1Val;
+      if (solventVol > 0) {
+        prep = (<>
+          {t('dilPrepPipette', lang)} <strong>{fmtVal(v1Val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}
+          {t('dilPrepAdd', lang)} <strong>{fmtVal(solventVol)} {v2Unit}</strong> {t('dilPrepSolvent', lang)}{lang === 'zh' ? '，' : ' '}
+          {t('dilPrepReach', lang)} <strong>{fmtVal(result.val)} {v2Unit}</strong> {t('dilPrepTotal', lang)}
+        </>);
+      }
+    } else if (solve === 'c2') {
+      prep = (<>
+        {t('dilPrepDilute', lang)} <strong>{fmtVal(result.val)} {c2Unit}</strong>{lang === 'zh' ? '，' : ', '}
+        {t('dilPrepUsing', lang)} <strong>{(+v1).toFixed(4)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ' → '}
+        <strong>{(+v2).toFixed(4)} {v2Unit}</strong> {t('dilPrepFinalVol', lang)}
+      </>);
+    } else if (solve === 'c1') {
+      prep = (<>
+        {t('dilPrepNeedStock', lang)} <strong>{fmtVal(result.val)} {c1Unit}</strong>{lang === 'zh' ? '，' : ' '}
+        {t('dilPrepToGet', lang)} <strong>{(+c2).toFixed(4)} {c2Unit}</strong>{lang === 'zh' ? '，' : ', '}
+        {t('dilPrepFrom', lang)} <strong>{(+v1).toFixed(4)} {v1Unit}</strong> → <strong>{(+v2).toFixed(4)} {v2Unit}</strong>
+      </>);
+    }
+  }
 
-  const concUnits = ['M', 'mM', 'µM', 'nM', '%'];
-  const volUnits = ['L', 'mL', 'µL'];
+  const field = { result, lang };
 
   return (
-    <div className="card p-6">
-      <h2 className="text-xl font-bold mb-1">{t('calcTaskDilution', lang)}</h2>
-      <p className="text-sm mb-4" style={S_MUTED}>{t('dilutionCalcDesc', lang)}</p>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold mono" style={S_MUTED}>{t('dilutionFormula', lang)}</h3>
-        <div className="flex items-center gap-2 text-sm">
-          <span style={S_MUTED}>{t('solveFor', lang)}:</span>
-          {['c1','v1','c2','v2'].map(s => (
-            <button key={s} onClick={() => setSolve(s)}
-              className={`px-2.5 py-1 rounded-md mono font-bold text-xs transition-all ${
-                solve === s ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-              }`}>{s === 'c1' ? 'C₁' : s === 'v1' ? 'V₁' : s === 'c2' ? 'C₂' : 'V₂'}</button>
-          ))}
-        </div>
+    <section className="panel" aria-labelledby="calc-dilution-title">
+      <div className="panel-head">
+        <h2 id="calc-dilution-title" className="section-title min-w-0">{t('calcTaskDilution', lang)}</h2>
+        <span className="badge" style={{ textTransform: 'none', letterSpacing: 0, fontSize: '0.6875rem' }}>C₁V₁ = C₂V₂</span>
       </div>
+      <div className="panel-body space-y-4 @container">
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', maxWidth: '68ch' }}>{t('dilutionCalcDesc', lang)}</p>
 
-      <div className="space-y-3">
-        <InputRow result={result} lang={lang} label="C₁" desc={t('dilC1Desc', lang)} value={c1} setValue={setC1} unit={c1Unit} setUnit={setC1Unit} units={concUnits} isSolveTarget={solve==='c1'} />
-        <InputRow result={result} lang={lang} label="V₁" desc={t('dilV1Desc', lang)} value={v1} setValue={setV1} unit={v1Unit} setUnit={setV1Unit} units={volUnits} isSolveTarget={solve==='v1'} />
-        <div className="text-center mono text-gray-300 text-lg">=</div>
-        <InputRow result={result} lang={lang} label="C₂" desc={t('dilC2Desc', lang)} value={c2} setValue={setC2} unit={c2Unit} setUnit={setC2Unit} units={concUnits} isSolveTarget={solve==='c2'} />
-        <InputRow result={result} lang={lang} label="V₂" desc={t('dilV2Desc', lang)} value={v2} setValue={setV2} unit={v2Unit} setUnit={setV2Unit} units={volUnits} isSolveTarget={solve==='v2'} />
-      </div>
-
-      <div aria-live="polite" aria-atomic="true">
-      {result && (
-        <div className="mt-4 p-4 rounded-lg border-2 border-primary bg-primary-light text-center">
-          <p className="text-sm" style={S_MUTED}>{t('result', lang)}</p>
-          <p className="text-2xl font-bold mono" style={S_PRIMARY}>
-            {result.label} = {result.val < 0.001 ? result.val.toExponential(3) : result.val.toFixed(4)} {result.unit}
-          </p>
-        </div>
-      )}
-      </div>
-      {result && (() => {
-        const fmtVal = (v) => v < 0.001 ? v.toExponential(3) : v.toFixed(4);
-        let prep = null;
-        if (solve === 'v1') {
-          const solventVol = +v2 - result.val;
-          if (solventVol > 0) {
-            prep = (<p className="text-sm" style={S_TEXT}>
-              {t('dilPrepPipette', lang)} <strong>{fmtVal(result.val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}
-              {t('dilPrepAdd', lang)} <strong>{fmtVal(solventVol)} {v2Unit}</strong> {t('dilPrepSolvent', lang)}{lang === 'zh' ? '，' : ' '}
-              {t('dilPrepReach', lang)} <strong>{(+v2).toFixed(4)} {v2Unit}</strong> {t('dilPrepTotal', lang)}
-            </p>);
-          }
-        } else if (solve === 'v2') {
-          const v1Val = +v1;
-          const solventVol = result.val - v1Val;
-          if (solventVol > 0) {
-            prep = (<p className="text-sm" style={S_TEXT}>
-              {t('dilPrepPipette', lang)} <strong>{fmtVal(v1Val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}
-              {t('dilPrepAdd', lang)} <strong>{fmtVal(solventVol)} {v2Unit}</strong> {t('dilPrepSolvent', lang)}{lang === 'zh' ? '，' : ' '}
-              {t('dilPrepReach', lang)} <strong>{fmtVal(result.val)} {v2Unit}</strong> {t('dilPrepTotal', lang)}
-            </p>);
-          }
-        } else if (solve === 'c2') {
-          prep = (<p className="text-sm" style={S_TEXT}>
-            {t('dilPrepDilute', lang)} <strong>{fmtVal(result.val)} {c2Unit}</strong>{lang === 'zh' ? '，' : ', '}
-            {t('dilPrepUsing', lang)} <strong>{(+v1).toFixed(4)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ' → '}
-            <strong>{(+v2).toFixed(4)} {v2Unit}</strong> {t('dilPrepFinalVol', lang)}
-          </p>);
-        } else if (solve === 'c1') {
-          prep = (<p className="text-sm" style={S_TEXT}>
-            {t('dilPrepNeedStock', lang)} <strong>{fmtVal(result.val)} {c1Unit}</strong>{lang === 'zh' ? '，' : ' '}
-            {t('dilPrepToGet', lang)} <strong>{(+c2).toFixed(4)} {c2Unit}</strong>{lang === 'zh' ? '，' : ', '}
-            {t('dilPrepFrom', lang)} <strong>{(+v1).toFixed(4)} {v1Unit}</strong> → <strong>{(+v2).toFixed(4)} {v2Unit}</strong>
-          </p>);
-        }
-        return prep ? (
-          <div className="mt-3 p-3 rounded-lg" style={{background:'var(--accent-light)', border:'1px solid var(--border)'}}>
-            <p className="text-xs font-semibold mb-1" style={S_MUTED}>{t('dilPrepSummary', lang)}</p>
-            {prep}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span className="eyebrow" id="dil-solve-label">{t('solveFor', lang)}</span>
+          <div className="seg" role="group" aria-labelledby="dil-solve-label">
+            {['c1', 'v1', 'c2', 'v2'].map(s => (
+              <button key={s} type="button" aria-pressed={solve === s} onClick={() => setSolve(s)}
+                style={{ minWidth: '3rem', minHeight: '2.25rem', fontSize: '0.875rem' }}>
+                {SYM[s]}
+              </button>
+            ))}
           </div>
-        ) : null;
-      })()}
-    </div>
+        </div>
+
+        {/* Row 1 = stock side (C₁ · V₁), row 2 = final side (C₂ · V₂) */}
+        <div className="grid gap-x-4 gap-y-3 @md:grid-cols-2 @md:items-end">
+          <Field {...field} id="dil-c1" sym="C₁" label={t('dilC1Desc', lang)} value={c1} setValue={setC1} unit={c1Unit} setUnit={setC1Unit} units={CONC_UNITS} isTarget={solve === 'c1'} />
+          <Field {...field} id="dil-v1" sym="V₁" label={t('dilV1Desc', lang)} value={v1} setValue={setV1} unit={v1Unit} setUnit={setV1Unit} units={VOL_UNITS} isTarget={solve === 'v1'} />
+          <Field {...field} id="dil-c2" sym="C₂" label={t('dilC2Desc', lang)} value={c2} setValue={setC2} unit={c2Unit} setUnit={setC2Unit} units={CONC_UNITS} isTarget={solve === 'c2'} />
+          <Field {...field} id="dil-v2" sym="V₂" label={t('dilV2Desc', lang)} value={v2} setValue={setV2} unit={v2Unit} setUnit={setV2Unit} units={VOL_UNITS} isTarget={solve === 'v2'} />
+        </div>
+
+        {prep && (
+          <div className="notice notice-info">
+            <p><span className="notice-title">{t('dilPrepSummary', lang)}</span>{lang === 'zh' ? '：' : ': '}{prep}</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

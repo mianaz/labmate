@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
-import { S_MUTED, S_PRIMARY, S_BG2 } from '../../lib/styleConstants.js';
+import { IconInfo } from '../../components/icons.jsx';
+
+// Variable symbol inside a (globally uppercased) field label.
+const SYM_STYLE = { textTransform: 'none', letterSpacing: 0, color: 'var(--text)', fontSize: '0.8125rem', marginRight: '0.45rem' };
+const TICKS = [0, 10, 20, 30, 40, 50];
 
 export default function DeadVolumeCalc() {
   const lang = useLang();
@@ -39,86 +43,82 @@ export default function DeadVolumeCalc() {
     ? { val: (total / 1000).toFixed(2), unit: 'mL' }
     : { val: total.toFixed(1), unit: volUnit };
 
+  const deadLabel = t('deadVolPercent', lang).replace(/\s*[(（]%[)）]\s*$/, '');
+
   return (
-    <div className="card p-6 max-w-2xl">
-      <h2 className="text-xl font-bold mb-1">{t('deadVolTitle', lang)}</h2>
-      <p className="text-sm mb-4" style={S_MUTED}>{t('deadVolDesc', lang)}</p>
-
-      <p className="text-xs font-semibold mb-2" style={S_MUTED}>{t('presets', lang)}</p>
-      <div className="flex flex-wrap gap-2 mb-5">
-        {presets.map(p => (
-          <button key={p.id} onClick={() => applyPreset(p)}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-            style={{
-              background: preset === p.id ? 'var(--primary)' : 'var(--bg-2)',
-              color: preset === p.id ? 'var(--on-primary)' : 'var(--text-muted)',
-              border: `1px solid ${preset === p.id ? 'var(--primary)' : 'var(--border)'}`,
-            }}>
-            {p.label}
-          </button>
-        ))}
+    <section className="panel" aria-labelledby="calc-deadvol-title">
+      <div className="panel-head">
+        <h2 id="calc-deadvol-title" className="section-title min-w-0">{t('calcTaskDeadVol', lang)}</h2>
+        <span className="badge" style={{ textTransform: 'none', letterSpacing: 0, fontSize: '0.6875rem' }}>V × N × (1 + dead%)</span>
       </div>
+      <div className="panel-body space-y-4 @container">
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', maxWidth: '68ch' }}>{t('deadVolDesc', lang)}</p>
 
-      <div className="space-y-4">
-        <div className="p-3 rounded-lg" style={S_BG2}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('numSamples', lang)}</label>
-          <input type="number" value={nSamples} onChange={e => { setNSamples(e.target.value); setPreset('custom'); }}
-            placeholder="e.g. 24" min="1" step="1"
-            className="w-full px-3 py-2 rounded-lg text-sm"
-            style={{background:'var(--card)', border:'1px solid var(--border)', color:'var(--text)'}} />
-        </div>
-
-        <div className="p-3 rounded-lg" style={S_BG2}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>{t('volPerSample', lang)}</label>
-          <div className="flex gap-2 items-center">
-            <input type="number" value={volPer} onChange={e => { setVolPer(e.target.value); setPreset('custom'); }}
-              placeholder="e.g. 200" min="0" step="any"
-              className="flex-1 px-3 py-2 rounded-lg text-sm"
-              style={{background:'var(--card)', border:'1px solid var(--border)', color:'var(--text)', minWidth:0}} />
-            <select value={volUnit} onChange={e => setVolUnit(e.target.value)}
-              className="px-2 py-2 rounded-lg text-sm"
-              style={{background:'var(--card)', border:'1px solid var(--border)', color:'var(--text)', width:'4.5rem', flexShrink:0}}>
-              <option value="µL">µL</option>
-              <option value="mL">mL</option>
-              <option value="L">L</option>
-            </select>
+        <div role="group" aria-labelledby="dv-presets-label">
+          <div className="eyebrow mb-1.5" id="dv-presets-label">{t('presets', lang)}</div>
+          <div className="chip-row">
+            {presets.map(p => (
+              <button key={p.id} type="button" className="chip" aria-pressed={preset === p.id} onClick={() => applyPreset(p)}>
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="p-3 rounded-lg" style={S_BG2}>
-          <label className="text-xs font-semibold block mb-1" style={S_MUTED}>
-            {t('deadVolPercent', lang)}: <span className="mono font-bold" style={S_PRIMARY}>{deadPct}%</span>
-          </label>
-          <input type="range" min="0" max="50" step="1" value={deadPct}
+        <div className="grid gap-x-4 gap-y-3 @md:grid-cols-2 @md:items-end">
+          <div className="min-w-0">
+            <label htmlFor="dv-n"><span style={SYM_STYLE}>N</span>{t('numSamples', lang)}</label>
+            <input id="dv-n" type="number" value={nSamples} onChange={e => { setNSamples(e.target.value); setPreset('custom'); }}
+              placeholder="e.g. 24" min="1" step="1" className="w-full" />
+          </div>
+          <div className="min-w-0">
+            <label htmlFor="dv-vol"><span style={SYM_STYLE}>V</span>{t('volPerSample', lang)}</label>
+            <div className="flex gap-2">
+              <input id="dv-vol" type="number" value={volPer} onChange={e => { setVolPer(e.target.value); setPreset('custom'); }}
+                placeholder="e.g. 200" min="0" step="any" className="flex-1 min-w-0" />
+              <select value={volUnit} onChange={e => setVolUnit(e.target.value)} aria-label={`V ${lang === 'zh' ? '单位' : 'unit'}`}
+                className="shrink-0" style={{ width: '5.5rem' }}>
+                <option value="µL">µL</option>
+                <option value="mL">mL</option>
+                <option value="L">L</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="dv-dead" style={{ marginBottom: 0 }}>{deadLabel}</label>
+            <output htmlFor="dv-dead" className="mono tabular" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{deadPct}%</output>
+          </div>
+          <input id="dv-dead" type="range" min="0" max="50" step="1" value={deadPct}
             onChange={e => { setDeadPct(e.target.value); setPreset('custom'); }}
-            className="w-full accent-teal-600" />
-          <div className="flex justify-between text-xs mt-1" style={S_MUTED}>
-            <span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>50%</span>
+            className="w-full mt-1.5" />
+          <div className="flex justify-between mono" aria-hidden="true" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            {TICKS.map(p => <span key={p}>{p}%</span>)}
           </div>
         </div>
-      </div>
 
-      <div aria-live="polite" aria-atomic="true">
-      {hasResult && (
-        <div className="mt-5 p-4 rounded-xl" style={{background:'var(--primary-light)', border:'2px solid var(--primary)'}}>
-          <p className="text-xs mb-2" style={S_MUTED}>{t('totalNeeded', lang)}</p>
-          <p className="text-2xl font-bold mono" style={S_PRIMARY}>
-            {displayTotal.val} {displayTotal.unit}
-          </p>
-          <div className="flex gap-4 mt-2 text-xs" style={S_MUTED}>
-            <span>{t('withoutDead', lang)}: <span className="mono font-bold">{base.toFixed(1)} {volUnit}</span></span>
-            <span>{t('deadVolAmount', lang)}: <span className="mono font-bold">+{deadAmt.toFixed(1)} {volUnit}</span></span>
-          </div>
-          <p className="text-xs mt-2 italic" style={S_MUTED}>
-            = {n} × {v} {volUnit} × (1 + {d}%)
-          </p>
+        <div className={hasResult ? 'readout' : 'readout is-empty'} aria-live="polite" aria-atomic="true">
+          <div className="readout-label">{t('totalNeeded', lang)}</div>
+          {hasResult ? (
+            <>
+              <div className="readout-value">{displayTotal.val}<span className="unit">{displayTotal.unit}</span></div>
+              <div className="readout-sub">
+                {t('withoutDead', lang)} {base.toFixed(1)} {volUnit} · {t('deadVolAmount', lang)} +{deadAmt.toFixed(1)} {volUnit}
+              </div>
+              <div className="readout-sub" style={{ marginTop: '0.1rem' }}>= {n} × {v} {volUnit} × (1 + {d}%)</div>
+            </>
+          ) : (
+            <div className="readout-value">{lang === 'zh' ? '输入样品数和每份用量' : 'Enter the number of samples and volume per sample'}</div>
+          )}
         </div>
-      )}
-      </div>
 
-      <div className="mt-4 p-3 rounded-lg text-xs" style={{background:'var(--accent-light)', color:'var(--accent)'}}>
-        {t('deadVolTip', lang)}
+        <div className="notice">
+          <IconInfo size={15} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+          <p>{t('deadVolTip', lang)}</p>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
