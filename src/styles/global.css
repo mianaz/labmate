@@ -51,6 +51,7 @@
   /* Surfaces */
   --bg:            #F0EEE6; /* matte documentation paper */
   --bg-2:          #E6E3D8; /* deeper paper — wells, chips, hover */
+  --row-hover:     var(--bg);  /* list-row hover: category text stays ≥4.5:1 (it dips to 4.2 on --bg-2) */
   --bg-3:          #DCD8CB; /* pressed */
   --card:          #FBFAF5; /* fresh sheet */
   --nav-bg:        #F0EEE6; /* opaque — never glass */
@@ -141,6 +142,7 @@
 [data-theme="dark"] {
   --bg:            #0D0F0C; /* deactivated-CRT near-black */
   --bg-2:          #1B1F19;
+  --row-hover:     var(--bg-2);
   --bg-3:          #242922;
   --card:          #141712;
   --nav-bg:        #0D0F0C;
@@ -659,7 +661,7 @@ button:disabled { cursor: not-allowed; }
     transition: background-color var(--duration-fast) ease;
   }
   .list-row:last-child { border-bottom: 0; }
-  .list-row:hover { background: var(--bg-2); }
+  .list-row:hover { background: var(--row-hover); }
   .list-row.is-selected { background: var(--primary-light); }
   .list-row.is-selected::before {
     content: '';

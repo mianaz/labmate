@@ -55,7 +55,7 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
 - Scientific calculator swallowed Enter everywhere while open; its keyboard handler was registered twice.
 - Units in uppercase labels could render "µM" as "ΜM"; several contrast failures (axe: no WCAG 2.1 A/AA
   violations remain); favourite buttons were labelled "Added to favorites" before toggling; duplicate
-  paper-grain overlay.
+  paper-grain overlay; hovering a list row dropped its category label below AA contrast.
 
 ## [2.2.0] - 2026-05-12
 
