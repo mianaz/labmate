@@ -1,92 +1,188 @@
 // Timer system — TimerProvider/useTimers (state), QuickTimerButton + QuickTimerPanel
 // (start a timer), TimerDock (running timers in the desktop sidebar) and TimerBar
 // (running timers floating above the bottom nav on phones/tablets).
-import React, { useState, useCallback, useMemo } from 'react';
+//
+// A running timer stores the moment it ends, not a counter: browsers throttle
+// background tabs and suspend locked phones, and a counter that only moved when
+// the page got CPU time fell minutes behind. Timers are saved to localStorage, so
+// a reload or relaunch keeps them, and followed across open tabs.
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { t, useLang } from '../i18n/index.js';
 import UtilityPanel from './UtilityPanel.jsx';
 import { IconTimer, IconPause, IconPlay, IconReset, IconClose } from './icons.jsx';
+import { primeTimerAlerts, unlockTimerAudio, alertTimerDone, releaseTimerAudio } from '../lib/timerAlerts.js';
+import { useWakeLock } from '../hooks/useWakeLock.js';
+import { useMediaQuery } from '../hooks/useMediaQuery.js';
+
+export const TIMERS_KEY = 'labmate_timers';
+
+// ═══════════════════════════════════════════════
+// TIMER MODEL
+// ═══════════════════════════════════════════════
+// { id, label, totalSeconds, running, endsAt (ms, while running),
+//   remaining (s, while paused), done, finishedAt (ms) }
+
+export function timerRemaining(tmr, now) {
+  if (!tmr.running) return tmr.remaining;
+  return Math.max(0, Math.ceil((tmr.endsAt - now) / 1000));
+}
+
+function finished(tmr) {
+  return { ...tmr, running: false, done: true, remaining: 0, endsAt: null, finishedAt: tmr.endsAt };
+}
+
+function isTimer(x) {
+  return !!x && typeof x === 'object' && ['number', 'string'].includes(typeof x.id)
+    && typeof x.label === 'string' && Number.isFinite(x.totalSeconds) && x.totalSeconds > 0
+    && (x.running ? Number.isFinite(x.endsAt) : Number.isFinite(x.remaining));
+}
+
+// Stored timers that ran out while the page was closed come back finished, without
+// an alarm: that may have been hours ago, and the dock shows them as done.
+export function parseTimers(raw, now) {
+  let list;
+  try { list = JSON.parse(raw || '[]'); } catch { return []; }
+  if (!Array.isArray(list)) return [];
+  return list.filter(isTimer).map(tmr => (tmr.running && tmr.endsAt <= now ? finished(tmr) : tmr));
+}
+
+function loadTimers() {
+  try { return parseTimers(localStorage.getItem(TIMERS_KEY), Date.now()); } catch { return []; }
+}
 
 // ═══════════════════════════════════════════════
 // CONTEXT & PROVIDER
 // ═══════════════════════════════════════════════
 
 export const TimerContext = React.createContext();
+// The actions never change, so components that only start timers (RecipeDetail)
+// don't re-render every second while one runs.
+const TimerActionsContext = React.createContext();
 
 export function TimerProvider({ children }) {
-  const [timers, setTimers] = useState([]);
+  const [timers, setTimers] = useState(loadTimers);
+  const [now, setNow] = useState(() => Date.now());
+  const coarsePointer = useMediaQuery('(pointer: coarse)');
 
-  const audioCtxRef = React.useRef(null);
+  // "id:endsAt|…" for the running timers: changes only when one starts, pauses or ends.
+  const runningKey = timers.filter(tm => tm.running).map(tm => `${tm.id}:${tm.endsAt}`).join('|');
+  const hasRunning = runningKey !== '';
 
-  // Stable mutators: the provider re-renders once a second while a timer runs,
-  // so every consumer (RecipeDetail among them) would otherwise re-render each
-  // tick just because these closures and the context object were recreated.
   const addTimer = useCallback((label, seconds) => {
-    const id = Date.now() + Math.random();
-    setTimers(prev => [...prev, { id, label, totalSeconds: seconds, remaining: seconds, running: true, startedAt: Date.now() }]);
+    const total = Math.max(1, Math.round(seconds));
+    const start = Date.now();
+    const id = start + Math.random();
+    primeTimerAlerts();
+    setTimers(prev => [...prev, { id, label, totalSeconds: total, remaining: total, running: true, endsAt: start + total * 1000, startedAt: start }]);
+    setNow(start);
     return id;
   }, []);
-
-  const removeTimer = useCallback((id) => {
-    setTimers(prev => {
-      const next = prev.filter(t => t.id !== id);
-      // Close AudioContext when no timers remain
-      if (next.length === 0 && audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-        audioCtxRef.current = null;
-      }
-      return next;
-    });
+  const removeTimer = useCallback((id) => setTimers(prev => prev.filter(tm => tm.id !== id)), []);
+  const pauseTimer = useCallback((id) => {
+    const at = Date.now();
+    setTimers(prev => prev.map(tm => (tm.id === id && tm.running && tm.endsAt > at
+      ? { ...tm, running: false, remaining: timerRemaining(tm, at), endsAt: null }
+      : tm)));
   }, []);
-  const pauseTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: false} : t)), []);
-  const resumeTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, running: true} : t)), []);
-  const resetTimer = useCallback((id) => setTimers(prev => prev.map(t => t.id === id ? {...t, remaining: t.totalSeconds, running: false} : t)), []);
-  const hasRunning = timers.some(t => t.running && t.remaining > 0);
+  const resumeTimer = useCallback((id) => {
+    const at = Date.now();
+    primeTimerAlerts();
+    setTimers(prev => prev.map(tm => (tm.id === id && !tm.running && !tm.done && tm.remaining > 0
+      ? { ...tm, running: true, endsAt: at + tm.remaining * 1000 }
+      : tm)));
+    setNow(at);
+  }, []);
+  const resetTimer = useCallback((id) => setTimers(prev => prev.map(tm => (tm.id === id
+    ? { ...tm, running: false, done: false, remaining: tm.totalSeconds, endsAt: null, finishedAt: null }
+    : tm))), []);
 
-  React.useEffect(() => {
-    if (!hasRunning) return; // No interval when no active timers
-    const interval = setInterval(() => {
-      setTimers(prev => prev.map(tmr => {
-        if (!tmr.running || tmr.remaining <= 0) return tmr;
-        const next = tmr.remaining - 1;
-        if (next <= 0) {
-          // Play alert sound (reuse AudioContext)
-          try {
-            if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            const ctx = audioCtxRef.current;
-            [0, 0.3, 0.6].forEach(delay => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.connect(gain); gain.connect(ctx.destination);
-              osc.frequency.value = 880;
-              osc.type = 'sine';
-              gain.gain.value = 0.3;
-              osc.start(ctx.currentTime + delay);
-              osc.stop(ctx.currentTime + delay + 0.15);
-            });
-          } catch(e) {}
-          // Browser notification
-          if (typeof Notification !== 'undefined') {
-            if (Notification.permission === 'granted') {
-              new Notification('Timer Done!', { body: tmr.label, icon: '🧪' });
-            } else if (Notification.permission !== 'denied') {
-              Notification.requestPermission();
-            }
-          }
-        }
-        return {...tmr, remaining: Math.max(0, next), running: next > 0 ? true : false};
-      }));
-    }, 1000);
-    return () => clearInterval(interval);
+  // Save, and follow changes made in other tabs (the storage event only fires there).
+  useEffect(() => {
+    try {
+      if (timers.length) localStorage.setItem(TIMERS_KEY, JSON.stringify(timers));
+      else localStorage.removeItem(TIMERS_KEY);
+    } catch { /* storage blocked or full: timers still run for this session */ }
+    if (!timers.length) releaseTimerAudio();
+  }, [timers]);
+  useEffect(() => {
+    const onStorage = (e) => { if (e.key === TIMERS_KEY) setTimers(parseTimers(e.newValue, Date.now())); };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // While something runs: repaint when the next displayed second changes, give each
+  // timer a one-shot timeout for the moment it ends (hidden tabs batch chained timers
+  // to once a minute, but not one-shots), and catch up at once when the page is
+  // shown again after a locked screen or another tab.
+  useEffect(() => {
+    if (!runningKey) return undefined;
+    const ends = runningKey.split('|').map(entry => Number(entry.slice(entry.lastIndexOf(':') + 1)));
+    let tickHandle;
+    const tick = () => {
+      const at = Date.now();
+      setNow(at);
+      let wait = 1000;
+      for (const end of ends) if (end > at) wait = Math.min(wait, (end - at) % 1000 || 1000);
+      tickHandle = setTimeout(tick, wait + 5);
+    };
+    tick();
+    const endHandles = ends.map(end => setTimeout(() => setNow(Date.now()), Math.max(0, end - Date.now()) + 5));
+    const wake = () => { if (document.visibilityState === 'visible') setNow(Date.now()); };
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('focus', wake);
+    window.addEventListener('pageshow', wake);
+    return () => {
+      clearTimeout(tickHandle);
+      endHandles.forEach(clearTimeout);
+      document.removeEventListener('visibilitychange', wake);
+      window.removeEventListener('focus', wake);
+      window.removeEventListener('pageshow', wake);
+    };
+  }, [runningKey]);
+
+  // Finish the timers that have run out, then alert: outside the state updater,
+  // which has to stay free of side effects.
+  useEffect(() => {
+    const due = timers.filter(tm => tm.running && tm.endsAt <= now);
+    if (!due.length) return;
+    const ids = new Set(due.map(tm => tm.id));
+    setTimers(prev => prev.map(tm => (ids.has(tm.id) && tm.running ? finished(tm) : tm)));
+    due.forEach(alertTimerDone);
+  }, [timers, now]);
+
+  // Timers restored by a reload have had no click to unlock audio with: use the next one.
+  useEffect(() => {
+    if (!hasRunning) return undefined;
+    window.addEventListener('pointerdown', unlockTimerAudio, true);
+    window.addEventListener('keydown', unlockTimerAudio, true);
+    return () => {
+      window.removeEventListener('pointerdown', unlockTimerAudio, true);
+      window.removeEventListener('keydown', unlockTimerAudio, true);
+    };
   }, [hasRunning]);
 
-  const value = useMemo(
-    () => ({ timers, addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer }),
-    [timers, addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer]
+  // A locked phone or tablet suspends the page, which holds the alarm until you
+  // come back, so keep the screen on there while a timer runs.
+  useWakeLock(hasRunning && coarsePointer);
+
+  const actions = useMemo(
+    () => ({ addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer }),
+    [addTimer, removeTimer, pauseTimer, resumeTimer, resetTimer]
   );
-  return React.createElement(TimerContext.Provider, { value }, children);
+  const view = useMemo(
+    () => timers.map(tm => (tm.running ? { ...tm, remaining: timerRemaining(tm, now) } : tm)),
+    [timers, now]
+  );
+  const value = useMemo(() => ({ timers: view, ...actions }), [view, actions]);
+  return (
+    <TimerActionsContext.Provider value={actions}>
+      <TimerContext.Provider value={value}>{children}</TimerContext.Provider>
+    </TimerActionsContext.Provider>
+  );
 }
 
 export function useTimers() { return React.useContext(TimerContext); }
+export function useTimerActions() { return React.useContext(TimerActionsContext); }
 
 export function formatTimer(s) {
   const h = Math.floor(s / 3600);
@@ -96,16 +192,20 @@ export function formatTimer(s) {
   return `${h > 0 ? h + ':' : ''}${mm}:${String(sec).padStart(2, '0')}`;
 }
 
+function formatClock(ms, lang) {
+  return new Date(ms).toLocaleTimeString(lang === 'zh' ? 'zh-CN' : undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
 // ═══════════════════════════════════════════════
 // RUNNING TIMERS
 // ═══════════════════════════════════════════════
 
 function TimerItem({ tmr, lang, floating }) {
-  const { removeTimer, pauseTimer, resumeTimer, resetTimer } = useTimers();
-  const done = tmr.remaining <= 0 && !tmr.running;
+  const { removeTimer, pauseTimer, resumeTimer, resetTimer } = useTimerActions();
+  const done = tmr.done || (tmr.remaining <= 0 && !tmr.running);
   const pct = tmr.totalSeconds ? ((tmr.totalSeconds - tmr.remaining) / tmr.totalSeconds) * 100 : 0;
   return (
-    <div className={done ? 'animate-pulse' : undefined} role={done ? 'alert' : undefined}
+    <div className={done ? 'timer-done' : undefined} role={done ? 'alert' : undefined}
       style={{
         background: done ? 'var(--primary-light)' : 'var(--card)',
         border: `1px solid ${done ? 'var(--primary)' : 'var(--border-strong)'}`,
@@ -119,7 +219,11 @@ function TimerItem({ tmr, lang, floating }) {
         </span>
       </div>
       <div className="flex items-center gap-0.5 mt-0.5">
-        {done ? <span className="flex-1" /> : (
+        {done ? (
+          <span className="flex-1 mono tabular" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            {tmr.finishedAt ? `${t('timerFinishedAt', lang)} ${formatClock(tmr.finishedAt, lang)}` : ''}
+          </span>
+        ) : (
           <div className="flex-1 mr-1.5" style={{ height: 3, background: 'var(--bg-2)' }} aria-hidden="true">
             <div style={{ height: '100%', width: `${pct}%`, background: tmr.running ? 'var(--primary)' : 'var(--border)', transition: 'width 1s linear' }} />
           </div>
@@ -211,7 +315,7 @@ const QUICK_TIMES = [
 
 export function QuickTimerPanel({ open, onClose }) {
   const lang = useLang();
-  const { addTimer } = useTimers();
+  const { addTimer } = useTimerActions();
   const [customMin, setCustomMin] = useState('');
   const [customLabel, setCustomLabel] = useState('');
 

@@ -10,8 +10,12 @@ const MERGE_ARRAY_KEYS = ['labmate_customRecipes', 'labmate_customProtocols'];
 // that might land in localStorage, so a backup file can never carry a secret.
 const SECRET_KEY_RE = /(^|[_-])(api[_-]?key|secret|token|credential|bearer|password|passwd|key)([_-]|$)/i;
 
+// Device-local state rather than data: running timers restored from an old backup
+// would come back as long-finished alarms.
+const LS_EXCLUDED_KEYS = ['labmate_timers'];
+
 function isBackupKey(key) {
-  if (SECRET_KEY_RE.test(key)) return false;
+  if (SECRET_KEY_RE.test(key) || LS_EXCLUDED_KEYS.includes(key)) return false;
   return LS_PREFIXES.some(p => key.startsWith(p)) || LS_EXACT_KEYS.includes(key);
 }
 
@@ -62,6 +66,7 @@ export async function importBackup(fileContent) {
   }
   Object.entries(parsed.data).forEach(([key, value]) => {
     if (SECRET_KEY_RE.test(key)) return; // never restore a secret-shaped key from a backup file
+    if (LS_EXCLUDED_KEYS.includes(key)) return;
     if (MERGE_ARRAY_KEYS.includes(key)) {
       let existing = [];
       try { existing = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}

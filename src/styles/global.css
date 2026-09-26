@@ -51,6 +51,7 @@
   /* Surfaces */
   --bg:            #F0EEE6; /* matte documentation paper */
   --bg-2:          #E6E3D8; /* deeper paper — wells, chips, hover */
+  --row-hover:     var(--bg);  /* list-row hover: category text stays ≥4.5:1 (it dips to 4.2 on --bg-2) */
   --bg-3:          #DCD8CB; /* pressed */
   --card:          #FBFAF5; /* fresh sheet */
   --nav-bg:        #F0EEE6; /* opaque — never glass */
@@ -141,6 +142,7 @@
 [data-theme="dark"] {
   --bg:            #0D0F0C; /* deactivated-CRT near-black */
   --bg-2:          #1B1F19;
+  --row-hover:     var(--bg-2);
   --bg-3:          #242922;
   --card:          #141712;
   --nav-bg:        #0D0F0C;
@@ -659,7 +661,7 @@ button:disabled { cursor: not-allowed; }
     transition: background-color var(--duration-fast) ease;
   }
   .list-row:last-child { border-bottom: 0; }
-  .list-row:hover { background: var(--bg-2); }
+  .list-row:hover { background: var(--row-hover); }
   .list-row.is-selected { background: var(--primary-light); }
   .list-row.is-selected::before {
     content: '';
@@ -1337,6 +1339,11 @@ tfoot tr { border-top: 1px solid var(--border-strong); }
 .skeleton-shimmer { background: var(--bg-2); animation: skeletonPulse 1.4s ease-in-out infinite; }
 .scroll-reveal { opacity: 0; transform: translateY(12px); transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out); }
 .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Finished timer: the card flashes between its tint and the plain card. The text
+   never fades, so it keeps AA contrast throughout (Tailwind's pulse halves opacity). */
+.timer-done { animation: timer-done-flash 1.6s ease-in-out infinite; }
+@keyframes timer-done-flash { 50% { background-color: var(--card); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

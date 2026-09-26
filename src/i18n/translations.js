@@ -246,6 +246,10 @@ export const translations = {
   timerRunning: { en: 'Running timers', zh: '进行中的计时' },
   timerAdd: { en: 'Quick Timer', zh: '快速计时' },
   timerMinutes: { en: 'min', zh: '分钟' },
+  timerFinishedAt: { en: 'Finished', zh: '结束于' },
+  timerNotifyTitle: { en: 'Timer done', zh: '计时结束' },
+  keepScreenOn: { en: 'Keep screen on', zh: '屏幕常亮' },
+  keepScreenOnHint: { en: 'Stops the screen dimming or locking while this page is open', zh: '打开此页面时，屏幕不会变暗或自动锁定' },
   // Dilution calc descriptive labels
   dilC1Desc: { en: 'Stock Concentration', zh: '母液浓度' },
   dilV1Desc: { en: 'Volume of Stock to Pipette', zh: '需取母液体积' },

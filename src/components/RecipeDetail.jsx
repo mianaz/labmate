@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { t, useLang, NOTES_EN } from '../i18n/index.js';
 import { safeText, BoldText, getRecipeNotes, downloadFile, renderDynamicStep } from '../lib/utils.js';
 import { useToast } from './Toast.jsx';
-import { useTimers } from './Timer.jsx';
+import { useTimerActions } from './Timer.jsx';
+import { useWakeLock, isWakeLockSupported } from '../hooks/useWakeLock.js';
 import { useFavs } from './Favorites.jsx';
 import { useRecipes } from '../lib/RecipeProvider.jsx';
 import GelTab from '../features/calc/GelTab.jsx';
@@ -10,7 +11,7 @@ import db from '../lib/db.js';
 import { CAT_COLORS, categoryLabel, disciplineLabel } from './RecipeRow.jsx';
 import {
   IconStar, IconDownload, IconCopy, IconEdit, IconTrash, IconArrowRight, IconArrowUpRight,
-  IconTimer, IconCheck, IconPause, IconInfo,
+  IconTimer, IconCheck, IconPause, IconInfo, IconSun,
 } from './icons.jsx';
 
 // Helper: convert recipe to text for download/clipboard
@@ -118,15 +119,39 @@ function SectionHead({ title, children, id }) {
   );
 }
 
+// "Keep screen on" for working through a recipe or protocol at the bench. The
+// choice is remembered; the screen only stays on while a detail view is open.
+const KEEP_AWAKE_KEY = 'labmate_keepScreenOn';
+
+function readKeepAwake() {
+  try { return localStorage.getItem(KEEP_AWAKE_KEY) === 'true'; } catch { return false; }
+}
+
+function KeepAwakeToggle({ on, onToggle, lang }) {
+  return (
+    <button type="button" className="chip no-print" aria-pressed={on} onClick={onToggle} title={t('keepScreenOnHint', lang)}>
+      <IconSun size={13} />{t('keepScreenOn', lang)}
+    </button>
+  );
+}
+
 function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom, onDeleteCustom }) {
   const lang = useLang();
   const toast = useToast();
-  const { addTimer } = useTimers();
+  const { addTimer } = useTimerActions();
   const { isFav, toggle } = useFavs();
   const { recipeById: RECIPE_BY_ID } = useRecipes();
   const [targetVol, setTargetVol] = useState(recipe.defaultVolume);
   const [showDetailed, setShowDetailed] = useState(false);
   const [showAllRelated, setShowAllRelated] = useState(false);
+  const [keepAwake, setKeepAwake] = useState(readKeepAwake);
+  useWakeLock(keepAwake);
+  const toggleKeepAwake = () => {
+    const next = !keepAwake;
+    setKeepAwake(next);
+    try { localStorage.setItem(KEEP_AWAKE_KEY, String(next)); } catch { /* storage blocked */ }
+  };
+  const keepAwakeToggle = isWakeLockSupported() && <KeepAwakeToggle on={keepAwake} onToggle={toggleKeepAwake} lang={lang} />;
   const scale = targetVol / recipe.defaultVolume;
   const isProtocol = recipe.category === 'protocol';
   const isGel = recipe.id === 'sds_page_gel';
@@ -335,6 +360,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         {hasStepToggle && (
           <section className="doc-section" aria-labelledby="doc-steps">
             <SectionHead id="doc-steps" title={t('stepsLabel', lang)}>
+              {keepAwakeToggle}
               <div className="seg" role="group" aria-label={t('stepsLabel', lang)}>
                 <button type="button" aria-pressed={!showDetailed} onClick={() => setShowDetailed(false)}>{t('briefLabel', lang)}</button>
                 <button type="button" aria-pressed={showDetailed} onClick={() => setShowDetailed(true)}>{t('detailedLabel', lang)}</button>
@@ -431,7 +457,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
             detailed steps, and for the SDS gel (its calculator replaces it). */}
         {isGel ? null : isProtocol && hasStepToggle ? null : isProtocol ? (
           <section className="doc-section" aria-labelledby="doc-steps-legacy">
-            <SectionHead id="doc-steps-legacy" title={t('stepsLabel', lang)} />
+            <SectionHead id="doc-steps-legacy" title={t('stepsLabel', lang)}>{keepAwakeToggle}</SectionHead>
             <ol className="protocol-timeline">
               {/* Custom protocols keep their steps as strings in briefSteps (no components). */}
               {!(recipe.components || []).length && (recipe.briefSteps || []).map((st, i) => (
@@ -509,7 +535,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
         {/* Preparation steps */}
         {recipe.prepSteps && recipe.prepSteps.length > 0 && (
           <section className="doc-section" aria-labelledby="doc-prep">
-            <SectionHead id="doc-prep" title={t('prepStepsLabel', lang)} />
+            <SectionHead id="doc-prep" title={t('prepStepsLabel', lang)}>{keepAwakeToggle}</SectionHead>
             <ol className="protocol-timeline">
               {recipe.prepSteps.map((step, i) => (
                 <li key={i} className="protocol-step">
