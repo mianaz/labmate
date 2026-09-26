@@ -1275,7 +1275,8 @@ tfoot tr { border-top: 1px solid var(--border-strong); }
 .filter-tags-scroll::-webkit-scrollbar { display: none; }
 
 /* Inventory: collapse the third column on mid-width screens */
-@media (max-width: 1100px) and (min-width: 768px) {
+/* 1279px: with the 240px sidebar, three columns get cramped below ~1280px */
+@media (max-width: 1279px) and (min-width: 768px) {
   .inv-grid-3col { grid-template-columns: 200px 1fr !important; }
   .inv-col-3 { display: none !important; }
 }
