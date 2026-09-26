@@ -42,8 +42,11 @@ export async function exportBackup() {
   a.download = `labmate-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  localStorage.setItem('labmate_lastExport', String(Date.now()));
-  db.settings.put({ key: 'labmate_lastExport', value: String(Date.now()) }).catch(() => {});
+  const exportedAt = Date.now();
+  localStorage.setItem('labmate_lastExport', String(exportedAt));
+  db.settings.put({ key: 'labmate_lastExport', value: String(exportedAt) }).catch(() => {});
+  // Lets the shell's "last backup" status update wherever the export was triggered.
+  window.dispatchEvent(new window.CustomEvent('labmate-backup-exported', { detail: { exportedAt } }));
 }
 
 export async function importBackup(fileContent) {

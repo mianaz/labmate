@@ -5,7 +5,7 @@
   "start_url": "/labmate/",
   "display": "standalone",
   "background_color": "#F0EEE6",
-  "theme_color": "#16B364",
+  "theme_color": "#F0EEE6",
   "icons": [
     { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "favicon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },

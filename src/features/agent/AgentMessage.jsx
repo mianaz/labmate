@@ -15,7 +15,7 @@ function RichText({ text }) {
         if (tok.type === 'code') {
           return (
             <code key={ti} className="mono" style={{
-              background: 'var(--bg-2)', border: '1px solid var(--border)',
+              background: 'var(--bg-2)', border: '1px solid var(--rule)',
               padding: '0.05em 0.3em', fontSize: '0.85em',
             }}>{tok.value}</code>
           );
@@ -32,10 +32,10 @@ export default function AgentMessage({ role, content, error = false, streaming =
   if (!text && !streaming) return null; // tool-call-only assistant turns render nothing here
 
   const bubbleStyle = isUser
-    ? { background: 'var(--primary-light)', border: '2px solid var(--border)', color: 'var(--text)' }
+    ? { background: 'var(--primary-light)', border: '1px solid var(--border)', color: 'var(--text)' }
     : error
-      ? { background: 'var(--danger-bg)', border: '2px solid var(--danger-border)', color: 'var(--danger-text)' }
-      : { background: 'var(--card)', border: '2px solid var(--border)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' };
+      ? { background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)' }
+      : { background: 'var(--card)', border: '1px solid var(--border-strong)', color: 'var(--text)' };
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>

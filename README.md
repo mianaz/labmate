@@ -10,7 +10,7 @@ Everything is stored locally in your browser (IndexedDB) — no account, no serv
 
 ## Features
 
-Organized into tabs, routed under a locale prefix (`/en/…` or `/zh/…`):
+Organized into sections — grouped as **Library**, **Tools**, **My lab** and **Help** in the desktop sidebar — and routed under a locale prefix (`/en/…` or `/zh/…`):
 
 | Tab | What it does |
 | --- | --- |
@@ -18,14 +18,14 @@ Organized into tabs, routed under a locale prefix (`/en/…` or `/zh/…`):
 | **Protocols** | ~100 step-by-step molecular biology protocols with brief and detailed step views, reagents, and durations. |
 | **Calculator** | Dilution (C₁V₁=C₂V₂), mass, molarity, percent (w/v, v/v), dead-volume, unit conversion, molecular weight, and a 118-element periodic table. |
 | **Plate Designer** | Design 6–384-well layouts (templates + free editing) **and Reader Import** — auto-detects Tecan / BioTek / SpectraMax CSV/TSV exports and pivots them to tidy long-format data with a heatmap and per-sample stats. |
-| **Tools** | A curated directory of external bench calculators (ELISA standard-curve fitting, NEB Tm, and more), filterable by category. |
+| **Links** | A curated directory of external bench tools and databases (ELISA standard-curve fitting, NEB Tm, and more), filterable by category. |
 | **Inventory** | Sample / box / freezer inventory with position tracking and CSV import/export (per-box or full, with a template). |
 | **Notebook** | Structured experiment records — import a protocol, log materials, procedure, and results. |
 | **Calendar** | Schedule protocol steps and experiments on a timeline. |
 | **Guide** | How-to intro, local data backup/import, replay the onboarding tour, and privacy/storage info. |
 | **Assistant** | Optional LLM lab assistant (searches protocols, runs calculators, drafts experiment records). Retrieval-only for bio content — never invents protocol steps or amounts. Hidden unless a backend key is configured (see [The Assistant](#the-assistant)). |
 
-Also app-wide: **bilingual** English / 中文 (carried in the URL), **global search** (`⌘/Ctrl-K`), favorites and custom recipes, and an **offline PWA** with installability and a unified local backup/restore of all your data.
+Also app-wide: **bilingual** English / 中文 (carried in the URL), **global search** (`⌘/Ctrl-K`, keyboard-navigable), a **quick timer** and **quick calculator** that are always one click away, favorites and custom recipes, and an **offline PWA** with installability and a unified local backup/restore of all your data (with a "last backup" status in the sidebar).
 
 ## Screenshots
 
@@ -38,7 +38,7 @@ Also app-wide: **bilingual** English / 中文 (carried in the URL), **global sea
 | ![Protocols](screenshots/protocols.png) | ![Inventory](screenshots/inventory.png) |
 
 <p align="center"><img src="screenshots/mobile.png" alt="LabMate on mobile" width="300"></p>
-<p align="center"><em>Installable PWA with a mobile bottom-nav layout.</em></p>
+<p align="center"><em>Installable PWA — top bar, bottom navigation and a "More" sheet on phones.</em></p>
 
 ## Tech stack
 
@@ -78,11 +78,12 @@ No secrets are needed for local development — see [`.env.example`](.env.exampl
 
 ```
 src/
-  App.jsx              # Router, tab ↔ URL mapping, locale prefixing, layout shell
-  components/          # Shared UI (Header, BottomNav, RecipeCard/Detail, modals, Toast, Timer…)
-  features/            # One folder per tab: buffers, protocols, calc, plate, tools,
-                       #   inventory, notebook, calendar, refs, agent
-  lib/                 # Data + logic layer (Dexie db, calculators, experiments, backup, agent/)
+  App.jsx              # Router, locale prefixing, app shell (sidebar / top bar / bottom nav)
+  components/          # Shared UI (Sidebar, MobileTopBar, BottomNav, MoreSheet, PageHeader,
+                       #   RecipeRow/Detail, modals, Toast, Timer, icons…)
+  features/            # One folder per section: library (shared Recipes/Protocols view), buffers,
+                       #   protocols, calc, plate, tools, inventory, notebook, calendar, refs, agent
+  lib/                 # Data + logic layer (nav config, Dexie db, calculators, experiments, backup, agent/)
   data/                # Code-defined app data (gel formulas, references, plate configs, taxonomy)
   i18n/                # English + 中文 translations
   styles/              # global.css (design tokens + component CSS)
@@ -110,7 +111,7 @@ Native shells wrap this same web app: **Tauri 2** (desktop) and **Capacitor** (i
 
 ## Design
 
-LabMate implements the shared Bioinfospace **v2 design system — "Lab-Manual Brutalism × Sequence Telemetry"** (signal green `#16B364`, zero border-radius, monospace as structural type). See [`DESIGN.md`](DESIGN.md); the ground truth in code is `src/styles/global.css` and `src/lib/styleConstants.js`.
+LabMate implements the shared Bioinfospace **v2 design system — "Lab-Manual Brutalism × Sequence Telemetry"** (paper and carbon ink, signal green `#16B364`, zero border-radius, monospace as structural type), refined for an all-day bench tool: flat 1px-framed panels, soft interior hairlines, hard offset shadows reserved for primary actions and floating surfaces, a grouped sidebar on desktop and a bottom bar on phones. See [`DESIGN.md`](DESIGN.md) for tokens, component classes and page patterns; the ground truth in code is `src/styles/global.css`, `src/lib/nav.jsx` and the shared components in `src/components/`.
 
 ## License
 

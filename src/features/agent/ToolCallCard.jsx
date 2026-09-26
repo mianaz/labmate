@@ -21,12 +21,9 @@ export default function ToolCallCard({ name, args = {}, result = {}, lang = 'en'
   return (
     <div
       className="text-xs"
-      style={{ background: 'var(--bg-2)', border: '2px solid var(--border)', maxWidth: '88%' }}
+      style={{ background: 'var(--bg-2)', border: '1px solid var(--rule)', borderLeft: `3px solid ${toneStyle.dot}`, maxWidth: '88%' }}
     >
       <div className="flex items-start gap-2 px-2.5 py-1.5">
-        <span aria-hidden="true" className="rounded-full" style={{
-          width: '7px', height: '7px', marginTop: '0.35em', flexShrink: 0, background: toneStyle.dot,
-        }} />
         <div className="min-w-0 flex-1">
           <div className="mono" style={{
             fontSize: '0.62rem', letterSpacing: '0.04em', textTransform: 'uppercase',
@@ -59,7 +56,7 @@ export default function ToolCallCard({ name, args = {}, result = {}, lang = 'en'
         <pre
           className="mono"
           style={{
-            margin: 0, padding: '0.5rem 0.65rem', borderTop: '1px solid var(--border)',
+            margin: 0, padding: '0.5rem 0.65rem', borderTop: '1px solid var(--rule)',
             background: 'var(--card)', color: 'var(--text-muted)', fontSize: '0.62rem',
             lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: '11rem', overflow: 'auto',
           }}

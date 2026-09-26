@@ -2,6 +2,11 @@ import { createContext, useContext, useState, useRef, useCallback, useEffect, us
 import { createPortal } from 'react-dom';
 
 export const ToastContext = createContext({ show: () => {} });
+
+// Callers pass either a glyph ('✓', '⚠') or a type name as the second argument;
+// type names map to a glyph instead of being printed literally.
+const TYPE_GLYPHS = { success: '✓', error: '⚠', warning: '⚠', info: '' };
+const glyphFor = (icon) => (icon in TYPE_GLYPHS ? TYPE_GLYPHS[icon] : icon);
 export function useToast() { return useContext(ToastContext); }
 
 // ToastProvider sits above LangContext.Provider in the tree (see App.jsx), so it can't
@@ -91,7 +96,7 @@ function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       {createPortal(
-        <div className="toast-container">
+        <div className="toast-container" role="status" aria-live="polite">
           {toasts.map(t => (
             <div
               key={t.id}
@@ -100,7 +105,8 @@ function ToastProvider({ children }) {
                 ? { animation: `toastIn 0.22s var(--ease-out), toastOut 0.22s ease-in ${Math.max(t.duration - 220, 0) / 1000}s forwards` }
                 : undefined}
             >
-              {t.icon && <span>{t.icon}</span>} {t.msg}
+              {glyphFor(t.icon) && <span className="mono" aria-hidden="true" style={{ fontWeight: 700 }}>{glyphFor(t.icon)}</span>}
+              <span>{t.msg}</span>
               {t.actionLabel && (
                 <button
                   type="button"
@@ -109,9 +115,9 @@ function ToastProvider({ children }) {
                   style={{
                     marginLeft: '0.4rem',
                     flexShrink: 0,
-                    background: 'transparent',
-                    color: 'var(--primary)',
-                    border: '2px solid var(--border-strong)',
+                    background: 'var(--primary)',
+                    color: 'var(--on-primary)',
+                    border: '1px solid currentColor',
                     borderRadius: 0,
                     padding: '2px 8px',
                     fontSize: '0.72rem',

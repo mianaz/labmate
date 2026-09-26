@@ -7,7 +7,9 @@ export const S_TEXT = Object.freeze({ color: 'var(--text)' });
 export const S_PRIMARY = Object.freeze({ color: 'var(--accent)' });
 export const S_MUTED_DIM = Object.freeze({ color: 'var(--text-muted)', opacity: 0.7 });
 export const S_BORDER = Object.freeze({ borderColor: 'var(--border)' });
-export const S_PILL_PRIMARY = Object.freeze({ background: 'var(--primary-light)', color: 'var(--accent)', border: '2px solid var(--border)' });
-export const S_PILL_ACCENT = Object.freeze({ background: 'var(--accent-light)', color: 'var(--accent)', border: '2px solid var(--border)' });
+export const S_PILL_PRIMARY = Object.freeze({ background: 'var(--primary-light)', color: 'var(--accent)', border: '1px solid var(--border)' });
+export const S_PILL_ACCENT = Object.freeze({ background: 'var(--accent-light)', color: 'var(--accent)', border: '1px solid var(--border)' });
+// Soft interior divider (table rows, list separators) — see --rule in global.css.
+export const S_RULE = Object.freeze({ borderColor: 'var(--rule)' });
 export const S_BG2 = Object.freeze({ background: 'var(--bg-2)' });
 export const S_INLINE_ICON = Object.freeze({ display: 'inline', marginRight: '4px', verticalAlign: 'middle' });

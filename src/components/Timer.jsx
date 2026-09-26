@@ -1,8 +1,10 @@
-// Timer system — TimerContext, TimerProvider, useTimers, TimerBar, QuickTimerButton
+// Timer system — TimerProvider/useTimers (state), QuickTimerButton + QuickTimerPanel
+// (start a timer), TimerDock (running timers in the desktop sidebar) and TimerBar
+// (running timers floating above the bottom nav on phones/tablets).
 import React, { useState, useCallback, useMemo } from 'react';
 import { t, useLang } from '../i18n/index.js';
-import { S_MUTED, S_BG2 } from '../lib/styleConstants.js';
-import { useIsMobile } from '../hooks/useMediaQuery.js';
+import UtilityPanel from './UtilityPanel.jsx';
+import { IconTimer, IconPause, IconPlay, IconReset, IconClose } from './icons.jsx';
 
 // ═══════════════════════════════════════════════
 // CONTEXT & PROVIDER
@@ -63,10 +65,12 @@ export function TimerProvider({ children }) {
             });
           } catch(e) {}
           // Browser notification
-          if (Notification.permission === 'granted') {
-            new Notification('Timer Done!', { body: tmr.label, icon: '🧪' });
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission();
+          if (typeof Notification !== 'undefined') {
+            if (Notification.permission === 'granted') {
+              new Notification('Timer Done!', { body: tmr.label, icon: '🧪' });
+            } else if (Notification.permission !== 'denied') {
+              Notification.requestPermission();
+            }
           }
         }
         return {...tmr, remaining: Math.max(0, next), running: next > 0 ? true : false};
@@ -84,145 +88,168 @@ export function TimerProvider({ children }) {
 
 export function useTimers() { return React.useContext(TimerContext); }
 
+export function formatTimer(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
+  return `${h > 0 ? h + ':' : ''}${mm}:${String(sec).padStart(2, '0')}`;
+}
+
 // ═══════════════════════════════════════════════
-// TIMER BAR — Floating display for active timers
+// RUNNING TIMERS
 // ═══════════════════════════════════════════════
 
+function TimerItem({ tmr, lang, floating }) {
+  const { removeTimer, pauseTimer, resumeTimer, resetTimer } = useTimers();
+  const done = tmr.remaining <= 0 && !tmr.running;
+  const pct = tmr.totalSeconds ? ((tmr.totalSeconds - tmr.remaining) / tmr.totalSeconds) * 100 : 0;
+  return (
+    <div className={done ? 'animate-pulse' : undefined} role={done ? 'alert' : undefined}
+      style={{
+        background: done ? 'var(--primary-light)' : 'var(--card)',
+        border: `1px solid ${done ? 'var(--primary)' : 'var(--border-strong)'}`,
+        boxShadow: floating ? 'var(--shadow)' : 'none',
+        padding: '0.4rem 0.3rem 0.3rem 0.6rem',
+      }}>
+      <div className="flex items-center gap-2 pr-1">
+        <span className="flex-1 min-w-0 truncate" style={{ fontSize: '0.75rem', fontWeight: 600 }} title={tmr.label}>{tmr.label}</span>
+        <span className="mono tabular" style={{ fontSize: '0.9375rem', fontWeight: 700, color: done ? 'var(--accent)' : 'var(--text)' }}>
+          {done ? t('timerDone', lang) : formatTimer(tmr.remaining)}
+        </span>
+      </div>
+      <div className="flex items-center gap-0.5 mt-0.5">
+        {done ? <span className="flex-1" /> : (
+          <div className="flex-1 mr-1.5" style={{ height: 3, background: 'var(--bg-2)' }} aria-hidden="true">
+            <div style={{ height: '100%', width: `${pct}%`, background: tmr.running ? 'var(--primary)' : 'var(--border)', transition: 'width 1s linear' }} />
+          </div>
+        )}
+        {!done && (tmr.running ? (
+          <button type="button" onClick={() => pauseTimer(tmr.id)} className="btn-ghost btn-icon btn-sm" aria-label={lang === 'zh' ? '暂停' : 'Pause'}><IconPause size={13} /></button>
+        ) : (
+          <button type="button" onClick={() => resumeTimer(tmr.id)} className="btn-ghost btn-icon btn-sm" aria-label={lang === 'zh' ? '继续' : 'Resume'}><IconPlay size={13} /></button>
+        ))}
+        {!done && <button type="button" onClick={() => resetTimer(tmr.id)} className="btn-ghost btn-icon btn-sm" aria-label={lang === 'zh' ? '重置' : 'Reset'}><IconReset size={13} /></button>}
+        <button type="button" onClick={() => removeTimer(tmr.id)} className="btn-ghost btn-icon btn-sm" aria-label={lang === 'zh' ? '移除计时器' : 'Remove timer'}><IconClose size={13} /></button>
+      </div>
+    </div>
+  );
+}
+
+// Desktop sidebar section listing every timer.
+export function TimerDock() {
+  const lang = useLang();
+  const { timers } = useTimers();
+  if (timers.length === 0) return null;
+  return (
+    <div className="sidebar-section" aria-label={t('toolTimer', lang)}>
+      <div className="nav-group-label" style={{ padding: '0 0 0.4rem' }}>{t('toolTimer', lang)} · {timers.length}</div>
+      <div className="space-y-1.5 sidebar-timers">
+        {timers.map(tmr => <TimerItem key={tmr.id} tmr={tmr} lang={lang} />)}
+      </div>
+    </div>
+  );
+}
+
+// Phones/tablets: running timers float above the bottom nav (hidden ≥1024px,
+// where TimerDock shows them in the sidebar instead).
 export function TimerBar() {
   const lang = useLang();
-  const isMobile = useIsMobile();
-  const { timers, removeTimer, pauseTimer, resumeTimer, resetTimer } = useTimers();
-  const active = timers.filter(t => t.remaining > 0 || t.running);
-  const done = timers.filter(t => t.remaining <= 0 && !t.running);
-
+  const { timers } = useTimers();
   if (timers.length === 0) return null;
-
-  const fmtTime = (s) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className={`fixed z-40 space-y-2 ${isMobile ? '' : 'bottom-4 right-4'}`} style={{
-      ...(isMobile ? { bottom: 'calc(var(--fab-b) + 3.75rem)', right: 'calc(env(safe-area-inset-right, 0px) + 1rem)' } : {}),
-      maxWidth: '320px',
-    }}>
-      {active.map(tmr => {
-        const pct = ((tmr.totalSeconds - tmr.remaining) / tmr.totalSeconds) * 100;
-        return (
-          <div key={tmr.id} className="p-3 shadow-lg" style={{background:'var(--card)', border:'2px solid var(--border-strong)'}}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold truncate" style={{color:'var(--text)', maxWidth:'160px'}}>{tmr.label}</span>
-              <span className="mono text-sm font-bold" style={{color: tmr.remaining < 60 ? 'var(--accent)' : 'var(--primary)'}}>{fmtTime(tmr.remaining)}</span>
-            </div>
-            <div className="w-full h-1.5 overflow-hidden" style={S_BG2}>
-              <div className="h-full transition-all" style={{width:`${pct}%`, background:'var(--primary)'}} />
-            </div>
-            <div className="flex gap-1 mt-2">
-              {tmr.running ? (
-                <button onClick={() => pauseTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--bg-2)', color:'var(--text-muted)'}}>⏸</button>
-              ) : (
-                <button onClick={() => resumeTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--primary-light)', color:'var(--primary)'}}>▶</button>
-              )}
-              <button onClick={() => resetTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--bg-2)', color:'var(--text-muted)'}}>↺</button>
-              <button onClick={() => removeTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--accent-light)', color:'var(--accent)'}}>✕</button>
-            </div>
-          </div>
-        );
-      })}
-      {done.map(tmr => (
-        <div key={tmr.id} className="p-3 shadow-lg animate-pulse" style={{background:'var(--accent-light)', border:'2px solid var(--accent)'}}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold" style={{color:'var(--accent)'}}>{tmr.label} — {t('timerDone', lang)}</span>
-            <button onClick={() => removeTimer(tmr.id)} className="text-xs px-2 py-0.5 rounded" style={{background:'var(--card)', color:'var(--text-muted)'}}>✕</button>
-          </div>
-        </div>
-      ))}
+    <div className="fixed z-40 flex flex-col gap-1.5 lg:hidden"
+      style={{
+        right: 'calc(env(safe-area-inset-right, 0px) + 0.75rem)',
+        bottom: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 0.75rem)',
+        width: 'min(260px, calc(100vw - 1.5rem))',
+      }}>
+      {timers.map(tmr => <TimerItem key={tmr.id} tmr={tmr} lang={lang} floating />)}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════
-// QUICK TIMER BUTTON — Floating FAB with popup
+// QUICK TIMER — trigger + panel
 // ═══════════════════════════════════════════════
 
-export function QuickTimerButton() {
+export function QuickTimerButton({ open, onToggle, variant = 'topbar' }) {
   const lang = useLang();
-  const isMobile = useIsMobile();
-  const { addTimer } = useTimers();
-  const [open, setOpen] = useState(false);
-  const [customMin, setCustomMin] = useState('');
-  const [customLabel, setCustomLabel] = useState('');
-  const quickTimes = [
-    { min: 1, label: '1 min' },
-    { min: 5, label: '5 min' },
-    { min: 10, label: '10 min' },
-    { min: 15, label: '15 min' },
-    { min: 30, label: '30 min' },
-    { min: 60, label: '1 h' },
-  ];
-
-  if (!open) {
+  const { timers } = useTimers();
+  const running = timers.filter(tm => tm.running && tm.remaining > 0).length;
+  const label = t('timerAdd', lang);
+  if (variant === 'sidebar') {
     return (
-      <button onClick={() => setOpen(true)}
-        className="fixed z-40 w-12 h-12 flex items-center justify-center text-lg shadow-lg transition-transform hover:scale-110"
-        style={{
-          bottom: 'var(--fab-b)',
-          right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
-          background:'var(--primary)', color:'var(--on-primary)', border:'2px solid var(--border-strong)',
-        }} title={t('timerAdd', lang)}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="13" r="8"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="13" x2="15" y2="13"/>
-          <line x1="10" y1="2" x2="14" y2="2"/>
-          <line x1="12" y1="2" x2="12" y2="5"/>
-          <line x1="19.5" y1="7.5" x2="21" y2="6"/>
-        </svg>
+      <button type="button" className="sidebar-tool" onClick={onToggle} aria-expanded={open} aria-haspopup="dialog" aria-label={label} title={label}>
+        <IconTimer size={15} />
+        <span>{t('toolTimer', lang)}{running > 0 ? ` · ${running}` : ''}</span>
       </button>
     );
   }
+  return (
+    <button type="button" className="topbar-btn relative" onClick={onToggle} aria-expanded={open} aria-haspopup="dialog" aria-label={label} title={label}>
+      <IconTimer size={20} />
+      {running > 0 && (
+        <span aria-hidden="true" className="mono" style={{
+          position: 'absolute', top: 6, right: 5, minWidth: 14, height: 14, padding: '0 3px',
+          fontSize: 9, fontWeight: 700, lineHeight: '14px', textAlign: 'center',
+          background: 'var(--primary)', color: 'var(--on-primary)', border: '1px solid var(--border-strong)',
+        }}>{running}</span>
+      )}
+    </button>
+  );
+}
+
+const QUICK_TIMES = [
+  { min: 1, label: '1 min' },
+  { min: 5, label: '5 min' },
+  { min: 10, label: '10 min' },
+  { min: 15, label: '15 min' },
+  { min: 30, label: '30 min' },
+  { min: 60, label: '1 h' },
+];
+
+export function QuickTimerPanel({ open, onClose }) {
+  const lang = useLang();
+  const { addTimer } = useTimers();
+  const [customMin, setCustomMin] = useState('');
+  const [customLabel, setCustomLabel] = useState('');
+
+  function startCustom(e) {
+    e.preventDefault();
+    const m = parseFloat(customMin);
+    if (m > 0) {
+      addTimer(customLabel || `${m} min`, Math.round(m * 60));
+      setCustomMin('');
+      setCustomLabel('');
+      onClose();
+    }
+  }
 
   return (
-    <div className={`fixed z-40 p-4 shadow-lg ${isMobile ? '' : 'bottom-36 right-4'}`} style={{
-      ...(isMobile ? { bottom: 'calc(var(--fab-b) + 3.75rem)', right: 'calc(env(safe-area-inset-right, 0px) + 1rem)' } : {}),
-      background:'var(--card)', border:'2px solid var(--border-strong)', width:'280px', overflow:'hidden',
-    }}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-bold">{t('timerAdd', lang)}</span>
-        <button onClick={() => setOpen(false)} className="text-xs px-2 py-0.5 rounded" style={S_MUTED}>✕</button>
-      </div>
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {quickTimes.map(qt => (
-          <button key={qt.min} onClick={() => { addTimer(qt.label, qt.min * 60); setOpen(false); }}
-            className="px-2 py-2 rounded-lg text-xs font-semibold transition-all hover:scale-105"
-            style={{background:'var(--primary-light)', color:'var(--primary)', border:'1px solid var(--border)'}}>
-            {qt.label}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-2">
-        <input type="text" value={customLabel} onChange={e => setCustomLabel(e.target.value)}
-          placeholder={lang === 'en' ? 'Label (e.g. Blocking)' : '标签（如 封闭）'}
-          className="w-full px-2 py-1.5 rounded text-xs"
-          style={{background:'var(--bg-2)', border:'1px solid var(--border)', color:'var(--text)'}} />
-        <div className="flex gap-2">
-          <input type="number" value={customMin} onChange={e => setCustomMin(e.target.value)}
-            placeholder={t('timerMinutes', lang)} min="0.5" step="0.5"
-            className="flex-1 px-2 py-1.5 rounded text-xs min-w-0"
-            style={{background:'var(--bg-2)', border:'1px solid var(--border)', color:'var(--text)', minWidth:0}} />
-          <button onClick={() => {
-            const m = parseFloat(customMin);
-            if (m > 0) { addTimer(customLabel || `${m} min`, m * 60); setCustomMin(''); setCustomLabel(''); setOpen(false); }
-          }}
-            className="px-3 py-1.5 rounded text-xs font-bold"
-            style={{background:'var(--primary)', color:'var(--on-primary)', whiteSpace:'nowrap', flexShrink:0}}>
-            {t('timerStart', lang)}
-          </button>
+    <UtilityPanel open={open} onClose={onClose} title={t('timerAdd', lang)} icon={<IconTimer size={15} />}>
+      <div className="p-3.5">
+        <div className="grid grid-cols-3 gap-1.5">
+          {QUICK_TIMES.map(qt => (
+            <button key={qt.min} type="button" className="btn btn-sm mono"
+              onClick={() => { addTimer(customLabel || qt.label, qt.min * 60); setCustomLabel(''); onClose(); }}>
+              {qt.label}
+            </button>
+          ))}
         </div>
+        <form onSubmit={startCustom} className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid var(--rule)' }}>
+          <input type="text" value={customLabel} onChange={e => setCustomLabel(e.target.value)}
+            aria-label={lang === 'zh' ? '计时器标签' : 'Timer label'}
+            placeholder={lang === 'zh' ? '标签（如 封闭）' : 'Label (e.g. Blocking)'} className="w-full" />
+          <div className="flex gap-1.5">
+            <input type="number" value={customMin} onChange={e => setCustomMin(e.target.value)}
+              aria-label={lang === 'zh' ? '分钟数' : 'Minutes'}
+              placeholder={t('timerMinutes', lang)} min="0.5" step="0.5" className="flex-1" style={{ minWidth: 0 }} />
+            <button type="submit" className="btn-primary" disabled={!(parseFloat(customMin) > 0)}>{t('timerStart', lang)}</button>
+          </div>
+        </form>
       </div>
-    </div>
+    </UtilityPanel>
   );
 }
 
