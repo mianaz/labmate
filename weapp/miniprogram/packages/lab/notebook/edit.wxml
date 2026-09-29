@@ -1,1 +1,454 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<wxs module="nb" src="../components/nb-shared/nb.wxs"/>
+
+<!-- Section head: number, title, meta, collapse chevron -->
+<template name="sec-head">
+  <view class="doc-section-head nb-sec-head" hover-class="is-pressed" data-key="{{key}}" bindtap="toggleSection"
+    aria-role="button" aria-expanded="{{open}}">
+    <view class="row gap-8 flex-1 nb-sec-line">
+      <text class="mono nb-sec-num">{{num}}</text>
+      <text class="section-title shrink-0">{{label}}</text>
+      <text wx:if="{{meta}}" class="mono nb-sec-meta flex-1">{{meta}}</text>
+    </view>
+    <view class="icon i-chevron-down nb-chev {{open ? '' : 'is-closed'}}"></view>
+  </view>
+</template>
+
+<!-- Checkbox square -->
+<template name="check">
+  <view class="checkbox {{on ? 'is-checked' : ''}}"><view wx:if="{{on}}" class="icon i-check"></view></view>
+</template>
+
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <view wx:if="{{missing}}" class="panel">
+    <view class="empty">
+      <view class="empty-icon"><view class="icon i-notebook"></view></view>
+      <view class="empty-title">{{i.t('nbNotFound', lang)}}</view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="back" aria-role="button">
+        <view class="icon i-chevron-left"></view><text>{{i.t('backNav', lang)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:elif="{{ready}}" class="panel nb-doc">
+    <!-- Toolbar -->
+    <view class="nb-toolbar {{editing ? 'is-editing' : ''}}">
+      <block wx:if="{{editing}}">
+        <view class="row gap-6 flex-1 nb-editing">
+          <view class="nb-editing-mark"></view>
+          <text class="eyebrow nb-editing-label shrink-0">{{i.t('nbEditingLabel', lang)}}</text>
+          <text class="nb-autosave truncate flex-1">· {{savedAt ? i.n('nbAutoSavedAt', lang, savedAt) : i.t('nbAutoSaveHint', lang)}}</text>
+        </view>
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="cancelEdit" aria-role="button">{{i.t('nbCancel', lang)}}</view>
+        <view class="btn-primary btn-sm" hover-class="is-pressed" bindtap="saveEdit" aria-role="button">
+          <view class="icon i-check"></view>
+          <text>{{i.t('nbSave', lang)}}</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="startEdit" aria-role="button">
+          <view class="icon i-edit"></view>
+          <text>{{i.t('editCustom', lang)}}</text>
+        </view>
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="viewInCalendar" aria-role="button">
+          <view class="icon i-calendar"></view>
+          <text>{{i.t('nbViewInCalendar', lang)}}</text>
+        </view>
+        <view class="flex-1"></view>
+        <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="exportMarkdown"
+          aria-role="button" aria-label="{{i.t('nbExportMd', lang)}}">
+          <view class="icon i-download"></view>
+        </view>
+        <view class="btn-ghost btn-icon btn-sm nb-danger" hover-class="is-pressed" bindtap="deleteEntry"
+          aria-role="button" aria-label="{{i.t('nbDeleteEntry', lang)}}">
+          <view class="icon i-trash"></view>
+        </view>
+      </block>
+    </view>
+
+    <view class="nb-body">
+      <!-- ── Header: fields (edit) or title + facts (read) ── -->
+      <block wx:if="{{editing}}">
+        <view class="field">
+          <view class="field-label">{{i.t('nbEntryTitle', lang)}}</view>
+          <input class="input" value="{{doc.title}}" data-path="title" bindinput="onField"
+            placeholder="{{i.t('nbTitlePh', lang)}}" placeholder-class="placeholder" />
+        </view>
+        <view class="field">
+          <view class="field-label">{{i.t('nbEntryTitleZh', lang)}}</view>
+          <input class="input" value="{{doc.titleZh}}" data-path="titleZh" bindinput="onField"
+            placeholder="{{i.t('nbTitleZhPh', lang)}}" placeholder-class="placeholder" />
+        </view>
+        <view class="grid-2 nb-grid">
+          <view class="field">
+            <view class="field-label">{{i.t('nbDate', lang)}}</view>
+            <picker class="picker-host" mode="date" value="{{doc.date}}" bindchange="onDate">
+              <view class="picker"><text class="picker-value">{{doc.date || '—'}}</text><view class="icon i-calendar"></view></view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="field-label">{{i.t('nbStartTime', lang)}}</view>
+            <picker class="picker-host" mode="time" value="{{doc.startTime || '09:00'}}" bindchange="onStartTime">
+              <view class="picker"><text class="picker-value">{{doc.startTime || '--:--'}}</text><view class="icon i-timer"></view></view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="field-label">{{i.t('nbDuration', lang)}}</view>
+            <input class="input" type="number" value="{{doc.duration || ''}}" bindinput="onDuration" placeholder="60" placeholder-class="placeholder" />
+          </view>
+          <view class="field">
+            <view class="field-label">{{i.t('nbStatus', lang)}}</view>
+            <picker class="picker-host" mode="selector" range="{{statusLabels}}" value="{{nb.statusIndex(doc.status)}}" bindchange="onStatus">
+              <view class="picker nb-status-picker">
+                <view class="row gap-6 flex-1">
+                  <view class="dot dot-sm nb-dot nb-st-{{nb.statusId(doc.status)}}"></view>
+                  <text class="picker-value">{{i.t(nb.statusKey(doc.status), lang)}}</text>
+                </view>
+                <view class="icon i-chevron-down"></view>
+              </view>
+            </picker>
+          </view>
+        </view>
+        <view class="field">
+          <view class="field-label">{{i.t('nbPriority', lang)}}</view>
+          <view class="seg is-block">
+            <view class="seg-item {{doc.priority === 'high' ? 'is-active' : ''}}" data-value="high" bindtap="setPriority">{{i.t('nbPriorityHigh', lang)}}</view>
+            <view class="seg-item {{doc.priority !== 'high' && doc.priority !== 'low' ? 'is-active' : ''}}" data-value="medium" bindtap="setPriority">{{i.t('nbPriorityMedium', lang)}}</view>
+            <view class="seg-item {{doc.priority === 'low' ? 'is-active' : ''}}" data-value="low" bindtap="setPriority">{{i.t('nbPriorityLow', lang)}}</view>
+          </view>
+        </view>
+        <view class="field">
+          <view class="field-label">{{i.t('calColor', lang)}}</view>
+          <view class="row-wrap gap-6">
+            <view class="chip {{nb.isLabelColor(doc.color) ? '' : 'is-active'}}" hover-class="is-pressed" data-color="" bindtap="setColor" aria-role="button">{{i.t('calByStatus', lang)}}</view>
+            <view wx:for="{{colors}}" wx:key="value" class="nb-color {{doc.color === item.value ? 'is-active' : ''}}"
+              style="background: {{item.value}}" data-color="{{item.value}}" bindtap="setColor"
+              aria-role="button" aria-label="{{lang === 'zh' ? item.zh : item.en}}"></view>
+          </view>
+          <view class="nb-hint">{{i.t('calColorHint', lang)}}</view>
+        </view>
+        <view wx:if="{{doc.protocolRef}}" class="notice notice-info nb-notice">
+          <view class="icon i-clipboard accent nb-notice-icon"></view>
+          <view class="flex-1 break"><text class="notice-title">{{i.t('nbLinkedProtocol', lang)}}:</text> {{protoLabel}}</view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="eyebrow">{{i.t('nbEntryLabel', lang)}} · {{shortId}}</view>
+        <view class="nb-doc-title {{nb.title(doc.title, doc.titleZh, lang) ? '' : 'is-untitled'}}">{{nb.title(doc.title, doc.titleZh, lang) || i.t('nbUntitled', lang)}}</view>
+        <view wx:if="{{nb.other(doc.title, doc.titleZh, lang)}}" class="nb-doc-other">{{nb.other(doc.title, doc.titleZh, lang)}}</view>
+        <view class="meta-grid nb-facts">
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbStatus', lang)}}</view>
+            <view class="meta-val"><text class="badge nb-badge nb-st-{{nb.statusId(doc.status)}}">{{i.t(nb.statusKey(doc.status), lang)}}</text></view>
+          </view>
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbDate', lang)}}</view>
+            <view class="meta-val">{{doc.date || '—'}}</view>
+          </view>
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbTime', lang)}}</view>
+            <view class="meta-val">
+              <text class="nowrap">{{nb.timeRange(doc.startTime, doc.duration) || '—'}}</text>
+              <text wx:if="{{doc.duration}}" class="muted nowrap"> · {{doc.duration}} min</text>
+            </view>
+          </view>
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbPriority', lang)}}</view>
+            <view class="meta-val {{doc.priority === 'high' ? 'nb-high' : ''}}">{{i.t(nb.priorityKey(doc.priority), lang)}}</view>
+          </view>
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbLinkedProtocol', lang)}}</view>
+            <view class="meta-val {{protoLabel ? '' : 'muted'}}">{{protoLabel || '—'}}</view>
+          </view>
+          <view class="meta-cell">
+            <view class="meta-key">{{i.t('nbUpdated', lang)}}</view>
+            <view class="meta-val">{{updatedLabel}}</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- ── 01 Plan ── -->
+      <view class="doc-section">
+        <template is="sec-head" data="{{num: '01', key: 'plan', label: i.t('nbPlan', lang), meta: '', open: open.plan}}"/>
+        <view wx:if="{{open.plan}}">
+          <block wx:if="{{editing}}">
+            <view class="field">
+              <view class="field-label">{{i.t('nbObjectives', lang)}}</view>
+              <textarea class="textarea nb-ta" auto-height maxlength="-1" value="{{doc.plan.objectives}}"
+                data-path="plan.objectives" bindinput="onField"
+                placeholder="{{i.t('nbObjectivesPh', lang)}}" placeholder-class="placeholder" />
+            </view>
+            <view class="field">
+              <view class="field-label">{{i.t('nbNotes', lang)}}</view>
+              <textarea class="textarea nb-ta is-short" auto-height maxlength="-1" value="{{doc.plan.notes}}"
+                data-path="plan.notes" bindinput="onField"
+                placeholder="{{i.t('nbNotesPh', lang)}}" placeholder-class="placeholder" />
+            </view>
+          </block>
+          <block wx:elif="{{doc.plan.objectives || doc.plan.notes}}">
+            <view wx:if="{{doc.plan.objectives}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbObjectives', lang)}}</view>
+              <text class="nb-text" user-select>{{doc.plan.objectives}}</text>
+            </view>
+            <view wx:if="{{doc.plan.notes}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbNotes', lang)}}</view>
+              <text class="nb-text" user-select>{{doc.plan.notes}}</text>
+            </view>
+          </block>
+          <view wx:else class="nb-empty-line">
+            <text>{{i.t('nbEmptyPlan', lang)}} </text>
+            <text class="link" bindtap="startEdit">{{i.t('nbAdd', lang)}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- ── 02 Materials ── -->
+      <view class="doc-section">
+        <template is="sec-head" data="{{num: '02', key: 'materials', label: i.t('nbMaterials', lang), meta: meta.materials, open: open.materials}}"/>
+        <view wx:if="{{open.materials}}">
+          <block wx:if="{{editing}}">
+            <!-- Reagents -->
+            <view class="nb-sub-head">
+              <text class="eyebrow">{{i.t('nbReagents', lang)}}</text>
+              <view class="btn btn-sm" hover-class="is-pressed" data-list="materials.reagents" bindtap="addItem" aria-role="button">
+                <view class="icon i-plus"></view><text>{{i.t('nbAddReagent', lang)}}</text>
+              </view>
+            </view>
+            <view wx:for="{{doc.materials.reagents}}" wx:key="_k" class="nb-item">
+              <view class="row gap-6">
+                <input class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbReagentName', lang)}}" placeholder-class="placeholder"
+                  data-list="materials.reagents" data-index="{{index}}" data-field="name" bindinput="onItemField" />
+                <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials.reagents" data-index="{{index}}" bindtap="removeItem"
+                  aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
+              </view>
+              <view class="nb-grid-3">
+                <input class="input is-sm" value="{{item.amount}}" placeholder="{{i.t('nbAmount', lang)}}" placeholder-class="placeholder"
+                  data-list="materials.reagents" data-index="{{index}}" data-field="amount" bindinput="onItemField" />
+                <input class="input is-sm" value="{{item.unit}}" placeholder="{{i.t('nbUnit', lang)}}" placeholder-class="placeholder"
+                  data-list="materials.reagents" data-index="{{index}}" data-field="unit" bindinput="onItemField" />
+                <input class="input is-sm" value="{{item.location}}" placeholder="{{i.t('nbLocation', lang)}}" placeholder-class="placeholder"
+                  data-list="materials.reagents" data-index="{{index}}" data-field="location" bindinput="onItemField" />
+              </view>
+            </view>
+
+            <!-- Equipment -->
+            <view class="nb-sub-head">
+              <text class="eyebrow">{{i.t('nbEquipment', lang)}}</text>
+              <view class="btn btn-sm" hover-class="is-pressed" data-list="materials.equipment" bindtap="addItem" aria-role="button">
+                <view class="icon i-plus"></view><text>{{i.t('nbAddEquipment', lang)}}</text>
+              </view>
+            </view>
+            <view wx:for="{{doc.materials.equipment}}" wx:key="_k" class="row gap-6 nb-item-row">
+              <input class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbEquipmentName', lang)}}" placeholder-class="placeholder"
+                data-list="materials.equipment" data-index="{{index}}" data-field="name" bindinput="onItemField" />
+              <view class="seg nb-seg-sm shrink-0">
+                <view class="seg-item {{item.status === 'ready' ? 'is-active' : ''}}" data-index="{{index}}" data-value="ready" bindtap="setEquipStatus">{{i.t('nbReady', lang)}}</view>
+                <view class="seg-item {{item.status !== 'ready' ? 'is-active' : ''}}" data-index="{{index}}" data-value="pending" bindtap="setEquipStatus">{{i.t('nbPending', lang)}}</view>
+              </view>
+              <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials.equipment" data-index="{{index}}" bindtap="removeItem"
+                aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
+            </view>
+
+            <!-- Checklist -->
+            <view class="nb-sub-head">
+              <text class="eyebrow">{{i.t('nbChecklist', lang)}}</text>
+              <view class="btn btn-sm" hover-class="is-pressed" data-list="materials.checklist" bindtap="addItem" aria-role="button">
+                <view class="icon i-plus"></view><text>{{i.t('nbAddCheckItem', lang)}}</text>
+              </view>
+            </view>
+            <view wx:for="{{doc.materials.checklist}}" wx:key="_k" class="row gap-6 nb-item-row">
+              <view class="nb-check-hit" data-index="{{index}}" bindtap="toggleCheck" aria-role="checkbox" aria-checked="{{item.checked}}" aria-label="{{i.t('nbDone', lang)}}">
+                <template is="check" data="{{on: item.checked}}"/>
+              </view>
+              <input class="input is-sm flex-1 {{item.checked ? 'nb-input-done' : ''}}" value="{{item.item}}" placeholder="{{i.t('nbChecklist', lang)}}" placeholder-class="placeholder"
+                data-list="materials.checklist" data-index="{{index}}" data-field="item" bindinput="onItemField" />
+              <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials.checklist" data-index="{{index}}" bindtap="removeItem"
+                aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
+            </view>
+          </block>
+
+          <block wx:elif="{{doc.materials.reagents.length || doc.materials.equipment.length || doc.materials.checklist.length}}">
+            <view wx:if="{{doc.materials.reagents.length}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbReagents', lang)}}</view>
+              <view class="table">
+                <view class="tr is-head">
+                  <view class="th nb-c-name">{{i.t('nbReagentName', lang)}}</view>
+                  <view class="th nb-c-amt">{{i.t('nbAmount', lang)}}</view>
+                  <view class="th nb-c-loc">{{i.t('nbLocation', lang)}}</view>
+                </view>
+                <view wx:for="{{doc.materials.reagents}}" wx:key="_k" class="tr">
+                  <view class="td nb-c-name break">{{item.name || '—'}}</view>
+                  <view class="td nb-c-amt mono">{{item.amount ? item.amount + ' ' + (item.unit || '') : '—'}}</view>
+                  <view class="td nb-c-loc break {{item.location ? '' : 'muted'}}">{{item.location || '—'}}</view>
+                </view>
+              </view>
+            </view>
+            <view wx:if="{{doc.materials.equipment.length}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbEquipment', lang)}}</view>
+              <view wx:for="{{doc.materials.equipment}}" wx:key="_k" class="nb-line">
+                <text class="flex-1 break">{{item.name || '—'}}</text>
+                <text class="badge {{item.status === 'ready' ? 'badge-green' : 'badge-warn'}}">{{item.status === 'ready' ? i.t('nbReady', lang) : i.t('nbPending', lang)}}</text>
+              </view>
+            </view>
+            <view wx:if="{{doc.materials.checklist.length}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbChecklist', lang)}}</view>
+              <view wx:for="{{doc.materials.checklist}}" wx:key="_k" class="nb-line nb-check-line" hover-class="is-pressed"
+                data-index="{{index}}" bindtap="toggleCheck" aria-role="checkbox" aria-checked="{{item.checked}}">
+                <template is="check" data="{{on: item.checked}}"/>
+                <text class="flex-1 break {{item.checked ? 'nb-struck' : ''}}">{{item.item || '—'}}</text>
+              </view>
+            </view>
+          </block>
+          <view wx:else class="nb-empty-line">
+            <text>{{i.t('nbEmptyMaterials', lang)}} </text>
+            <text class="link" bindtap="startEdit">{{i.t('nbAdd', lang)}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- ── 03 Procedure ── -->
+      <view class="doc-section">
+        <template is="sec-head" data="{{num: '03', key: 'procedure', label: i.t('nbProcedure', lang), meta: meta.procedure, open: open.procedure}}"/>
+        <view wx:if="{{open.procedure}}">
+          <block wx:if="{{editing}}">
+            <view class="row-wrap gap-8 nb-proc-bar">
+              <view class="seg">
+                <view class="seg-item {{doc.procedure.mode === 'template' ? 'is-active' : ''}}" data-mode="template" bindtap="setMode">{{i.t('nbTemplateMode', lang)}}</view>
+                <view class="seg-item {{doc.procedure.mode !== 'template' ? 'is-active' : ''}}" data-mode="freetext" bindtap="setMode">{{i.t('nbFreetextMode', lang)}}</view>
+              </view>
+              <view wx:if="{{doc.procedure.mode === 'template'}}" class="btn btn-sm" hover-class="is-pressed" bindtap="openSelector" aria-role="button">
+                <view class="icon i-clipboard"></view><text>{{i.t('nbImportProtocol', lang)}}</text>
+              </view>
+            </view>
+            <block wx:if="{{doc.procedure.mode === 'template'}}">
+              <view wx:if="{{!doc.procedure.protocolSteps.length}}" class="nb-empty-line">{{i.t('nbStepsHint', lang)}}</view>
+              <view wx:for="{{doc.procedure.protocolSteps}}" wx:key="_k" class="nb-step-card {{item.completed ? 'is-done' : ''}}">
+                <view class="row-top gap-8">
+                  <view class="nb-check-hit is-top" data-index="{{index}}" bindtap="toggleStep" aria-role="checkbox" aria-checked="{{item.completed}}">
+                    <template is="check" data="{{on: item.completed}}"/>
+                  </view>
+                  <text class="mono nb-step-num">{{nb.pad2(index + 1)}}</text>
+                  <text class="flex-1 nb-step-text {{item.completed ? 'nb-struck' : ''}}">{{item.stepText}}</text>
+                </view>
+                <view class="nb-step-inputs">
+                  <input class="input is-sm" value="{{item.deviation}}" placeholder="{{i.t('nbDeviation', lang)}}" placeholder-class="placeholder"
+                    data-list="procedure.protocolSteps" data-index="{{index}}" data-field="deviation" bindinput="onItemField" />
+                  <input class="input is-sm" value="{{item.actualParams}}" placeholder="{{i.t('nbActualParams', lang)}}" placeholder-class="placeholder"
+                    data-list="procedure.protocolSteps" data-index="{{index}}" data-field="actualParams" bindinput="onItemField" />
+                </view>
+              </view>
+            </block>
+            <textarea wx:else class="textarea nb-ta is-tall" auto-height maxlength="-1" value="{{doc.procedure.freeText}}"
+              data-path="procedure.freeText" bindinput="onField" aria-label="{{i.t('nbProcedure', lang)}}"
+              placeholder="{{i.t('nbFreeTextPh', lang)}}" placeholder-class="placeholder" />
+          </block>
+
+          <block wx:elif="{{doc.procedure.mode === 'template' && doc.procedure.protocolSteps.length}}">
+            <view class="nb-progress"><view class="nb-progress-fill" style="width: {{meta.pct}}%"></view></view>
+            <view wx:for="{{doc.procedure.protocolSteps}}" wx:key="_k" class="nb-step {{item.completed ? 'is-done' : ''}}" hover-class="is-pressed"
+              data-index="{{index}}" bindtap="toggleStep" aria-role="checkbox" aria-checked="{{item.completed}}">
+              <template is="check" data="{{on: item.completed}}"/>
+              <text class="mono nb-step-num">{{nb.pad2(index + 1)}}</text>
+              <view class="flex-1">
+                <text class="nb-step-text {{item.completed ? 'nb-struck' : ''}}">{{item.stepText}}</text>
+                <view wx:if="{{item.deviation}}" class="nb-dl">
+                  <text class="mono nb-dt is-warn">{{i.t('nbDeviation', lang)}}</text>
+                  <text class="mono nb-dd">{{item.deviation}}</text>
+                </view>
+                <view wx:if="{{item.actualParams}}" class="nb-dl">
+                  <text class="mono nb-dt">{{i.t('nbActualParams', lang)}}</text>
+                  <text class="mono nb-dd">{{item.actualParams}}</text>
+                </view>
+              </view>
+            </view>
+          </block>
+          <text wx:elif="{{doc.procedure.mode !== 'template' && doc.procedure.freeText}}" class="nb-text" user-select>{{doc.procedure.freeText}}</text>
+          <view wx:else>
+            <view class="nb-empty-line">
+              <text>{{i.t('nbEmptyProcedure', lang)}} </text>
+              <text class="link" bindtap="startEdit">{{i.t('nbWriteSteps', lang)}}</text>
+              <text>{{lang === 'zh' ? '。' : '.'}}</text>
+            </view>
+            <view class="btn btn-sm mt-8" hover-class="is-pressed" bindtap="openSelector" aria-role="button">
+              <view class="icon i-clipboard"></view><text>{{i.t('nbImportProtocol', lang)}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- ── 04 Results ── -->
+      <view class="doc-section">
+        <template is="sec-head" data="{{num: '04', key: 'results', label: i.t('nbResults', lang), meta: meta.results, open: open.results}}"/>
+        <view wx:if="{{open.results}}">
+          <block wx:if="{{editing}}">
+            <view class="field">
+              <view class="field-label">{{i.t('nbSummary', lang)}}</view>
+              <textarea class="textarea nb-ta" auto-height maxlength="-1" value="{{doc.results.summary}}"
+                data-path="results.summary" bindinput="onField"
+                placeholder="{{i.t('nbSummaryPh', lang)}}" placeholder-class="placeholder" />
+            </view>
+            <view class="field">
+              <view class="field-label">{{i.t('nbDataProcessing', lang)}}</view>
+              <textarea class="textarea nb-ta is-short" auto-height maxlength="-1" value="{{doc.results.dataProcessing}}"
+                data-path="results.dataProcessing" bindinput="onField"
+                placeholder="{{i.t('nbDataProcPh', lang)}}" placeholder-class="placeholder" />
+            </view>
+            <view class="nb-sub-head">
+              <text class="eyebrow">{{i.t('nbFigures', lang)}}</text>
+              <view class="btn btn-sm" hover-class="is-pressed" data-list="results.figures" bindtap="addItem" aria-role="button">
+                <view class="icon i-plus"></view><text>{{i.t('nbAddFigure', lang)}}</text>
+              </view>
+            </view>
+            <view wx:for="{{doc.results.figures}}" wx:key="_k" class="nb-item">
+              <view class="row gap-6">
+                <text class="mono nb-fig-num shrink-0">{{i.n('nbFigN', lang, index + 1)}}</text>
+                <input class="input is-sm flex-1" value="{{item.description}}" placeholder="{{i.t('nbFigureDesc', lang)}}" placeholder-class="placeholder"
+                  data-list="results.figures" data-index="{{index}}" data-field="description" bindinput="onItemField" />
+                <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="results.figures" data-index="{{index}}" bindtap="removeItem"
+                  aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
+              </view>
+              <input class="input is-sm mt-8" value="{{item.notes}}" placeholder="{{i.t('nbFigureNotes', lang)}}" placeholder-class="placeholder"
+                data-list="results.figures" data-index="{{index}}" data-field="notes" bindinput="onItemField" />
+            </view>
+            <view class="field nb-field-top">
+              <view class="field-label">{{i.t('nbBackupStatus', lang)}}</view>
+              <input class="input" value="{{doc.results.backupStatus}}" data-path="results.backupStatus" bindinput="onField"
+                placeholder="{{i.t('nbBackupPh', lang)}}" placeholder-class="placeholder" />
+            </view>
+          </block>
+
+          <block wx:elif="{{doc.results.summary || doc.results.dataProcessing || doc.results.figures.length || doc.results.backupStatus}}">
+            <view wx:if="{{doc.results.summary}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbSummary', lang)}}</view>
+              <text class="nb-text" user-select>{{doc.results.summary}}</text>
+            </view>
+            <view wx:if="{{doc.results.dataProcessing}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbDataProcessing', lang)}}</view>
+              <text class="nb-text" user-select>{{doc.results.dataProcessing}}</text>
+            </view>
+            <view wx:if="{{doc.results.figures.length}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbFigures', lang)}}</view>
+              <view wx:for="{{doc.results.figures}}" wx:key="_k" class="nb-line is-top">
+                <text class="mono nb-fig-num shrink-0">{{i.n('nbFigN', lang, index + 1)}}</text>
+                <view class="flex-1 break">
+                  <text>{{item.description || '—'}}</text>
+                  <text wx:if="{{item.notes}}" class="muted"> · {{item.notes}}</text>
+                </view>
+              </view>
+            </view>
+            <view wx:if="{{doc.results.backupStatus}}" class="nb-block">
+              <view class="eyebrow nb-block-label">{{i.t('nbBackupStatus', lang)}}</view>
+              <text class="mono nb-mono-text break">{{doc.results.backupStatus}}</text>
+            </view>
+          </block>
+          <view wx:else class="nb-empty-line">
+            <text>{{i.t('nbEmptyResults', lang)}} </text>
+            <text class="link" bindtap="startEdit">{{i.t('nbAdd', lang)}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+<nb-protocol-selector id="protocol-picker" show="{{showSelector}}" title="{{i.t('nbImportProtocol', lang)}}" bind:select="onProtocolSelect" bind:close="closeSelector" />
+<timer-bar />

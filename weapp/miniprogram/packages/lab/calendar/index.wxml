@@ -1,1 +1,208 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+
+<!-- Agenda row: time, title (+ label swatch), duration · protocol, status -->
+<template name="cal-row">
+  <view class="list-row cal-row nb-st-{{status}} {{hl ? 'is-hl' : ''}}" hover-class="is-pressed" hover-stay-time="80"
+    data-id="{{id}}" bindtap="openEvent" aria-role="button">
+    <text class="mono tabular cal-time">{{time}}</text>
+    <view class="flex-1">
+      <view class="row gap-6">
+        <view wx:if="{{swatch}}" class="nb-swatch" style="background: {{swatch}}"></view>
+        <text class="list-row-title truncate flex-1 {{cancelled ? 'cal-cancelled' : ''}} {{untitled ? 'nb-untitled' : ''}}">{{title}}</text>
+      </view>
+      <view class="list-row-meta nb-meta-nowrap">
+        <text class="shrink-0">{{dur}}</text>
+        <block wx:if="{{proto}}">
+          <text class="shrink-0">·</text>
+          <text class="truncate flex-1">{{proto}}</text>
+        </block>
+      </view>
+    </view>
+    <text class="badge nb-badge nb-st-{{status}}">{{statusLabel}}</text>
+  </view>
+</template>
+
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navMyLab', lang)}}"
+    meta="{{upcomingCount ? upcomingLabel : ''}}"
+    title="{{i.t('calTitle', lang)}}"
+    desc="{{i.t('calSubtitle', lang)}}"
+  >
+    <view class="btn-primary" hover-class="is-pressed" bindtap="newEvent" aria-role="button" aria-label="{{i.t('calNewEvent', lang)}}">
+      <view class="icon i-plus"></view>
+      <text>{{i.t('calNewShort', lang)}}</text>
+    </view>
+    <view class="btn" hover-class="is-pressed" bindtap="openSelector" aria-role="button" aria-label="{{i.t('calImportProtocol', lang)}}">
+      <view class="icon i-clipboard"></view>
+      <text>{{i.t('calFromProtocol', lang)}}</text>
+    </view>
+    <view class="btn" hover-class="is-pressed" bindtap="openIcs" aria-role="button" aria-label="{{i.t('calExportIcs', lang)}}">
+      <view class="icon i-download"></view>
+      <text>{{i.t('calExportShort', lang)}}</text>
+    </view>
+  </page-header>
+
+  <!-- View switch -->
+  <view class="row gap-8 mb-12">
+    <view class="seg">
+      <view class="seg-item {{viewMode === 'agenda' ? 'is-active' : ''}}" data-mode="agenda" bindtap="setView" aria-role="button">{{i.t('calAgenda', lang)}}</view>
+      <view class="seg-item {{viewMode === 'month' ? 'is-active' : ''}}" data-mode="month" bindtap="setView" aria-role="button">{{i.t('calMonthView', lang)}}</view>
+      <view class="seg-item {{viewMode === 'week' ? 'is-active' : ''}}" data-mode="week" bindtap="setView" aria-role="button">{{i.t('calWeekView', lang)}}</view>
+    </view>
+    <view class="flex-1"></view>
+    <view wx:if="{{viewMode !== 'agenda'}}" class="btn btn-sm" hover-class="is-pressed" bindtap="goToday" aria-role="button">{{i.t('calToday', lang)}}</view>
+  </view>
+
+  <!-- Period navigation (month / week) -->
+  <view wx:if="{{viewMode !== 'agenda'}}" class="panel cal-panel">
+    <view class="cal-nav">
+      <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-dir="-1" bindtap="step" aria-role="button" aria-label="{{i.t('calPrev', lang)}}">
+        <view class="icon i-chevron-left"></view>
+      </view>
+      <view class="cal-period">
+        <text class="cal-period-main">{{periodMain}}</text>
+        <text class="mono cal-period-year">{{periodYear}}</text>
+      </view>
+      <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-dir="1" bindtap="step" aria-role="button" aria-label="{{i.t('calNext', lang)}}">
+        <view class="icon i-chevron-right"></view>
+      </view>
+    </view>
+
+    <!-- Month: day numbers + status dots -->
+    <block wx:if="{{viewMode === 'month'}}">
+      <view class="cal-grid cal-dow">
+        <view wx:for="{{dayKeys}}" wx:key="*this" class="eyebrow cal-dow-cell">{{i.t(item, lang)}}</view>
+      </view>
+      <view class="cal-grid">
+        <view wx:for="{{cells}}" wx:key="date" class="cal-cell {{item.out ? 'is-out' : ''}}" hover-class="is-pressed"
+          data-date="{{item.date}}" bindtap="pickDay" aria-role="button" aria-selected="{{item.sel}}">
+          <text class="mono cal-num {{item.sel ? 'is-selected' : (item.today ? 'is-today' : '')}}">{{item.day}}</text>
+          <view class="cal-dots">
+            <view wx:for="{{item.dots}}" wx:for-item="d" wx:key="k" class="cal-dot nb-dot nb-st-{{d.st}}"></view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- Week: one row per day -->
+    <block wx:else>
+      <view wx:for="{{weekDays}}" wx:for-item="wd" wx:key="date" class="cal-wday {{wd.today ? 'is-today' : ''}}">
+        <view class="cal-wday-head">
+          <text class="eyebrow cal-wday-dow">{{i.t(wd.dow, lang)}}</text>
+          <text class="mono cal-num {{wd.today ? 'is-today' : ''}}">{{wd.day}}</text>
+          <text wx:if="{{wd.rows.length}}" class="mono cal-wday-count">× {{wd.rows.length}}</text>
+          <view class="flex-1"></view>
+          <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-date="{{wd.date}}" bindtap="newEvent"
+            aria-role="button" aria-label="{{i.t('calNewEvent', lang)}}">
+            <view class="icon i-plus"></view>
+          </view>
+        </view>
+        <view wx:if="{{wd.rows.length}}" class="list cal-wday-list">
+          <block wx:for="{{wd.rows}}" wx:key="id">
+            <template is="cal-row" data="{{...item}}"/>
+          </block>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- Status legend -->
+  <view wx:if="{{viewMode === 'month'}}" class="nb-legend cal-legend">
+    <view wx:for="{{statuses}}" wx:key="id" class="nb-legend-item nb-st-{{item.id}}">
+      <view class="nb-legend-swatch"></view>
+      <text>{{i.t(item.key, lang)}}</text>
+    </view>
+  </view>
+
+  <!-- Agenda: the selected day, or everything upcoming -->
+  <view wx:if="{{viewMode !== 'week'}}" class="panel {{viewMode === 'month' ? 'mt-12' : ''}}">
+    <view class="panel-head">
+      <text class="panel-title">{{dayFilter ? dayLabel : i.t('calUpcoming', lang)}}</text>
+      <view wx:if="{{dayFilter}}" class="row gap-4">
+        <view wx:if="{{dayRows.length}}" class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-date="{{dayFilter}}" bindtap="newEvent"
+          aria-role="button" aria-label="{{i.t('calNewEvent', lang)}}">
+          <view class="icon i-plus"></view>
+        </view>
+        <view class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="clearDay" aria-role="button">{{i.t('calShowAll', lang)}}</view>
+      </view>
+      <text wx:elif="{{upcomingCount}}" class="mono cal-count">{{upcomingCount}}</text>
+    </view>
+
+    <block wx:if="{{dayFilter}}">
+      <view wx:if="{{dayRows.length}}" class="list">
+        <block wx:for="{{dayRows}}" wx:key="id">
+          <template is="cal-row" data="{{...item}}"/>
+        </block>
+      </view>
+      <view wx:else class="empty cal-empty">
+        <view class="empty-title">{{i.t('calNoEventsDay', lang)}}</view>
+        <view class="btn-primary" hover-class="is-pressed" data-date="{{dayFilter}}" bindtap="newEvent" aria-role="button">
+          <view class="icon i-plus"></view>
+          <text>{{i.t('calNewEvent', lang)}}</text>
+        </view>
+      </view>
+    </block>
+    <block wx:elif="{{groups.length}}">
+      <block wx:for="{{groups}}" wx:for-item="g" wx:key="date">
+        <view class="eyebrow cal-group {{g.today ? 'is-today' : ''}}">{{g.label}}</view>
+        <view class="list">
+          <block wx:for="{{g.rows}}" wx:key="id">
+            <template is="cal-row" data="{{...item}}"/>
+          </block>
+        </view>
+      </block>
+    </block>
+    <view wx:else class="empty">
+      <view class="empty-icon"><view class="icon i-calendar"></view></view>
+      <view class="empty-title">{{i.t('calNoEvents', lang)}}</view>
+      <view class="empty-desc">{{i.t('calEmptyHint', lang)}}</view>
+      <view class="btn-primary" hover-class="is-pressed" bindtap="newEvent" aria-role="button">
+        <view class="icon i-plus"></view>
+        <text>{{i.t('calNewEvent', lang)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- .ics export -->
+  <block wx:if="{{showIcs}}">
+    <view class="mask" bindtap="closeIcs" catchtouchmove="noop"></view>
+    <view class="sheet" catchtouchmove="noop">
+      <view class="sheet-head">
+        <text class="sheet-title">{{i.t('calExportIcs', lang)}}</text>
+        <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="closeIcs" aria-role="button" aria-label="{{i.t('closeLabel', lang)}}">
+          <view class="icon i-close"></view>
+        </view>
+      </view>
+      <view class="sheet-body">
+        <view class="grid-2">
+          <view class="field">
+            <view class="field-label">{{i.t('calIcsFrom', lang)}}</view>
+            <picker class="picker-host" mode="date" value="{{icsFrom}}" bindchange="onIcsFrom">
+              <view class="picker"><text class="picker-value">{{icsFrom}}</text><view class="icon i-calendar"></view></view>
+            </picker>
+          </view>
+          <view class="field">
+            <view class="field-label">{{i.t('calIcsTo', lang)}}</view>
+            <picker class="picker-host" mode="date" value="{{icsTo || icsFrom}}" start="{{icsFrom}}" bindchange="onIcsTo">
+              <view class="picker"><text class="picker-value {{icsTo ? '' : 'muted'}}">{{icsTo || i.t('calIcsNoEnd', lang)}}</text><view class="icon i-calendar"></view></view>
+            </picker>
+          </view>
+        </view>
+        <view class="row between gap-8">
+          <text class="mono cal-ics-count {{icsCount ? '' : 'is-warn'}}">{{icsLabel}}</text>
+          <text wx:if="{{icsTo}}" class="link text-sm shrink-0" bindtap="clearIcsTo">{{i.t('calIcsNoEnd', lang)}}</text>
+        </view>
+        <view class="row gap-8 mt-16">
+          <view class="btn flex-1" hover-class="is-pressed" bindtap="closeIcs" aria-role="button">{{i.t('nbCancel', lang)}}</view>
+          <view class="btn-primary flex-1" hover-class="is-pressed" bindtap="exportIcs" aria-role="button">
+            <view class="icon i-download"></view>
+            <text>{{i.t('calExportIcs', lang)}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+<nb-protocol-selector id="protocol-picker" show="{{showSelector}}" title="{{i.t('calImportProtocol', lang)}}" bind:select="onProtocolSelect" bind:close="closeSelector" />
+<timer-bar />

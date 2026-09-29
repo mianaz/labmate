@@ -1,0 +1,45 @@
+<wxs module="i" src="../../../../shared/i18n.wxs"/>
+<block wx:if="{{show}}">
+  <view class="mask" bindtap="close" catchtouchmove="noop"></view>
+  <view class="sheet nb-ps lang-{{lang}}">
+    <view class="sheet-head" catchtouchmove="noop">
+      <text class="sheet-title">{{title || i.t('nbImportProtocol', lang)}}</text>
+      <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="close" aria-role="button" aria-label="{{i.t('closeLabel', lang)}}">
+        <view class="icon i-close"></view>
+      </view>
+    </view>
+    <view class="nb-ps-top" catchtouchmove="noop">
+      <view class="search-field">
+        <view class="icon i-search"></view>
+        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+          placeholder="{{i.t('nbPsSearch', lang)}}" placeholder-class="placeholder"
+          bindinput="onSearch" aria-label="{{i.t('nbPsSearch', lang)}}" />
+        <view wx:if="{{search}}" class="icon i-close nb-ps-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+      </view>
+      <view class="nb-ps-count">{{countLabel}}</view>
+    </view>
+    <scroll-view scroll-y class="nb-ps-scroll" enhanced show-scrollbar="{{false}}">
+      <view wx:if="{{rows.length}}" class="list">
+        <view wx:for="{{rows}}" wx:key="id" class="list-row" hover-class="is-pressed" hover-stay-time="80"
+          data-id="{{item.id}}" bindtap="pick" aria-role="button">
+          <view class="flex-1">
+            <view class="list-row-title truncate">{{item.primary}}</view>
+            <view wx:if="{{item.secondary}}" class="list-row-sub truncate">{{item.secondary}}</view>
+            <view class="list-row-meta">
+              <text>{{i.n('nbPsSteps', lang, item.steps)}}</text>
+              <text wx:if="{{item.materials}}">{{i.n('nbPsMaterials', lang, item.materials)}}</text>
+              <text wx:if="{{item.duration}}">~{{item.duration}} min</text>
+              <text wx:if="{{item.custom}}" class="badge badge-green">{{i.t('customBadge', lang)}}</text>
+            </view>
+          </view>
+          <view class="icon i-chevron-right chevron"></view>
+        </view>
+      </view>
+      <view wx:else class="empty">
+        <view class="empty-icon"><view class="icon i-clipboard"></view></view>
+        <view class="empty-title">{{i.t('noResults', lang)}}</view>
+        <view class="empty-desc">{{i.t('nbPsEmptyHint', lang)}}</view>
+      </view>
+    </scroll-view>
+  </view>
+</block>

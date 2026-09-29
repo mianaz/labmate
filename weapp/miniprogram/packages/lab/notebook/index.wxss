@@ -1,0 +1,29 @@
+@import "../components/nb-shared/nb.wxss";
+
+.nb-filters { padding: 12px; border-bottom: 1px solid var(--rule); }
+.nb-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.nb-sort { font-size: 10px; color: var(--text-muted); }
+
+/* First run */
+.nb-first { padding: 40px 22px 32px; }
+.nb-first-actions { margin-top: 12px; }
+.nb-first-actions .btn, .nb-first-actions .btn-primary { margin-top: 0; }
+.nb-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--rule);
+  border-top: 1px solid var(--rule);
+}
+.nb-section-cell { padding: 12px 14px; background: var(--card); }
+.nb-section-num { font-size: 11px; font-weight: 700; color: var(--accent); }
+.nb-section-name { color: var(--text); }
+.nb-section-desc { margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--text-muted); }

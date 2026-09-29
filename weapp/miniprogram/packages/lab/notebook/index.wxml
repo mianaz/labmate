@@ -1,1 +1,107 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navMyLab', lang)}}"
+    meta="{{total ? countLabel : ''}}"
+    title="{{i.t('nbTitle', lang)}}"
+    desc="{{i.t('nbSubtitle', lang)}}"
+  >
+    <view class="btn-primary" hover-class="is-pressed" bindtap="newEntry" aria-role="button">
+      <view class="icon i-plus"></view>
+      <text>{{i.t('nbNewEntry', lang)}}</text>
+    </view>
+    <view class="btn" hover-class="is-pressed" bindtap="importJson" aria-role="button" aria-label="{{i.t('nbImportJson', lang)}}">
+      <view class="icon i-upload"></view>
+      <text>{{i.t('nbImportShort', lang)}}</text>
+    </view>
+    <view class="btn {{total ? '' : 'is-disabled'}}" hover-class="{{total ? 'is-pressed' : 'none'}}" bindtap="exportJson"
+      aria-role="button" aria-label="{{i.t('nbExportJson', lang)}}" aria-disabled="{{!total}}">
+      <view class="icon i-download"></view>
+      <text>{{i.t('nbExportShort', lang)}}</text>
+    </view>
+  </page-header>
+
+  <!-- First run: nothing recorded yet -->
+  <view wx:if="{{!total}}" class="panel">
+    <view class="empty nb-first">
+      <view class="empty-icon"><view class="icon i-notebook"></view></view>
+      <view class="empty-title">{{i.t('nbNoEntries', lang)}}</view>
+      <view class="empty-desc">{{i.t('nbFirstRunDesc', lang)}}</view>
+      <view class="row-wrap center gap-8 nb-first-actions">
+        <view class="btn-primary" hover-class="is-pressed" bindtap="newEntry" aria-role="button">
+          <view class="icon i-plus"></view>
+          <text>{{i.t('nbNewEntry', lang)}}</text>
+        </view>
+        <view class="btn" hover-class="is-pressed" bindtap="importJson" aria-role="button">
+          <view class="icon i-upload"></view>
+          <text>{{i.t('nbImportJson', lang)}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="nb-sections">
+      <view wx:for="{{sections}}" wx:key="num" class="nb-section-cell">
+        <view class="row gap-8">
+          <text class="mono nb-section-num">{{item.num}}</text>
+          <text class="eyebrow nb-section-name">{{i.t(item.key, lang)}}</text>
+        </view>
+        <view class="nb-section-desc">{{i.t(item.desc, lang)}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Master list -->
+  <view wx:else class="panel">
+    <view class="nb-filters">
+      <view class="search-field">
+        <view class="icon i-search"></view>
+        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+          placeholder="{{i.t('nbSearch', lang)}}" placeholder-class="placeholder"
+          bindinput="onSearch" aria-label="{{i.t('nbSearch', lang)}}" />
+        <view wx:if="{{search}}" class="icon i-close nb-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+      </view>
+      <scroll-view scroll-x class="chip-scroll mt-8" enhanced show-scrollbar="{{false}}">
+        <view wx:for="{{chips}}" wx:key="id" class="chip {{statusFilter === item.id ? 'is-active' : ''}}"
+          hover-class="is-pressed" data-id="{{item.id}}" bindtap="setStatus" aria-role="button">
+          <view wx:if="{{item.id !== 'all'}}" class="dot dot-sm nb-dot nb-st-{{item.id}}"></view>
+          <text>{{i.t(item.key, lang)}}</text>
+          <text class="chip-count">{{item.count}}</text>
+        </view>
+      </scroll-view>
+    </view>
+    <view class="nb-list-head">
+      <text class="panel-title">{{listLabel}}</text>
+      <text class="mono nb-sort">{{i.t('nbByDate', lang)}}</text>
+    </view>
+
+    <view wx:if="{{rows.length}}" class="list">
+      <view wx:for="{{rows}}" wx:key="id" class="list-row" hover-class="is-pressed" hover-stay-time="80"
+        data-id="{{item.id}}" bindtap="open" aria-role="button">
+        <view class="flex-1">
+          <view class="row gap-8">
+            <text class="list-row-title flex-1 truncate {{item.untitled ? 'nb-untitled' : ''}}">{{item.title}}</text>
+            <text class="badge nb-badge nb-st-{{item.status}}">{{i.t(item.statusKey, lang)}}</text>
+          </view>
+          <view class="list-row-meta nb-meta-nowrap">
+            <text class="shrink-0">{{item.date}}</text>
+            <block wx:if="{{item.high}}">
+              <text class="shrink-0">·</text>
+              <text class="shrink-0 nb-high">{{i.t('nbHighPriority', lang)}}</text>
+            </block>
+            <block wx:if="{{item.proto}}">
+              <text class="shrink-0">·</text>
+              <text class="truncate flex-1">{{item.proto}}</text>
+            </block>
+          </view>
+        </view>
+        <view class="icon i-chevron-right chevron"></view>
+      </view>
+    </view>
+    <view wx:else class="empty">
+      <view class="empty-icon"><view class="icon i-search"></view></view>
+      <view class="empty-title">{{i.t('nbNoMatch', lang)}}</view>
+      <view class="empty-desc">{{i.t('nbNoMatchHint', lang)}}</view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="clearFilters" aria-role="button">{{i.t('nbClearFilters', lang)}}</view>
+    </view>
+  </view>
+</view>
+<timer-bar />

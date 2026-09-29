@@ -1,0 +1,21 @@
+/* Shared by the notebook and calendar pages (@import from each page's wxss).
+   Status tones match the web's STATUSES fg/bg pairs: .nb-st-<status> sets
+   --st-fg / --st-bg for badges, row bars and dots. */
+.nb-st-planned { --st-fg: var(--base-c); --st-bg: var(--cat-media-bg); }
+.nb-st-in-progress { --st-fg: var(--warning-text); --st-bg: var(--warning-bg); }
+.nb-st-completed { --st-fg: var(--accent); --st-bg: var(--primary-light); }
+.nb-st-cancelled { --st-fg: var(--text-muted); --st-bg: var(--bg-2); }
+
+.nb-badge { color: var(--st-fg); background: var(--st-bg); flex-shrink: 0; }
+.nb-dot { background: var(--st-fg); }
+.nb-swatch { width: 7px; height: 7px; flex-shrink: 0; border: 1px solid var(--border-strong); }
+
+.nb-untitled { color: var(--text-muted); font-weight: 500; }
+.nb-high { color: var(--danger-text); font-weight: 700; }
+.nb-meta-nowrap { flex-wrap: nowrap; gap: 0 6px; min-width: 0; }
+.nb-clear { color: var(--text-muted); font-size: 15px; padding: 4px; }
+
+/* Status legend (calendar) */
+.nb-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.nb-legend-item { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.nb-legend-swatch { width: 11px; height: 11px; background: var(--st-bg); border-left: 3px solid var(--st-fg); }

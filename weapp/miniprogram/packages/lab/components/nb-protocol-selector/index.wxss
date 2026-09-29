@@ -1,0 +1,5 @@
+.nb-ps { display: flex; flex-direction: column; height: 82vh; }
+.nb-ps-top { flex-shrink: 0; padding: 12px 16px 10px; border-bottom: 1px solid var(--rule); }
+.nb-ps-clear { color: var(--text-muted); font-size: 15px; padding: 4px; }
+.nb-ps-count { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.nb-ps-scroll { flex: 1; height: 0; min-height: 0; }

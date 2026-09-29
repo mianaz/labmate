@@ -1,0 +1,55 @@
+// Template helpers for the notebook / calendar pages (WXS is ES5-only).
+var STATUS_IDS = ['planned', 'in-progress', 'completed', 'cancelled'];
+var STATUS_KEYS = ['nbStatusPlanned', 'nbStatusInProgress', 'nbStatusCompleted', 'nbStatusCancelled'];
+
+function statusIndex(s) {
+  var i = STATUS_IDS.indexOf(s);
+  return i < 0 ? 0 : i;
+}
+function statusId(s) { return STATUS_IDS[statusIndex(s)]; }
+function statusKey(s) { return STATUS_KEYS[statusIndex(s)]; }
+function priorityKey(p) {
+  return p === 'high' ? 'nbPriorityHigh' : (p === 'low' ? 'nbPriorityLow' : 'nbPriorityMedium');
+}
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+function addMinutes(time, minutes) {
+  if (!time) return '';
+  var parts = ('' + time).split(':');
+  var h = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return '';
+  var total = h * 60 + m + (parseInt(minutes, 10) || 0);
+  return pad2(Math.floor(total / 60) % 24) + ':' + pad2(total % 60);
+}
+// "09:00–10:30", or '' without a start time.
+function timeRange(start, duration) {
+  if (!start) return '';
+  var end = addMinutes(start, duration);
+  return end ? start + '–' + end : start;
+}
+
+// Title in the active language, and the other language's title.
+function title(en, zh, lang) {
+  return (lang === 'zh' ? (zh || en) : (en || zh)) || '';
+}
+function other(en, zh, lang) {
+  return lang === 'zh' ? (zh ? en : '') : (en ? zh : '');
+}
+
+function isLabelColor(c) {
+  return !!c && ('' + c).toLowerCase() !== '#1d9e75';
+}
+
+module.exports = {
+  statusIndex: statusIndex,
+  statusId: statusId,
+  statusKey: statusKey,
+  priorityKey: priorityKey,
+  pad2: pad2,
+  addMinutes: addMinutes,
+  timeRange: timeRange,
+  title: title,
+  other: other,
+  isLabelColor: isLabelColor,
+};

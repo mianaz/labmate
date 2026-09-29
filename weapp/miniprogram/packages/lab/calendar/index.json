@@ -1,1 +1,7 @@
-{ "usingComponents": {} }
+{
+  "usingComponents": {
+    "page-header": "/components/page-header/index",
+    "nb-protocol-selector": "../components/nb-protocol-selector/index",
+    "timer-bar": "/components/timer-bar/index"
+  }
+}
