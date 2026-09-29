@@ -1,0 +1,48 @@
+/* Inventory classes shared by the inventory pages and (styleIsolation:
+   apply-shared) their private components. Imported by index.wxss and box.wxss. */
+@import "icons.wxss";
+
+/* Sample-type colours (SAMPLE_TYPE_COLORS → --samp-* tokens in app.wxss). */
+.inv-t-cell_line { color: var(--samp-cell-line-text); background: var(--samp-cell-line-bg); }
+.inv-t-plasmid   { color: var(--samp-plasmid-text);   background: var(--samp-plasmid-bg); }
+.inv-t-antibody  { color: var(--samp-antibody-text);  background: var(--samp-antibody-bg); }
+.inv-t-primer    { color: var(--samp-primer-text);    background: var(--samp-primer-bg); }
+.inv-t-protein   { color: var(--samp-protein-text);   background: var(--samp-protein-bg); }
+.inv-t-reagent   { color: var(--samp-reagent-text);   background: var(--samp-reagent-bg); }
+.inv-t-tissue    { color: var(--samp-tissue-text);    background: var(--samp-tissue-bg); }
+.inv-t-virus     { color: var(--samp-virus-text);     background: var(--samp-virus-bg); }
+.inv-t-other     { color: var(--samp-other-text);     background: var(--samp-other-bg); }
+
+/* Position badge (A1 …) — ink text, never uppercased away. */
+.inv-pos-badge { color: var(--text); height: 20px; font-size: 11px; text-transform: none; letter-spacing: 0; }
+.inv-nocase { text-transform: none; letter-spacing: 0; }
+
+/* Meter: thin square progress bar (InventoryComponents.Meter). */
+.inv-meter { height: 4px; background: var(--bg-2); border: 1px solid var(--rule); overflow: hidden; }
+.inv-meter.is-6 { height: 6px; }
+.inv-meter.is-8 { height: 8px; }
+.inv-meter-fill { height: 100%; background: var(--primary); }
+.inv-meter-fill.is-warn { background: var(--warning-border); }
+.inv-meter-fill.is-full { background: var(--danger-border); }
+.inv-meter-fill.is-type { background: currentColor; }
+
+/* Box colour swatch. */
+.inv-swatch { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; border: 1px solid var(--border-strong); }
+
+/* Two-column form rows inside sheets. */
+.inv-form-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 10px; }
+.inv-form-grid .field { min-width: 0; }
+.inv-hint { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.inv-mono-sm { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.inv-date-clear { color: var(--text-muted); font-size: 14px; padding: 0 2px; }
+.inv-textarea { height: 64px; min-height: 64px; font-family: var(--font-body); font-size: 15px; }
+.inv-field-row { display: flex; align-items: stretch; gap: 6px; }
+.inv-field-row .picker-host { flex: 1; min-width: 0; }
+.inv-clear-btn { min-height: 42px; width: 42px; min-width: 42px; }
+.inv-warn-text { color: var(--warning-text); }
+.inv-picker-long { font-size: 14px; }
+/* Tones on global cells (.meta-val / .td set their own colour). */
+.meta-val.danger, .td.danger { color: var(--danger-text); }
+.meta-val.inv-warn-text { color: var(--warning-text); }
+.td.accent { color: var(--accent); }
+.td.muted { color: var(--text-muted); }

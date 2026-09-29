@@ -1,1 +1,302 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navMyLab', lang)}}"
+    meta="{{meta}}"
+    title="{{i.t('tabInventory', lang)}}"
+    desc="{{i.t('pageInventoryDesc', lang)}}"
+  >
+    <block wx:if="{{hasLocations}}">
+      <view class="btn-primary inv-hbtn" hover-class="is-pressed" bindtap="openAddLocation" aria-role="button">
+        <view class="icon i-plus"></view><text>{{i.t('invAddLocation', lang)}}</text>
+      </view>
+      <view class="btn inv-hbtn" hover-class="is-pressed" bindtap="openImport" aria-role="button">
+        <view class="icon i-upload"></view><text>{{i.t('invImport', lang)}}</text>
+      </view>
+      <view class="btn inv-hbtn" hover-class="is-pressed" bindtap="openExport" aria-role="button">
+        <view class="icon i-download"></view><text>{{i.t('invExport', lang)}}</text>
+      </view>
+    </block>
+    <view wx:elif="{{canUndo}}" class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="undo" aria-role="button">
+      <view class="icon i-reset"></view><text>{{i.t('invUndo', lang)}}</text>
+    </view>
+  </page-header>
+
+  <block wx:if="{{!loaded}}"></block>
+
+  <!-- No locations yet: one empty state that explains the hierarchy. -->
+  <view wx:elif="{{!hasLocations}}" class="panel">
+    <view class="empty inv-empty">
+      <view class="empty-icon"><view class="icon i-box"></view></view>
+      <view class="empty-title">{{lang === 'zh' ? '建立你的样品库存' : 'Set up your storage'}}</view>
+      <view class="empty-desc">{{lang === 'zh' ? '库存与实验室实物一一对应：存储位置里放盒子，每个盒子是一个孔位网格，每个孔位存放一个样品。先添加一台冰箱或一个架子。' : 'Inventory mirrors your bench: a location holds boxes, each box is a grid of positions, and each position holds one sample. Start with a freezer or shelf.'}}</view>
+      <view class="inv-steps">
+        <view class="inv-step">
+          <view class="row between"><text class="inv-step-n">01</text><view class="icon inv-i-freezer"></view></view>
+          <view class="inv-step-label">{{lang === 'zh' ? '存储位置' : 'Location'}}</view>
+          <view class="inv-step-ex truncate">{{lang === 'zh' ? '冰箱 · -80°C' : 'Freezer · -80°C'}}</view>
+        </view>
+        <view class="inv-step">
+          <view class="row between"><text class="inv-step-n">02</text><view class="icon i-box"></view></view>
+          <view class="inv-step-label">{{lang === 'zh' ? '盒子' : 'Box'}}</view>
+          <view class="inv-step-ex truncate">{{lang === 'zh' ? '9×9 冻存盒' : '9×9 cryo box'}}</view>
+        </view>
+        <view class="inv-step">
+          <view class="row between"><text class="inv-step-n">03</text><view class="icon i-plate"></view></view>
+          <view class="inv-step-label">{{lang === 'zh' ? '孔位' : 'Position'}}</view>
+          <view class="inv-step-ex truncate">A1 … I9</view>
+        </view>
+        <view class="inv-step">
+          <view class="row between"><text class="inv-step-n">04</text><view class="icon i-flask"></view></view>
+          <view class="inv-step-label">{{lang === 'zh' ? '样品' : 'Sample'}}</view>
+          <view class="inv-step-ex truncate">HEK293T · P5</view>
+        </view>
+      </view>
+      <view class="row-wrap center gap-8 mt-12">
+        <view class="btn-primary" hover-class="is-pressed" bindtap="openAddLocation" aria-role="button">
+          <view class="icon i-plus"></view><text>{{i.t('invAddLocation', lang)}}</text>
+        </view>
+        <view class="btn" hover-class="is-pressed" bindtap="openImport" aria-role="button">
+          <view class="icon i-upload"></view><text>{{lang === 'zh' ? '导入 CSV / 备份' : 'Import CSV or backup'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <!-- Toolbar -->
+    <view class="inv-toolbar">
+      <view wx:if="{{view === 'grid'}}" class="search-field mb-8">
+        <view class="icon i-search"></view>
+        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+          placeholder="{{i.t('invSearch', lang)}}" placeholder-class="placeholder"
+          bindinput="onSearch" aria-label="{{i.t('invSearch', lang)}}" />
+        <view wx:if="{{search}}" class="icon i-close inv-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+      </view>
+      <view class="row gap-8">
+        <view class="seg shrink-0">
+          <view class="seg-item {{view === 'grid' ? 'is-active' : ''}}" data-view="grid" bindtap="setView" aria-role="button">{{i.t('invStatsBoxes', lang)}}</view>
+          <view class="seg-item {{view === 'list' ? 'is-active' : ''}}" data-view="list" bindtap="setView" aria-role="button">{{i.t('invAllSamples', lang)}}</view>
+        </view>
+        <view class="flex-1"></view>
+        <view class="btn-ghost btn-sm inv-tool {{canUndo ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="undo"
+          aria-role="button" aria-label="{{i.t('invUndoLast', lang)}}">
+          <view class="icon i-reset"></view><text>{{i.t('invUndo', lang)}}</text>
+        </view>
+        <view class="btn-ghost btn-sm inv-tool" hover-class="is-pressed" bindtap="openStats" aria-role="button" aria-label="{{i.t('invStatsTitle', lang)}}">
+          <view class="icon inv-i-bars"></view><text>{{i.t('invStats', lang)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Search results -->
+    <view wx:if="{{view === 'grid' && searching}}" class="panel">
+      <view class="panel-head">
+        <text class="panel-title">{{resultsCount}}{{i.t('invResults', lang)}}</text>
+        <view class="btn-ghost btn-sm inv-head-btn" hover-class="is-pressed" bindtap="clearSearch" aria-role="button">
+          <view class="icon i-close"></view><text>{{lang === 'zh' ? '清除' : 'Clear'}}</text>
+        </view>
+      </view>
+      <view wx:if="{{!results.length}}" class="empty">
+        <view class="empty-icon"><view class="icon i-search"></view></view>
+        <view class="empty-title">{{i.t('invNoResults', lang)}}</view>
+      </view>
+      <view wx:else class="list">
+        <view wx:for="{{results}}" wx:key="id" class="list-row" hover-class="is-pressed"
+          data-id="{{item.id}}" data-box="{{item.boxId}}" bindtap="openSample" aria-role="button">
+          <view class="flex-1">
+            <view class="row gap-8">
+              <text class="list-row-title truncate">{{item.name}}</text>
+              <text class="badge shrink-0 inv-t-{{item.type}}">{{item.typeLabel}}</text>
+            </view>
+            <view class="list-row-meta">
+              <text class="truncate inv-where">{{item.where}}</text>
+              <text wx:if="{{item.qty}}">· {{item.qty}}</text>
+              <text wx:if="{{item.owner}}">· {{item.owner}}</text>
+            </view>
+          </view>
+          <text class="badge inv-pos-badge shrink-0">{{item.pos || '—'}}</text>
+          <view class="icon i-chevron-right chevron"></view>
+        </view>
+        <view wx:if="{{resultsMore}}" class="inv-foot">+ {{resultsMore}}</view>
+      </view>
+    </view>
+
+    <!-- All samples -->
+    <view wx:elif="{{view === 'list'}}" class="panel">
+      <view class="panel-head">
+        <view class="row-wrap gap-8 flex-1">
+          <text class="panel-title">{{i.t('invAllSamples', lang)}}</text>
+          <text class="inv-mono-sm">{{listCount}}</text>
+        </view>
+        <text wx:if="{{hasFilters}}" class="link text-sm shrink-0" bindtap="clearFilters" aria-role="button">{{i.t('invClearFilters', lang)}}</text>
+      </view>
+      <view class="inv-filters">
+        <view class="search-field">
+          <view class="icon i-search"></view>
+          <input class="input-bare" type="text" value="{{lf.name}}" placeholder="{{i.t('invSearchName', lang)}}"
+            placeholder-class="placeholder" bindinput="onListName" aria-label="{{i.t('invSearchName', lang)}}" />
+        </view>
+        <view class="grid-2 mt-8">
+          <picker class="picker-host" mode="selector" range="{{typeOpts}}" range-key="label" value="{{typeIdx}}" data-k="type" bindchange="onFilter">
+            <view class="picker inv-fpicker {{typeIdx ? 'is-set' : ''}}">
+              <text class="picker-value">{{typeIdx ? typeOpts[typeIdx].label : i.t('invColType', lang)}}</text><view class="icon i-chevron-down"></view>
+            </view>
+          </picker>
+          <picker class="picker-host" mode="selector" range="{{locOpts}}" range-key="label" value="{{locIdx}}" data-k="loc" bindchange="onFilter">
+            <view class="picker inv-fpicker {{locIdx ? 'is-set' : ''}}">
+              <text class="picker-value">{{locIdx ? locOpts[locIdx].label : i.t('invColLocation', lang)}}</text><view class="icon i-chevron-down"></view>
+            </view>
+          </picker>
+          <picker class="picker-host" mode="selector" range="{{boxOpts}}" range-key="label" value="{{boxIdx}}" data-k="box" bindchange="onFilter">
+            <view class="picker inv-fpicker {{boxIdx ? 'is-set' : ''}}">
+              <text class="picker-value">{{boxIdx ? boxOpts[boxIdx].label : i.t('invColBox', lang)}}</text><view class="icon i-chevron-down"></view>
+            </view>
+          </picker>
+          <picker class="picker-host" mode="selector" range="{{ownerOpts}}" range-key="label" value="{{ownerIdx}}" data-k="owner" bindchange="onFilter">
+            <view class="picker inv-fpicker {{ownerIdx ? 'is-set' : ''}}">
+              <text class="picker-value">{{ownerIdx ? ownerOpts[ownerIdx].label : i.t('invColOwner', lang)}}</text><view class="icon i-chevron-down"></view>
+            </view>
+          </picker>
+        </view>
+        <view class="row gap-8 mt-8">
+          <text class="eyebrow shrink-0">{{lang === 'zh' ? '排序' : 'Sort'}}</text>
+          <picker class="picker-host flex-1" mode="selector" range="{{sortOpts}}" range-key="label" value="{{sortIdx}}" bindchange="onSort">
+            <view class="picker inv-fpicker"><text class="picker-value">{{sortOpts[sortIdx].label}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+          <view class="btn btn-sm btn-icon" hover-class="is-pressed" bindtap="toggleDir" aria-role="button"
+            aria-label="{{dir === 'asc' ? (lang === 'zh' ? '升序' : 'Ascending') : (lang === 'zh' ? '降序' : 'Descending')}}">
+            <text class="mono strong">{{dir === 'asc' ? '↑' : '↓'}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{!listRows.length}}" class="empty">
+        <view class="empty-icon"><view class="icon i-search"></view></view>
+        <view class="empty-title">{{i.t('invNoResults', lang)}}</view>
+      </view>
+      <view wx:else class="list">
+        <view wx:for="{{listRows}}" wx:key="id" class="list-row" hover-class="is-pressed"
+          data-id="{{item.id}}" data-box="{{item.boxId}}" bindtap="openSample" aria-role="button">
+          <view class="flex-1">
+            <view class="row gap-8">
+              <text class="list-row-title truncate flex-1">{{item.name}}</text>
+              <text class="badge inv-pos-badge shrink-0">{{item.pos || '—'}}</text>
+            </view>
+            <view class="list-row-meta">
+              <text class="badge inv-t-{{item.type}}">{{item.typeLabel}}</text>
+              <text class="truncate inv-where">{{item.where}}</text>
+            </view>
+            <view wx:if="{{item.qty || item.owner || item.date}}" class="list-row-meta">
+              <text wx:if="{{item.qty}}">{{item.qty}}</text>
+              <text wx:if="{{item.owner}}">{{item.owner}}</text>
+              <text wx:if="{{item.date}}">{{item.date}}</text>
+            </view>
+          </view>
+        </view>
+        <view wx:if="{{listMore}}" class="inv-foot">+ {{listMore}}</view>
+      </view>
+    </view>
+
+    <!-- Storage: overview strip + tree -->
+    <block wx:else>
+      <view wx:if="{{dash}}" class="panel mb-12">
+        <view class="panel-head inv-dash-head">
+          <text class="panel-title">{{i.t('invStatsTitle', lang)}}</text>
+          <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="dismissDash" aria-role="button"
+            aria-label="{{i.t('invDashboardDismiss', lang)}}"><view class="icon i-close"></view></view>
+        </view>
+        <view class="inv-dash">
+          <view wx:for="{{dash}}" wx:key="k" class="inv-dash-cell">
+            <view class="stat-label truncate">{{item.label}}</view>
+            <view class="stat-value {{item.warn ? 'inv-warn-text' : ''}}">{{item.value}}</view>
+            <view wx:if="{{item.k === 'util'}}" class="inv-meter inv-dash-meter"><view class="inv-meter-fill is-{{item.tone}}" style="width: {{item.meter}}%"></view></view>
+            <view class="inv-mono-sm inv-dash-sub">{{item.sub}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="panel">
+        <view class="panel-head">
+          <text class="panel-title">{{i.t('invStorageTree', lang)}}</text>
+          <text class="inv-mono-sm">{{tree.length}}</text>
+        </view>
+        <view wx:for="{{tree}}" wx:for-item="loc" wx:key="id" class="inv-loc {{index ? '' : 'is-first'}}">
+          <view class="inv-loc-row">
+            <view class="inv-loc-main" hover-class="is-pressed" data-id="{{loc.id}}" bindtap="toggleLoc"
+              aria-role="button" aria-expanded="{{loc.open}}">
+              <view class="icon i-chevron-right inv-chev {{loc.open ? 'is-open' : ''}}"></view>
+              <view class="icon inv-i-{{loc.type}} inv-loc-icon"></view>
+              <text class="inv-loc-name truncate">{{loc.name}}</text>
+              <text wx:if="{{loc.temp}}" class="inv-loc-temp truncate">{{loc.temp}}</text>
+            </view>
+            <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-id="{{loc.id}}" bindtap="locMenu"
+              aria-role="button" aria-label="{{i.t('invEditLocation', lang)}}"><view class="icon i-more"></view></view>
+          </view>
+          <block wx:if="{{loc.open}}">
+            <view wx:for="{{loc.boxes}}" wx:for-item="box" wx:key="id" class="inv-box-row">
+              <view class="inv-box-main" hover-class="is-pressed" data-id="{{box.id}}" bindtap="openBox" aria-role="button">
+                <view class="inv-box-ic">
+                  <view wx:if="{{box.color}}" class="inv-swatch" style="background: {{box.color}}"></view>
+                  <view wx:else class="icon i-box"></view>
+                </view>
+                <text class="inv-box-name truncate">{{box.name}}</text>
+                <text class="inv-box-count">{{box.count}}/{{box.total}}</text>
+                <view class="icon i-chevron-right chevron inv-box-chev"></view>
+              </view>
+              <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-id="{{box.id}}" bindtap="boxMenu"
+                aria-role="button" aria-label="{{i.t('invEditBox', lang)}}"><view class="icon i-more"></view></view>
+            </view>
+            <view class="inv-add-box" hover-class="is-pressed" data-id="{{loc.id}}" bindtap="addBoxTap" aria-role="button">
+              <view class="icon i-plus"></view><text>{{i.t('invAddBox', lang)}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <location-form id="locForm" show="{{locFormShow}}" location="{{editLoc}}" bindsave="onLocSave" bindclose="closeLocForm" />
+  <box-form id="boxForm" show="{{boxFormShow}}" box="{{editBox}}" location-name="{{boxLocName}}" bindsave="onBoxSave" bindclose="closeBoxForm" />
+  <stats-sheet id="stats" show="{{statsShow}}" bindclose="closeStats" />
+
+  <!-- Import (the web's ImportDialog) -->
+  <inv-sheet wx:if="{{importShow}}" show="{{true}}" title="{{i.t('invImport', lang)}}" bindclose="closeImport">
+    <view class="row gap-8">
+      <view class="icon i-file muted"></view>
+      <text class="section-title inv-imp-title">{{i.t('invImportCsv', lang)}}</text>
+    </view>
+    <view class="inv-hint mt-8">{{lang === 'zh' ? 'CSV 的每一行会成为所选盒子里的一个样品；孔位已被占用的行会被跳过。' : 'Each CSV row becomes a sample in the chosen box. Rows whose position is already taken are skipped.'}}</view>
+    <view wx:if="{{importBoxes.length}}" class="field mt-12">
+      <text class="field-label">{{lang === 'zh' ? '导入到盒子' : 'Into box'}}</text>
+      <picker class="picker-host" mode="selector" range="{{importBoxes}}" range-key="label" value="{{importBoxIdx}}" bindchange="onImportBox">
+        <view class="picker inv-picker-long"><text class="picker-value">{{importBoxes[importBoxIdx].label}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view wx:else class="notice notice-info mt-12 text-sm">{{lang === 'zh' ? '先添加一个存储位置和盒子——CSV 中的样品会放进盒子里。' : 'Add a location and a box first — CSV rows are placed into a box.'}}</view>
+    <view class="row-wrap gap-8 mt-12">
+      <view class="btn-primary {{importBoxes.length ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="importCsv" aria-role="button">
+        <view class="icon i-upload"></view><text>{{lang === 'zh' ? '选择 CSV 文件' : 'Choose CSV file'}}</text>
+      </view>
+      <view class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="downloadTemplate" aria-role="button">
+        <view class="icon i-download"></view><text>{{i.t('invDownloadTemplate', lang)}}</text>
+      </view>
+    </view>
+    <view class="inv-mono-sm mt-8 text-xs">{{lang === 'zh' ? '列：' : 'Columns: '}}{{csvColumns}}</view>
+
+    <view class="inv-imp-sec">
+      <view class="row gap-8">
+        <view class="icon i-layers muted"></view>
+        <text class="section-title inv-imp-title">{{i.t('invImportJson', lang)}}</text>
+      </view>
+      <view class="inv-hint mt-8">{{lang === 'zh' ? '恢复从 labmate 导出的库存备份（位置、盒子与样品），与现有数据合并。' : 'Restores an inventory backup exported from labmate — locations, boxes and samples — merged with what is already here.'}}</view>
+      <view class="btn mt-12" hover-class="is-pressed" bindtap="importJson" aria-role="button">
+        <view class="icon i-upload"></view><text>{{lang === 'zh' ? '选择 JSON 文件' : 'Choose JSON file'}}</text>
+      </view>
+    </view>
+    <view class="inv-hint mt-12 text-xs">{{lang === 'zh' ? '文件从微信聊天中选择（可先发送到「文件传输助手」）。' : 'Files are picked from a WeChat chat (send them to File Transfer first).'}}</view>
+    <view slot="foot" class="row">
+      <view class="btn" hover-class="is-pressed" bindtap="closeImport">{{i.t('closeLabel', lang)}}</view>
+    </view>
+  </inv-sheet>
+</view>
+<timer-bar />

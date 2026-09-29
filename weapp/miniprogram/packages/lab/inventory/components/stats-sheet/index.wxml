@@ -1,0 +1,90 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<inv-sheet wx:if="{{show}}" show="{{true}}" tall="{{!vm.empty}}" title="{{i.t('invStatsTitle', lang)}}" bindclose="close">
+  <view class="lang-{{lang}}">
+    <view wx:if="{{vm.empty}}" class="empty">
+      <view class="empty-icon"><view class="icon inv-i-bars"></view></view>
+      <view class="empty-title">{{i.t('invStatsEmpty', lang)}}</view>
+    </view>
+    <block wx:else>
+      <view class="grid-2">
+        <view wx:for="{{vm.tiles}}" wx:key="k" class="stat">
+          <view class="stat-value">{{item.v}}</view>
+          <view class="stat-label truncate">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="inv-st-sec">
+        <view class="eyebrow mb-8">{{i.t('invStatsUtilization', lang)}}</view>
+        <view class="inv-meter is-8"><view class="inv-meter-fill is-{{vm.utilTone}}" style="width: {{vm.util}}%"></view></view>
+        <view class="inv-mono-sm mt-4">{{vm.utilText}}</view>
+        <view wx:if="{{vm.locs.length}}" class="table mt-8">
+          <view class="tr is-head">
+            <view class="th flex-1">{{i.t('invColLocation', lang)}}</view>
+            <view class="th inv-st-num">{{i.t('invStatsOccupied', lang)}}</view>
+            <view class="th inv-st-bar"></view>
+          </view>
+          <view wx:for="{{vm.locs}}" wx:key="id" class="tr">
+            <view class="td flex-1 truncate">{{item.name}}</view>
+            <view class="td inv-st-num mono tabular">{{item.used}}</view>
+            <view class="td inv-st-bar row gap-6">
+              <view class="inv-meter is-6 flex-1"><view class="inv-meter-fill is-{{item.tone}}" style="width: {{item.pct}}%"></view></view>
+              <text class="mono tabular inv-st-pct {{item.pct >= 85 ? 'danger' : ''}}">{{item.pct}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{vm.types.length}}" class="inv-st-sec">
+        <view class="eyebrow mb-8">{{i.t('invStatsByType', lang)}}</view>
+        <view class="table">
+          <view wx:for="{{vm.types}}" wx:key="type" class="tr">
+            <view class="td inv-st-type"><text class="badge inv-t-{{item.type}}">{{item.label}}</text></view>
+            <view class="td inv-st-count mono tabular strong">{{item.n}}</view>
+            <view class="td flex-1"><view class="inv-meter is-6 inv-t-{{item.type}}"><view class="inv-meter-fill is-type" style="width: {{item.pct}}%"></view></view></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="inv-st-sec grid-2">
+        <view>
+          <view class="eyebrow mb-8">{{i.t('invStatsExpiring', lang)}}</view>
+          <view wx:for="{{vm.expiring}}" wx:key="k" class="tr">
+            <view class="td flex-1 text-sm">{{item.label}}</view>
+            <view class="td mono tabular strong {{item.n ? 'danger' : 'muted'}}">{{item.n}}</view>
+          </view>
+        </view>
+        <view>
+          <view class="eyebrow mb-8">{{i.t('invStatsRecentlyAdded', lang)}}</view>
+          <view wx:for="{{vm.added}}" wx:key="k" class="tr">
+            <view class="td flex-1 text-sm">{{item.label}}</view>
+            <view class="td mono tabular strong {{item.n ? 'accent' : 'muted'}}">{{item.n}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{vm.latest.length}}" class="inv-st-sec">
+        <view class="eyebrow mb-8">{{lang === 'zh' ? '最新样品' : 'Latest samples'}}</view>
+        <view class="list">
+          <view wx:for="{{vm.latest}}" wx:key="id" class="inv-st-latest">
+            <view class="row gap-8">
+              <text class="flex-1 truncate strong text-sm">{{item.name}}</text>
+              <text class="badge inv-t-{{item.type}}">{{item.typeLabel}}</text>
+            </view>
+            <view class="row between inv-mono-sm">
+              <text class="truncate">{{item.where}}</text>
+              <text class="shrink-0">{{item.date}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+  <view slot="foot" class="row gap-8 flex-1">
+    <view wx:if="{{!vm.empty}}" class="row gap-8 flex-1 inv-st-toggle" bindtap="toggleDashboard" aria-role="checkbox" aria-checked="{{dashboard}}">
+      <view class="checkbox {{dashboard ? 'is-checked' : ''}}"><view wx:if="{{dashboard}}" class="icon i-check"></view></view>
+      <text class="text-sm">{{lang === 'zh' ? '在库存页顶部显示概览' : 'Show overview on the inventory page'}}</text>
+    </view>
+    <view wx:else class="flex-1"></view>
+    <view class="btn" hover-class="is-pressed" bindtap="close">{{i.t('closeLabel', lang)}}</view>
+  </view>
+</inv-sheet>

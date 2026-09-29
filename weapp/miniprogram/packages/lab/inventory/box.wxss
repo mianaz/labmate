@@ -1,0 +1,26 @@
+@import "common.wxss";
+
+.inv-toggle.is-active { background: var(--text); color: var(--bg); }
+.inv-grid-body { padding: 8px; }
+.inv-selbar { padding: 8px 12px; background: var(--primary-light); border-bottom: 1px solid var(--rule); }
+.inv-seltext { font-family: var(--font-mono); font-size: 12px; font-weight: 700; line-height: 1.45; color: var(--text-muted); }
+.lang-zh .inv-seltext { font-family: var(--font-body); }
+.inv-seltext.is-on { color: var(--text); }
+.inv-selclear { margin: -6px -8px -6px 0; }
+
+.inv-srow { align-items: flex-start; min-height: 0; padding: 8px 10px 9px 12px; }
+.inv-srow-pos {
+  width: 32px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.inv-srow-name { font-size: 14px; }
+.inv-srow .chevron { align-self: center; font-size: 14px; }
+
+.inv-detail-name { line-height: 1.25; }
+.inv-detail-text { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }

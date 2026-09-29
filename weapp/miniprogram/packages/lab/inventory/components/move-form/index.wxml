@@ -1,0 +1,34 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<inv-sheet wx:if="{{show}}" show="{{true}}" title="{{lang === 'zh' ? '移动样品' : 'Move sample'}}" badge="{{fromPos}}" bindclose="close">
+  <view class="lang-{{lang}}">
+    <view class="mb-12 text-sm">
+      <text class="strong">{{sampleName}}</text>
+      <text class="mono muted text-xs"> · {{from}} {{fromPos}}</text>
+    </view>
+    <view class="field">
+      <text class="field-label">{{lang === 'zh' ? '目标盒子' : 'Target box'}}</text>
+      <picker class="picker-host" mode="selector" range="{{boxOptions}}" range-key="label" value="{{boxIndex}}" bindchange="onBox">
+        <view class="picker inv-picker-long"><text class="picker-value">{{boxOptions[boxIndex].label}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="field-label">{{lang === 'zh' ? '目标孔位' : 'Target position'}}</text>
+      <picker class="picker-host" mode="selector" range="{{free}}" value="{{posIndex}}" bindchange="onPos" disabled="{{!free.length}}">
+        <view class="picker"><text class="picker-value">{{target || '—'}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view wx:if="{{gridBox && !free.length}}" class="notice notice-warn text-sm">{{lang === 'zh' ? '这个盒子没有空位了。' : 'This box has no empty positions.'}}</view>
+    <block wx:if="{{gridBox && free.length}}">
+      <view class="eyebrow mb-8">{{lang === 'zh' ? '或点击空位' : 'Or pick an empty position'}}</view>
+      <box-grid box="{{gridBox}}" samples="{{gridSamples}}" active-pos="{{target}}" compact
+        min-cell="{{20}}" max-cell="{{30}}" avail="{{avail}}" bindcell="onCell" />
+    </block>
+  </view>
+  <view slot="foot" class="row gap-8">
+    <view class="btn" hover-class="is-pressed" bindtap="close">{{i.t('invCancel', lang)}}</view>
+    <view class="btn-primary {{target ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="move">
+      <view class="icon i-arrow-right"></view>
+      <text>{{lang === 'zh' ? '移动' : 'Move'}}{{target ? ' → ' + target : ''}}</text>
+    </view>
+  </view>
+</inv-sheet>

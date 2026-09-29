@@ -1,0 +1,20 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<block wx:if="{{show}}">
+  <view class="mask" bindtap="close" catchtouchmove="noop"></view>
+  <view class="sheet inv-sheet {{tall ? 'is-tall' : ''}} lang-{{lang}}" role="dialog" aria-label="{{title}}">
+    <view class="sheet-head inv-sheet-head" catchtouchmove="noop">
+      <view class="row gap-8 flex-1">
+        <text class="inv-sheet-title truncate">{{title}}</text>
+        <text wx:if="{{badge}}" class="badge inv-pos-badge shrink-0">{{badge}}</text>
+        <text wx:if="{{meta}}" class="inv-sheet-meta truncate">{{meta}}</text>
+      </view>
+      <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="close" aria-role="button" aria-label="{{i.t('closeLabel', lang)}}">
+        <view class="icon i-close"></view>
+      </view>
+    </view>
+    <scroll-view scroll-y class="inv-sheet-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="sheet-body"><slot></slot></view>
+    </scroll-view>
+    <view wx:if="{{foot}}" class="inv-sheet-foot" catchtouchmove="noop"><slot name="foot"></slot></view>
+  </view>
+</block>

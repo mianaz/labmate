@@ -1,0 +1,70 @@
+.inv-bg-scroll { width: 100%; overflow-x: auto; }
+.inv-bg-grid { margin: 0 auto; padding: 4px; box-sizing: border-box; }
+.inv-bg-row { display: flex; gap: 3px; margin-bottom: 3px; }
+.inv-bg-row:last-child { margin-bottom: 0; }
+.inv-bg-corner { width: 18px; height: 18px; flex-shrink: 0; }
+.inv-bg-lbl {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.inv-bg-lbl.is-col { height: 18px; align-items: flex-end; padding-bottom: 2px; }
+.inv-bg-lbl.is-row { width: 18px; }
+.inv-bg-lbl.is-tappable { color: var(--accent); font-weight: 700; }
+
+.inv-cell {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-muted);
+  background: transparent;
+  box-sizing: border-box;
+}
+/* Hairline frame: --border at 55% on empty cells, the type colour at 45% on filled ones. */
+.inv-cell::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  border: 1px solid var(--border);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.inv-cell.is-filled::after { border-color: currentColor; opacity: 0.45; }
+.inv-cell.is-sel { background: var(--primary); color: var(--on-primary); }
+.inv-cell.is-sel::after { border-color: var(--border-strong); opacity: 1; }
+.inv-cell.is-active { overflow: visible; z-index: 1; box-shadow: 0 0 0 1px var(--card), 0 0 0 3px var(--primary); }
+.inv-cell.is-anchor { box-shadow: inset 0 0 0 2px var(--primary); }
+.inv-cell-txt { overflow: hidden; white-space: nowrap; padding: 0 1px; }
+.inv-cell-check { font-size: 13px; }
+.inv-cell-exp {
+  position: absolute;
+  top: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 7px 7px 0;
+  border-color: transparent var(--danger-border) transparent transparent;
+}
+.inv-cell-exp.is-sm { border-width: 0 6px 6px 0; }
+
+.inv-bg-legend { margin: 8px auto 0; padding: 0 4px 0 25px; }
+.inv-bg-legend-row { gap: 6px 14px; }
+.inv-bg-key { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.lang-zh .inv-bg-key { font-family: var(--font-body); }
+.inv-bg-n { color: var(--text); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.inv-bg-sw { position: relative; width: 10px; height: 10px; flex-shrink: 0; border: 1px solid var(--border); opacity: 0.8; }
+.inv-bg-sw.is-filled { border-color: currentColor; opacity: 1; }
+.inv-bg-sw.is-exp { border-color: var(--rule); opacity: 1; overflow: hidden; }
+.inv-bg-hint { margin-top: 8px; font-size: 12px; line-height: 1.45; color: var(--text-muted); }

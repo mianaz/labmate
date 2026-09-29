@@ -673,3 +673,8 @@ button.btn-reset { padding: 0; background: transparent; font-size: inherit; colo
 
 /* <picker> host: make it a block that can shrink inside flex rows. */
 .picker-host { display: block; min-width: 0; }
+
+/* Tone utilities last, so they win over component text colours (.td, .meta-val…). */
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent); }
+.danger { color: var(--danger-text); }

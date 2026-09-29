@@ -1,0 +1,16 @@
+.inv-type-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.inv-type-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.inv-type-opt .icon { font-size: 16px; }
+.inv-type-opt.is-pressed { background: var(--bg-2); }
+.inv-type-opt.is-active { color: var(--on-primary); background: var(--primary); border-color: var(--border-strong); }

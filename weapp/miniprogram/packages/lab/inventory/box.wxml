@@ -1,0 +1,238 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <view wx:if="{{loaded && !found}}" class="panel">
+    <view class="empty">
+      <view class="empty-icon"><view class="icon i-box"></view></view>
+      <view class="empty-title">{{i.t('invBoxNotFound', lang)}}</view>
+      <view class="row-wrap center gap-8 mt-12">
+        <view class="btn" hover-class="is-pressed" bindtap="goBack" aria-role="button">
+          <view class="icon i-chevron-left"></view><text>{{i.t('tabInventory', lang)}}</text>
+        </view>
+        <view wx:if="{{canUndo}}" class="btn-ghost" hover-class="is-pressed" bindtap="undo" aria-role="button">
+          <view class="icon i-reset"></view><text>{{i.t('invUndo', lang)}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <block wx:elif="{{box}}">
+    <page-header eyebrow="{{i.t('tabInventory', lang)}}" meta="{{box.loc}}" title="{{box.name}}" desc="{{box.desc}}">
+      <view class="btn-primary" hover-class="is-pressed" bindtap="addSample" aria-role="button">
+        <view class="icon i-plus"></view><text>{{i.t('invAddSample', lang)}}</text>
+      </view>
+      <view class="btn inv-toggle {{selectMode ? 'is-active' : ''}}" hover-class="is-pressed" bindtap="toggleSelect"
+        aria-role="button" aria-selected="{{selectMode}}">
+        <view class="icon i-check"></view><text>{{i.t('invSelect', lang)}}</text>
+      </view>
+      <view class="btn btn-icon" hover-class="is-pressed" bindtap="editBox" aria-role="button" aria-label="{{i.t('invEditBox', lang)}}">
+        <view class="icon i-edit"></view>
+      </view>
+      <view class="btn btn-icon" hover-class="is-pressed" bindtap="boxMore" aria-role="button" aria-label="{{i.t('invExport', lang)}} · {{i.t('invImport', lang)}}">
+        <view class="icon i-more"></view>
+      </view>
+      <view wx:if="{{canUndo}}" class="btn-ghost btn-icon" hover-class="is-pressed" bindtap="undo" aria-role="button" aria-label="{{i.t('invUndoLast', lang)}}">
+        <view class="icon i-reset"></view>
+      </view>
+    </page-header>
+
+    <view class="panel">
+      <view class="panel-head">
+        <view class="row gap-8 flex-1">
+          <view wx:if="{{box.color}}" class="inv-swatch" style="background: {{box.color}}"></view>
+          <text class="panel-title">{{i.t('invBoxContents', lang)}}</text>
+        </view>
+        <text class="inv-mono-sm tabular">{{box.count}}/{{box.total}}</text>
+      </view>
+      <view wx:if="{{selectMode}}" class="inv-selbar">
+        <view class="row gap-8">
+          <view class="inv-seltext flex-1 {{selected.length ? 'is-on' : ''}}">{{selText}}</view>
+          <view wx:if="{{selected.length}}" class="btn-ghost btn-sm inv-selclear" hover-class="is-pressed" bindtap="clearSelection" aria-role="button">
+            <view class="icon i-close"></view><text>{{lang === 'zh' ? '清除' : 'Clear'}}</text>
+          </view>
+        </view>
+        <view wx:if="{{selEmpty || selOcc}}" class="row-wrap gap-6 mt-8">
+          <view wx:if="{{selEmpty}}" class="btn btn-sm" hover-class="is-pressed" bindtap="openBulkAdd" aria-role="button">
+            <view class="icon i-plus"></view><text>{{i.t('invBulkAddBtn', lang)}} · {{selEmpty}}</text>
+          </view>
+          <view wx:if="{{selOcc}}" class="btn btn-sm" hover-class="is-pressed" bindtap="openBulkEdit" aria-role="button">
+            <view class="icon i-edit"></view><text>{{i.t('invBulkEdit', lang)}} · {{selOcc}}</text>
+          </view>
+          <view wx:if="{{selOcc}}" class="btn-danger btn-sm" hover-class="is-pressed" bindtap="bulkDelete" aria-role="button">
+            <view class="icon i-trash"></view><text>{{lang === 'zh' ? '删除' : 'Delete'}} · {{selOcc}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="inv-grid-body">
+        <box-grid id="grid" box="{{gridBox}}" samples="{{gridSamples}}" select-mode="{{selectMode}}" selected="{{selected}}"
+          anchor="{{anchor}}" active-pos="{{activePos}}"
+          hint="{{selectMode ? '' : i.t('invGridHint', lang)}}"
+          bindcell="onCell" bindlongcell="onLongCell" bindline="onLine" />
+      </view>
+    </view>
+
+    <view wx:if="{{rows.length}}" class="panel mt-12">
+      <view class="panel-head">
+        <text class="panel-title">{{i.t('invSamples', lang)}}</text>
+        <text class="inv-mono-sm tabular">{{rows.length}}</text>
+      </view>
+      <view class="list">
+        <view wx:for="{{rows}}" wx:key="id" class="list-row inv-srow {{detail && detail.id === item.id ? 'is-selected' : ''}}"
+          hover-class="is-pressed" data-id="{{item.id}}" bindtap="openRow" aria-role="button">
+          <text class="inv-srow-pos">{{item.pos}}</text>
+          <view class="flex-1">
+            <view class="list-row-title truncate inv-srow-name">{{item.name}}</view>
+            <view class="list-row-meta">
+              <text class="badge inv-t-{{item.type}}">{{item.typeLabel}}</text>
+              <text wx:if="{{item.expired}}" class="badge badge-danger">{{i.t('expired', lang)}}</text>
+              <text wx:if="{{item.warn}}" class="badge badge-warn inv-nocase">{{item.warn}}</text>
+              <text wx:if="{{item.soon}}" class="inv-warn-text">{{item.soon}}</text>
+              <text wx:if="{{item.qty}}">{{item.qty}}</text>
+              <text wx:if="{{item.owner}}">· {{item.owner}}</text>
+            </view>
+          </view>
+          <view class="icon i-chevron-right chevron"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- Sample detail (the web's SampleDetail panel) -->
+  <inv-sheet wx:if="{{detail}}" show="{{true}}" title="{{lang === 'zh' ? '样品' : 'Sample'}}" badge="{{detail.pos}}" bindclose="closeDetail">
+    <view class="section-title inv-detail-name break">{{detail.name}}</view>
+    <view wx:if="{{detail.nameZh}}" class="text-sm muted">{{detail.nameZh}}</view>
+    <view class="row-wrap gap-6 mt-8">
+      <text class="badge inv-t-{{detail.type}}">{{detail.typeLabel}}</text>
+      <view wx:if="{{detail.expired}}" class="badge badge-danger"><view class="icon i-alert"></view><text>{{i.t('expired', lang)}}</text></view>
+      <view wx:if="{{detail.warn}}" class="badge badge-warn inv-nocase"><view class="icon i-alert"></view><text>{{detail.warn}}</text></view>
+      <text wx:for="{{detail.tags}}" wx:key="*this" class="badge inv-nocase">{{item}}</text>
+    </view>
+    <view class="meta-grid mt-12">
+      <view wx:for="{{detail.fields}}" wx:key="k" class="meta-cell">
+        <view class="meta-key">{{item.label}}</view>
+        <view class="meta-val {{item.tone}}">{{item.v || '—'}}</view>
+      </view>
+    </view>
+    <view wx:if="{{detail.description}}" class="mt-12">
+      <view class="eyebrow">{{i.t('invDescription', lang)}}</view>
+      <text class="inv-detail-text" user-select>{{detail.description}}</text>
+    </view>
+    <view wx:if="{{detail.notes}}" class="mt-12">
+      <view class="eyebrow">{{i.t('invNotes', lang)}}</view>
+      <text class="inv-detail-text" user-select>{{detail.notes}}</text>
+    </view>
+    <view slot="foot" class="row gap-6 flex-1">
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="detailEdit" aria-role="button">
+        <view class="icon i-edit"></view><text>{{lang === 'zh' ? '编辑' : 'Edit'}}</text>
+      </view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="detailMove" aria-role="button">
+        <view class="icon i-arrow-right"></view><text>{{lang === 'zh' ? '移动' : 'Move'}}</text>
+      </view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="detailDuplicate" aria-role="button">
+        <view class="icon i-copy"></view><text>{{i.t('invDuplicate', lang)}}</text>
+      </view>
+      <view class="flex-1"></view>
+      <view class="btn-danger btn-sm btn-icon" hover-class="is-pressed" bindtap="detailDelete" aria-role="button"
+        aria-label="{{i.t('invDeleteSample', lang)}}"><view class="icon i-trash"></view></view>
+    </view>
+  </inv-sheet>
+
+  <sample-form id="sampleForm" show="{{formShow}}" sample="{{formSample}}" position="{{formPos}}" box-name="{{box ? box.name : ''}}"
+    bindsave="onFormSave" binddelete="onFormDelete" bindclose="closeForm" />
+  <move-form id="moveForm" show="{{moveShow}}" sample-id="{{moveId}}" bindmove="onMove" bindclose="closeMove" />
+  <box-form id="boxForm" show="{{boxFormShow}}" box="{{editBox}}" bindsave="onBoxSave" bindclose="closeBoxForm" />
+
+  <!-- Bulk add: the same sample in every selected empty position -->
+  <inv-sheet wx:if="{{bulkAddShow}}" show="{{true}}" title="{{i.t('invBulkAddTitle', lang)}}"
+    meta="{{selEmpty}}{{i.t('invPositionsCount', lang)}}" bindclose="closeBulkAdd">
+    <view class="inv-hint mb-12">{{i.t('invBulkAddHint', lang)}}</view>
+    <view class="field">
+      <text class="field-label">{{i.t('invSampleNameReq', lang)}}</text>
+      <input class="input" value="{{bulkAdd.name}}" data-k="name" bindinput="onBulkAddInput" maxlength="120" />
+    </view>
+    <view class="inv-form-grid">
+      <view class="field">
+        <text class="field-label">{{i.t('invChineseName', lang)}}</text>
+        <input class="input" value="{{bulkAdd.nameZh}}" data-k="nameZh" bindinput="onBulkAddInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invSampleType', lang)}}</text>
+        <picker class="picker-host" mode="selector" range="{{typeOptions}}" value="{{bulkAddTypeIdx}}" bindchange="onBulkAddType">
+          <view class="picker"><text class="picker-value">{{typeOptions[bulkAddTypeIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invQuantity', lang)}}</text>
+        <input class="input" value="{{bulkAdd.quantity}}" data-k="quantity" bindinput="onBulkAddInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invConcentration', lang)}}</text>
+        <input class="input" value="{{bulkAdd.concentration}}" data-k="concentration" bindinput="onBulkAddInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invOwner', lang)}}</text>
+        <input class="input" value="{{bulkAdd.owner}}" data-k="owner" bindinput="onBulkAddInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invExpiryDate', lang)}}</text>
+        <view class="inv-field-row">
+          <picker class="picker-host" mode="date" value="{{bulkAdd.expiryDate}}" data-k="expiryDate" bindchange="onBulkAddInput">
+            <view class="picker"><text class="picker-value {{bulkAdd.expiryDate ? '' : 'placeholder'}}">{{bulkAdd.expiryDate || '—'}}</text></view>
+          </picker>
+          <view wx:if="{{bulkAdd.expiryDate}}" class="btn btn-icon inv-clear-btn" hover-class="is-pressed" data-k="bulkAdd.expiryDate" bindtap="clearBulkDate"
+            aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"><view class="icon i-close"></view></view>
+        </view>
+      </view>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invTagsShort', lang)}}</text>
+      <input class="input" value="{{bulkAdd.tags}}" data-k="tags" bindinput="onBulkAddInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invDescription', lang)}}</text>
+      <input class="input" value="{{bulkAdd.description}}" data-k="description" bindinput="onBulkAddInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invNotes', lang)}}</text>
+      <input class="input" value="{{bulkAdd.notes}}" data-k="notes" bindinput="onBulkAddInput" />
+    </view>
+    <view slot="foot" class="row gap-8">
+      <view class="btn" hover-class="is-pressed" bindtap="closeBulkAdd">{{i.t('invCancel', lang)}}</view>
+      <view class="btn-primary {{bulkAdd.name ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="saveBulkAdd">{{i.t('invBulkAddBtn', lang)}} {{selEmpty}}</view>
+    </view>
+  </inv-sheet>
+
+  <!-- Bulk edit: only filled-in fields change -->
+  <inv-sheet wx:if="{{bulkEditShow}}" show="{{true}}" title="{{i.t('invBulkEditTitle', lang)}}"
+    meta="{{selOcc}}{{i.t('invSamplesCount', lang)}}" bindclose="closeBulkEdit">
+    <view class="inv-hint mb-12">{{i.t('invBulkEditHint', lang)}}</view>
+    <view class="field">
+      <text class="field-label">{{i.t('invOwner', lang)}}</text>
+      <input class="input" value="{{bulkEdit.owner}}" data-k="owner" bindinput="onBulkEditInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invSampleType', lang)}}</text>
+      <picker class="picker-host" mode="selector" range="{{editTypeOptions}}" value="{{bulkEditTypeIdx}}" bindchange="onBulkEditType">
+        <view class="picker"><text class="picker-value">{{editTypeOptions[bulkEditTypeIdx]}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invExpiryDate', lang)}}</text>
+      <view class="inv-field-row">
+        <picker class="picker-host" mode="date" value="{{bulkEdit.expiryDate}}" data-k="expiryDate" bindchange="onBulkEditInput">
+          <view class="picker"><text class="picker-value {{bulkEdit.expiryDate ? '' : 'placeholder'}}">{{bulkEdit.expiryDate || i.t('invBulkNoChange', lang)}}</text></view>
+        </picker>
+        <view wx:if="{{bulkEdit.expiryDate}}" class="btn btn-icon inv-clear-btn" hover-class="is-pressed" data-k="bulkEdit.expiryDate" bindtap="clearBulkDate"
+          aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"><view class="icon i-close"></view></view>
+      </view>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invTagsShort', lang)}}</text>
+      <input class="input" value="{{bulkEdit.tags}}" data-k="tags" bindinput="onBulkEditInput" placeholder="{{i.t('invBulkNoChange', lang)}}" placeholder-class="placeholder" />
+    </view>
+    <view slot="foot" class="row gap-8">
+      <view class="btn" hover-class="is-pressed" bindtap="closeBulkEdit">{{i.t('invCancel', lang)}}</view>
+      <view class="btn-primary" hover-class="is-pressed" bindtap="saveBulkEdit">{{i.t('invApply', lang)}}</view>
+    </view>
+  </inv-sheet>
+</view>
+<timer-bar />

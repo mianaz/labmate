@@ -1,0 +1,34 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<inv-sheet wx:if="{{show}}" show="{{true}}" title="{{i.t(editing ? 'invEditLocation' : 'invAddLocation', lang)}}" bindclose="close">
+  <view class="lang-{{lang}}">
+    <view class="field">
+      <text class="field-label">{{i.t('invName', lang)}} *</text>
+      <input class="input" value="{{form.name}}" data-k="name" bindinput="onInput" maxlength="80"
+        placeholder="{{lang === 'zh' ? '如 Freezer A' : 'e.g. Freezer A'}}" placeholder-class="placeholder" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invNameZh', lang)}}</text>
+      <input class="input" value="{{form.nameZh}}" data-k="nameZh" bindinput="onInput" maxlength="80" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invLocationType', lang)}}</text>
+      <view class="inv-type-grid">
+        <view wx:for="{{types}}" wx:key="*this" class="inv-type-opt {{form.type === item ? 'is-active' : ''}}"
+          hover-class="is-pressed" data-index="{{index}}" bindtap="pickType" aria-role="button" aria-label="{{typeOptions[index]}}">
+          <view class="icon inv-i-{{item}}"></view>
+          <text class="truncate">{{typeOptions[index]}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invTemperature', lang)}}</text>
+      <picker class="picker-host" mode="selector" range="{{tempOptions}}" value="{{tempIndex}}" bindchange="onTemp">
+        <view class="picker"><text class="picker-value">{{tempOptions[tempIndex]}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+  </view>
+  <view slot="foot" class="row gap-8">
+    <view class="btn" hover-class="is-pressed" bindtap="close">{{i.t('invCancel', lang)}}</view>
+    <view class="btn-primary {{form.name ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="save">{{i.t('invSave', lang)}}</view>
+  </view>
+</inv-sheet>

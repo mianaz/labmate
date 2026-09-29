@@ -16,6 +16,7 @@
       "name": "lab",
       "pages": [
         "inventory/index",
+        "inventory/box",
         "notebook/index",
         "notebook/edit",
         "calendar/index"

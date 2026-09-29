@@ -1,0 +1,54 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<inv-sheet wx:if="{{show}}" show="{{true}}" title="{{i.t(editing ? 'invEditBox' : 'invAddBox', lang)}}"
+  meta="{{!editing && locationName ? '→ ' + locationName : ''}}" bindclose="close">
+  <view class="lang-{{lang}}">
+    <view class="field">
+      <text class="field-label">{{i.t('invName', lang)}} *</text>
+      <input class="input" value="{{form.name}}" data-k="name" bindinput="onInput" maxlength="80"
+        placeholder="{{lang === 'zh' ? '如 细胞系 1 号盒' : 'e.g. Cell lines — Box 1'}}" placeholder-class="placeholder" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invNameZh', lang)}}</text>
+      <input class="input" value="{{form.nameZh}}" data-k="nameZh" bindinput="onInput" maxlength="80" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invBoxType', lang)}}</text>
+      <picker class="picker-host" mode="selector" range="{{typeOptions}}" value="{{typeIndex}}" bindchange="onType">
+        <view class="picker"><text class="picker-value">{{typeOptions[typeIndex]}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view wx:if="{{form.boxType === 'custom'}}" class="inv-form-grid">
+      <view class="field">
+        <text class="field-label">{{i.t('invRows', lang)}} (1–26)</text>
+        <input class="input" type="number" value="{{form.rows}}" data-k="rows" bindinput="onDim" bindblur="onDimBlur" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invCols', lang)}} (1–50)</text>
+        <input class="input" type="number" value="{{form.cols}}" data-k="cols" bindinput="onDim" bindblur="onDimBlur" />
+      </view>
+    </view>
+    <view class="inv-mono-sm mb-12">{{dims}}</view>
+    <view wx:if="{{outside}}" class="notice notice-warn mb-12 text-sm">
+      {{lang === 'zh' ? outside + ' 个样品的孔位超出新尺寸，将不在网格中显示（仍在样品列表中）。' : outside + ' sample(s) sit outside the new size — they drop off the grid but stay in the sample list.'}}
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invColor', lang)}}</text>
+      <view class="row-wrap gap-6">
+        <view class="inv-color is-none {{form.color ? '' : 'is-active'}}" data-color="" bindtap="pickColor"
+          aria-role="button" aria-label="{{lang === 'zh' ? '无颜色' : 'No colour'}}"><view class="inv-color-x"></view></view>
+        <view wx:for="{{colors}}" wx:key="*this" class="inv-color {{form.color === item ? 'is-active' : ''}}"
+          style="background: {{item}}" data-color="{{item}}" bindtap="pickColor" aria-role="button" aria-label="{{item}}"></view>
+      </view>
+      <view class="row gap-8 mt-8">
+        <view class="inv-swatch inv-color-preview" style="background: {{form.color || 'transparent'}}"></view>
+        <input class="input is-sm inv-hex" value="{{hex}}" bindinput="onHex" maxlength="7"
+          placeholder="{{lang === 'zh' ? '自定义 #RRGGBB' : 'Custom #RRGGBB'}}" placeholder-class="placeholder" />
+        <text class="inv-mono-sm">{{form.color ? form.color : (lang === 'zh' ? '无' : 'None')}}</text>
+      </view>
+    </view>
+  </view>
+  <view slot="foot" class="row gap-8">
+    <view class="btn" hover-class="is-pressed" bindtap="close">{{i.t('invCancel', lang)}}</view>
+    <view class="btn-primary {{form.name ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="save">{{i.t('invSave', lang)}}</view>
+  </view>
+</inv-sheet>

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "inv-sheet": "../sheet/index",
+    "box-grid": "../box-grid/index"
+  }
+}

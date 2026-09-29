@@ -1,0 +1,74 @@
+@import "common.wxss";
+
+.inv-toolbar { margin-bottom: 12px; }
+.inv-hbtn { padding: 0 10px; gap: 6px; }
+.inv-clear { color: var(--text-muted); font-size: 15px; padding: 4px; }
+.inv-tool { padding: 0 8px; }
+.inv-tool .icon { font-size: 15px; }
+.inv-head-btn { margin-right: -6px; }
+.inv-foot { padding: 8px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--rule); }
+.inv-where { max-width: 100%; }
+
+/* Empty state: the location → box → position → sample steps. */
+.inv-empty { padding: 36px 16px 28px; }
+.inv-steps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; margin-top: 16px; }
+.inv-step { text-align: left; padding: 10px 12px; background: var(--bg); border: 1px solid var(--rule); color: var(--text-muted); }
+.inv-step .icon { font-size: 15px; }
+.inv-step-n { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); }
+.inv-step-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+.inv-step-ex { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* Overview strip: 2 × 2 cells on hairline gaps. */
+.inv-dash-head { padding-right: 6px; }
+.inv-dash { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px; background: var(--rule); }
+.inv-dash-cell { min-width: 0; padding: 10px 14px; background: var(--card); }
+.inv-dash-meter { margin: 4px 0 3px; }
+.inv-dash-sub { font-size: 11px; line-height: 1.4; }
+
+/* Storage tree */
+.inv-loc { padding: 4px 0; border-top: 1px solid var(--rule); }
+.inv-loc.is-first { border-top: 0; }
+.inv-loc-row, .inv-box-row { display: flex; align-items: center; padding-right: 4px; }
+.inv-loc-main, .inv-box-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  min-height: 44px;
+}
+.inv-loc-main { padding: 0 4px 0 12px; }
+.inv-loc-main.is-pressed, .inv-box-main.is-pressed, .inv-add-box.is-pressed { background: var(--bg-2); }
+.inv-chev { font-size: 12px; color: var(--text-muted); transition: transform 0.15s ease; }
+.inv-chev.is-open { transform: rotate(90deg); }
+.inv-loc-icon { font-size: 16px; color: var(--text-muted); }
+.inv-loc-name { font-size: 14px; font-weight: 600; min-width: 0; flex-shrink: 1; }
+.inv-loc-temp { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); min-width: 0; flex-shrink: 6; white-space: nowrap; }
+.inv-box-main { padding: 0 4px 0 30px; }
+.inv-box-ic { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-muted); font-size: 15px; }
+.inv-box-name { font-size: 14px; font-weight: 500; min-width: 0; flex: 1; }
+.inv-box-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.inv-box-chev { font-size: 13px; }
+.inv-add-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px 0 30px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.inv-add-box .icon { font-size: 13px; width: 16px; }
+
+/* All samples */
+.inv-filters { padding: 12px; border-bottom: 1px solid var(--rule); }
+.inv-fpicker { min-height: 34px; height: 34px; font-size: 13px; }
+.inv-fpicker .picker-value { color: var(--text-muted); }
+.inv-fpicker.is-set { border-color: var(--primary); }
+.inv-fpicker.is-set .picker-value { color: var(--text); }
+
+/* Import sheet */
+.inv-imp-title { font-size: 15px; }
+.inv-imp-sec { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--rule); }

@@ -1,0 +1,11 @@
+{
+  "usingComponents": {
+    "page-header": "/components/page-header/index",
+    "timer-bar": "/components/timer-bar/index",
+    "inv-sheet": "./components/sheet/index",
+    "box-grid": "./components/box-grid/index",
+    "sample-form": "./components/sample-form/index",
+    "move-form": "./components/move-form/index",
+    "box-form": "./components/box-form/index"
+  }
+}

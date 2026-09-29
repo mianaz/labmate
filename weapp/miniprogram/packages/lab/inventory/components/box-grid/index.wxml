@@ -1,0 +1,46 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<view class="inv-bg lang-{{lang}}">
+  <scroll-view scroll-x class="inv-bg-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="inv-bg-grid" style="width: {{gridWidth}}px" aria-role="grid"
+      aria-label="{{box.name}} · {{box.rows}} × {{box.cols}}">
+      <view class="inv-bg-row">
+        <view class="inv-bg-corner"></view>
+        <view wx:for="{{colLabels}}" wx:key="*this" class="inv-bg-lbl is-col {{selectMode ? 'is-tappable' : ''}}"
+          style="width: {{cell}}px" data-c="{{index}}" bindtap="onCol">{{item}}</view>
+      </view>
+      <view wx:for="{{grid}}" wx:for-item="row" wx:key="r" class="inv-bg-row">
+        <view class="inv-bg-lbl is-row {{selectMode ? 'is-tappable' : ''}}" style="height: {{cell}}px"
+          data-r="{{row.r}}" bindtap="onRow">{{row.label}}</view>
+        <view wx:for="{{row.cells}}" wx:for-item="c" wx:key="p"
+          class="inv-cell {{c.t ? 'is-filled inv-t-' + c.t : ''}} {{c.s ? 'is-sel' : ''}} {{c.a ? 'is-active' : ''}} {{c.k ? 'is-anchor' : ''}}"
+          style="width: {{cell}}px; height: {{cell}}px; font-size: {{font}}px"
+          data-pos="{{c.p}}" bindtap="onTap" bindlongpress="onLong"
+          aria-role="button" aria-label="{{c.p}}{{c.t ? '' : ' · ' + i.t('invEmpty', lang)}}{{c.x ? ' · ' + i.t('expired', lang) : ''}}">
+          <view wx:if="{{c.s}}" class="icon i-check inv-cell-check"></view>
+          <text wx:elif="{{c.n}}" class="inv-cell-txt">{{c.n}}</text>
+          <view wx:if="{{c.x && !c.s}}" class="inv-cell-exp"></view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{!compact}}" class="inv-bg-legend" style="max-width: {{gridWidth}}px">
+    <view class="row-wrap inv-bg-legend-row">
+      <view wx:for="{{legend}}" wx:key="type" class="row gap-6 inv-bg-key">
+        <view class="inv-bg-sw is-filled inv-t-{{item.type}}"></view>
+        <text>{{item.label}}</text>
+        <text class="inv-bg-n">{{item.n}}</text>
+      </view>
+      <view class="row gap-6 inv-bg-key">
+        <view class="inv-bg-sw"></view>
+        <text>{{lang === 'zh' ? '空位' : 'Empty'}}</text>
+        <text class="inv-bg-n">{{emptyCount}}</text>
+      </view>
+      <view wx:if="{{anyExpired}}" class="row gap-6 inv-bg-key">
+        <view class="inv-bg-sw is-exp"><view class="inv-cell-exp is-sm"></view></view>
+        <text>{{i.t('expired', lang)}}</text>
+      </view>
+    </view>
+    <view wx:if="{{hint}}" class="inv-bg-hint">{{hint}}</view>
+  </view>
+</view>

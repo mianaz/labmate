@@ -1,0 +1,9 @@
+.inv-st-sec { margin-top: 20px; }
+.inv-st-num { width: 76px; flex-shrink: 0; text-align: right; }
+.inv-st-bar { width: 38%; flex-shrink: 0; }
+.inv-st-pct { width: 40px; text-align: right; font-size: 12px; }
+.inv-st-type { width: 34%; flex-shrink: 0; }
+.inv-st-count { width: 48px; flex-shrink: 0; text-align: right; }
+.inv-st-latest { padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.inv-st-latest:last-child { border-bottom: 0; }
+.inv-st-toggle { min-height: 40px; min-width: 0; }

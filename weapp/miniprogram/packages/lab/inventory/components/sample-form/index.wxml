@@ -1,0 +1,75 @@
+<wxs module="i" src="../../../../../shared/i18n.wxs"/>
+<inv-sheet wx:if="{{show}}" show="{{true}}" title="{{i.t(editing ? 'invEditSample' : 'invAddSample', lang)}}"
+  badge="{{position}}" meta="{{boxName}}" bindclose="close">
+  <view class="lang-{{lang}}">
+    <view class="field">
+      <text class="field-label">{{i.t('invName', lang)}} *</text>
+      <input class="input" value="{{form.name}}" data-k="name" bindinput="onInput" maxlength="120"
+        placeholder="HEK293T" placeholder-class="placeholder" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invSampleType', lang)}}</text>
+      <picker class="picker-host" mode="selector" range="{{typeOptions}}" value="{{typeIndex}}" bindchange="onType">
+        <view class="picker">
+          <view class="row gap-8 picker-value">
+            <text class="badge inv-t-{{form.sampleType}}">{{typeOptions[typeIndex]}}</text>
+          </view>
+          <view class="icon i-chevron-down"></view>
+        </view>
+      </picker>
+    </view>
+    <view class="inv-form-grid">
+      <view class="field">
+        <text class="field-label">{{i.t('invQuantity', lang)}}</text>
+        <input class="input" value="{{form.quantity}}" data-k="quantity" bindinput="onInput" placeholder="500 µL" placeholder-class="placeholder" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invConcentration', lang)}}</text>
+        <input class="input" value="{{form.concentration}}" data-k="concentration" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invPassage', lang)}}</text>
+        <input class="input" value="{{form.passage}}" data-k="passage" bindinput="onInput" placeholder="P5" placeholder-class="placeholder" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invOwner', lang)}}</text>
+        <input class="input" value="{{form.owner}}" data-k="owner" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invDateStored', lang)}}</text>
+        <picker class="picker-host" mode="date" value="{{form.dateStored}}" data-k="dateStored" bindchange="onInput">
+          <view class="picker"><text class="picker-value {{form.dateStored ? '' : 'placeholder'}}">{{form.dateStored || '—'}}</text><view class="icon i-calendar"></view></view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('invExpiryDate', lang)}}</text>
+        <view class="inv-field-row">
+          <picker class="picker-host" mode="date" value="{{form.expiryDate}}" data-k="expiryDate" bindchange="onInput">
+            <view class="picker"><text class="picker-value {{form.expiryDate ? '' : 'placeholder'}}">{{form.expiryDate || '—'}}</text><view wx:if="{{!form.expiryDate}}" class="icon i-calendar"></view></view>
+          </picker>
+          <view wx:if="{{form.expiryDate}}" class="btn btn-icon inv-clear-btn" hover-class="is-pressed" data-k="expiryDate" bindtap="clearDate"
+            aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"><view class="icon i-close"></view></view>
+        </view>
+      </view>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invTags', lang)}}</text>
+      <input class="input" value="{{form.tags}}" data-k="tags" bindinput="onInput" placeholder="frozen, validated" placeholder-class="placeholder" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invDescription', lang)}}</text>
+      <textarea class="textarea inv-textarea" fixed value="{{form.description}}" data-k="description" bindinput="onInput" maxlength="-1" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('invNotes', lang)}}</text>
+      <textarea class="textarea inv-textarea" fixed value="{{form.notes}}" data-k="notes" bindinput="onInput" maxlength="-1" />
+    </view>
+  </view>
+  <view slot="foot" class="row gap-8 flex-1">
+    <view wx:if="{{editing}}" class="btn-danger btn-icon" hover-class="is-pressed" bindtap="remove"
+      aria-role="button" aria-label="{{i.t('invDeleteSample', lang)}}"><view class="icon i-trash"></view></view>
+    <view class="flex-1"></view>
+    <view class="btn" hover-class="is-pressed" bindtap="close">{{i.t('invCancel', lang)}}</view>
+    <view class="btn-primary {{form.name ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="save">{{i.t('invSave', lang)}}</view>
+  </view>
+</inv-sheet>

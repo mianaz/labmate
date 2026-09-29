@@ -1,0 +1,4 @@
+{
+  "component": true,
+  "usingComponents": { "inv-sheet": "../sheet/index" }
+}
