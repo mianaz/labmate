@@ -1,0 +1,3 @@
+@import "../calc.wxss";
+
+.pc-solve { padding: 0 9px; font-size: 13px; }

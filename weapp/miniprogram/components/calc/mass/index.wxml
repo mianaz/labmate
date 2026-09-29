@@ -1,0 +1,63 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskMass', lang)}}</text>
+    <text class="badge cx-formula">{{i.t('massFormula', lang)}}</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('massCalcDesc', lang)}}</view>
+
+    <!-- Quick fill: common reagents → MW -->
+    <view class="eyebrow cx-eyebrow-gap">{{i.t('commonMW', lang)}}</view>
+    <scroll-view class="chip-scroll cx-chips" scroll-x enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{commons}}" wx:key="name" class="chip cx-chip {{mwNum === item.mw ? 'is-active' : ''}}" hover-class="is-pressed"
+        data-mw="{{item.mw}}" bindtap="pickCommon" aria-role="button" aria-selected="{{mwNum === item.mw}}">
+        <text>{{item.name}}</text><text class="chip-count">{{item.mw}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="field">
+      <view class="field-label"><text class="cx-sym">MW</text>{{i.t('massMwDesc', lang)}}</view>
+      <view class="input-group">
+        <input class="input" type="digit" value="{{mw}}" placeholder="{{lang === 'zh' ? '如 58.44 (NaCl)' : 'e.g. 58.44 (NaCl)'}}"
+          placeholder-class="placeholder" data-field="mw" bindinput="onInput" aria-label="MW" />
+        <view class="input-addon cx-addon-fixed">g/mol</view>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label"><text class="cx-sym">C</text>{{i.t('targetConc', lang)}}</view>
+      <view class="input-group">
+        <input class="input" type="digit" value="{{conc}}" placeholder="0" placeholder-class="placeholder"
+          data-field="conc" bindinput="onInput" aria-label="C" />
+        <picker class="picker-host shrink-0" mode="selector" range="{{concUnits}}" value="{{concIdx}}" bindchange="onConcUnit">
+          <view class="input-addon is-picker cx-addon"><text>{{concUnits[concIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label"><text class="cx-sym">V</text>{{i.t('targetVol', lang)}}</view>
+      <view class="input-group">
+        <input class="input" type="digit" value="{{vol}}" placeholder="0" placeholder-class="placeholder"
+          data-field="vol" bindinput="onInput" aria-label="V" />
+        <picker class="picker-host shrink-0" mode="selector" range="{{volUnits}}" value="{{volIdx}}" bindchange="onVolUnit">
+          <view class="input-addon is-picker cx-addon"><text>{{volUnits[volIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="readout cx-block {{value ? '' : 'is-empty'}}" aria-live="polite">
+      <view class="readout-label">{{i.t('massNeededLabel', lang)}}</view>
+      <block wx:if="{{value}}">
+        <view class="readout-value">{{value}}<text class="readout-unit">{{unit}}</text></view>
+        <view class="readout-sub">{{sub}}</view>
+      </block>
+      <view wx:else class="readout-value">{{i.t('calcEmptyMass', lang)}}</view>
+    </view>
+
+    <view wx:if="{{prep.length}}" class="notice notice-info cx-block">
+      <view class="cx-notice-body">
+        <text wx:for="{{prep}}" wx:key="k" class="{{item.k === '0' ? 'notice-title' : (item.b ? 'cx-strong' : '')}}">{{item.t}}</text>
+      </view>
+    </view>
+  </view>
+</view>

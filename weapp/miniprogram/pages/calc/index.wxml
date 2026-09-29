@@ -1,1 +1,39 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page is-tab {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navTools', lang)}}"
+    title="{{i.t('tabCalc', lang)}}"
+    desc="{{i.t('pageCalcDesc', lang)}}"
+  />
+
+  <!-- Calculator switcher: one scrollable row, edge to edge -->
+  <view class="cx-switch">
+    <view class="cx-switch-head">
+      <text class="eyebrow">{{i.t('calcSwitcher', lang)}}</text>
+      <text class="cx-switch-count">{{modes.length}}</text>
+    </view>
+    <scroll-view class="cx-switch-scroll" scroll-x enhanced show-scrollbar="{{false}}"
+      scroll-into-view="{{scrollTo}}" aria-role="tablist" aria-label="{{i.t('calcSwitcher', lang)}}">
+      <view class="cx-switch-track">
+        <view wx:for="{{modes}}" wx:key="id" id="cx-mode-{{item.id}}"
+          class="cx-mode {{mode === item.id ? 'is-active' : ''}}" hover-class="is-pressed" hover-stay-time="60"
+          data-id="{{item.id}}" bindtap="select" aria-role="tab" aria-selected="{{mode === item.id}}">
+          <text class="cx-mode-task">{{i.t(item.key, lang)}}</text>
+          <text class="cx-mode-formula">{{item.fkey ? i.t(item.fkey, lang) : item.formula}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <calc-scientific wx:if="{{mode === 'scientific'}}" id="scientific" />
+  <calc-dilution wx:elif="{{mode === 'dilution'}}" id="dilution" />
+  <calc-mass wx:elif="{{mode === 'mass'}}" id="mass" />
+  <calc-molarity wx:elif="{{mode === 'molarity'}}" id="molarity" />
+  <calc-percent wx:elif="{{mode === 'percent'}}" id="percent" />
+  <calc-deadvol wx:elif="{{mode === 'deadvol'}}" id="deadvol" />
+  <calc-convert wx:elif="{{mode === 'convert'}}" id="convert" />
+  <calc-mw wx:elif="{{mode === 'mw'}}" id="mw" />
+  <calc-periodic wx:elif="{{mode === 'periodic'}}" id="periodic" />
+  <gel-calc wx:elif="{{mode === 'gel'}}" id="gel" variant="panel" />
+</view>
+<timer-bar tab />

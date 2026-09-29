@@ -1,0 +1,41 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskPercent', lang)}}</text>
+    <text class="badge cx-formula">{{formula}}</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('percentCalcDesc', lang)}}</view>
+
+    <view class="cx-ctl">
+      <text class="eyebrow">{{i.t('calcPctType', lang)}}</text>
+      <view class="seg">
+        <view wx:for="{{types}}" wx:key="id" class="seg-item cx-seg-item {{mode === item.id ? 'is-active' : ''}}"
+          data-id="{{item.id}}" bindtap="setType" aria-role="button" aria-label="{{i.t(item.id, lang)}}" aria-selected="{{mode === item.id}}">{{item.short}}</view>
+      </view>
+    </view>
+    <view class="cx-ctl">
+      <text class="eyebrow">{{i.t('solveFor', lang)}}</text>
+      <view class="seg">
+        <view wx:for="{{solveOpts}}" wx:key="id" class="seg-item cx-seg-item pc-solve {{solve === item.id ? 'is-active' : ''}}"
+          data-id="{{item.id}}" bindtap="setSolve" aria-role="button" aria-selected="{{solve === item.id}}">{{item.l}}</view>
+      </view>
+    </view>
+
+    <block wx:for="{{fields}}" wx:key="id">
+      <view wx:if="{{solve === item.id}}" class="readout cx-target {{result ? '' : 'is-empty'}}" aria-live="polite">
+        <view class="readout-label">{{item.label}}</view>
+        <view wx:if="{{result}}" class="readout-value cx-target-value">{{result}}<text class="readout-unit">{{item.unit}}</text></view>
+        <view wx:else class="readout-value cx-target-value">{{i.t('calcEmptyPercent', lang)}}</view>
+      </view>
+      <view wx:else class="field">
+        <view class="field-label">{{item.label}}</view>
+        <view class="input-group">
+          <input class="input" type="digit" value="{{vals[item.id]}}" placeholder="{{item.placeholder}}" placeholder-class="placeholder"
+            data-field="{{item.id}}" bindinput="onInput" aria-label="{{item.label}}" />
+          <view class="input-addon cx-addon-fixed">{{item.unit}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

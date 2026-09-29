@@ -1,0 +1,59 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskMW', lang)}}</text>
+    <text class="badge cx-formula">MW = Σ(n × Aᵣ)</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('mwCalcSubtitle', lang)}}</view>
+
+    <view class="field">
+      <view class="field-label">{{i.t('mwFormula', lang)}}</view>
+      <view class="search-field mw-input">
+        <input class="input-bare" type="text" value="{{formula}}" placeholder="{{i.t('mwFormulaPlaceholder', lang)}}"
+          placeholder-class="placeholder" confirm-type="done" bindinput="onInput" aria-label="{{i.t('mwFormula', lang)}}" />
+        <view wx:if="{{formula}}" class="icon i-close mw-clear" bindtap="clear" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+      </view>
+    </view>
+
+    <view class="eyebrow cx-eyebrow-gap">{{i.t('mwCommon', lang)}}</view>
+    <view class="chip-row cx-block">
+      <view wx:for="{{commons}}" wx:key="name" class="chip cx-chip {{formula === item.formula ? 'is-active' : ''}}" hover-class="is-pressed"
+        data-formula="{{item.formula}}" bindtap="pick" aria-role="button" aria-selected="{{formula === item.formula}}">{{item.name}}</view>
+    </view>
+
+    <view wx:if="{{state === 'error'}}" class="notice notice-danger" aria-live="polite">
+      <view class="icon i-alert cx-notice-danger-icon"></view>
+      <view class="cx-notice-body">
+        <text class="notice-title">{{i.t('mwParseError', lang)}}</text><text>{{lang === 'zh' ? '：' : ': '}}{{i.t('calcUnknownElement', lang)}} </text><text class="mono">"{{errorSym}}"</text>
+      </view>
+    </view>
+    <view wx:else class="readout {{state === 'ok' ? '' : 'is-empty'}}" aria-live="polite">
+      <view class="readout-label">{{i.t('mwResult', lang)}}</view>
+      <view wx:if="{{state === 'ok'}}" class="readout-value">{{total}}<text class="readout-unit">g/mol</text></view>
+      <view wx:else class="readout-value">{{i.t('calcEmptyMW', lang)}}</view>
+    </view>
+
+    <view wx:if="{{state === 'ok'}}" class="table mw-table">
+      <view class="tr is-head">
+        <view class="th mw-c-el">{{i.t('mwElement', lang)}}</view>
+        <view class="th mw-c-n mw-num">{{i.t('mwCount', lang)}}</view>
+        <view class="th mw-c-m mw-num">{{i.t('mwAtomicMass', lang)}}</view>
+        <view class="th mw-c-s mw-num">{{i.t('mwSubtotal', lang)}}</view>
+      </view>
+      <view wx:for="{{rows}}" wx:key="k" class="tr">
+        <view class="td mw-c-el">
+          <text class="mw-sym">{{item.sym}}</text>
+          <view class="mw-name truncate">{{item.name}}</view>
+        </view>
+        <view class="td mw-c-n mw-num tabular">{{item.count}}</view>
+        <view class="td mw-c-m mw-num tabular">{{item.mass}}</view>
+        <view class="td mw-c-s mw-num tabular strong">{{item.subtotal}}</view>
+      </view>
+      <view class="tr mw-foot">
+        <view class="td mw-foot-label strong">{{i.t('mwResult', lang)}}</view>
+        <view class="td mw-c-s mw-num tabular strong">{{total}}</view>
+      </view>
+    </view>
+  </view>
+</view>

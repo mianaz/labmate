@@ -1,0 +1,8 @@
+@import "../calc.wxss";
+
+.dv-label { margin-bottom: 0; }
+.dv-step { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+.dv-out { min-width: 44px; text-align: center; font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+.dv-slider { margin: 10px 11px 2px; }
+.dv-ticks { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.dv-sub2 { margin-top: 1px; }

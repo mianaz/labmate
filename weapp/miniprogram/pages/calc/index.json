@@ -1,1 +1,17 @@
-{ "usingComponents": {} }
+{
+  "usingComponents": {
+    "page-header": "/components/page-header/index",
+    "timer-bar": "/components/timer-bar/index",
+    "calc-scientific": "/components/calc/scientific/index",
+    "calc-dilution": "/components/calc/dilution/index",
+    "calc-mass": "/components/calc/mass/index",
+    "calc-molarity": "/components/calc/molarity/index",
+    "calc-percent": "/components/calc/percent/index",
+    "calc-deadvol": "/components/calc/deadvol/index",
+    "calc-convert": "/components/calc/convert/index",
+    "calc-mw": "/components/calc/mw/index",
+    "calc-periodic": "/components/calc/periodic/index",
+    "gel-calc": "/components/gel-calc/index"
+  },
+  "enablePullDownRefresh": false
+}

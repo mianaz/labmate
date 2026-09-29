@@ -1,0 +1,28 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskScientific', lang)}}</text>
+    <text class="badge cx-formula">sin · log · xʸ</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('scientificCalcDesc', lang)}}</view>
+
+    <view class="sc-box">
+      <!-- Display: expression on top, live/last result below -->
+      <view class="sc-display {{error ? 'is-error' : ''}}" aria-live="polite">
+        <view class="sc-flags">
+          <text>{{deg ? 'DEG' : 'RAD'}}</text>
+          <text wx:if="{{hasAns}}">ANS</text>
+        </view>
+        <view class="sc-expr {{expr.length > 13 ? 'is-long' : ''}}">{{expr || '0'}}</view>
+        <view class="sc-preview">{{error ? i.t('calcError', lang) : (preview ? '= ' + preview : '')}}</view>
+      </view>
+
+      <view class="sc-keys">
+        <view wx:for="{{keys}}" wx:key="k" class="sc-key sc-{{item.v}} sc-k-{{item.k}} {{item.span === 2 ? 'sc-span2' : ''}}"
+          hover-class="is-pressed" hover-stay-time="60" data-k="{{item.k}}" bindtap="onKey" aria-role="button"
+          aria-label="{{item.aria ? i.t(item.aria, lang) : (item.ariaEn ? (lang === 'zh' ? item.ariaZh : item.ariaEn) : item.label)}}">{{item.act === 'deg' ? (deg ? 'DEG' : 'RAD') : item.label}}</view>
+      </view>
+    </view>
+  </view>
+</view>

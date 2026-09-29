@@ -1,0 +1,18 @@
+@import "../calc.wxss";
+
+.mw-input { height: 44px; }
+.mw-input .input-bare { font-size: 16px; }
+.mw-clear { color: var(--text-muted); font-size: 15px; padding: 4px; }
+
+.mw-table { margin-top: 14px; border-top: 1px solid var(--rule); }
+.mw-table .td, .mw-table .th { padding-left: 6px; padding-right: 6px; }
+.mw-c-el { flex: 1.3; }
+.mw-c-n { flex: 0.8; }
+.mw-c-m { flex: 1.3; }
+.mw-c-s { flex: 1.3; }
+.mw-num { text-align: right; font-family: var(--font-mono); font-size: 13px; }
+.th.mw-num { font-size: 10px; }
+.mw-sym { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+.mw-name { font-size: 11px; line-height: 1.3; color: var(--text-muted); }
+.mw-foot { border-top: 1px solid var(--border-strong); }
+.mw-foot-label { flex: 4.7; font-size: 13px; }

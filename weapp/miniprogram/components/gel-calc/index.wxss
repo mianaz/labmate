@@ -1,0 +1,42 @@
+/* SDS-PAGE gel calculator (gc-). Self-contained: used on the Calc tab and in
+   the sds_page_gel recipe document. */
+.gc-doc { display: block; }
+.gc-head { flex-wrap: wrap; row-gap: 6px; }
+.gc-title { min-width: 0; font-size: 16px; line-height: 1.3; }
+.gc-badge { height: auto; min-height: 20px; padding: 2px 6px; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.gc-desc { margin-bottom: 14px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.gc-ink { color: var(--text); }
+.gc-nocase { text-transform: none; letter-spacing: 0; }
+
+.gc-group { margin-bottom: 14px; }
+.gc-legend { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.gc-dot-res { color: var(--primary); }
+.gc-dot-stack { color: var(--base-c); }
+.gc-cell { min-width: 0; }
+.gc-actions { margin-bottom: 4px; }
+
+.gc-result { margin-top: 20px; }
+.gc-result-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-bottom: 4px; }
+.gc-result-head .gc-legend { margin-bottom: 0; }
+.gc-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.gc-reagent { font-weight: 500; }
+.gc-c-amt { width: 84px; flex-shrink: 0; text-align: right; }
+.gc-c-unit { width: 44px; flex-shrink: 0; }
+.gc-total { border-top: 1px solid var(--border-strong); }
+.gc-total .td { font-weight: 700; }
+
+.gc-ref { margin-top: 24px; }
+.gc-ref-title { margin-bottom: 6px; }
+.gc-c-perc { width: 76px; flex-shrink: 0; }
+.gc-perc { font-family: var(--font-mono); font-weight: 700; }
+.gc-range { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--text-muted); }
+.gc-current { background: var(--primary-light); box-shadow: inset 3px 0 0 var(--primary); }
+.gc-current .gc-range { color: var(--text); }
+.gc-current-badge { font-family: var(--font-mono); }
+.gc-cite { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+.gc-warn { margin-bottom: 12px; }
+.gc-warn-icon { margin-top: 4px; font-size: 15px; color: var(--warning-text); }
+.gc-tips { font-size: 13px; line-height: 1.5; color: var(--text); }
+.gc-tip { display: flex; gap: 10px; margin-bottom: 6px; }
+.gc-bullet { width: 5px; height: 5px; margin-top: 8px; flex-shrink: 0; background: var(--text-muted); }

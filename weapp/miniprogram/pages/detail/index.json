@@ -1,6 +1,7 @@
 {
   "usingComponents": {
-    "timer-bar": "/components/timer-bar/index"
+    "timer-bar": "/components/timer-bar/index",
+    "gel-calc": "/components/gel-calc/index"
   },
   "navigationBarTitleText": ""
 }

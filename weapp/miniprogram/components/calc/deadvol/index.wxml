@@ -1,0 +1,64 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskDeadVol', lang)}}</text>
+    <text class="badge cx-formula">V × N × (1 + dead%)</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('deadVolDesc', lang)}}</view>
+
+    <view class="eyebrow cx-eyebrow-gap">{{i.t('presets', lang)}}</view>
+    <view class="chip-row cx-block">
+      <view wx:for="{{presets}}" wx:key="id" class="chip cx-chip {{preset === item.id ? 'is-active' : ''}}" hover-class="is-pressed"
+        data-id="{{item.id}}" bindtap="applyPreset" aria-role="button" aria-selected="{{preset === item.id}}">{{item.key ? i.t(item.key, lang) : item.label}}</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label"><text class="cx-sym">N</text>{{i.t('numSamples', lang)}}</view>
+      <input class="input" type="number" value="{{n}}" placeholder="{{lang === 'zh' ? '如 24' : 'e.g. 24'}}" placeholder-class="placeholder"
+        data-field="n" bindinput="onInput" aria-label="N" />
+    </view>
+    <view class="field">
+      <view class="field-label"><text class="cx-sym">V</text>{{i.t('volPerSample', lang)}}</view>
+      <view class="input-group">
+        <input class="input" type="digit" value="{{vol}}" placeholder="{{lang === 'zh' ? '如 200' : 'e.g. 200'}}" placeholder-class="placeholder"
+          data-field="vol" bindinput="onInput" aria-label="V" />
+        <picker class="picker-host shrink-0" mode="selector" range="{{volUnits}}" value="{{volIdx}}" bindchange="onVolUnit">
+          <view class="input-addon is-picker cx-addon"><text>{{volUnits[volIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="cx-block">
+      <view class="row between gap-8">
+        <text class="field-label dv-label">{{deadLabel}}</text>
+        <view class="row gap-6 shrink-0">
+          <view class="btn btn-sm btn-icon dv-step" hover-class="is-pressed" data-step="-1" bindtap="stepDead" aria-role="button" aria-label="−1%">−</view>
+          <text class="dv-out">{{dead}}%</text>
+          <view class="btn btn-sm btn-icon dv-step" hover-class="is-pressed" data-step="1" bindtap="stepDead" aria-role="button" aria-label="+1%">+</view>
+        </view>
+      </view>
+      <slider class="dv-slider" min="0" max="50" step="1" value="{{dead}}" block-size="22"
+        activeColor="#16B364" backgroundColor="#8A8578" block-color="#FFFFFF"
+        bindchanging="onDead" bindchange="onDead" aria-label="{{deadLabel}}" />
+      <view class="row between dv-ticks">
+        <text wx:for="{{ticks}}" wx:key="*this">{{item}}%</text>
+      </view>
+    </view>
+
+    <view class="readout cx-block {{has ? '' : 'is-empty'}}" aria-live="polite">
+      <view class="readout-label">{{i.t('totalNeeded', lang)}}</view>
+      <block wx:if="{{has}}">
+        <view class="readout-value">{{total}}<text class="readout-unit">{{totalUnit}}</text></view>
+        <view class="readout-sub">{{sub1}}</view>
+        <view class="readout-sub dv-sub2">{{sub2}}</view>
+      </block>
+      <view wx:else class="readout-value">{{i.t('calcEmptyDeadVol', lang)}}</view>
+    </view>
+
+    <view class="notice">
+      <view class="icon i-info cx-notice-icon"></view>
+      <view class="cx-notice-body">{{i.t('deadVolTip', lang)}}</view>
+    </view>
+  </view>
+</view>

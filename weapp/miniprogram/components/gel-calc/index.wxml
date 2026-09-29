@@ -1,0 +1,133 @@
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="lang-{{lang}} {{variant === 'panel' ? 'panel' : 'gc-doc'}}">
+  <!-- Head: a card on the Calc tab, a document section head in a recipe -->
+  <view wx:if="{{variant === 'panel'}}" class="panel-head gc-head">
+    <text class="section-title gc-title">{{i.t('calcTaskGel', lang)}}</text>
+    <text class="badge gc-badge">Laemmli</text>
+  </view>
+  <view wx:else class="doc-section-head">
+    <text class="eyebrow gc-ink">{{i.t('calcGelHeading', lang)}}</text>
+    <view class="row gap-6">
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="copyRecipe" aria-role="button">
+        <view class="icon i-copy"></view><text>{{i.t('calcGelCopy', lang)}}</text>
+      </view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="sendRecipe" aria-role="button">
+        <view class="icon i-upload"></view><text>{{i.t('calcGelSend', lang)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="{{variant === 'panel' ? 'panel-body' : ''}}">
+    <view wx:if="{{variant === 'panel'}}" class="gc-desc">{{i.t('gelSubtitle', lang)}}</view>
+
+    <!-- Inputs: one group per gel layer, then the number of gels -->
+    <view class="gc-group">
+      <view class="eyebrow gc-ink gc-legend"><view class="dot gc-dot-res"></view><text>{{i.t('gelResolving', lang)}}</text></view>
+      <view class="grid-2">
+        <view class="gc-cell">
+          <view class="field-label">{{i.t('gelConc', lang)}}</view>
+          <picker class="picker-host" mode="selector" range="{{resOptions}}" value="{{resIdx}}" bindchange="onResPerc">
+            <view class="picker"><text class="picker-value">{{resOptions[resIdx]}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+        </view>
+        <view class="gc-cell">
+          <view class="field-label">{{volLabel.label}} <text class="gc-nocase">{{volLabel.unit}}</text></view>
+          <input class="input" type="digit" value="{{resVol}}" placeholder="10" placeholder-class="placeholder"
+            data-field="resVol" bindinput="onInput" aria-label="{{i.t('gelResolving', lang)}} {{i.t('gelResolvingVol', lang)}}" />
+        </view>
+      </view>
+    </view>
+    <view class="gc-group">
+      <view class="eyebrow gc-ink gc-legend"><view class="dot gc-dot-stack"></view><text>{{i.t('gelStacking', lang)}}</text></view>
+      <view class="grid-2">
+        <view class="gc-cell">
+          <view class="field-label">{{i.t('gelConc', lang)}}</view>
+          <picker class="picker-host" mode="selector" range="{{stackOptions}}" value="{{stackIdx}}" bindchange="onStackPerc">
+            <view class="picker"><text class="picker-value">{{stackOptions[stackIdx]}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+        </view>
+        <view class="gc-cell">
+          <view class="field-label">{{volLabel.label}} <text class="gc-nocase">{{volLabel.unit}}</text></view>
+          <input class="input" type="digit" value="{{stackVol}}" placeholder="5" placeholder-class="placeholder"
+            data-field="stackVol" bindinput="onInput" aria-label="{{i.t('gelStacking', lang)}} {{i.t('gelStackingVol', lang)}}" />
+        </view>
+      </view>
+    </view>
+    <view class="grid-2 gc-group">
+      <view class="gc-cell">
+        <view class="field-label">{{i.t('gelCount', lang)}}</view>
+        <input class="input" type="number" value="{{numGels}}" placeholder="2" placeholder-class="placeholder"
+          data-field="numGels" bindinput="onInput" aria-label="{{i.t('gelCount', lang)}}" />
+      </view>
+    </view>
+
+    <view wx:if="{{variant === 'panel'}}" class="row gap-8 gc-actions">
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="copyRecipe" aria-role="button">
+        <view class="icon i-copy"></view><text>{{i.t('calcGelCopy', lang)}}</text>
+      </view>
+      <view class="btn btn-sm" hover-class="is-pressed" bindtap="sendRecipe" aria-role="button">
+        <view class="icon i-upload"></view><text>{{i.t('calcGelSend', lang)}}</text>
+      </view>
+    </view>
+
+    <!-- Results -->
+    <view wx:for="{{tables}}" wx:key="id" class="gc-result">
+      <view class="gc-result-head">
+        <view class="eyebrow gc-ink gc-legend"><view class="dot {{item.id === 'res' ? 'gc-dot-res' : 'gc-dot-stack'}}"></view><text>{{i.t(item.titleKey, lang)}}</text></view>
+        <text class="gc-meta">{{item.meta}}</text>
+      </view>
+      <view class="table">
+        <view class="tr is-head">
+          <view class="th flex-1">{{i.t('reagent', lang)}}</view>
+          <view class="th gc-c-amt">{{i.t('amount', lang)}}</view>
+          <view class="th gc-c-unit">{{i.t('unit', lang)}}</view>
+        </view>
+        <view wx:for="{{item.rows}}" wx:for-item="row" wx:key="k" class="tr">
+          <view class="td flex-1 gc-reagent">{{row.name}}</view>
+          <view class="td is-num gc-c-amt">{{row.val}}</view>
+          <view class="td is-unit gc-c-unit">{{row.unit}}</view>
+        </view>
+        <view class="tr gc-total">
+          <view class="td flex-1 strong">{{i.t('gelTotal', lang)}}</view>
+          <view class="td is-num gc-c-amt">{{item.total}}</view>
+          <view class="td is-unit gc-c-unit">mL</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Reference: separation range + safety -->
+    <view class="gc-ref">
+      <view class="eyebrow gc-ink gc-ref-title">{{i.t('mwRange', lang)}}</view>
+      <view class="table">
+        <view class="tr is-head">
+          <view class="th gc-c-perc">{{i.t('gelConc', lang)}}</view>
+          <view class="th flex-1">{{rangeLabel.label}} <text class="gc-nocase">{{rangeLabel.unit}}</text></view>
+        </view>
+        <view wx:for="{{guide}}" wx:key="perc" class="tr {{item.current ? 'gc-current' : ''}}">
+          <view class="td gc-c-perc gc-perc">{{item.perc}}</view>
+          <view class="td flex-1 gc-range">
+            <text>{{item.range}}</text>
+            <text wx:if="{{item.current}}" class="badge badge-green gc-current-badge">{{i.t('calcGelCurrent', lang)}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="gc-cite">Ref: Gallagher (2012) Curr Protoc Mol Biol</view>
+    </view>
+
+    <view class="gc-ref">
+      <view class="eyebrow gc-ink gc-ref-title">{{i.t('gelSafetyTitle', lang)}}</view>
+      <view class="notice notice-warn gc-warn">
+        <view class="icon i-alert gc-warn-icon"></view>
+        <view class="flex-1"><text class="notice-title">30% Acrylamide</text><text> — {{i.t('gelSafety1', lang)}}</text></view>
+      </view>
+      <view class="gc-tips">
+        <view class="gc-tip"><view class="gc-bullet"></view><view class="flex-1"><text class="strong">APS</text><text> — {{i.t('gelSafety2', lang)}}</text></view></view>
+        <view class="gc-tip"><view class="gc-bullet"></view><view class="flex-1"><text class="strong">TEMED</text><text> — {{i.t('gelSafety3', lang)}}</text></view></view>
+        <view class="gc-tip"><view class="gc-bullet"></view><view class="flex-1">{{i.t('gelSafety4', lang)}}</view></view>
+        <view class="gc-tip"><view class="gc-bullet"></view><view class="flex-1">{{i.t('gelSafety5', lang)}}</view></view>
+        <view class="gc-tip"><view class="gc-bullet"></view><view class="flex-1">Mini-gel: resolving ~5–8 mL, stacking ~2–3 mL; RT polymerization ~30–45 min</view></view>
+      </view>
+      <view class="gc-cite">Ref: Laemmli (1970) Nature 227:680; Bio-Rad Mini-PROTEAN Manual</view>
+    </view>
+  </view>
+</view>

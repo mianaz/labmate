@@ -1,0 +1,63 @@
+/* Shared by the calculator components: @import "../calc.wxss"; */
+
+/* Panel head: title + formula badge */
+.cx-head { flex-wrap: wrap; row-gap: 6px; }
+.cx-title { min-width: 0; font-size: 16px; line-height: 1.3; }
+.cx-formula {
+  height: auto;
+  min-height: 20px;
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.3;
+}
+
+.cx-desc { margin-bottom: 14px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.cx-block { margin-bottom: 14px; }
+.cx-block:last-child { margin-bottom: 0; }
+.cx-eyebrow-gap { margin-bottom: 6px; }
+
+/* Variable symbol inside an uppercase field label (C₁, V, MW …) */
+.cx-sym {
+  margin-right: 7px;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+/* Unit text inside an uppercase label: keep "mL" from reading "ML" */
+.cx-nocase { text-transform: none; letter-spacing: 0; }
+
+/* "Solve for" / "Type" rows */
+.cx-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 14px; }
+.cx-ctl .seg { max-width: 100%; }
+.cx-seg-item { min-height: 36px; min-width: 48px; padding: 0 10px; font-size: 14px; }
+
+/* Unit picker as an input addon */
+.cx-addon {
+  height: 42px;
+  min-width: 78px;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 14px;
+}
+.cx-addon .icon { font-size: 12px; color: var(--text-muted); }
+.cx-addon-fixed { min-width: 58px; justify-content: center; color: var(--text-muted); }
+
+/* Solved-for variable: a readout in the field's slot */
+.cx-target { margin-bottom: 14px; padding: 9px 8px 9px 16px; }
+.cx-target-value { font-size: 22px; margin-top: 1px; }
+.readout.is-empty .cx-target-value { font-size: 14px; }
+.cx-target-picker { width: 84px; min-height: 36px; height: 36px; padding: 0 8px; font-size: 14px; }
+.cx-target-picker .icon { font-size: 12px; }
+
+/* Horizontally scrolling chip rows */
+.cx-chips { margin-bottom: 14px; overflow: hidden; }
+.cx-chip { min-height: 34px; }
+.cx-chip .chip-count { margin-left: 2px; }
+
+.cx-notice-body { flex: 1; min-width: 0; font-size: 14px; line-height: 1.6; }
+.cx-notice-icon { margin-top: 4px; font-size: 15px; color: var(--text-muted); }
+.cx-notice-danger-icon { margin-top: 4px; font-size: 15px; color: var(--danger-text); }
+.cx-strong { font-family: var(--font-mono); font-weight: 700; }

@@ -1,0 +1,68 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<wxs module="pt">
+// Dim an element when a search is active and it doesn't match (symbol, English
+// name or exact atomic number) — same rule as the web.
+function dim(tile, q) {
+  if (!q) return false;
+  if (tile.sym.toLowerCase().indexOf(q) >= 0) return false;
+  if (tile.name.toLowerCase().indexOf(q) >= 0) return false;
+  return ('' + tile.z) !== q;
+}
+module.exports = { dim: dim };
+</wxs>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskPeriodic', lang)}}</text>
+    <text class="badge cx-formula">{{i.t('calcFormulaPeriodic', lang)}}</text>
+  </view>
+  <view class="panel-body">
+    <view class="search-field cx-block">
+      <view class="icon i-search"></view>
+      <input class="input-bare" type="text" confirm-type="search" value="{{search}}" placeholder="{{i.t('periodicSearch', lang)}}"
+        placeholder-class="placeholder" bindinput="onSearch" aria-label="{{i.t('periodicSearch', lang)}}" />
+      <view wx:if="{{search}}" class="icon i-close pt-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+    </view>
+
+    <view class="pt-legend cx-block" aria-label="{{i.t('legend', lang)}}">
+      <view wx:for="{{legend}}" wx:key="cat" class="pt-legend-item">
+        <view class="dot" style="color: {{item.color}}"></view><text>{{item.label}}</text>
+      </view>
+    </view>
+
+    <scroll-view class="pt-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="pt-grid" style="{{gridStyle}}">
+        <view wx:for="{{tiles}}" wx:key="z"
+          class="pt-tile pt-c-{{item.cat}} {{sel === item.z ? 'is-sel' : ''}} {{pt.dim(item, q) ? 'is-dim' : ''}}"
+          style="{{item.pos}}" data-z="{{item.z}}" bindtap="select"
+          aria-role="button" aria-label="{{item.name}}, {{item.z}}" aria-selected="{{sel === item.z}}">
+          <text class="pt-z">{{item.z}}</text>
+          <text class="pt-sym">{{item.sym}}</text>
+          <text class="pt-m">{{item.m}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="pt-details" aria-live="polite">
+      <view wx:if="{{!el}}" class="pt-hint">{{i.t('periodicSubtitle', lang)}}</view>
+      <block wx:else>
+        <view class="row gap-12">
+          <view class="pt-big pt-c-{{el.cat}}">
+            <text class="pt-big-z">{{el.z}}</text>
+            <text class="pt-big-sym">{{el.sym}}</text>
+            <text class="pt-big-m">{{el.mass3}}</text>
+          </view>
+          <view class="flex-1">
+            <view class="section-title">{{el.name}}</view>
+            <view class="pt-cat">{{el.catLabel}}</view>
+          </view>
+        </view>
+        <view class="meta-grid pt-facts">
+          <view class="meta-cell"><view class="meta-key">{{i.t('periodicAtomicNum', lang)}}</view><view class="meta-val">{{el.z}}</view></view>
+          <view class="meta-cell"><view class="meta-key">{{i.t('periodicAtomicMass', lang)}}</view><view class="meta-val">{{el.mass4}} u</view></view>
+          <view class="meta-cell"><view class="meta-key">{{i.t('periodicCategory', lang)}}</view><view class="meta-val pt-body">{{el.catLabel}}</view></view>
+          <view class="meta-cell"><view class="meta-key">{{i.t('periodicElectronConfig', lang)}}</view><view class="meta-val">{{el.econf}}</view></view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

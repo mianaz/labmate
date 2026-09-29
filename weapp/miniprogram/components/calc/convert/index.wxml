@@ -1,0 +1,50 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskConvert', lang)}}</text>
+    <text class="badge cx-formula">{{i.t('calcFormulaConvert', lang)}}</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('convertCalcDesc', lang)}}</view>
+
+    <view class="eyebrow cx-eyebrow-gap">{{i.t('convertCategory', lang)}}</view>
+    <view class="chip-row cx-block">
+      <view wx:for="{{cats}}" wx:key="id" class="chip cx-chip {{cat === item.id ? 'is-active' : ''}}" hover-class="is-pressed"
+        data-id="{{item.id}}" bindtap="pickCategory" aria-role="button" aria-selected="{{cat === item.id}}">{{i.t(item.key, lang)}}</view>
+    </view>
+
+    <view class="field cv-from">
+      <view class="field-label">{{i.t('convertFrom', lang)}}</view>
+      <view class="input-group">
+        <view wx:if="{{cat === 'temperature'}}" class="input-addon cv-sign" hover-class="is-pressed" bindtap="toggleSign"
+          aria-role="button" aria-label="{{i.t('calcToggleSign', lang)}}">±</view>
+        <input class="input" type="digit" value="{{value}}" placeholder="0" placeholder-class="placeholder"
+          bindinput="onInput" aria-label="{{i.t('convertFrom', lang)}}" />
+        <picker class="picker-host shrink-0" mode="selector" range="{{units}}" value="{{fromIdx}}" bindchange="onFrom">
+          <view class="input-addon is-picker cx-addon cv-unit"><text>{{units[fromIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="row center cv-swap-row">
+      <view class="btn btn-icon" hover-class="is-pressed" bindtap="swap" aria-role="button" aria-label="{{i.t('calcSwapUnits', lang)}}">
+        <view class="cv-swap-icon">
+          <view class="icon i-arrow-right"></view>
+          <view class="icon i-arrow-right cv-flip"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="readout cx-target cv-to {{result ? '' : 'is-empty'}}" aria-live="polite">
+      <view class="row gap-12">
+        <view class="flex-1">
+          <view class="readout-label">{{i.t('convertTo', lang)}}</view>
+          <view class="readout-value cx-target-value">{{result || i.t('calcEmptyConvert', lang)}}</view>
+        </view>
+        <picker class="picker-host shrink-0" mode="selector" range="{{units}}" value="{{toIdx}}" bindchange="onTo">
+          <view class="picker cx-target-picker cv-unit"><text class="picker-value">{{units[toIdx]}}</text><view class="icon i-chevron-down"></view></view>
+        </picker>
+      </view>
+    </view>
+  </view>
+</view>

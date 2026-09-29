@@ -1,0 +1,20 @@
+@import "../calc.wxss";
+
+.cv-from { margin-bottom: 10px; }
+.cv-unit { min-width: 92px; width: 92px; }
+.cv-sign {
+  justify-content: center;
+  min-width: 42px;
+  border-left: 1px solid var(--border-strong);
+  border-right: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.cv-sign.is-pressed { background: var(--bg-3); }
+.cv-swap-row { margin-bottom: 10px; }
+/* ⇅ from two stroke arrows */
+.cv-swap-icon { display: flex; flex-direction: column; align-items: center; transform: rotate(90deg); font-size: 14px; line-height: 1; }
+.cv-swap-icon .icon { display: block; }
+.cv-swap-icon .icon:first-child { margin-bottom: -4px; }
+.cv-flip { transform: scaleX(-1); }
+.cv-to { margin-bottom: 0; }

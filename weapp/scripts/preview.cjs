@@ -86,7 +86,7 @@ html, body { margin: 0; padding: 0; }
 body { width: 375px; }
 .mp-root { min-height: 100vh; position: relative; }
 wx-view, wx-scroll-view, wx-swiper, wx-swiper-item, wx-form, wx-picker-view, wx-movable-area, wx-cover-view, wx-rich-text { display: block; }
-wx-scroll-view[scroll-x] { overflow-x: auto; }
+wx-scroll-view { overflow-x: auto; }
 wx-text, wx-label, wx-navigator, wx-icon { display: inline; }
 wx-text { white-space: pre-wrap; }
 wx-input, wx-textarea { display: block; overflow: hidden; white-space: nowrap; }

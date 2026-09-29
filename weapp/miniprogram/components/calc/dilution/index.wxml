@@ -1,0 +1,51 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="panel lang-{{lang}}">
+  <view class="panel-head cx-head">
+    <text class="section-title cx-title">{{i.t('calcTaskDilution', lang)}}</text>
+    <text class="badge cx-formula">C₁V₁ = C₂V₂</text>
+  </view>
+  <view class="panel-body">
+    <view class="cx-desc">{{i.t('dilutionCalcDesc', lang)}}</view>
+
+    <view class="cx-ctl">
+      <text class="eyebrow">{{i.t('solveFor', lang)}}</text>
+      <view class="seg">
+        <view wx:for="{{fields}}" wx:key="id" class="seg-item cx-seg-item {{solve === item.id ? 'is-active' : ''}}"
+          data-id="{{item.id}}" bindtap="setSolve" aria-role="button" aria-selected="{{solve === item.id}}">{{item.sym}}</view>
+      </view>
+    </view>
+
+    <!-- Row order: stock side (C₁ · V₁), then final side (C₂ · V₂) -->
+    <block wx:for="{{fields}}" wx:key="id">
+      <view wx:if="{{solve === item.id}}" class="readout cx-target {{result ? '' : 'is-empty'}}" aria-live="polite">
+        <view class="row gap-12">
+          <view class="flex-1">
+            <view class="readout-label"><text class="cx-sym">{{item.sym}}</text>{{i.t(item.key, lang)}}</view>
+            <view class="readout-value cx-target-value">{{result || i.t('enterOther3', lang)}}</view>
+          </view>
+          <picker class="picker-host shrink-0" mode="selector" range="{{item.kind === 'conc' ? concUnits : volUnits}}"
+            value="{{unitIdx[item.id]}}" data-field="{{item.id}}" bindchange="onUnit">
+            <view class="picker cx-target-picker"><text class="picker-value">{{units[item.id]}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+        </view>
+      </view>
+      <view wx:else class="field">
+        <view class="field-label"><text class="cx-sym">{{item.sym}}</text>{{i.t(item.key, lang)}}</view>
+        <view class="input-group">
+          <input class="input" type="digit" value="{{vals[item.id]}}" placeholder="0" placeholder-class="placeholder"
+            data-field="{{item.id}}" bindinput="onInput" aria-label="{{item.sym}}" />
+          <picker class="picker-host shrink-0" mode="selector" range="{{item.kind === 'conc' ? concUnits : volUnits}}"
+            value="{{unitIdx[item.id]}}" data-field="{{item.id}}" bindchange="onUnit">
+            <view class="input-addon is-picker cx-addon"><text>{{units[item.id]}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+        </view>
+      </view>
+    </block>
+
+    <view wx:if="{{prep.length}}" class="notice notice-info">
+      <view class="cx-notice-body">
+        <text wx:for="{{prep}}" wx:key="k" class="{{item.k === '0' ? 'notice-title' : (item.b ? 'cx-strong' : '')}}">{{item.t}}</text>
+      </view>
+    </view>
+  </view>
+</view>

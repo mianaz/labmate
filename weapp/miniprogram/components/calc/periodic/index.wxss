@@ -1,0 +1,85 @@
+@import "../calc.wxss";
+
+.pt-clear { color: var(--text-muted); font-size: 15px; padding: 4px; }
+
+.pt-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.pt-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; line-height: 1.4; color: var(--text-muted); }
+
+/* Table: absolutely placed 34 × 37 px tiles, scrolled sideways on a phone */
+.pt-scroll { width: 100%; overflow: hidden; white-space: nowrap; }
+.pt-grid { position: relative; padding-bottom: 2px; }
+.pt-tile {
+  position: absolute;
+  width: 34px;
+  height: 37px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  color: var(--text);
+  white-space: nowrap;
+}
+.pt-z { font-family: var(--font-mono); font-size: 8px; opacity: 0.8; }
+.pt-sym { font-family: var(--font-mono); font-size: 14px; font-weight: 800; }
+.pt-m { font-family: var(--font-mono); font-size: 7px; opacity: 0.8; }
+.pt-tile.is-dim { opacity: 0.25; }
+.pt-tile.is-sel {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: inset 0 0 0 2px var(--border-strong);
+  opacity: 1;
+}
+
+/* Category hue: tinted tile (40 % hue over the theme's card colour — the web's
+   color-mix, precomputed) with the full-strength hue along the top edge. */
+.pt-c-alkali          { background: #FDC1BE; box-shadow: inset 0 3px 0 #ff6b6b; }
+.pt-c-alkaline-earth  { background: #FDDAB2; box-shadow: inset 0 3px 0 #ffa94d; }
+.pt-c-transition      { background: #B5DAF6; box-shadow: inset 0 3px 0 #4dabf7; }
+.pt-c-post-transition { background: #C1EEC5; box-shadow: inset 0 3px 0 #69db7c; }
+.pt-c-metalloid       { background: #EEC6F4; box-shadow: inset 0 3px 0 #da77f2; }
+.pt-c-nonmetal        { background: #FDEBAB; box-shadow: inset 0 3px 0 #ffd43b; }
+.pt-c-halogen         { background: #ADEDD7; box-shadow: inset 0 3px 0 #38d9a9; }
+.pt-c-noble-gas       { background: #C5CFF8; box-shadow: inset 0 3px 0 #748ffc; }
+.pt-c-lanthanide      { background: #F9CAD8; box-shadow: inset 0 3px 0 #f783ac; }
+.pt-c-actinide        { background: #F2D3F6; box-shadow: inset 0 3px 0 #e599f7; }
+@media (prefers-color-scheme: dark) {
+  .pt-c-alkali          { background: #723936; }
+  .pt-c-alkaline-earth  { background: #72512A; }
+  .pt-c-transition      { background: #2B526E; }
+  .pt-c-post-transition { background: #36653C; }
+  .pt-c-metalloid       { background: #633D6C; }
+  .pt-c-nonmetal        { background: #726322; }
+  .pt-c-halogen         { background: #22654E; }
+  .pt-c-noble-gas       { background: #3A4770; }
+  .pt-c-lanthanide      { background: #6F4250; }
+  .pt-c-actinide        { background: #684B6E; }
+}
+
+/* Details */
+.pt-details { margin-top: 14px; }
+.pt-hint {
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+}
+.pt-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 68px;
+  height: 68px;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  line-height: 1.1;
+}
+.pt-big-z { font-family: var(--font-mono); font-size: 11px; }
+.pt-big-sym { font-family: var(--font-mono); font-size: 24px; font-weight: 800; }
+.pt-big-m { font-family: var(--font-mono); font-size: 10px; }
+.pt-cat { margin-top: 2px; font-size: 13px; color: var(--text-muted); }
+.pt-facts { margin-top: 12px; border: 1px solid var(--rule); border-bottom: 0; }
+.pt-body { font-family: var(--font-body); }

@@ -227,3 +227,12 @@ describe('onboarding', () => {
     expect(comp.querySelector('#onboarding').instance.data.open).toBe(false);
   });
 });
+
+test('SDS-PAGE recipe embeds the gel calculator', async () => {
+  const comp = await page('pages/detail/index', { id: 'sds_page_gel' });
+  expect(comp.instance.data.doc.isGel).toBe(true);
+  expect(comp.instance.data.doc.showComponentsTable).toBe(false);
+  const txt = text(comp);
+  expect(txt).toContain('30% Acrylamide/Bis (29:1)');
+  expect(txt).toContain('TEMED');
+});
