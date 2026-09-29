@@ -5,6 +5,7 @@ const storage = require('./storage');
 const experiments = require('./experiments');
 const bus = require('./bus');
 const { isoDate } = require('./format');
+const { getLang, setLang } = require('./lang');
 
 const APP_VERSION = 'weapp-0.1.0';
 const LAST_EXPORT_KEY = 'labmate_lastExport';
@@ -81,6 +82,9 @@ function importBackup(fileContent) {
     count++;
   });
   ['custom', 'favs', 'experiments', 'inventory', 'backup'].forEach((e) => bus.emit(e));
+  // The language is cached in lib/lang: apply a restored one right away.
+  const lang = parsed.data.biolab_lang;
+  if ((lang === 'en' || lang === 'zh') && lang !== getLang()) setLang(lang);
   return count;
 }
 

@@ -1,0 +1,85 @@
+{
+  "lkMetaCount": { "en": "{n} links", "zh": "{n} 个链接" },
+  "lkFilterLabel": { "en": "Filter by category", "zh": "按类别筛选" },
+  "lkCopyHint": {
+    "en": "Mini programs can’t open external websites. Tap a card to copy its link, then paste it into your browser.",
+    "zh": "小程序无法直接打开外部网站。点击卡片复制链接，再粘贴到浏览器中打开。"
+  },
+  "lkCopyLink": { "en": "Copy link", "zh": "复制链接" },
+  "lkCopied": { "en": "Link copied — paste it into a browser", "zh": "链接已复制，请粘贴到浏览器打开" },
+
+  "gdBackupTitle": { "en": "Backup & restore", "zh": "备份与恢复" },
+  "gdBackupDueDesc": {
+    "en": "Everything is stored only on this phone. Send yourself a backup file regularly.",
+    "zh": "所有数据仅保存在这台手机上，请定期发送备份文件保存。"
+  },
+  "gdExportDesc": {
+    "en": "Save all your favorites, step progress, notebook entries, inventory and settings as a single JSON file and send it to a WeChat chat — File Transfer works well. Use it to back up your data or move it to another phone.",
+    "zh": "将所有收藏、实验进度、实验记录、库存和设置打包为一个 JSON 文件并发送到微信聊天（推荐「文件传输助手」）。可用于备份数据或转移到其他手机。"
+  },
+  "gdExportBtn": { "en": "Send Backup File", "zh": "发送备份文件" },
+  "gdImportDesc": {
+    "en": "Choose a backup file from a WeChat chat to restore it. It merges with your current data (existing items are overwritten if they conflict).",
+    "zh": "从微信聊天中选择之前导出的备份文件进行恢复。将与当前数据合并（冲突项将被覆盖）。"
+  },
+  "gdImportBtn": { "en": "Choose from Chat", "zh": "从聊天中选择" },
+  "gdImportConfirm": {
+    "en": "Restore data from “{name}”? It will be merged with the data on this phone; items that already exist will be overwritten.",
+    "zh": "从「{name}」恢复数据？将与本机数据合并，已存在的条目会被覆盖。"
+  },
+  "gdBackupSent": { "en": "Backup file sent", "zh": "备份文件已发送" },
+  "gdShareUnsupported": { "en": "This version of WeChat can’t send files", "zh": "当前微信版本不支持发送文件" },
+  "gdInterop": {
+    "en": "Backup files are interchangeable with the LabMate web app — a file exported here imports in the browser, and the other way round. Tap the address to copy it:",
+    "zh": "备份文件与 LabMate 网页版通用——在此导出的文件可在浏览器中导入，反之亦然。点击网址即可复制："
+  },
+  "gdStorageUsed": { "en": "Local storage: {used} of {limit} used", "zh": "本地存储：已用 {used}，上限 {limit}" },
+
+  "gdFeatureGuide": { "en": "Feature guide", "zh": "功能指南" },
+  "gdExpandAll": { "en": "Expand all", "zh": "全部展开" },
+  "gdCollapseAll": { "en": "Collapse all", "zh": "全部收起" },
+  "gdCopyDoi": { "en": "Copy DOI link", "zh": "复制 DOI 链接" },
+
+  "gdPrivacyBody": {
+    "en": "LabMate runs entirely inside WeChat on this phone. Your favorites, step progress, notebook entries, inventory and settings stay in this mini program’s local storage and never leave the device — the mini program makes no network requests. No account, no server. Deleting the mini program or clearing WeChat’s storage erases this data, so export a backup regularly (Backup & restore, above).",
+    "zh": "LabMate 完全在这台手机的微信内运行。您的收藏、实验进度、实验记录、库存和设置都保存在本小程序的本地存储中，不会离开这台手机——小程序不发起任何网络请求。无需账号，没有服务器。删除小程序或清理微信存储空间会清除这些数据，请定期导出备份（见上方「备份与恢复」）。"
+  },
+
+  "gdBuffersBody": {
+    "en": "Browse verified buffer recipes (PBS, RIPA, Laemmli, etc.) organized by discipline. Type a target volume or tap ×½ / ×2 / ×5 to scale any recipe — amounts and preparation steps update together. Star recipes to add them to Favorites; filter by discipline, favorites or your own custom recipes. From a recipe’s detail page, copy the scaled recipe or share it to a chat. Recently viewed recipes appear at the top.",
+    "zh": "按学科分类浏览已验证的缓冲液配方（PBS、RIPA、Laemmli 等）。输入目标体积或点击 ×½ / ×2 / ×5 即可换算配方，用量与配制步骤同步更新。点击星标收藏常用配方；可按学科、收藏或自定义筛选。在配方详情页可复制缩放后的配方，或分享到微信聊天。最近查看的配方会置顶显示。"
+  },
+  "gdCalcBody": {
+    "en": "Nine calculators in the Calc tab: Dilution (C₁V₁=C₂V₂ with practical pipetting instructions), Mass (how much powder to weigh for a target molarity), Molarity (concentration from a known mass), Percent (w/v or v/v), Dead volume (master-mix totals with overage), Unit conversion, Molecular weight from a formula, a Periodic table, and a Scientific calculator.",
+    "zh": "「计算」标签页中有九种计算器：稀释（C₁V₁=C₂V₂，含实际移液指导）、质量（按目标摩尔浓度计算称量量）、摩尔浓度（由已知质量求浓度）、百分比（w/v 或 v/v）、配液余量（多样品总量含损耗补偿）、单位换算、分子式求分子量、元素周期表与科学计算器。"
+  },
+  "gdGelBody": {
+    "en": "Found in the Calc tab. Choose resolving and stacking gel percentages, set the volume per gel, and specify how many gels. The calculator shows exact volumes of acrylamide, buffer, water, APS, and TEMED. Includes a MW separation range reference table.",
+    "zh": "位于「计算」标签页。选择分离胶和浓缩胶浓度、单胶体积和胶数量，计算器显示丙烯酰胺、缓冲液、水、APS 和 TEMED 的精确用量。附分子量分离范围参考表。"
+  },
+  "gdPlateBody": {
+    "en": "Design multi-well plate layouts (6, 12, 24, 48, 96, 384-well). Tap wells to select them, assign labels and colors, then confirm. Use Quick Templates for serial dilution, dose-response, or checkerboard patterns, and switch to the table view to review every well. Plate-reader results can be imported from a file sent to a WeChat chat.",
+    "zh": "设计多孔板布局（6/12/24/48/96/384 孔板）。点击选孔，分配标签和颜色后确认。使用快速模板生成梯度稀释、多药物梯度或棋盘格，并可切换到表格视图查看每个孔。酶标仪读数可从发送到微信聊天的文件中导入。"
+  },
+  "gdInventoryBody": {
+    "en": "Organize lab samples with a hierarchical storage system. Create locations (freezers, fridges, shelves), add boxes (cryo 9×9, 10×10, tip 8×12, etc.), and track samples in a visual grid. Each sample records type, quantity, concentration, passage, dates, owner, and tags. Color-coded by sample type. Everything is stored on this phone and included in the backup file.",
+    "zh": "使用层级存储系统管理实验室样品。创建存储位置（冰箱、冰柜、架子），添加盒子（冻存盒 9×9、10×10、枪头盒 8×12 等），在可视化网格中追踪样品。每个样品记录类型、数量、浓度、代数、日期、负责人和标签。按样品类型颜色编码。所有数据保存在这台手机上，并包含在备份文件中。"
+  },
+  "gdCalendarBody": {
+    "en": "A calendar of all notebook entries, color-coded by status. Tap an empty day to schedule a new experiment; tap an existing entry to edit it. Move between months with the arrows or jump back to Today.",
+    "zh": "以日历形式查看所有记录本条目，按状态颜色编码。点击空白日期可新建实验；点击已有条目可编辑。使用箭头切换月份，或点击「今天」跳回当前日期。"
+  },
+  "gdToolsBody": {
+    "en": "Curated directory of external bioinformatics resources grouped by category: sequencing analysis, primer design, protein/structure databases, genome browsers, pathway tools, single-cell atlases, and more. Filter by category to narrow the list. Mini programs can’t open external websites, so tapping a card copies its link — paste it into your browser.",
+    "zh": "精选的外部生物信息学资源目录，按类别分组：测序分析、引物设计、蛋白/结构数据库、基因组浏览器、通路工具、单细胞图谱等。可按类别筛选。小程序无法直接打开外部网站，点击卡片会复制链接，请粘贴到浏览器中打开。"
+  },
+  "gdSearchTitle": { "en": "Search & Timers", "zh": "搜索与计时器" },
+  "gdSearchBody": {
+    "en": "Tap “Search all” at the top of the Recipes or Protocols tab to search every recipe, protocol, reagent and tag at once. Timers started from protocol steps or the quick timer stay in a bar at the bottom of every page — pause, reset or remove them there, or tap a timer’s name to open the timer page. They keep counting while you switch to another app, and the screen stays on while one is running.",
+    "zh": "在「配方库」或「实验方案」页顶部点击「全局搜索」，即可一次搜索所有配方、方案、试剂和标签。从方案步骤或快速计时器启动的计时器会显示在各页面底部的计时栏中——可在此暂停、重置或移除，点击计时器名称可打开计时页面。切换到其他应用时计时不会中断，计时期间屏幕保持常亮。"
+  },
+  "gdDataSafetyBody": {
+    "en": "All your data (favorites, inventory, notebook, custom recipes, step progress) is stored only in this mini program’s local storage on this phone — it is not synced to other phones, the web app or any server. Deleting the mini program, clearing WeChat’s storage or changing phones will erase it. Send yourself a backup file regularly from Backup & restore at the top of this page.",
+    "zh": "所有数据（收藏、库存、实验记录、自定义配方、步骤进度）仅保存在这台手机的小程序本地存储中，不会同步到其他手机、网页版或任何服务器。删除小程序、清理微信存储空间或更换手机都会导致数据丢失。请定期在本页顶部的「备份与恢复」中发送备份文件保存。"
+  }
+}

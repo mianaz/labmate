@@ -1,0 +1,150 @@
+/* Guide — the web's RefsTab: backup panel, feature guide, privacy note, references. */
+.gd-block { margin-bottom: 20px; }
+.gd-count { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.gd-title-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+
+/* Square icon tile — same language as the Links monograms. */
+.gd-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: var(--accent);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+
+/* ── Backup & restore ─────────────────────────────────────── */
+.gd-head-wrap { flex-wrap: wrap; row-gap: 2px; }
+.gd-last { font-size: 11px; color: var(--text-muted); }
+.gd-last.is-stale { color: var(--warning-text); }
+
+.gd-due { margin: 14px 14px 0; font-size: 13px; }
+.gd-due-icon { margin-top: 3px; font-size: 15px; color: var(--warning-text); }
+.gd-due-desc { margin-top: 2px; color: var(--text-muted); line-height: 1.5; }
+
+.gd-action { padding: 16px 14px; }
+.gd-action.is-ruled { border-top: 1px solid var(--rule); }
+.gd-action-title { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--text); }
+.gd-action-desc { margin-top: 4px; font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.gd-action-btn { margin-top: 14px; padding-left: 44px; }
+
+.gd-interop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+  background: var(--bg);
+  border-top: 1px solid var(--rule);
+}
+.gd-interop-icon { margin-top: 3px; font-size: 14px; color: var(--accent); }
+.gd-weburl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 32px;
+  margin-top: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.gd-weburl.is-pressed { background: var(--bg-2); }
+.gd-weburl-icon { font-size: 13px; }
+
+.gd-storage {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  border-top: 1px solid var(--rule);
+}
+.gd-storage-dot { margin-top: 5px; color: var(--primary); }
+.gd-storage-dot.is-high { color: var(--warning-border); }
+
+/* ── Feature guide ────────────────────────────────────────── */
+.gd-toggle-all { margin-right: -8px; min-height: 30px; }
+.gd-sec { border-bottom: 1px solid var(--rule); }
+.gd-sec:last-child { border-bottom: 0; }
+.gd-sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px;
+}
+.gd-sec-head.is-pressed { background: var(--bg); }
+.gd-sec-num {
+  width: 22px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.gd-sec-title { font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--text); }
+.gd-chev { align-self: center; flex-shrink: 0; font-size: 16px; color: var(--text-muted); transition: transform 0.2s ease; }
+.gd-chev.is-open { transform: rotate(180deg); }
+.gd-sec-body {
+  padding: 0 14px 14px 48px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+/* ── Privacy ──────────────────────────────────────────────── */
+.gd-privacy { padding: 14px 16px; }
+.gd-privacy-icon { margin-top: 4px; font-size: 18px; color: var(--accent); }
+.gd-privacy-body { margin-top: 4px; font-size: 13px; line-height: 1.6; color: var(--text-muted); }
+
+/* ── References ───────────────────────────────────────────── */
+.gd-refs-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.gd-refs-head.is-pressed { background: var(--bg-2); }
+.gd-refs-desc { margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--text-muted); }
+.gd-refs { border-top: 1px solid var(--rule); }
+.gd-ref {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.gd-ref:last-child { border-bottom: 0; }
+.gd-ref.is-pressed { background: var(--bg); }
+.gd-ref-num {
+  width: 20px;
+  flex-shrink: 0;
+  padding-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.gd-ref-body { min-width: 0; font-size: 13px; line-height: 1.55; color: var(--text); }
+.gd-ref-cite { word-break: break-word; }
+.gd-ref-journal { font-style: italic; }
+.gd-ref-vol { font-size: 12px; color: var(--text-muted); }
+.gd-ref-note { margin-top: 4px; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.gd-ref-doi {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--accent);
+}
+.gd-ref-doi-icon { font-size: 12px; }

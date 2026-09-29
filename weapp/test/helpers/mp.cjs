@@ -27,20 +27,15 @@ function text(comp) {
   return comp.dom.textContent.replace(/\s+/g, ' ').trim();
 }
 
-// Tap the first element whose text includes `label` (or matching a selector).
-function tapText(comp, label) {
-  const all = comp.dom.querySelectorAll('*');
-  for (const el of all) {
-    if (el.children.length === 0 && el.textContent.includes(label)) {
-      let node = el;
-      while (node && node !== comp.dom) {
-        node.dispatchEvent(new Event('tap', { bubbles: false }));
-        node = node.parentNode;
-      }
-      return true;
-    }
-  }
-  return false;
+// Tap the i-th element matching a selector (id / class), firing its bindtap
+// handler the way WeChat would.
+async function tap(comp, selector, index) {
+  const nodes = comp.querySelectorAll(selector);
+  const node = nodes[index || 0];
+  if (!node) throw new Error('tap: nothing matches ' + selector);
+  node.dispatchEvent('tap');
+  await simulate.sleep(0);
+  return node;
 }
 
-module.exports = { ROOT, load, page, text, tapText, simulate };
+module.exports = { ROOT, load, page, text, tap, simulate };

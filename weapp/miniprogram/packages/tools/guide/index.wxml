@@ -1,1 +1,135 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navHelp', lang)}}"
+    title="{{i.t('refsTitle', lang)}}"
+    desc="{{i.t('guideIntro', lang)}}"
+  />
+
+  <!-- Backup & restore -->
+  <view class="panel gd-block">
+    <view class="panel-head gd-head-wrap">
+      <text class="panel-title">{{i.t('gdBackupTitle', lang)}}</text>
+      <text class="mono gd-last {{backupStale ? 'is-stale' : ''}}">{{i.t('backupLast', lang)}}: {{lastLabel}}</text>
+    </view>
+
+    <view wx:if="{{backupStale}}" class="notice notice-warn gd-due">
+      <view class="icon i-alert gd-due-icon"></view>
+      <view class="flex-1">
+        <view class="notice-title">{{i.t('backupDueTitle', lang)}}</view>
+        <view class="gd-due-desc">{{i.t('gdBackupDueDesc', lang)}}</view>
+      </view>
+    </view>
+
+    <view class="gd-action">
+      <view class="row-top gap-12">
+        <view class="gd-tile"><view class="icon i-download"></view></view>
+        <view class="flex-1">
+          <view class="gd-action-title">{{i.t('exportTitle', lang)}}</view>
+          <view class="gd-action-desc">{{i.t('gdExportDesc', lang)}}</view>
+        </view>
+      </view>
+      <view class="gd-action-btn">
+        <view class="btn-primary" hover-class="is-pressed" bindtap="exportData" aria-role="button">
+          <view class="icon i-download"></view>
+          <text>{{i.t('gdExportBtn', lang)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gd-action is-ruled">
+      <view class="row-top gap-12">
+        <view class="gd-tile"><view class="icon i-upload"></view></view>
+        <view class="flex-1">
+          <view class="gd-action-title">{{i.t('importTitle', lang)}}</view>
+          <view class="gd-action-desc">{{i.t('gdImportDesc', lang)}}</view>
+        </view>
+      </view>
+      <view class="gd-action-btn">
+        <view class="btn" hover-class="is-pressed" bindtap="importData" aria-role="button">
+          <view class="icon i-upload"></view>
+          <text>{{i.t('gdImportBtn', lang)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="gd-interop">
+      <view class="icon i-globe gd-interop-icon"></view>
+      <view class="flex-1">
+        <view><text>{{i.t('gdInterop', lang)}}</text></view>
+        <view class="mono gd-weburl" hover-class="is-pressed" bindtap="copyWebUrl" aria-role="button" aria-label="{{i.t('lkCopyLink', lang)}}">
+          <text class="break">{{webUrlLabel}}</text>
+          <view class="icon i-copy gd-weburl-icon"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="mono gd-storage">
+      <view class="dot gd-storage-dot {{storageHigh ? 'is-high' : ''}}"></view>
+      <text class="flex-1">{{storageLabel}}</text>
+    </view>
+  </view>
+
+  <!-- Feature guide: one hairline-ruled list of collapsible sections -->
+  <view class="panel gd-block">
+    <view class="panel-head">
+      <view class="gd-title-row">
+        <text class="panel-title">{{i.t('gdFeatureGuide', lang)}}</text>
+        <text class="mono tabular gd-count">{{sectionCount}}</text>
+      </view>
+      <view class="btn-ghost btn-sm gd-toggle-all" hover-class="is-pressed" bindtap="toggleAll" aria-role="button">
+        <text>{{i.t(allOpen ? 'gdCollapseAll' : 'gdExpandAll', lang)}}</text>
+      </view>
+    </view>
+    <view wx:for="{{sections}}" wx:key="id" class="gd-sec {{item.open ? 'is-open' : ''}}">
+      <view class="gd-sec-head" hover-class="is-pressed" hover-stay-time="60" data-index="{{index}}" bindtap="toggleSection"
+        aria-role="button" aria-expanded="{{item.open}}">
+        <text class="mono tabular gd-sec-num">{{item.num}}</text>
+        <text class="flex-1 gd-sec-title">{{i.t(item.titleKey, lang)}}</text>
+        <view class="icon i-chevron-down gd-chev {{item.open ? 'is-open' : ''}}"></view>
+      </view>
+      <view wx:if="{{item.open}}" class="gd-sec-body">
+        <text user-select>{{i.t(item.bodyKey, lang)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Privacy -->
+  <view class="notice notice-info gd-block gd-privacy">
+    <view class="icon i-shield gd-privacy-icon"></view>
+    <view class="flex-1">
+      <view class="notice-title">{{i.t('privacyTitle', lang)}}</view>
+      <view class="gd-privacy-body"><text>{{i.t('gdPrivacyBody', lang)}}</text></view>
+    </view>
+  </view>
+
+  <!-- Literature references -->
+  <view class="panel">
+    <view class="gd-refs-head" hover-class="is-pressed" bindtap="toggleRefs" aria-role="button" aria-expanded="{{refsOpen}}">
+      <view class="gd-tile"><view class="icon i-book"></view></view>
+      <view class="flex-1">
+        <view class="gd-title-row">
+          <text class="gd-action-title">{{i.t('guideRefsCollapse', lang)}}</text>
+          <text class="mono tabular gd-count">{{refCount}}</text>
+        </view>
+        <view class="gd-refs-desc">{{i.t('guideRefsCollapseDesc', lang)}}</view>
+      </view>
+      <view class="icon i-chevron-down gd-chev {{refsOpen ? 'is-open' : ''}}"></view>
+    </view>
+    <view wx:if="{{refsOpen}}" class="gd-refs">
+      <view wx:for="{{refs}}" wx:key="id" class="gd-ref {{item.url ? 'has-link' : ''}}"
+        hover-class="{{item.url ? 'is-pressed' : 'none'}}" data-url="{{item.url}}" bindtap="copyRef">
+        <text class="mono tabular gd-ref-num">{{item.num}}</text>
+        <view class="flex-1 gd-ref-body">
+          <view class="gd-ref-cite"><text>{{item.text + ' '}}</text><text class="gd-ref-journal">{{item.journal}}</text><text wx:if="{{item.volPages}}" class="mono gd-ref-vol">{{item.volPages}}</text></view>
+          <view class="gd-ref-note">{{lang === 'en' ? item.noteEn : item.noteZh}}</view>
+          <view wx:if="{{item.doi}}" class="mono gd-ref-doi" aria-role="button" aria-label="{{i.t('gdCopyDoi', lang)}}">
+            <text class="break">doi:{{item.doi}}</text>
+            <view class="icon i-copy gd-ref-doi-icon"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+<timer-bar />

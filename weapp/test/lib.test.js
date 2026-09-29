@@ -174,3 +174,10 @@ test('i18n falls back like the web', () => {
   expect(i18n.t('no_such_key', 'en')).toBe('no_such_key');
   expect(i18n.tf('itemsCount', 'en', { n: 5 })).toBe('5 items');
 });
+
+test('restoring a backup applies its language immediately', () => {
+  const lang = require('../miniprogram/lib/lang');
+  expect(lang.getLang()).toBe('zh');
+  backup.importBackup({ exportedAt: 'x', data: { biolab_lang: 'en' } });
+  expect(lang.getLang()).toBe('en');
+});

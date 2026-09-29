@@ -1,1 +1,49 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navTools', lang)}}"
+    meta="{{i.n('lkMetaCount', lang, total)}}"
+    title="{{i.t('toolsTitle', lang)}}"
+    desc="{{i.t('toolsSubtitle', lang)}}"
+  />
+
+  <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="lk-chips" aria-label="{{i.t('lkFilterLabel', lang)}}">
+    <view class="lk-chip-track">
+      <view wx:for="{{cats}}" wx:key="id" class="chip lk-chip {{filter === item.id ? 'is-active' : ''}}"
+        hover-class="is-pressed" data-cat="{{item.id}}" bindtap="setFilter" aria-role="button">
+        <text>{{i.t(item.id === 'all' ? 'all' : item.id, lang)}}</text>
+        <text class="chip-count">{{item.count}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="notice lk-hint">
+    <view class="icon i-copy lk-hint-icon"></view>
+    <text class="flex-1">{{i.t('lkCopyHint', lang)}}</text>
+  </view>
+
+  <block wx:for="{{groups}}" wx:for-item="group" wx:key="cat">
+    <view wx:if="{{filter === 'all' || filter === group.cat}}" class="lk-group">
+      <view class="eyebrow lk-group-head" aria-role="heading">
+        <text>{{i.t(group.cat, lang)}}</text>
+        <text class="tabular lk-group-count">{{group.count}}</text>
+        <view class="lk-rule"></view>
+      </view>
+      <view class="lk-grid">
+        <view wx:for="{{group.tools}}" wx:key="key" class="panel lk-card" hover-class="is-pressed" hover-stay-time="80"
+          data-url="{{item.url}}" bindtap="copyLink" aria-role="button" aria-label="{{item.name}}, {{i.t('lkCopyLink', lang)}}">
+          <view class="mono lk-mono">{{item.mono}}</view>
+          <view class="flex-1 lk-body">
+            <view class="row-top gap-8">
+              <text class="flex-1 lk-name">{{item.name}}</text>
+              <view class="icon i-copy lk-copy"></view>
+            </view>
+            <view class="lk-desc">{{lang === 'zh' ? item.descZh : item.descEn}}</view>
+            <view class="mono truncate lk-host">{{item.host}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+<timer-bar />

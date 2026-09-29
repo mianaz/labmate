@@ -1,0 +1,91 @@
+/* Links — the web's ToolsTab: filter chips, per-category groups, monogram cards. */
+
+/* Chip row runs edge to edge and scrolls sideways (the web's chip-row is-scroll). */
+.lk-chips {
+  width: auto;
+  margin: 0 -16px 12px;
+  white-space: nowrap;
+  overflow: hidden; /* the host clips; scroll-view scrolls its own inner box */
+}
+.lk-chip-track {
+  display: inline-block;
+  padding: 0 10px 0 16px;
+  white-space: nowrap;
+}
+.lk-chip { margin-right: 6px; }
+
+.lk-hint {
+  margin-bottom: 22px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.lk-hint-icon { margin-top: 3px; font-size: 14px; color: var(--accent); }
+
+.lk-group { margin-bottom: 26px; }
+.lk-group:last-child { margin-bottom: 0; }
+.lk-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lk-group-count { font-weight: 500; }
+.lk-rule { flex: 1; height: 1px; background: var(--rule); }
+
+.lk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.lk-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 12px 12px 14px;
+}
+.lk-card.is-pressed { background: var(--bg-2); }
+
+.lk-mono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+}
+.lk-card.is-pressed .lk-mono {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--border-strong);
+}
+
+.lk-body { display: flex; flex-direction: column; min-width: 0; }
+.lk-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  word-break: break-word;
+}
+.lk-copy { margin-top: 2px; font-size: 14px; color: var(--text-muted); }
+.lk-desc {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.lk-host {
+  padding-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}

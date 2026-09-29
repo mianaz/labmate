@@ -5,8 +5,8 @@
 //   node scripts/sync.mjs          write the generated files
 //   node scripts/sync.mjs --check  fail if any generated file is out of date (CI)
 //
-// Everything written here lands under miniprogram/shared/, miniprogram/data/ and
-// miniprogram/styles/icons.wxss and is committed, so the project opens in WeChat
+// Everything written here lands under miniprogram/shared/, miniprogram/data/,
+// miniprogram/styles/icons.wxss and packages/tools/links/tools-data.js and is committed, so the project opens in WeChat
 // DevTools without running Node first. Do not edit those files by hand.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,6 +53,8 @@ const SHARED_MODULES = {
   'shared/plateReaderParser.js': 'features/plate/plateReaderParser.js',
   'shared/plateExport.js': 'features/plate/plateExport.js',
   'shared/data.js': 'data/index.js',
+  // Only the Links page (tools subpackage) needs this list.
+  'packages/tools/links/tools-data.js': 'data/externalTools.js',
 };
 
 // ── Recipe library ──────────────────────────────────────────────────────────
