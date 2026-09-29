@@ -1,1 +1,113 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page page-sub lang-{{lang}}">
+  <view class="panel panel-body">
+    <view class="field">
+      <text class="field-label">{{i.t('customFormName', lang)}} *</text>
+      <input class="input" value="{{f.name}}" data-key="name" bindinput="onField" focus="{{!editing}}" />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('customFormNameCn', lang)}}</text>
+      <input class="input" value="{{f.nameCn}}" data-key="nameCn" bindinput="onField" />
+    </view>
+    <view wx:if="{{!isProtocol}}" class="field">
+      <text class="field-label">{{i.t('customFormCategory', lang)}}</text>
+      <picker class="picker-host" mode="selector" range="{{catOptions}}" value="{{catIndex}}" bindchange="onCategory">
+        <view class="picker"><text class="picker-value">{{catOptions[catIndex]}}</text><view class="icon i-chevron-down"></view></view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('customFormTags', lang)}}</text>
+      <input class="input" value="{{f.tags}}" data-key="tags" bindinput="onField" placeholder="e.g. WB, common" placeholder-class="placeholder" />
+    </view>
+
+    <block wx:if="{{!isProtocol}}">
+      <view class="grid-2">
+        <view class="field">
+          <text class="field-label">{{i.t('customFormDefaultVol', lang)}}</text>
+          <input class="input" type="digit" value="{{f.defaultVolume}}" data-key="defaultVolume" bindinput="onField" />
+        </view>
+        <view class="field">
+          <text class="field-label">{{i.t('customFormUnit', lang)}}</text>
+          <input class="input" value="{{f.unit}}" data-key="unit" bindinput="onField" />
+        </view>
+        <view class="field">
+          <text class="field-label">{{i.t('customFormPH', lang)}}</text>
+          <input class="input" type="text" value="{{f.ph}}" data-key="ph" bindinput="onField" />
+        </view>
+        <view class="field">
+          <text class="field-label">{{i.t('customFormStorageTemp', lang)}}</text>
+          <picker class="picker-host" mode="selector" range="{{temps}}" value="{{tempIndex}}" bindchange="onTemp">
+            <view class="picker"><text class="picker-value">{{temps[tempIndex]}}</text><view class="icon i-chevron-down"></view></view>
+          </picker>
+        </view>
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('customFormStorageDuration', lang)}}</text>
+        <input class="input" value="{{f.storageDuration}}" data-key="storageDuration" bindinput="onField" placeholder="e.g. 12 months" placeholder-class="placeholder" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('customFormStorageLabelEn', lang)}}</text>
+        <input class="input" value="{{f.storageLabelEn}}" data-key="storageLabelEn" bindinput="onField" placeholder="e.g. Prepare fresh; DMSO aliquots at RT" placeholder-class="placeholder" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('customFormStorageLabelZh', lang)}}</text>
+        <input class="input" value="{{f.storageLabelZh}}" data-key="storageLabelZh" bindinput="onField" placeholder="例如：现配现用；DMSO 分装室温保存" placeholder-class="placeholder" />
+      </view>
+
+      <view class="eyebrow cf-section">{{i.t('customFormComponents', lang)}}</view>
+      <view wx:for="{{components}}" wx:key="index" class="cf-comp">
+        <view class="row gap-6">
+          <input class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('customFormCompName', lang)}}" placeholder-class="placeholder"
+            data-list="components" data-index="{{index}}" data-key="name" bindinput="onListField" />
+          <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="components" data-index="{{index}}" bindtap="removeRow" aria-role="button" aria-label="{{lang === 'zh' ? '移除' : 'Remove'}}"><view class="icon i-close"></view></view>
+        </view>
+        <view class="row gap-6 mt-4">
+          <input class="input is-sm cf-amount" type="digit" value="{{item.amount}}" placeholder="{{i.t('customFormCompAmount', lang)}}" placeholder-class="placeholder"
+            data-list="components" data-index="{{index}}" data-key="amount" bindinput="onListField" />
+          <input class="input is-sm cf-unit" value="{{item.unit}}" placeholder="{{i.t('customFormCompUnit', lang)}}" placeholder-class="placeholder"
+            data-list="components" data-index="{{index}}" data-key="unit" bindinput="onListField" />
+          <input class="input is-sm flex-1" value="{{item.note}}" placeholder="{{i.t('customFormCompNote', lang)}}" placeholder-class="placeholder"
+            data-list="components" data-index="{{index}}" data-key="note" bindinput="onListField" />
+        </view>
+      </view>
+      <view class="btn btn-sm mt-8" hover-class="is-pressed" data-list="components" bindtap="addRow"><view class="icon i-plus"></view><text>{{i.t('customFormAddComponent', lang)}}</text></view>
+    </block>
+
+    <block wx:else>
+      <view class="eyebrow cf-section">{{i.t('customFormSteps', lang)}}</view>
+      <view wx:for="{{steps}}" wx:key="index" class="row-top gap-6 cf-step">
+        <text class="mono cf-step-n">{{index + 1}}.</text>
+        <view class="flex-1">
+          <input class="input is-sm" value="{{item.en}}" placeholder="{{i.t('customFormStepTextEn', lang)}}" placeholder-class="placeholder"
+            data-list="steps" data-index="{{index}}" data-key="en" bindinput="onListField" />
+          <input class="input is-sm mt-4" value="{{item.zh}}" placeholder="{{i.t('customFormStepTextZh', lang)}}" placeholder-class="placeholder"
+            data-list="steps" data-index="{{index}}" data-key="zh" bindinput="onListField" />
+        </view>
+        <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="steps" data-index="{{index}}" bindtap="removeRow" aria-role="button" aria-label="{{lang === 'zh' ? '移除' : 'Remove'}}"><view class="icon i-close"></view></view>
+      </view>
+      <view class="btn btn-sm mt-8" hover-class="is-pressed" data-list="steps" bindtap="addRow"><view class="icon i-plus"></view><text>{{i.t('customFormAddStep', lang)}}</text></view>
+
+      <view class="eyebrow cf-section">{{i.t('customFormMaterials', lang)}}</view>
+      <view wx:for="{{materials}}" wx:key="index" class="row gap-6 cf-mat">
+        <input class="input is-sm flex-1" value="{{item}}" data-list="materials" data-index="{{index}}" bindinput="onListField" aria-label="{{i.t('customFormMaterials', lang)}}" />
+        <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials" data-index="{{index}}" bindtap="removeRow" aria-role="button" aria-label="{{lang === 'zh' ? '移除' : 'Remove'}}"><view class="icon i-close"></view></view>
+      </view>
+      <view class="btn btn-sm mt-8" hover-class="is-pressed" data-list="materials" bindtap="addRow"><view class="icon i-plus"></view><text>{{i.t('customFormAddMaterial', lang)}}</text></view>
+    </block>
+
+    <view class="field mt-24">
+      <text class="field-label">{{i.t('customFormNotesEn', lang)}}</text>
+      <textarea class="textarea" value="{{f.notesEn}}" data-key="notesEn" bindinput="onField" maxlength="-1" auto-height />
+    </view>
+    <view class="field">
+      <text class="field-label">{{i.t('customFormNotesZh', lang)}}</text>
+      <textarea class="textarea" value="{{f.notesZh}}" data-key="notesZh" bindinput="onField" maxlength="-1" auto-height />
+    </view>
+    <view class="notice text-sm">{{lang === 'zh' ? '自定义条目仅保存在本机，可通过「更多 → 备份」导出。' : 'Custom entries stay on this phone — export them from More → Back up.'}}</view>
+  </view>
+
+  <view class="row gap-8 mt-16">
+    <view class="btn flex-1" hover-class="is-pressed" bindtap="cancel">{{i.t('customFormCancel', lang)}}</view>
+    <view class="btn-primary flex-1 {{canSave ? '' : 'is-disabled'}}" hover-class="{{canSave ? 'is-pressed' : 'none'}}" bindtap="save">{{i.t('customFormSave', lang)}}</view>
+  </view>
+</view>

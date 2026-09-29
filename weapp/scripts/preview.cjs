@@ -76,6 +76,8 @@ function allWxss() {
   walk(MP);
   return out.join('\n')
     .replace(/(^|[\s,}])page(\s*[{,])/g, '$1.mp-root$2')
+    // WXSS tag selectors match the rendered wx-* elements.
+    .replace(/(^|[\s,}>+~(])(view|text|input|textarea|scroll-view|picker|button|image|swiper|label|navigator|switch|slider|checkbox|radio)(?=[\s,{:.\[>+~)])/g, '$1wx-$2')
     .replace(/(-?\d*\.?\d+)rpx/g, (_, n) => (parseFloat(n) * 0.5) + 'px');
 }
 

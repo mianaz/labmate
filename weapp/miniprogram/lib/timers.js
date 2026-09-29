@@ -118,6 +118,7 @@ function init() {
   timers = parseTimers(storage.get(KEY, []), Date.now());
   save();
   schedule();
+  publish();
 }
 
 function add(label, seconds) {

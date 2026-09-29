@@ -1,1 +1,6 @@
-{ "usingComponents": {} }
+{
+  "usingComponents": {
+    "timer-bar": "/components/timer-bar/index"
+  },
+  "navigationBarTitleText": ""
+}

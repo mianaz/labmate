@@ -85,3 +85,19 @@ function importBackup(fileContent) {
 }
 
 module.exports = { buildBackup, backupFileName, markExported, lastExport, importBackup, isBackupKey, collectBackupData };
+
+// "today" / "3 d ago" / "never" (web: describeLastBackup in useBackupStatus.js).
+const { t } = require('../shared/i18n.js');
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+function describeLastBackup(ts, lang) {
+  if (!ts) return t('backupNever', lang);
+  const days = Math.floor((Date.now() - ts) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return t('backupToday', lang);
+  return t('backupDaysAgo', lang).replace('{n}', days);
+}
+function isDue(ts) {
+  return !ts || Date.now() - ts > WEEK_MS;
+}
+
+module.exports.describeLastBackup = describeLastBackup;
+module.exports.isDue = isDue;

@@ -1,1 +1,54 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page page-sub lang-{{lang}}">
+  <view class="panel">
+    <view class="panel-head"><text class="panel-title">{{i.t('timerAdd', lang)}}</text><view class="icon i-timer muted"></view></view>
+    <view class="panel-body">
+      <view class="grid-3">
+        <view wx:for="{{quick}}" wx:key="min" class="btn mono" hover-class="is-pressed" data-min="{{item.min}}" bindtap="startQuick">{{item.label}}</view>
+      </view>
+      <view class="tm-custom">
+        <input class="input" type="text" value="{{customLabel}}" bindinput="onLabel"
+          placeholder="{{lang === 'zh' ? '标签（如 封闭）' : 'Label (e.g. Blocking)'}}" placeholder-class="placeholder"
+          aria-label="{{lang === 'zh' ? '计时器标签' : 'Timer label'}}" />
+        <view class="row gap-8 mt-8">
+          <input class="input flex-1" type="digit" value="{{customMin}}" bindinput="onMinutes" bindconfirm="startCustom"
+            placeholder="{{i.t('timerMinutes', lang)}}" placeholder-class="placeholder" aria-label="{{lang === 'zh' ? '分钟数' : 'Minutes'}}" />
+          <view class="btn-primary {{canStart ? '' : 'is-disabled'}}" hover-class="{{canStart ? 'is-pressed' : 'none'}}" bindtap="startCustom">{{i.t('timerStart', lang)}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="row between mt-24 mb-8">
+    <text class="eyebrow">{{i.t('toolTimer', lang)}} · {{timers.length}}</text>
+    <view wx:if="{{doneCount}}" class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="clearDone">{{lang === 'zh' ? '清除已完成' : 'Clear finished'}}</view>
+  </view>
+
+  <view wx:if="{{!timers.length}}" class="panel empty">
+    <view class="empty-icon"><view class="icon i-timer"></view></view>
+    <view class="empty-title">{{lang === 'zh' ? '没有计时器' : 'No timers'}}</view>
+    <view class="empty-desc">{{lang === 'zh' ? '在实验步骤中点击时间即可开始计时；计时器在小程序关闭后也会保留。' : 'Tap a time in any protocol step to start one. Timers survive closing the mini program.'}}</view>
+  </view>
+
+  <view wx:for="{{timers}}" wx:key="id" class="panel tm-item {{item.done ? 'is-done' : ''}}">
+    <view class="row gap-12">
+      <view class="flex-1 tm-label break">{{item.label}}</view>
+      <view class="mono tabular tm-time">{{item.done ? i.t('timerDone', lang) : item.display}}</view>
+    </view>
+    <view wx:if="{{item.done}}" class="mono tm-finished">{{item.finishedClock ? i.t('timerFinishedAt', lang) + ' ' + item.finishedClock : ''}}</view>
+    <view wx:else class="tm-track"><view class="tm-fill {{item.running ? '' : 'is-paused'}}" style="width: {{item.pct}}%"></view></view>
+    <view class="row gap-8 mt-12">
+      <block wx:if="{{!item.done}}">
+        <view wx:if="{{item.running}}" class="btn btn-sm" hover-class="is-pressed" data-id="{{item.id}}" bindtap="pause"><view class="icon i-pause"></view><text>{{lang === 'zh' ? '暂停' : 'Pause'}}</text></view>
+        <view wx:else class="btn btn-sm" hover-class="is-pressed" data-id="{{item.id}}" bindtap="resume"><view class="icon i-play"></view><text>{{lang === 'zh' ? '继续' : 'Resume'}}</text></view>
+        <view class="btn btn-sm" hover-class="is-pressed" data-id="{{item.id}}" bindtap="reset"><view class="icon i-reset"></view><text>{{lang === 'zh' ? '重置' : 'Reset'}}</text></view>
+      </block>
+      <view class="btn-ghost btn-sm" hover-class="is-pressed" data-id="{{item.id}}" bindtap="remove"><view class="icon i-close"></view><text>{{lang === 'zh' ? '移除' : 'Remove'}}</text></view>
+    </view>
+  </view>
+
+  <view class="notice mt-16 tm-note">
+    <view class="icon i-info muted tm-note-icon"></view>
+    <text>{{lang === 'zh' ? '微信在后台会暂停小程序：计时器仍按结束时间准确计算，但提醒（振动、提示音）会在你回到小程序时触发。计时期间屏幕保持常亮。' : 'WeChat pauses mini programs in the background: timers keep exact time, but the alert (vibration + chime) fires when you come back. The screen stays on while a timer runs.'}}</text>
+  </view>
+</view>

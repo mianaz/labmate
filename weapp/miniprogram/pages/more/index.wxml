@@ -1,1 +1,64 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page is-tab {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header eyebrow="labmate" title="{{i.t('navMore', lang)}}" />
+
+  <view class="grid-2 mb-16">
+    <view class="btn" hover-class="is-pressed" bindtap="openSearch"><view class="icon i-search"></view><text>{{i.t('mpSearchAll', lang)}}</text></view>
+    <view class="btn" hover-class="is-pressed" bindtap="openTimer">
+      <view class="icon i-timer"></view><text>{{i.t('toolTimer', lang)}}{{runningTimers ? ' · ' + runningTimers : ''}}</text>
+    </view>
+  </view>
+
+  <view class="panel">
+    <block wx:for="{{groups}}" wx:for-item="group" wx:key="id">
+      <view class="mo-group-label {{index > 0 ? 'has-rule' : ''}}">{{i.t(group.label, lang)}}</view>
+      <view wx:for="{{group.items}}" wx:key="id" class="mo-row" hover-class="is-pressed" data-url="{{item.url}}" bindtap="go" aria-role="link">
+        <view class="icon {{item.icon}} mo-icon"></view>
+        <text class="flex-1">{{i.t(item.label, lang)}}</text>
+        <view class="icon i-chevron-right chevron"></view>
+      </view>
+    </block>
+
+    <view class="mo-group-label has-rule">{{i.t('navSettings', lang)}}</view>
+    <view class="mo-row">
+      <view class="icon i-globe mo-icon"></view>
+      <text class="flex-1">{{i.t('languageLabel', lang)}}</text>
+      <view class="seg">
+        <view class="seg-item {{lang === 'en' ? 'is-active' : ''}}" data-lang="en" bindtap="setLangTo">EN</view>
+        <view class="seg-item {{lang === 'zh' ? 'is-active' : ''}}" data-lang="zh" bindtap="setLangTo">中文</view>
+      </view>
+    </view>
+    <view class="mo-row">
+      <view class="icon i-moon mo-icon"></view>
+      <text class="flex-1">{{i.t('themeLabel', lang)}}</text>
+      <text class="mono muted mo-meta">{{i.t('mpThemeFollows', lang)}}</text>
+    </view>
+
+    <view class="mo-group-label has-rule">{{i.t('localDataOnly', lang)}}</view>
+    <view class="mo-backup">
+      <view class="row gap-12">
+        <view class="flex-1">
+          <view class="mono mo-backup-status {{backupDue ? 'is-due' : ''}}">{{i.t('backupLast', lang)}}: {{lastBackup}}</view>
+          <view wx:if="{{storageText}}" class="mono mo-meta">{{i.t('mpStorageUsed', lang)}}: {{storageText}}</view>
+        </view>
+      </view>
+      <view class="text-sm muted mt-8">{{i.t('mpBackupHint', lang)}}</view>
+      <view class="row gap-8 mt-12">
+        <view class="{{backupDue ? 'btn-primary' : 'btn'}} btn-sm" hover-class="is-pressed" bindtap="exportBackup"><view class="icon i-download"></view><text>{{i.t('backupAction', lang)}}</text></view>
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="importBackup"><view class="icon i-upload"></view><text>{{i.t('mpBackupRestore', lang)}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="mo-about">
+    <view class="eyebrow">{{i.t('mpAbout', lang)}}</view>
+    <view class="text-sm mt-4">{{i.t('mpAboutBody', lang)}}</view>
+    <view class="text-xs muted mt-8">{{i.t('mpDisclaimer', lang)}}</view>
+    <view class="row-wrap gap-8 mono mo-foot">
+      <text>labmate weapp</text><text>·</text>
+      <text class="link" bindtap="copyWebLink">{{i.t('mpWebVersion', lang)}}: apps.bioinfospace.com/labmate</text>
+      <text>·</text><text>{{i.t('mpLicense', lang)}}</text>
+    </view>
+  </view>
+</view>
+<timer-bar tab />

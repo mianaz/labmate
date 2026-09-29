@@ -12,6 +12,12 @@ function safeText(val, lang) {
 
 function getRecipeNotes(recipe, lang) {
   if (lang === 'en' && NOTES_EN[recipe.id]) return NOTES_EN[recipe.id];
+  // Custom entries keep Chinese notes in `notes` and English in `_notesEn`.
+  if (recipe._isCustom || recipe._notesEn !== undefined) {
+    const zh = safeText(recipe.notes, lang);
+    const en = recipe._notesEn || '';
+    return lang === 'en' ? (en || zh) : (zh || en);
+  }
   return safeText(recipe.notes, lang);
 }
 

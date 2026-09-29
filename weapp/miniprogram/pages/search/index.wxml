@@ -1,1 +1,40 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <view class="search-field sr-field">
+    <view class="icon i-search"></view>
+    <input class="input-bare" type="text" confirm-type="search" focus="{{focus}}" value="{{query}}"
+      placeholder="{{i.t('searchPlaceholder', lang)}}" placeholder-class="placeholder" bindinput="onInput"
+      aria-label="{{i.t('searchPlaceholder', lang)}}" />
+    <view wx:if="{{query}}" class="icon i-close sr-clear" bindtap="clear" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+  </view>
+
+  <view wx:if="{{!query}}" class="sr-hint">
+    <view class="muted text-sm">{{i.t('searchHint', lang)}}</view>
+    <view class="chip-row center mt-12">
+      <view wx:for="{{suggestions}}" wx:key="*this" class="chip" hover-class="is-pressed" data-q="{{item}}" bindtap="suggest">{{item}}</view>
+    </view>
+  </view>
+
+  <view wx:elif="{{!results.length}}" class="panel empty mt-12">
+    <view class="empty-icon"><view class="icon i-search"></view></view>
+    <view class="empty-title">{{i.t('noResults', lang)}}</view>
+  </view>
+
+  <view wx:else class="panel list mt-12">
+    <view wx:for="{{results}}" wx:key="id" class="list-row" hover-class="is-pressed" data-id="{{item.id}}" bindtap="open">
+      <view class="flex-1">
+        <view class="row gap-8">
+          <text class="list-row-title">{{item.name}}</text>
+          <text wx:if="{{item.custom}}" class="badge badge-green">{{i.t('customBadge', lang)}}</text>
+        </view>
+        <view wx:if="{{item.nameCn}}" class="list-row-sub">{{item.nameCn}}</view>
+        <view wx:if="{{item.contains}}" class="mono sr-contains">{{i.t('searchContains', lang)}}: {{item.contains}}</view>
+      </view>
+      <view class="eyebrow row gap-4 shrink-0 sr-cat" style="color: {{item.catColor}}"><view class="dot dot-sm"></view><text>{{item.cat}}</text></view>
+      <view class="icon i-arrow-right chevron"></view>
+    </view>
+  </view>
+
+  <view class="mono sr-foot">{{total}} {{i.t('totalRecipes', lang)}}</view>
+</view>
+<timer-bar />

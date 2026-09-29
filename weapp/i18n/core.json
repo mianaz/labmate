@@ -1,1 +1,15 @@
-{}
+{
+  "backupDone": { "en": "Backup file sent", "zh": "备份文件已发送" },
+  "mpBackupRestore": { "en": "Restore", "zh": "恢复" },
+  "mpBackupHint": { "en": "Sends a .json file to a chat (e.g. File Transfer). The same file restores here or in the web app.", "zh": "以 .json 文件发送到聊天（如「文件传输助手」）。同一文件可在此处或网页版中恢复。" },
+  "mpRestoreConfirm": { "en": "Restore this backup? Items with the same ID are replaced; everything else is kept.", "zh": "恢复此备份？相同 ID 的条目将被覆盖，其余数据保留。" },
+  "mpRestoreFailed": { "en": "Not a LabMate backup file", "zh": "不是有效的 LabMate 备份文件" },
+  "mpSearchAll": { "en": "Search all", "zh": "全局搜索" },
+  "mpAbout": { "en": "About", "zh": "关于" },
+  "mpAboutBody": { "en": "LabMate by Bioinfospace — recipes, protocols and bench tools. Everything is stored on this phone only; no account, no server.", "zh": "LabMate（Bioinfospace 出品）——配方、实验方案与实验台工具。所有数据仅保存在本机，无需账号，不连服务器。" },
+  "mpWebVersion": { "en": "Web version", "zh": "网页版" },
+  "mpDisclaimer": { "en": "Protocols and calculators are provided for reference, as is. Follow your institution's safety guidance and the manufacturer's current instructions. Not affiliated with any product or brand mentioned.", "zh": "实验方案与计算器仅供参考，按原样提供。请遵循所在机构的安全规范及厂商最新说明。与文中提及的任何产品或品牌无关联。" },
+  "mpLicense": { "en": "App code MIT · recipe data CC BY 4.0", "zh": "应用代码 MIT · 配方数据 CC BY 4.0" },
+  "mpThemeFollows": { "en": "Follows WeChat's dark mode", "zh": "跟随微信深色模式" },
+  "mpStorageUsed": { "en": "Storage used", "zh": "已用存储" }
+}
