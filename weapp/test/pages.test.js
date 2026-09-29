@@ -213,3 +213,17 @@ describe('custom form', () => {
     expect(text(detail)).toContain('冰上 10 分钟');
   });
 });
+
+describe('onboarding', () => {
+  test('shows once on first launch', async () => {
+    let comp = await page('pages/recipes/index');
+    const ob = comp.querySelector('#onboarding');
+    expect(ob.instance.data.open).toBe(true);
+    expect(text(comp)).toContain('欢迎使用 bioinfospace labmate');
+    for (let k = 0; k < 7; k++) ob.instance.next();
+    expect(ob.instance.data.open).toBe(false);
+    expect(wxMock.getStorageSync('labmate_onboardingDone')).toBe(true);
+    comp = await page('pages/recipes/index');
+    expect(comp.querySelector('#onboarding').instance.data.open).toBe(false);
+  });
+});

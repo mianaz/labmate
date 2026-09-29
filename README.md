@@ -113,6 +113,10 @@ Push to `main` runs the **Deploy** workflow (`.github/workflows/deploy.yml`): it
 
 Native shells wrap this same web app: **Tauri 2** (desktop) and **Capacitor** (iOS/Android), both loading a relative-base build (`npm run build:native`). Mobile/desktop configuration lives in [`capacitor.config.ts`](capacitor.config.ts); native projects are generated in a dev environment and are not committed.
 
+## WeChat Mini Program
+
+[`weapp/`](weapp/) is a native WeChat Mini Program (微信小程序) port — the library, calculators, plate designer, inventory, notebook, calendar and timers, bilingual and fully on-device. Its recipe data, translations, calculators and icons are generated from this app (`cd weapp && npm run sync`), and its backup files are interchangeable with the web app's. Open `weapp/` in WeChat DevTools; see [`weapp/README.md`](weapp/README.md).
+
 ## Design
 
 LabMate implements the shared Bioinfospace **v2 design system — "Lab-Manual Brutalism × Sequence Telemetry"** (paper and carbon ink, signal green `#16B364`, zero border-radius, monospace as structural type), refined for an all-day bench tool: flat 1px-framed panels, soft interior hairlines, hard offset shadows reserved for primary actions and floating surfaces, a grouped sidebar on desktop and a bottom bar on phones. See [`DESIGN.md`](DESIGN.md) for tokens, component classes and page patterns; the ground truth in code is `src/styles/global.css`, `src/lib/nav.jsx` and the shared components in `src/components/`.

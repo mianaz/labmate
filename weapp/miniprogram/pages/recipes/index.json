@@ -1,7 +1,8 @@
 {
   "usingComponents": {
     "library-view": "/components/library-view/index",
-    "timer-bar": "/components/timer-bar/index"
+    "timer-bar": "/components/timer-bar/index",
+    "onboarding": "/components/onboarding/index"
   },
   "enablePullDownRefresh": false
 }

@@ -1,0 +1,22 @@
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<block wx:if="{{open}}">
+  <view class="mask" catchtouchmove="noop"></view>
+  <view class="sheet ob-sheet lang-{{lang}}" catchtouchmove="noop" aria-role="dialog">
+    <view class="row between ob-top">
+      <text class="eyebrow">{{step < 9 ? '0' : ''}}{{step + 1}} / 0{{total}}</text>
+      <view wx:if="{{step < total - 1}}" class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="close">{{i.t('onboardingSkip', lang)}}</view>
+    </view>
+    <view class="ob-body">
+      <view class="ob-icon"><view class="icon {{slides[step].icon}}"></view></view>
+      <view class="ob-title">{{i.t(slides[step].title, lang)}}</view>
+      <view class="ob-text">{{i.t(slides[step].body, lang)}}</view>
+      <view class="ob-dots">
+        <view wx:for="{{slides}}" wx:key="title" class="ob-dot {{index <= step ? 'is-on' : ''}}"></view>
+      </view>
+      <view class="row gap-8">
+        <view wx:if="{{step > 0}}" class="btn btn-lg" hover-class="is-pressed" bindtap="prev">{{i.t('onboardingPrev', lang)}}</view>
+        <view class="btn-primary btn-lg flex-1" hover-class="is-pressed" bindtap="next">{{i.t(step === total - 1 ? 'onboardingDone' : 'onboardingNext', lang)}}</view>
+      </view>
+    </view>
+  </view>
+</block>

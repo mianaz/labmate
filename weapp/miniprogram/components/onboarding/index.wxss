@@ -1,0 +1,20 @@
+.ob-sheet { z-index: 60; box-shadow: none; }
+.ob-top { padding: 14px 20px 0; }
+.ob-body { padding: 16px 24px 24px; }
+.ob-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 18px;
+  font-size: 28px;
+  color: var(--accent);
+  background: var(--primary-light);
+  border: 1px solid var(--border-strong);
+}
+.ob-title { font-family: var(--font-heading); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.ob-text { margin-top: 8px; font-size: 15px; line-height: 1.6; color: var(--text-muted); min-height: 5em; }
+.ob-dots { display: flex; gap: 4px; margin: 20px 0; }
+.ob-dot { flex: 1; height: 3px; background: var(--rule); }
+.ob-dot.is-on { background: var(--primary); }

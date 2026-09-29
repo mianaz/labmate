@@ -219,13 +219,16 @@ view, text, input, textarea, scroll-view, picker, button { box-sizing: border-bo
 .btn-icon.btn-sm { width: 34px; min-width: 34px; }
 .btn-block { display: flex; width: 100%; }
 
+/* style v2 gives <button> a fixed 184px width and its own padding — undo it. */
 button.btn, button.btn-primary, button.btn-ghost, button.btn-danger, button.btn-reset {
   margin: 0;
-  width: auto;
+  width: auto !important;
   border-radius: 0;
   line-height: 1.2;
 }
-button.btn-block { width: 100%; }
+button.btn-icon { width: 40px !important; padding: 0; }
+button.btn-icon.btn-sm { width: 34px !important; }
+button.btn-block { width: 100% !important; }
 button.btn::after, button.btn-primary::after, button.btn-ghost::after, button.btn-danger::after, button.btn-reset::after { border: none; }
 button.btn-reset { padding: 0; background: transparent; font-size: inherit; color: inherit; text-align: inherit; }
 

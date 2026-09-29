@@ -1,0 +1,4 @@
+# WeChat DevTools per-user settings
+project.private.config.json
+# preview screenshots
+*.preview.png
