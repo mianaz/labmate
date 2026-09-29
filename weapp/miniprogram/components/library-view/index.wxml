@@ -1,0 +1,93 @@
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="lang-{{lang}}">
+  <page-header
+    eyebrow="{{i.t('navLibrary', lang)}}"
+    meta="{{total}}"
+    title="{{i.t(isProtocol ? 'tabProtocols' : 'tabBuffers', lang)}}"
+    desc="{{i.t(isProtocol ? 'pageProtocolsDesc' : 'pageRecipesDesc', lang)}}"
+  >
+    <view class="btn-primary" hover-class="is-pressed" bindtap="openNew" aria-role="button">
+      <view class="icon i-plus"></view>
+      <text>{{i.t(isProtocol ? 'addCustomProtocol' : 'addCustomRecipe', lang)}}</text>
+    </view>
+    <view class="btn" hover-class="is-pressed" bindtap="openSearch" aria-role="button">
+      <view class="icon i-search"></view>
+      <text>{{lang === 'zh' ? '全局搜索' : 'Search all'}}</text>
+    </view>
+  </page-header>
+
+  <view class="panel">
+    <view class="lv-filters">
+      <view class="search-field">
+        <view class="icon i-search"></view>
+        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+          placeholder="{{lang === 'zh' ? '名称、试剂或标签' : 'Name, reagent or tag'}}" placeholder-class="placeholder"
+          bindinput="onSearch" aria-label="{{i.t('searchPlaceholder', lang)}}" />
+        <view wx:if="{{search}}" class="icon i-close lv-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
+      </view>
+      <view class="row gap-8 mt-8">
+        <view class="seg shrink-0">
+          <view class="seg-item {{scope === 'all' ? 'is-active' : ''}}" data-scope="all" bindtap="setScope">{{i.t('all', lang)}}</view>
+          <view class="seg-item {{scope === 'favs' ? 'is-active' : ''}}" data-scope="favs" bindtap="setScope" aria-label="{{i.t('favorites', lang)}}">
+            <view class="icon {{scope === 'favs' ? 'i-star-filled' : 'i-star'}}"></view>
+          </view>
+          <view class="seg-item {{scope === 'custom' ? 'is-active' : ''}}" data-scope="custom" bindtap="setScope">{{i.t('customBadge', lang)}}</view>
+        </view>
+        <picker class="flex-1 picker-host" mode="selector" range="{{discOptions}}" range-key="label" value="{{discIndex}}" bindchange="onDisc">
+          <view class="picker lv-picker">
+            <text class="picker-value">{{discIndex === 0 ? (lang === 'zh' ? '全部学科' : 'Discipline') : discOptions[discIndex].label}}</text>
+            <view class="icon i-chevron-down"></view>
+          </view>
+        </picker>
+      </view>
+      <view wx:if="{{recentRows.length}}" class="row gap-8 mt-8">
+        <text class="eyebrow shrink-0 lv-recent-label">{{i.t('recentlyUsed', lang)}}</text>
+        <scroll-view scroll-x class="chip-scroll flex-1" enhanced show-scrollbar="{{false}}">
+          <view wx:for="{{recentRows}}" wx:key="id" class="chip lv-recent" hover-class="is-pressed" data-id="{{item.id}}" bindtap="open">
+            <text class="truncate">{{item.name}}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <view class="list">
+      <view wx:for="{{rows}}" wx:key="id" class="list-row lv-row" hover-class="is-pressed" hover-stay-time="80">
+        <view class="flex-1 lv-main" data-id="{{item.id}}" bindtap="open" aria-role="button">
+          <view class="list-row-title">{{item.name}}</view>
+          <view wx:if="{{item.nameCn}}" class="list-row-sub">{{item.nameCn}}</view>
+          <view class="list-row-meta">
+            <view wx:if="{{item.cat}}" class="row gap-4 lv-cat" style="color: {{item.catColor}}">
+              <view class="dot dot-sm"></view><text>{{item.cat}}</text>
+            </view>
+            <text wx:if="{{item.meta}}">{{item.cat ? '· ' : ''}}{{item.meta}}</text>
+            <text wx:if="{{item.custom}}" class="badge badge-green">{{i.t('customBadge', lang)}}</text>
+          </view>
+        </view>
+        <view class="lv-star {{item.fav ? 'fav-on' : ''}}" data-id="{{item.id}}" catchtap="toggleFav"
+          aria-role="button" aria-label="{{item.fav ? i.t('favRemove', lang) : i.t('favAdd', lang)}}">
+          <view class="icon {{item.fav ? 'i-star-filled' : 'i-star'}}"></view>
+        </view>
+      </view>
+
+      <view wx:if="{{!rows.length}}" class="empty">
+        <block wx:if="{{scope === 'favs' && !search && disc === 'all'}}">
+          <view class="empty-icon"><view class="icon i-star"></view></view>
+          <view class="empty-title">{{lang === 'zh' ? '还没有收藏' : 'No favorites yet'}}</view>
+          <view class="empty-desc">{{lang === 'zh' ? '点击任意条目上的 ☆ 即可收藏，方便快速找到。' : 'Star anything you use often and it will show up here.'}}</view>
+        </block>
+        <block wx:elif="{{scope === 'custom' && !search && disc === 'all'}}">
+          <view class="empty-icon"><view class="icon {{isProtocol ? 'i-clipboard' : 'i-flask'}}"></view></view>
+          <view class="empty-title">{{lang === 'zh' ? '还没有自定义条目' : (isProtocol ? 'No custom protocols yet' : 'No custom recipes yet')}}</view>
+          <view class="empty-desc">{{lang === 'zh' ? '添加实验室自己的配方或方案，仅保存在本机。' : 'Add your lab’s own versions — they stay on this device.'}}</view>
+          <view class="btn-primary btn-sm" hover-class="is-pressed" bindtap="openNew"><view class="icon i-plus"></view><text>{{i.t(isProtocol ? 'addCustomProtocol' : 'addCustomRecipe', lang)}}</text></view>
+        </block>
+        <block wx:else>
+          <view class="empty-icon"><view class="icon i-search"></view></view>
+          <view class="empty-title">{{i.t('noResults', lang)}}</view>
+          <view class="btn btn-sm" hover-class="is-pressed" bindtap="clearFilters">{{lang === 'zh' ? '清除筛选' : 'Clear filters'}}</view>
+        </block>
+      </view>
+    </view>
+    <view class="lv-foot">{{footer}}</view>
+  </view>
+</view>

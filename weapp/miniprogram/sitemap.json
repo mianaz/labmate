@@ -1,0 +1,10 @@
+{
+  "desc": "Recipe and protocol pages can be indexed; personal pages (notebook, inventory, calendar) cannot.",
+  "rules": [
+    { "action": "allow", "page": "pages/recipes/index" },
+    { "action": "allow", "page": "pages/protocols/index" },
+    { "action": "allow", "page": "pages/detail/index", "params": ["id"], "matching": "partial" },
+    { "action": "allow", "page": "pages/calc/index" },
+    { "action": "disallow", "page": "*" }
+  ]
+}

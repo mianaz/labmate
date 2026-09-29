@@ -1,0 +1,16 @@
+<wxs module="i" src="../shared/i18n.wxs"/>
+<view class="tab-bar lang-{{lang}}">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="path"
+    class="tab-item {{selected === index ? 'is-active' : ''}}"
+    hover-class="is-pressed"
+    data-index="{{index}}"
+    bindtap="switchTab"
+    aria-role="tab"
+    aria-selected="{{selected === index}}"
+  >
+    <view class="icon {{item.icon}} tab-icon"></view>
+    <text class="tab-label">{{i.t(item.label, lang)}}</text>
+  </view>
+</view>

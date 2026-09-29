@@ -1,0 +1,4 @@
+<view class="page is-tab {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <library-view id="lib" kind="protocols" />
+</view>
+<timer-bar tab />

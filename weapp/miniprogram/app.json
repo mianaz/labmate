@@ -1,0 +1,65 @@
+{
+  "pages": [
+    "pages/recipes/index",
+    "pages/protocols/index",
+    "pages/calc/index",
+    "pages/plate/index",
+    "pages/more/index",
+    "pages/detail/index",
+    "pages/search/index",
+    "pages/timer/index",
+    "pages/custom-form/index"
+  ],
+  "subPackages": [
+    {
+      "root": "packages/lab",
+      "name": "lab",
+      "pages": [
+        "inventory/index",
+        "notebook/index",
+        "notebook/edit",
+        "calendar/index"
+      ]
+    },
+    {
+      "root": "packages/tools",
+      "name": "tools",
+      "pages": [
+        "links/index",
+        "guide/index"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/more/index": { "network": "all", "packages": ["lab", "tools"] }
+  },
+  "window": {
+    "navigationBarBackgroundColor": "@navBg",
+    "navigationBarTextStyle": "@navText",
+    "navigationBarTitleText": "LabMate",
+    "backgroundColor": "@bgColor",
+    "backgroundTextStyle": "@bgTextStyle",
+    "backgroundColorTop": "@bgColor",
+    "backgroundColorBottom": "@bgColor"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "@tabColor",
+    "selectedColor": "@tabSelected",
+    "backgroundColor": "@tabBg",
+    "borderStyle": "@tabBorder",
+    "list": [
+      { "pagePath": "pages/recipes/index", "text": "Recipes" },
+      { "pagePath": "pages/protocols/index", "text": "Protocols" },
+      { "pagePath": "pages/calc/index", "text": "Calc" },
+      { "pagePath": "pages/plate/index", "text": "Plate" },
+      { "pagePath": "pages/more/index", "text": "More" }
+    ]
+  },
+  "usingComponents": {},
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

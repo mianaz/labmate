@@ -1,0 +1,22 @@
+{
+  "name": "labmate-weapp",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "LabMate as a native WeChat Mini Program",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "vitest run",
+    "verify": "node scripts/sync.mjs --check && node scripts/check.mjs && vitest run"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^25.0.0",
+    "miniprogram-simulate": "^1.6.2",
+    "playwright-core": "1.56",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vitest": "^3.0.0"
+  }
+}

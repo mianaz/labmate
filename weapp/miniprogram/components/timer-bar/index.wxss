@@ -1,0 +1,42 @@
+.timer-bar {
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 45;
+  width: 250px;
+  max-width: calc(100vw - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.timer-bar.on-tab { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px); }
+.tb-item {
+  padding: 6px 4px 4px 10px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+}
+.tb-item.is-done { background: var(--primary-light); border-color: var(--primary); }
+.tb-label { font-size: 13px; font-weight: 600; }
+.tb-time { font-size: 16px; font-weight: 700; padding-right: 4px; }
+.tb-item.is-done .tb-time { color: var(--accent); }
+.tb-controls { gap: 2px; margin-top: 2px; }
+.tb-finished { font-size: 11px; color: var(--text-muted); }
+.tb-track { height: 3px; background: var(--bg-2); margin-right: 6px; }
+.tb-fill { height: 100%; background: var(--primary); }
+.tb-fill.is-paused { background: var(--border); }
+.tb-btn { width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 15px; }
+.tb-btn.is-pressed { background: var(--bg-2); }
+.tb-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+}
+.tb-chev { font-size: 14px; }

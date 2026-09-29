@@ -1,0 +1,25 @@
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view wx:if="{{timers.length}}" class="timer-bar {{tab ? 'on-tab' : ''}} lang-{{lang}}">
+  <view wx:if="{{timers.length > 2}}" class="tb-more" hover-class="is-pressed" bindtap="toggle">
+    <text>{{i.t('toolTimer', lang)}} · {{timers.length}}</text>
+    <view class="icon {{expanded ? 'i-chevron-down' : 'i-chevron-left'}} tb-chev"></view>
+  </view>
+  <block wx:for="{{timers}}" wx:key="id">
+    <view wx:if="{{expanded || timers.length <= 2 || index >= timers.length - 2}}" class="tb-item {{item.done ? 'is-done' : ''}}">
+      <view class="row gap-8">
+        <text class="tb-label flex-1 truncate" bindtap="open">{{item.label}}</text>
+        <text class="tb-time mono tabular">{{item.done ? i.t('timerDone', lang) : item.display}}</text>
+      </view>
+      <view class="row tb-controls">
+        <text wx:if="{{item.done}}" class="flex-1 mono tb-finished">{{item.finishedClock ? i.t('timerFinishedAt', lang) + ' ' + item.finishedClock : ''}}</text>
+        <view wx:else class="flex-1 tb-track"><view class="tb-fill {{item.running ? '' : 'is-paused'}}" style="width: {{item.pct}}%"></view></view>
+        <block wx:if="{{!item.done}}">
+          <view wx:if="{{item.running}}" class="tb-btn" hover-class="is-pressed" data-id="{{item.id}}" bindtap="pause" aria-role="button" aria-label="{{lang === 'zh' ? '暂停' : 'Pause'}}"><view class="icon i-pause"></view></view>
+          <view wx:else class="tb-btn" hover-class="is-pressed" data-id="{{item.id}}" bindtap="resume" aria-role="button" aria-label="{{lang === 'zh' ? '继续' : 'Resume'}}"><view class="icon i-play"></view></view>
+          <view class="tb-btn" hover-class="is-pressed" data-id="{{item.id}}" bindtap="reset" aria-role="button" aria-label="{{lang === 'zh' ? '重置' : 'Reset'}}"><view class="icon i-reset"></view></view>
+        </block>
+        <view class="tb-btn" hover-class="is-pressed" data-id="{{item.id}}" bindtap="remove" aria-role="button" aria-label="{{lang === 'zh' ? '移除计时器' : 'Remove timer'}}"><view class="icon i-close"></view></view>
+      </view>
+    </view>
+  </block>
+</view>

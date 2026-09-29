@@ -1,0 +1,10 @@
+<view class="page-header">
+  <view wx:if="{{eyebrow}}" class="page-eyebrow">
+    <view class="page-eyebrow-mark"></view>
+    <text>{{eyebrow}}</text>
+    <text wx:if="{{meta}}" class="ph-meta">· {{meta}}</text>
+  </view>
+  <view class="page-title">{{title}}</view>
+  <view wx:if="{{desc}}" class="page-desc">{{desc}}</view>
+  <view class="ph-actions"><slot></slot></view>
+</view>
