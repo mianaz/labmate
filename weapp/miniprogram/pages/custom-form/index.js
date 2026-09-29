@@ -4,6 +4,7 @@ const pageBehavior = require('../../behaviors/page');
 const recipes = require('../../lib/recipes');
 const ui = require('../../lib/ui');
 const { t } = require('../../shared/i18n.js');
+const { parseNum } = require('../../lib/format');
 
 const CATEGORIES = ['buffer', 'staining', 'media'];
 const TEMPS = ['RT', '4°C', '-20°C', '-80°C', 'N/A'];
@@ -112,7 +113,7 @@ Component({
         category: isProtocol ? 'protocol' : CATEGORIES[this.data.catIndex],
         tags: parseTags(f.tags),
         _isCustom: true,
-        defaultVolume: +f.defaultVolume || 1000,
+        defaultVolume: parseNum(f.defaultVolume) > 0 ? parseNum(f.defaultVolume) : 1000,
         unit: f.unit,
       };
       if (!isProtocol) {
@@ -126,7 +127,7 @@ Component({
         recipe._notesEn = f.notesEn;
         recipe.components = this.data.components
           .filter((c) => c.name.trim())
-          .map((c) => ({ name: c.name.trim(), amount: +c.amount || 0, unit: c.unit || 'g', note: c.note || '' }));
+          .map((c) => ({ name: c.name.trim(), amount: parseNum(c.amount) || 0, unit: c.unit || 'g', note: c.note || '' }));
       } else {
         recipe.briefSteps = this.data.steps
           .filter((s) => s.en.trim() || s.zh.trim())

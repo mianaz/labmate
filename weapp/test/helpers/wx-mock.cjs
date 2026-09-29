@@ -66,6 +66,7 @@ const mock = {
   vibrateShort: record('vibrateShort'),
   pageScrollTo: record('pageScrollTo'),
   showShareMenu: record('showShareMenu'),
+  hideShareMenu: record('hideShareMenu'),
   shareFileMessage: record('shareFileMessage'),
   setInnerAudioOption: record('setInnerAudioOption'),
   // Set wx.__pickedFile = { name, content } to simulate picking a file from a chat.
@@ -82,6 +83,7 @@ const mock = {
   getFileSystemManager() {
     return {
       writeFile: record('fs.writeFile'),
+      writeFileSync(filePath, data, encoding) { calls.push({ name: 'fs.writeFile', opts: { filePath, data, encoding } }); },
       readFile(opts) { calls.push({ name: 'fs.readFile', opts }); if (opts.success) opts.success({ data: mock.__fileContent || '' }); },
     };
   },

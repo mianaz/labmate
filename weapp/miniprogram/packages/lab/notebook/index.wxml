@@ -54,7 +54,7 @@
     <view class="nb-filters">
       <view class="search-field">
         <view class="icon i-search"></view>
-        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+        <input maxlength="-1" class="input-bare" type="text" confirm-type="search" value="{{search}}"
           placeholder="{{i.t('nbSearch', lang)}}" placeholder-class="placeholder"
           bindinput="onSearch" aria-label="{{i.t('nbSearch', lang)}}" />
         <view wx:if="{{search}}" class="icon i-close nb-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>

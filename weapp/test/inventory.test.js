@@ -490,9 +490,11 @@ describe('CSV and JSON', () => {
   test('export menu, template and JSON backup', async () => {
     wxMock.setStorageSync(KEY, seed());
     const comp = await open(INDEX);
-    wxMock.__actionSheetIndex = 2;
     comp.instance.openExport();
     await simulate.sleep(0);
+    expect(comp.instance.data.exportShow).toBe(true);
+    await comp.instance.downloadTemplate();
+    expect(comp.instance.data.exportShow).toBe(false);
     expect(sharedFile()).toEqual({ name: 'inventory-template.csv', content: U.invCsvTemplate() });
     await comp.instance.exportJson();
     const backup = JSON.parse(sharedFile().content);

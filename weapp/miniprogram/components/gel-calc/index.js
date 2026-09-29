@@ -118,9 +118,9 @@ Component({
       const p = this.params();
       let txt = 'SDS-PAGE Gel Recipe\n' + '═'.repeat(50) + '\n';
       txt += 'Gels: ' + p.ng + '\n\n';
-      txt += gelToText('Resolving Gel (' + p.resPerc + '%, ' + p.rv * p.ng + ' mL)', p.resGel);
+      txt += gelToText('Resolving Gel (' + p.resPerc + '%, ' + fmtVol(p.rv * p.ng) + ' mL)', p.resGel);
       txt += '\n';
-      txt += gelToText('Stacking Gel (' + p.stackPerc + '%, ' + p.sv * p.ng + ' mL)', p.stackGel);
+      txt += gelToText('Stacking Gel (' + p.stackPerc + '%, ' + fmtVol(p.sv * p.ng) + ' mL)', p.stackGel);
       txt += '\n' + REF + '\n';
       return txt;
     },

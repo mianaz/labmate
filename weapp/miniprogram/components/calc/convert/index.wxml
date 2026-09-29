@@ -18,7 +18,7 @@
       <view class="input-group">
         <view wx:if="{{cat === 'temperature'}}" class="input-addon cv-sign" hover-class="is-pressed" bindtap="toggleSign"
           aria-role="button" aria-label="{{i.t('calcToggleSign', lang)}}">±</view>
-        <input class="input" type="digit" value="{{value}}" placeholder="0" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="digit" value="{{value}}" placeholder="0" placeholder-class="placeholder"
           bindinput="onInput" aria-label="{{i.t('convertFrom', lang)}}" />
         <picker class="picker-host shrink-0" mode="selector" range="{{units}}" value="{{fromIdx}}" bindchange="onFrom">
           <view class="input-addon is-picker cx-addon cv-unit"><text>{{units[fromIdx]}}</text><view class="icon i-chevron-down"></view></view>

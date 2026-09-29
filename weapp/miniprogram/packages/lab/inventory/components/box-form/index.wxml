@@ -20,11 +20,11 @@
     <view wx:if="{{form.boxType === 'custom'}}" class="inv-form-grid">
       <view class="field">
         <text class="field-label">{{i.t('invRows', lang)}} (1–26)</text>
-        <input class="input" type="number" value="{{form.rows}}" data-k="rows" bindinput="onDim" bindblur="onDimBlur" />
+        <input maxlength="-1" class="input" type="number" value="{{form.rows}}" data-k="rows" bindinput="onDim" bindblur="onDimBlur" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invCols', lang)}} (1–50)</text>
-        <input class="input" type="number" value="{{form.cols}}" data-k="cols" bindinput="onDim" bindblur="onDimBlur" />
+        <input maxlength="-1" class="input" type="number" value="{{form.cols}}" data-k="cols" bindinput="onDim" bindblur="onDimBlur" />
       </view>
     </view>
     <view class="inv-mono-sm mb-12">{{dims}}</view>

@@ -7,11 +7,11 @@
         <view wx:for="{{quick}}" wx:key="min" class="btn mono" hover-class="is-pressed" data-min="{{item.min}}" bindtap="startQuick">{{item.label}}</view>
       </view>
       <view class="tm-custom">
-        <input class="input" type="text" value="{{customLabel}}" bindinput="onLabel"
+        <input maxlength="-1" class="input" type="text" value="{{customLabel}}" bindinput="onLabel"
           placeholder="{{lang === 'zh' ? '标签（如 封闭）' : 'Label (e.g. Blocking)'}}" placeholder-class="placeholder"
           aria-label="{{lang === 'zh' ? '计时器标签' : 'Timer label'}}" />
         <view class="row gap-8 mt-8">
-          <input class="input flex-1" type="digit" value="{{customMin}}" bindinput="onMinutes" bindconfirm="startCustom"
+          <input maxlength="-1" class="input flex-1" type="digit" value="{{customMin}}" bindinput="onMinutes" bindconfirm="startCustom"
             placeholder="{{i.t('timerMinutes', lang)}}" placeholder-class="placeholder" aria-label="{{lang === 'zh' ? '分钟数' : 'Minutes'}}" />
           <view class="btn-primary {{canStart ? '' : 'is-disabled'}}" hover-class="{{canStart ? 'is-pressed' : 'none'}}" bindtap="startCustom">{{i.t('timerStart', lang)}}</view>
         </view>

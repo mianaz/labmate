@@ -2,7 +2,7 @@
 <view class="page page-sub {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
   <view class="search-field sr-field">
     <view class="icon i-search"></view>
-    <input class="input-bare" type="text" confirm-type="search" focus="{{focus}}" value="{{query}}"
+    <input maxlength="-1" class="input-bare" type="text" confirm-type="search" focus="{{focus}}" value="{{query}}"
       placeholder="{{i.t('searchPlaceholder', lang)}}" placeholder-class="placeholder" bindinput="onInput"
       aria-label="{{i.t('searchPlaceholder', lang)}}" />
     <view wx:if="{{query}}" class="icon i-close sr-clear" bindtap="clear" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>

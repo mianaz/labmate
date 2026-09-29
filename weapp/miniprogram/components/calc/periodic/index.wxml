@@ -18,7 +18,7 @@ module.exports = { dim: dim };
   <view class="panel-body">
     <view class="search-field cx-block">
       <view class="icon i-search"></view>
-      <input class="input-bare" type="text" confirm-type="search" value="{{search}}" placeholder="{{i.t('periodicSearch', lang)}}"
+      <input maxlength="-1" class="input-bare" type="text" confirm-type="search" value="{{search}}" placeholder="{{i.t('periodicSearch', lang)}}"
         placeholder-class="placeholder" bindinput="onSearch" aria-label="{{i.t('periodicSearch', lang)}}" />
       <view wx:if="{{search}}" class="icon i-close pt-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
     </view>

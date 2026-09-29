@@ -236,3 +236,49 @@ test('SDS-PAGE recipe embeds the gel calculator', async () => {
   expect(txt).toContain('30% Acrylamide/Bis (29:1)');
   expect(txt).toContain('TEMED');
 });
+
+describe('review fixes', () => {
+  test('unticking a step keeps it unticked after ticking another', async () => {
+    const comp = await page('pages/detail/index', { id: 'wb_protocol' });
+    const inst = comp.instance;
+    const steps = inst.data.doc.steps.filter((s) => !s.header);
+    const a = steps[0].i;
+    const b = steps[1].i;
+    inst.toggleStep(ev({ i: a }));
+    inst.toggleStep(ev({ i: a }));
+    inst.toggleStep(ev({ i: b }));
+    expect(wxMock.getStorageSync('stepTracker_wb_protocol')).toEqual([b]);
+    expect(inst.data.doneCount).toBe(1);
+  });
+
+  test('volume box accepts a comma and restores itself when cleared', async () => {
+    const comp = await page('pages/detail/index', { id: 'pbs_10x' });
+    const inst = comp.instance;
+    inst.onVolume(ev({}, { value: '0,5' }));
+    expect(inst.data.targetVol).toBe(0.5);
+    inst.onVolume(ev({}, { value: '' }));
+    expect(inst.data.volInput).toBe('');
+    inst.onVolumeBlur(ev({}, { value: '' }));
+    expect(inst.data.volInput).toBe('0.5');
+  });
+
+  test('custom entries keep their scaled volume on show and cannot be shared', async () => {
+    wxMock.setStorageSync('labmate_customRecipes', [{ id: 'custom_9', name: 'Mine', category: 'buffer', defaultVolume: 100, unit: 'mL', components: [{ name: 'NaCl', amount: 1, unit: 'g' }], _isCustom: true }]);
+    const comp = await page('pages/detail/index', { id: 'custom_9' });
+    const inst = comp.instance;
+    expect(wxMock.__called('hideShareMenu')).toHaveLength(1);
+    inst.setPreset(ev({ m: 2 }));
+    inst.onShow();
+    expect(inst.data.targetVol).toBe(200);
+  });
+
+  test('custom form reads a comma decimal amount', async () => {
+    const comp = await page('pages/custom-form/index', { type: 'recipe' });
+    const inst = comp.instance;
+    inst.onField({ currentTarget: { dataset: { key: 'name' } }, detail: { value: 'X' } });
+    inst.onListField({ currentTarget: { dataset: { list: 'components', index: 0, key: 'name' } }, detail: { value: 'NaCl' } });
+    inst.onListField({ currentTarget: { dataset: { list: 'components', index: 0, key: 'amount' } }, detail: { value: '0,5' } });
+    inst.save();
+    expect(wxMock.getStorageSync('labmate_customRecipes')[0].components[0].amount).toBe(0.5);
+  });
+});

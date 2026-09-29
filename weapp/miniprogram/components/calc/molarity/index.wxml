@@ -10,7 +10,7 @@
     <view class="field">
       <view class="field-label"><text class="cx-sym">m</text>{{i.t('measuredMass', lang)}}</view>
       <view class="input-group">
-        <input class="input" type="digit" value="{{mass}}" placeholder="0" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="digit" value="{{mass}}" placeholder="0" placeholder-class="placeholder"
           data-field="mass" bindinput="onInput" aria-label="m" />
         <picker class="picker-host shrink-0" mode="selector" range="{{massUnits}}" value="{{massIdx}}" bindchange="onMassUnit">
           <view class="input-addon is-picker cx-addon"><text>{{massUnits[massIdx]}}</text><view class="icon i-chevron-down"></view></view>
@@ -20,7 +20,7 @@
     <view class="field">
       <view class="field-label"><text class="cx-sym">MW</text>{{i.t('molMwDesc', lang)}}</view>
       <view class="input-group">
-        <input class="input" type="digit" value="{{mw}}" placeholder="{{lang === 'zh' ? '如 58.44' : 'e.g. 58.44'}}" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="digit" value="{{mw}}" placeholder="{{lang === 'zh' ? '如 58.44' : 'e.g. 58.44'}}" placeholder-class="placeholder"
           data-field="mw" bindinput="onInput" aria-label="MW" />
         <view class="input-addon cx-addon-fixed">g/mol</view>
       </view>
@@ -28,7 +28,7 @@
     <view class="field">
       <view class="field-label"><text class="cx-sym">V</text>{{i.t('solnVolume', lang)}}</view>
       <view class="input-group">
-        <input class="input" type="digit" value="{{vol}}" placeholder="0" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="digit" value="{{vol}}" placeholder="0" placeholder-class="placeholder"
           data-field="vol" bindinput="onInput" aria-label="V" />
         <picker class="picker-host shrink-0" mode="selector" range="{{volUnits}}" value="{{volIdx}}" bindchange="onVolUnit">
           <view class="input-addon is-picker cx-addon"><text>{{volUnits[volIdx]}}</text><view class="icon i-chevron-down"></view></view>

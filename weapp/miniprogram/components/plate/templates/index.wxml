@@ -23,29 +23,29 @@ module.exports = { parts: parts };
     <view wx:if="{{open === 'checkerboard'}}" class="grid-2">
       <view class="field">
         <text class="field-label">{{i.t('plateLabel1', lang)}}</text>
-        <input class="input" type="text" value="{{p.label1}}" data-key="label1" bindinput="onField" />
+        <input maxlength="-1" class="input" type="text" value="{{p.label1}}" data-key="label1" bindinput="onField" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('plateLabel2', lang)}}</text>
-        <input class="input" type="text" value="{{p.label2}}" data-key="label2" bindinput="onField" />
+        <input maxlength="-1" class="input" type="text" value="{{p.label2}}" data-key="label2" bindinput="onField" />
       </view>
     </view>
     <view wx:if="{{open === 'dose'}}" class="field">
       <text class="field-label">{{i.t('doseNumDrugs', lang)}}</text>
-      <input class="input" type="number" value="{{p.drugs}}" data-key="drugs" bindinput="onField" />
+      <input maxlength="-1" class="input" type="number" value="{{p.drugs}}" data-key="drugs" bindinput="onField" />
     </view>
     <view wx:if="{{open === 'antibody'}}" class="field">
       <text class="field-label">{{i.t('plateNumAntibodies', lang)}}</text>
-      <input class="input" type="number" value="{{p.antibodies}}" data-key="antibodies" bindinput="onField" />
+      <input maxlength="-1" class="input" type="number" value="{{p.antibodies}}" data-key="antibodies" bindinput="onField" />
     </view>
     <block wx:if="{{open === 'serial' || open === 'dose' || open === 'antibody'}}">
       <view class="field">
         <text class="field-label"><block wx:for="{{u.parts(i.t('serialStartConc', lang))}}" wx:key="*this"><text wx:if="{{index}}" class="pt-micro">µ</text>{{item}}</block></text>
-        <input class="input" type="digit" value="{{p.startConc}}" data-key="startConc" bindinput="onField" />
+        <input maxlength="-1" class="input" type="digit" value="{{p.startConc}}" data-key="startConc" bindinput="onField" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('serialFactor', lang)}}</text>
-        <input class="input" type="digit" value="{{open === 'serial' ? p.factor : p.dilFactor}}"
+        <input maxlength="-1" class="input" type="digit" value="{{open === 'serial' ? p.factor : p.dilFactor}}"
           data-key="{{open === 'serial' ? 'factor' : 'dilFactor'}}" bindinput="onField" />
       </view>
     </block>

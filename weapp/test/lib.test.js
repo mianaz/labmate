@@ -181,3 +181,57 @@ test('restoring a backup applies its language immediately', () => {
   backup.importBackup({ exportedAt: 'x', data: { biolab_lang: 'en' } });
   expect(lang.getLang()).toBe('en');
 });
+
+describe('review fixes', () => {
+  test('experiments live one per key and migrate from the old single array', () => {
+    wxMock.setStorageSync('labmate_experiments', [
+      { id: 'exp_a', date: '2026-01-02', title: 'A', createdAt: 1 },
+      { id: 'exp_b', date: '2026-01-03', title: 'B', createdAt: 2 },
+    ]);
+    expect(experiments.all().map((e) => e.id)).toEqual(['exp_b', 'exp_a']);
+    expect(wxMock.getStorageSync('labmate_experiments')).toBe('');
+    expect(wxMock.getStorageSync('nb:exp_a').title).toBe('A');
+    experiments.remove('exp_a');
+    expect(experiments.get('exp_a')).toBeNull();
+    // entries never leak into a backup's `data`
+    expect(Object.keys(backup.buildBackup().data)).toEqual([]);
+    expect(backup.buildBackup().experiments.map((e) => e.id)).toEqual(['exp_b']);
+  });
+
+  test('a restore that runs out of storage says so instead of claiming success', () => {
+    const orig = wx.setStorageSync;
+    wx.setStorageSync = (key, value) => {
+      if (key === 'labmate_inventory') throw new Error('setStorageSync:fail exceed storage max size');
+      return orig(key, value);
+    };
+    let err = null;
+    try {
+      backup.importBackup({ exportedAt: 'x', data: { biolab_favorites: ['a'], labmate_inventory: { locations: [] } } });
+    } catch (e) { err = e; }
+    wx.setStorageSync = orig;
+    expect(err && err.message).toBe('storage_full');
+    expect(err.failed).toEqual(['labmate_inventory']);
+    expect(wxMock.getStorageSync('biolab_favorites')).toEqual(['a']);
+  });
+
+  test('comma decimal separators parse', () => {
+    expect(fmt.parseNum('2,5')).toBe(2.5);
+    expect(fmt.parseNum('0。5')).toBe(0.5);
+    expect(fmt.parseNum('')).toBeNaN();
+  });
+
+  test('picked files lose a UTF-8 byte-order mark', async () => {
+    const ui = require('../miniprogram/lib/ui');
+    wxMock.__pickedFile = { name: 'b.json', content: '﻿{"a":1}' };
+    const file = await ui.pickTextFile(['json']);
+    expect(JSON.parse(file.content)).toEqual({ a: 1 });
+  });
+
+  test('shareTextFile calls wx.shareFileMessage synchronously (tap gesture)', () => {
+    const ui = require('../miniprogram/lib/ui');
+    ui.shareTextFile('x.txt', 'hello');
+    // no await: the share must already have been requested
+    expect(wxMock.__called('shareFileMessage')).toHaveLength(1);
+    expect(wxMock.__called('fs.writeFile')[0].opts.data).toBe('hello');
+  });
+});

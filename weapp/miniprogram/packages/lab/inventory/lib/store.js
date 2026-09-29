@@ -329,7 +329,8 @@ function exportJson(data) {
 
 // ── Overview strip visibility (web: localStorage 'true' when dismissed) ────
 
-function dashboardShown() { return storage.get(DASH_KEY, '') !== 'true'; }
+// A web backup restores the flag as boolean true (its backup JSON-parses 'true').
+function dashboardShown() { const v = storage.get(DASH_KEY, ''); return v !== 'true' && v !== true; }
 function setDashboardShown(on) {
   if (on) storage.remove(DASH_KEY); else storage.set(DASH_KEY, 'true');
   emit();

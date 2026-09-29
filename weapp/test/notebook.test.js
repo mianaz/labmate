@@ -6,8 +6,10 @@ const { isoDate } = require('../miniprogram/lib/format.js');
 const { PROTOCOLS } = require('../miniprogram/lib/recipes.js');
 const { normalizeProtocolSteps } = require('../miniprogram/shared/protocolImport.js');
 
+// Seeds use the legacy single-array key: lib/experiments migrates it to one
+// key per entry on first read, which these tests exercise too.
 const KEY = 'labmate_experiments';
-const stored = () => wxMock.getStorageSync(KEY) || [];
+const stored = () => experiments.all();
 const ev = (dataset, value) => ({ currentTarget: { dataset: dataset || {} }, detail: { value } });
 
 function entry(over) {

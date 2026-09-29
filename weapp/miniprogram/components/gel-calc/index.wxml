@@ -32,7 +32,7 @@
         </view>
         <view class="gc-cell">
           <view class="field-label">{{volLabel.label}} <text class="gc-nocase">{{volLabel.unit}}</text></view>
-          <input class="input" type="digit" value="{{resVol}}" placeholder="10" placeholder-class="placeholder"
+          <input maxlength="-1" class="input" type="digit" value="{{resVol}}" placeholder="10" placeholder-class="placeholder"
             data-field="resVol" bindinput="onInput" aria-label="{{i.t('gelResolving', lang)}} {{i.t('gelResolvingVol', lang)}}" />
         </view>
       </view>
@@ -48,7 +48,7 @@
         </view>
         <view class="gc-cell">
           <view class="field-label">{{volLabel.label}} <text class="gc-nocase">{{volLabel.unit}}</text></view>
-          <input class="input" type="digit" value="{{stackVol}}" placeholder="5" placeholder-class="placeholder"
+          <input maxlength="-1" class="input" type="digit" value="{{stackVol}}" placeholder="5" placeholder-class="placeholder"
             data-field="stackVol" bindinput="onInput" aria-label="{{i.t('gelStacking', lang)}} {{i.t('gelStackingVol', lang)}}" />
         </view>
       </view>
@@ -56,7 +56,7 @@
     <view class="grid-2 gc-group">
       <view class="gc-cell">
         <view class="field-label">{{i.t('gelCount', lang)}}</view>
-        <input class="input" type="number" value="{{numGels}}" placeholder="2" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="number" value="{{numGels}}" placeholder="2" placeholder-class="placeholder"
           data-field="numGels" bindinput="onInput" aria-label="{{i.t('gelCount', lang)}}" />
       </view>
     </view>

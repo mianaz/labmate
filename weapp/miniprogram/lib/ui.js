@@ -46,19 +46,20 @@ function actionSheet(items) {
 }
 
 // Write a text file to the user data dir and offer it to a chat (the mini
-// program's version of the web's download link).
+// program's version of the web's download link). Everything up to
+// wx.shareFileMessage runs synchronously, so when this is called straight from
+// a tap handler the share still counts as user-initiated.
 function shareTextFile(fileName, content) {
-  const fs = wx.getFileSystemManager();
-  const filePath = wx.env.USER_DATA_PATH + '/' + fileName;
   return new Promise((resolve, reject) => {
-    fs.writeFile({
-      filePath, data: content, encoding: 'utf8',
-      success: () => {
-        if (!wx.shareFileMessage) { reject(new Error('share_unsupported')); return; }
-        wx.shareFileMessage({ filePath, fileName, success: () => resolve(true), fail: (err) => reject(err) });
-      },
-      fail: reject,
-    });
+    if (!wx.shareFileMessage) { reject(new Error('share_unsupported')); return; }
+    const filePath = wx.env.USER_DATA_PATH + '/' + fileName;
+    try {
+      wx.getFileSystemManager().writeFileSync(filePath, content, 'utf8');
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    wx.shareFileMessage({ filePath, fileName, success: () => resolve(true), fail: reject });
   });
 }
 
@@ -74,7 +75,7 @@ function pickTextFile(extensions) {
         if (!file) { reject(new Error('no_file')); return; }
         wx.getFileSystemManager().readFile({
           filePath: file.path, encoding: 'utf8',
-          success: (r) => resolve({ name: file.name, content: r.data }),
+          success: (r) => resolve({ name: file.name, content: String(r.data).replace(/^\uFEFF/, '') }),
           fail: reject,
         });
       },

@@ -31,7 +31,7 @@
       <view wx:else class="field">
         <view class="field-label">{{item.label}}</view>
         <view class="input-group">
-          <input class="input" type="digit" value="{{vals[item.id]}}" placeholder="{{item.placeholder}}" placeholder-class="placeholder"
+          <input maxlength="-1" class="input" type="digit" value="{{vals[item.id]}}" placeholder="{{item.placeholder}}" placeholder-class="placeholder"
             data-field="{{item.id}}" bindinput="onInput" aria-label="{{item.label}}" />
           <view class="input-addon cx-addon-fixed">{{item.unit}}</view>
         </view>

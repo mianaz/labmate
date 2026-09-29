@@ -32,7 +32,20 @@
     }
   ],
   "preloadRule": {
-    "pages/more/index": { "network": "all", "packages": ["lab", "tools"] }
+    "pages/recipes/index": {
+      "network": "all",
+      "packages": [
+        "lab",
+        "tools"
+      ]
+    },
+    "pages/more/index": {
+      "network": "all",
+      "packages": [
+        "lab",
+        "tools"
+      ]
+    }
   },
   "window": {
     "navigationBarBackgroundColor": "@navBg",
@@ -50,11 +63,26 @@
     "backgroundColor": "@tabBg",
     "borderStyle": "@tabBorder",
     "list": [
-      { "pagePath": "pages/recipes/index", "text": "Recipes" },
-      { "pagePath": "pages/protocols/index", "text": "Protocols" },
-      { "pagePath": "pages/calc/index", "text": "Calc" },
-      { "pagePath": "pages/plate/index", "text": "Plate" },
-      { "pagePath": "pages/more/index", "text": "More" }
+      {
+        "pagePath": "pages/recipes/index",
+        "text": "Recipes"
+      },
+      {
+        "pagePath": "pages/protocols/index",
+        "text": "Protocols"
+      },
+      {
+        "pagePath": "pages/calc/index",
+        "text": "Calc"
+      },
+      {
+        "pagePath": "pages/plate/index",
+        "text": "Plate"
+      },
+      {
+        "pagePath": "pages/more/index",
+        "text": "More"
+      }
     ]
   },
   "usingComponents": {},

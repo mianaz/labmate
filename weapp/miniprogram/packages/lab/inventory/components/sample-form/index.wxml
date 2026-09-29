@@ -21,19 +21,19 @@
     <view class="inv-form-grid">
       <view class="field">
         <text class="field-label">{{i.t('invQuantity', lang)}}</text>
-        <input class="input" value="{{form.quantity}}" data-k="quantity" bindinput="onInput" placeholder="500 µL" placeholder-class="placeholder" />
+        <input maxlength="-1" class="input" value="{{form.quantity}}" data-k="quantity" bindinput="onInput" placeholder="500 µL" placeholder-class="placeholder" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invConcentration', lang)}}</text>
-        <input class="input" value="{{form.concentration}}" data-k="concentration" bindinput="onInput" />
+        <input maxlength="-1" class="input" value="{{form.concentration}}" data-k="concentration" bindinput="onInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invPassage', lang)}}</text>
-        <input class="input" value="{{form.passage}}" data-k="passage" bindinput="onInput" placeholder="P5" placeholder-class="placeholder" />
+        <input maxlength="-1" class="input" value="{{form.passage}}" data-k="passage" bindinput="onInput" placeholder="P5" placeholder-class="placeholder" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invOwner', lang)}}</text>
-        <input class="input" value="{{form.owner}}" data-k="owner" bindinput="onInput" />
+        <input maxlength="-1" class="input" value="{{form.owner}}" data-k="owner" bindinput="onInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invDateStored', lang)}}</text>
@@ -54,15 +54,15 @@
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invTags', lang)}}</text>
-      <input class="input" value="{{form.tags}}" data-k="tags" bindinput="onInput" placeholder="frozen, validated" placeholder-class="placeholder" />
+      <input maxlength="-1" class="input" value="{{form.tags}}" data-k="tags" bindinput="onInput" placeholder="frozen, validated" placeholder-class="placeholder" />
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invDescription', lang)}}</text>
-      <textarea class="textarea inv-textarea" fixed value="{{form.description}}" data-k="description" bindinput="onInput" maxlength="-1" />
+      <textarea class="textarea inv-textarea" fixed always-embed value="{{form.description}}" data-k="description" bindinput="onInput" maxlength="-1" />
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invNotes', lang)}}</text>
-      <textarea class="textarea inv-textarea" fixed value="{{form.notes}}" data-k="notes" bindinput="onInput" maxlength="-1" />
+      <textarea class="textarea inv-textarea" fixed always-embed value="{{form.notes}}" data-k="notes" bindinput="onInput" maxlength="-1" />
     </view>
   </view>
   <view slot="foot" class="row gap-8 flex-1">

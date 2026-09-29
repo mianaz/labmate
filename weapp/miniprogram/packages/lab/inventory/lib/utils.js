@@ -142,12 +142,14 @@ function isoDate(ts) {
   return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
 }
 
-// 'YYYY-MM-DD' (also YYYY/M/D) → UTC-midnight ms, like the web's
-// new Date('YYYY-MM-DD').getTime(); other strings fall back to Date parsing.
+// 'YYYY-MM-DD' (also YYYY/M/D, optionally followed by a time) → UTC-midnight
+// ms, like the web's new Date('YYYY-MM-DD').getTime(); other strings fall back
+// to Date parsing. The time part is matched here because iOS can't parse
+// "YYYY-MM-DD HH:mm" with new Date() (Android and browsers can).
 function parseDate(str) {
   const s = String(str || '').trim();
   if (!s) return null;
-  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/.exec(s);
+  const m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.exec(s);
   if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
   const t = new Date(s).getTime();
   return Number.isNaN(t) ? null : t;

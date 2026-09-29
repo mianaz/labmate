@@ -71,12 +71,12 @@
       <block wx:if="{{editing}}">
         <view class="field">
           <view class="field-label">{{i.t('nbEntryTitle', lang)}}</view>
-          <input class="input" value="{{doc.title}}" data-path="title" bindinput="onField"
+          <input maxlength="-1" class="input" value="{{doc.title}}" data-path="title" bindinput="onField"
             placeholder="{{i.t('nbTitlePh', lang)}}" placeholder-class="placeholder" />
         </view>
         <view class="field">
           <view class="field-label">{{i.t('nbEntryTitleZh', lang)}}</view>
-          <input class="input" value="{{doc.titleZh}}" data-path="titleZh" bindinput="onField"
+          <input maxlength="-1" class="input" value="{{doc.titleZh}}" data-path="titleZh" bindinput="onField"
             placeholder="{{i.t('nbTitleZhPh', lang)}}" placeholder-class="placeholder" />
         </view>
         <view class="grid-2 nb-grid">
@@ -94,7 +94,7 @@
           </view>
           <view class="field">
             <view class="field-label">{{i.t('nbDuration', lang)}}</view>
-            <input class="input" type="number" value="{{doc.duration || ''}}" bindinput="onDuration" placeholder="60" placeholder-class="placeholder" />
+            <input maxlength="-1" class="input" type="number" value="{{doc.duration || ''}}" bindinput="onDuration" placeholder="60" placeholder-class="placeholder" />
           </view>
           <view class="field">
             <view class="field-label">{{i.t('nbStatus', lang)}}</view>
@@ -216,17 +216,17 @@
             </view>
             <view wx:for="{{doc.materials.reagents}}" wx:key="_k" class="nb-item">
               <view class="row gap-6">
-                <input class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbReagentName', lang)}}" placeholder-class="placeholder"
+                <input maxlength="-1" class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbReagentName', lang)}}" placeholder-class="placeholder"
                   data-list="materials.reagents" data-index="{{index}}" data-field="name" bindinput="onItemField" />
                 <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials.reagents" data-index="{{index}}" bindtap="removeItem"
                   aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
               </view>
               <view class="nb-grid-3">
-                <input class="input is-sm" value="{{item.amount}}" placeholder="{{i.t('nbAmount', lang)}}" placeholder-class="placeholder"
+                <input maxlength="-1" class="input is-sm" value="{{item.amount}}" placeholder="{{i.t('nbAmount', lang)}}" placeholder-class="placeholder"
                   data-list="materials.reagents" data-index="{{index}}" data-field="amount" bindinput="onItemField" />
-                <input class="input is-sm" value="{{item.unit}}" placeholder="{{i.t('nbUnit', lang)}}" placeholder-class="placeholder"
+                <input maxlength="-1" class="input is-sm" value="{{item.unit}}" placeholder="{{i.t('nbUnit', lang)}}" placeholder-class="placeholder"
                   data-list="materials.reagents" data-index="{{index}}" data-field="unit" bindinput="onItemField" />
-                <input class="input is-sm" value="{{item.location}}" placeholder="{{i.t('nbLocation', lang)}}" placeholder-class="placeholder"
+                <input maxlength="-1" class="input is-sm" value="{{item.location}}" placeholder="{{i.t('nbLocation', lang)}}" placeholder-class="placeholder"
                   data-list="materials.reagents" data-index="{{index}}" data-field="location" bindinput="onItemField" />
               </view>
             </view>
@@ -239,7 +239,7 @@
               </view>
             </view>
             <view wx:for="{{doc.materials.equipment}}" wx:key="_k" class="row gap-6 nb-item-row">
-              <input class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbEquipmentName', lang)}}" placeholder-class="placeholder"
+              <input maxlength="-1" class="input is-sm flex-1" value="{{item.name}}" placeholder="{{i.t('nbEquipmentName', lang)}}" placeholder-class="placeholder"
                 data-list="materials.equipment" data-index="{{index}}" data-field="name" bindinput="onItemField" />
               <view class="seg nb-seg-sm shrink-0">
                 <view class="seg-item {{item.status === 'ready' ? 'is-active' : ''}}" data-index="{{index}}" data-value="ready" bindtap="setEquipStatus">{{i.t('nbReady', lang)}}</view>
@@ -260,7 +260,7 @@
               <view class="nb-check-hit" data-index="{{index}}" bindtap="toggleCheck" aria-role="checkbox" aria-checked="{{item.checked}}" aria-label="{{i.t('nbDone', lang)}}">
                 <template is="check" data="{{on: item.checked}}"/>
               </view>
-              <input class="input is-sm flex-1 {{item.checked ? 'nb-input-done' : ''}}" value="{{item.item}}" placeholder="{{i.t('nbChecklist', lang)}}" placeholder-class="placeholder"
+              <input maxlength="-1" class="input is-sm flex-1 {{item.checked ? 'nb-input-done' : ''}}" value="{{item.item}}" placeholder="{{i.t('nbChecklist', lang)}}" placeholder-class="placeholder"
                 data-list="materials.checklist" data-index="{{index}}" data-field="item" bindinput="onItemField" />
               <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="materials.checklist" data-index="{{index}}" bindtap="removeItem"
                 aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
@@ -331,9 +331,9 @@
                   <text class="flex-1 nb-step-text {{item.completed ? 'nb-struck' : ''}}">{{item.stepText}}</text>
                 </view>
                 <view class="nb-step-inputs">
-                  <input class="input is-sm" value="{{item.deviation}}" placeholder="{{i.t('nbDeviation', lang)}}" placeholder-class="placeholder"
+                  <input maxlength="-1" class="input is-sm" value="{{item.deviation}}" placeholder="{{i.t('nbDeviation', lang)}}" placeholder-class="placeholder"
                     data-list="procedure.protocolSteps" data-index="{{index}}" data-field="deviation" bindinput="onItemField" />
-                  <input class="input is-sm" value="{{item.actualParams}}" placeholder="{{i.t('nbActualParams', lang)}}" placeholder-class="placeholder"
+                  <input maxlength="-1" class="input is-sm" value="{{item.actualParams}}" placeholder="{{i.t('nbActualParams', lang)}}" placeholder-class="placeholder"
                     data-list="procedure.protocolSteps" data-index="{{index}}" data-field="actualParams" bindinput="onItemField" />
                 </view>
               </view>
@@ -402,17 +402,17 @@
             <view wx:for="{{doc.results.figures}}" wx:key="_k" class="nb-item">
               <view class="row gap-6">
                 <text class="mono nb-fig-num shrink-0">{{i.n('nbFigN', lang, index + 1)}}</text>
-                <input class="input is-sm flex-1" value="{{item.description}}" placeholder="{{i.t('nbFigureDesc', lang)}}" placeholder-class="placeholder"
+                <input maxlength="-1" class="input is-sm flex-1" value="{{item.description}}" placeholder="{{i.t('nbFigureDesc', lang)}}" placeholder-class="placeholder"
                   data-list="results.figures" data-index="{{index}}" data-field="description" bindinput="onItemField" />
                 <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" data-list="results.figures" data-index="{{index}}" bindtap="removeItem"
                   aria-role="button" aria-label="{{i.t('nbRemove', lang)}}"><view class="icon i-close"></view></view>
               </view>
-              <input class="input is-sm mt-8" value="{{item.notes}}" placeholder="{{i.t('nbFigureNotes', lang)}}" placeholder-class="placeholder"
+              <input maxlength="-1" class="input is-sm mt-8" value="{{item.notes}}" placeholder="{{i.t('nbFigureNotes', lang)}}" placeholder-class="placeholder"
                 data-list="results.figures" data-index="{{index}}" data-field="notes" bindinput="onItemField" />
             </view>
             <view class="field nb-field-top">
               <view class="field-label">{{i.t('nbBackupStatus', lang)}}</view>
-              <input class="input" value="{{doc.results.backupStatus}}" data-path="results.backupStatus" bindinput="onField"
+              <input maxlength="-1" class="input" value="{{doc.results.backupStatus}}" data-path="results.backupStatus" bindinput="onField"
                 placeholder="{{i.t('nbBackupPh', lang)}}" placeholder-class="placeholder" />
             </view>
           </block>

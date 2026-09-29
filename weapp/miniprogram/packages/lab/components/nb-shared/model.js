@@ -120,13 +120,20 @@ function normalize(entry) {
   return out;
 }
 
+// Duration in minutes, or 0 when the value isn't a positive number.
+function minutes(v) {
+  const n = typeof v === 'number' ? v : (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*$/.test(v) ? parseFloat(v) : NaN);
+  return n > 0 ? n : 0;
+}
+
 // Import a protocol's steps and materials into an entry (NotebookTab.handleImportProtocol).
 function applyProtocol(doc, recipe, lang) {
   const next = clone(doc);
   next.protocolRef = recipe.id;
   next.title = doc.title || recipeTitle(recipe, lang);
   next.titleZh = doc.titleZh || recipe.nameCn || '';
-  next.duration = recipe.duration || doc.duration;
+  // A few library protocols carry duration as an object; only minutes count.
+  next.duration = minutes(recipe.duration) || doc.duration;
   next.procedure = {
     mode: 'template',
     protocolSteps: toProcedureSteps(recipe, lang),
@@ -200,7 +207,7 @@ function calendarRow(e, lang, highlightId) {
     time: e.startTime || '--:--',
     title: title || t('calUntitled', lang),
     untitled: !title,
-    dur: (e.duration || 0) + ' min',
+    dur: (minutes(e.duration) || 0) + ' min',
     proto: protocolName(e.protocolRef, lang),
     status,
     statusLabel: t(STATUS_KEY[status], lang),
@@ -231,7 +238,7 @@ function protocolRow(r, lang) {
     secondary: zh ? (r.nameCn ? r.name : '') : (r.nameCn || ''),
     steps: normalizeProtocolSteps(r, lang).length,
     materials: Array.isArray(r.materials) ? r.materials.length : 0,
-    duration: r.duration || 0,
+    duration: minutes(r.duration) || 0,
     custom: !!r._isCustom,
     q: [r.name || '', r.nameCn || ''].concat(r.tags || []).join('\n').toLowerCase(),
   };
@@ -327,7 +334,7 @@ function buildICS(list) {
     const d = parseDate(e.date);
     const p = (isTimeStr(e.startTime) ? e.startTime : '09:00').split(':').map(Number);
     const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), p[0], p[1]);
-    const end = new Date(start.getTime() + (e.duration || 60) * 60000);
+    const end = new Date(start.getTime() + (minutes(e.duration) || 60) * 60000);
     ics += 'BEGIN:VEVENT\r\n';
     ics += 'DTSTART:' + icsStamp(start) + '\r\n';
     ics += 'DTEND:' + icsStamp(end) + '\r\n';

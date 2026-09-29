@@ -61,12 +61,17 @@ function importBackup(fileContent) {
     throw new Error('Invalid backup format');
   }
   let count = 0;
+  const failed = [];
   if (Array.isArray(parsed.experiments) && parsed.experiments.length > 0) {
-    count += experiments.bulkPut(parsed.experiments);
+    const valid = parsed.experiments.filter((e) => e && e.id).length;
+    const written = experiments.bulkPut(parsed.experiments);
+    count += written;
+    if (written < valid) failed.push('experiments');
   }
   Object.keys(parsed.data).forEach((key) => {
     const value = parsed.data[key];
     if (SECRET_KEY_RE.test(key) || EXCLUDED_KEYS.includes(key)) return;
+    let ok;
     if (MERGE_ARRAY_KEYS.includes(key)) {
       const existing = storage.get(key, []);
       const merged = Array.isArray(existing) ? existing.slice() : [];
@@ -75,16 +80,24 @@ function importBackup(fileContent) {
         const idx = merged.findIndex((m) => m && item && m.id === item.id);
         if (idx >= 0) merged[idx] = item; else merged.push(item);
       });
-      storage.set(key, merged);
+      ok = storage.set(key, merged);
     } else {
-      storage.set(key, value);
+      ok = storage.set(key, value);
     }
-    count++;
+    if (ok) count++; else failed.push(key);
   });
   ['custom', 'favs', 'experiments', 'inventory', 'backup'].forEach((e) => bus.emit(e));
   // The language is cached in lib/lang: apply a restored one right away.
   const lang = parsed.data.biolab_lang;
   if ((lang === 'en' || lang === 'zh') && lang !== getLang()) setLang(lang);
+  // wx storage holds 10 MB (1 MB per key); the browser holds more. Say so
+  // instead of reporting a restore that silently wrote nothing.
+  if (failed.length) {
+    const err = new Error('storage_full');
+    err.failed = failed;
+    err.count = count;
+    throw err;
+  }
   return count;
 }
 

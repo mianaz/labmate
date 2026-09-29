@@ -2,7 +2,9 @@
 
 A native WeChat Mini Program port of LabMate: the recipe and protocol library,
 calculators, plate designer, sample inventory, experiment notebook, calendar and
-bench timers — bilingual (中文 / English), fully offline, all data on the device.
+bench timers — bilingual (中文 / English), all data on the device, no server.
+It works offline; the lab and tools sections are subpackages that WeChat
+downloads once on first use (they are preloaded when the app opens).
 
 It is a native mini program (WXML / WXSS / JS, no framework). The recipe library,
 translations, calculators, plate-reader parser and the icon set are **generated
@@ -40,6 +42,16 @@ reason) — the library ships inside the package and is refreshed by `npm run sy
 `labmate-backup-YYYY-MM-DD.json` to a chat; *Import* picks one from a chat. The
 format and storage keys are the web app's, so a file exported in the browser
 restores in WeChat and vice versa.
+
+### Platform limits worth knowing
+
+- **Storage**: WeChat gives a mini program 10 MB, at most 1 MB per key. Notebook
+  entries are stored one per key; the inventory is one key (as in the web app),
+  which fits a few thousand samples. A restore that doesn't fit says so.
+- **Timers** keep exact time in the background, but WeChat suspends mini
+  programs there, so the alarm (vibration + chime) fires when you come back.
+  The screen stays on while a timer runs.
+- **Links** can't be opened inside a mini program; they are copied instead.
 
 ## Develop
 

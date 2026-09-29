@@ -24,7 +24,7 @@
             aria-role="button" aria-label="{{i.t('copyClipboard', lang)}}">
             <view class="icon i-copy"></view>
           </view>
-          <button class="btn-ghost btn-icon btn-sm" open-type="share" hover-class="is-pressed" aria-label="{{lang === 'zh' ? '分享' : 'Share'}}">
+          <button wx:if="{{!doc.isCustom}}" class="btn-ghost btn-icon btn-sm" open-type="share" hover-class="is-pressed" aria-label="{{lang === 'zh' ? '分享' : 'Share'}}">
             <view class="icon i-arrow-up-right"></view>
           </button>
         </view>
@@ -160,7 +160,7 @@
         <view class="row-wrap gap-8 dt-scale">
           <text class="field-label dt-scale-label">{{i.t('targetVolume', lang)}}</text>
           <view class="input-group dt-vol">
-            <input class="input is-sm tabular" type="digit" value="{{targetVol}}" bindinput="onVolume" bindblur="onVolumeBlur" aria-label="{{i.t('targetVolume', lang)}}" />
+            <input maxlength="-1" class="input is-sm tabular" type="digit" value="{{volInput}}" bindinput="onVolume" bindblur="onVolumeBlur" aria-label="{{i.t('targetVolume', lang)}}" />
             <view class="input-addon">{{doc.unit}}</view>
           </view>
           <view class="seg">

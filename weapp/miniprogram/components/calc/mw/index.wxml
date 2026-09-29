@@ -10,7 +10,7 @@
     <view class="field">
       <view class="field-label">{{i.t('mwFormula', lang)}}</view>
       <view class="search-field mw-input">
-        <input class="input-bare" type="text" value="{{formula}}" placeholder="{{i.t('mwFormulaPlaceholder', lang)}}"
+        <input maxlength="-1" class="input-bare" type="text" value="{{formula}}" placeholder="{{i.t('mwFormulaPlaceholder', lang)}}"
           placeholder-class="placeholder" confirm-type="done" bindinput="onInput" aria-label="{{i.t('mwFormula', lang)}}" />
         <view wx:if="{{formula}}" class="icon i-close mw-clear" bindtap="clear" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
       </view>

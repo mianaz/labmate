@@ -400,21 +400,20 @@ Component({
         return true;
       });
     },
-    openExport() {
-      const lang = this.data.lang;
-      ui.actionSheet([t('invExportAllCsv', lang), t('invExportJson', lang), t('invDownloadTemplate', lang)]).then((i) => {
-        if (i === 0) this.exportAllCsv();
-        else if (i === 1) this.exportJson();
-        else if (i === 2) this.downloadTemplate();
-      });
-    },
+    // Export choices are real buttons in a sheet (not wx.showActionSheet): some
+    // WeChat versions only allow wx.shareFileMessage straight from a tap.
+    openExport() { this.setData({ exportShow: true }); },
+    closeExport() { this.setData({ exportShow: false }); },
     exportAllCsv() {
+      if (this.data.exportShow) this.setData({ exportShow: false });
       return A.shareFile('inventory-all-' + localDate() + '.csv', U.invExportAllCsv(store.load()), this.data.lang);
     },
     exportJson() {
+      if (this.data.exportShow) this.setData({ exportShow: false });
       return A.shareFile('inventory-backup-' + localDate() + '.json', store.exportJson(), this.data.lang);
     },
     downloadTemplate() {
+      if (this.data.exportShow) this.setData({ exportShow: false });
       return A.shareFile('inventory-template.csv', U.invCsvTemplate(), this.data.lang);
     },
   },

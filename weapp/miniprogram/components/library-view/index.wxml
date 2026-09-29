@@ -20,7 +20,7 @@
     <view class="lv-filters">
       <view class="search-field">
         <view class="icon i-search"></view>
-        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+        <input maxlength="-1" class="input-bare" type="text" confirm-type="search" value="{{search}}"
           placeholder="{{lang === 'zh' ? '名称、试剂或标签' : 'Name, reagent or tag'}}" placeholder-class="placeholder"
           bindinput="onSearch" aria-label="{{i.t('searchPlaceholder', lang)}}" />
         <view wx:if="{{search}}" class="icon i-close lv-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>

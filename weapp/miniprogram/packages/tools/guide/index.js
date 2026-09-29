@@ -147,7 +147,8 @@ Component({
       try {
         count = backup.importBackup(file.content);
       } catch (err) {
-        ui.toast(this.t('importError'));
+        ui.toast(this.t(err && err.message === 'storage_full' ? 'mpStorageFull' : 'importError'));
+        this.refreshStatus();
         return;
       }
       // The web reloads after an import, picking up the backup's language;

@@ -15,13 +15,13 @@
 
     <view class="field">
       <view class="field-label"><text class="cx-sym">N</text>{{i.t('numSamples', lang)}}</view>
-      <input class="input" type="number" value="{{n}}" placeholder="{{lang === 'zh' ? '如 24' : 'e.g. 24'}}" placeholder-class="placeholder"
+      <input maxlength="-1" class="input" type="number" value="{{n}}" placeholder="{{lang === 'zh' ? '如 24' : 'e.g. 24'}}" placeholder-class="placeholder"
         data-field="n" bindinput="onInput" aria-label="N" />
     </view>
     <view class="field">
       <view class="field-label"><text class="cx-sym">V</text>{{i.t('volPerSample', lang)}}</view>
       <view class="input-group">
-        <input class="input" type="digit" value="{{vol}}" placeholder="{{lang === 'zh' ? '如 200' : 'e.g. 200'}}" placeholder-class="placeholder"
+        <input maxlength="-1" class="input" type="digit" value="{{vol}}" placeholder="{{lang === 'zh' ? '如 200' : 'e.g. 200'}}" placeholder-class="placeholder"
           data-field="vol" bindinput="onInput" aria-label="V" />
         <picker class="picker-host shrink-0" mode="selector" range="{{volUnits}}" value="{{volIdx}}" bindchange="onVolUnit">
           <view class="input-addon is-picker cx-addon"><text>{{volUnits[volIdx]}}</text><view class="icon i-chevron-down"></view></view>

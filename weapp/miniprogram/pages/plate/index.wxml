@@ -92,7 +92,7 @@
 
         <view class="field mt-16">
           <text class="field-label">{{i.t('plateLabelName', lang)}}</text>
-          <input class="input" type="text" value="{{label}}" confirm-type="done"
+          <input maxlength="-1" class="input" type="text" value="{{label}}" confirm-type="done"
             placeholder="{{i.t('plateLabelPlaceholder', lang)}}" placeholder-class="placeholder"
             bindinput="onLabel" bindconfirm="assign" />
         </view>

@@ -68,7 +68,7 @@
     <view class="inv-toolbar">
       <view wx:if="{{view === 'grid'}}" class="search-field mb-8">
         <view class="icon i-search"></view>
-        <input class="input-bare" type="text" confirm-type="search" value="{{search}}"
+        <input maxlength="-1" class="input-bare" type="text" confirm-type="search" value="{{search}}"
           placeholder="{{i.t('invSearch', lang)}}" placeholder-class="placeholder"
           bindinput="onSearch" aria-label="{{i.t('invSearch', lang)}}" />
         <view wx:if="{{search}}" class="icon i-close inv-clear" bindtap="clearSearch" aria-role="button" aria-label="{{lang === 'zh' ? '清除' : 'Clear'}}"></view>
@@ -134,7 +134,7 @@
       <view class="inv-filters">
         <view class="search-field">
           <view class="icon i-search"></view>
-          <input class="input-bare" type="text" value="{{lf.name}}" placeholder="{{i.t('invSearchName', lang)}}"
+          <input maxlength="-1" class="input-bare" type="text" value="{{lf.name}}" placeholder="{{i.t('invSearchName', lang)}}"
             placeholder-class="placeholder" bindinput="onListName" aria-label="{{i.t('invSearchName', lang)}}" />
         </view>
         <view class="grid-2 mt-8">
@@ -258,6 +258,15 @@
   <location-form id="locForm" show="{{locFormShow}}" location="{{editLoc}}" bindsave="onLocSave" bindclose="closeLocForm" />
   <box-form id="boxForm" show="{{boxFormShow}}" box="{{editBox}}" location-name="{{boxLocName}}" bindsave="onBoxSave" bindclose="closeBoxForm" />
   <stats-sheet id="stats" show="{{statsShow}}" bindclose="closeStats" />
+
+  <!-- Export choices -->
+  <inv-sheet wx:if="{{exportShow}}" show="{{true}}" title="{{i.t('invExport', lang)}}" foot="{{false}}" bindclose="closeExport">
+    <view class="col gap-8">
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="exportAllCsv"><view class="icon i-download"></view><text>{{i.t('invExportAllCsv', lang)}}</text></view>
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="exportJson"><view class="icon i-download"></view><text>{{i.t('invExportJson', lang)}}</text></view>
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="downloadTemplate"><view class="icon i-file"></view><text>{{i.t('invDownloadTemplate', lang)}}</text></view>
+    </view>
+  </inv-sheet>
 
   <!-- Import (the web's ImportDialog) -->
   <inv-sheet wx:if="{{importShow}}" show="{{true}}" title="{{i.t('invImport', lang)}}" bindclose="closeImport">

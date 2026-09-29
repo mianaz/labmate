@@ -151,6 +151,12 @@ function recipeToText(recipe, targetVol, lang) {
   return txt;
 }
 
+// Number typed on a phone keypad → number. Some regions' decimal keypads type
+// ',' (or '，' / '。') as the separator; parseFloat alone would read "2,5" as 2.
+function parseNum(v) {
+  return parseFloat(String(v === undefined || v === null ? '' : v).replace(/[,，。]/g, '.').replace(/\s+/g, ''));
+}
+
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
 // 90 → "1:30", 3700 → "1:01:40"
@@ -175,5 +181,5 @@ function isoDate(d) {
 
 module.exports = {
   safeText, getRecipeNotes, boldSegments, renderDynamicStep, fmtAmount,
-  parseTimePatternsFromText, stepText, recipeToText, formatTimer, formatClock, isoDate, pad2,
+  parseTimePatternsFromText, stepText, recipeToText, formatTimer, formatClock, isoDate, pad2, parseNum,
 };

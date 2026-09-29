@@ -66,5 +66,13 @@
   "onboardingNavBody": {
     "en": "The four sections you use most sit in the bottom bar; Inventory, Notebook, Calendar, Links and the Guide are under More.",
     "zh": "最常用的四项在底部导航栏；样品库存、实验记录、实验日历、常用链接和使用说明都在「更多」里。"
+  },
+  "mpStorageFull": {
+    "en": "LabMate's storage on this phone is full (WeChat allows 10 MB) — some data could not be saved.",
+    "zh": "LabMate 在本机的存储空间已满（微信上限 10 MB），部分数据未能保存。"
+  },
+  "mpNeedsNetwork": {
+    "en": "Couldn't open — this section downloads once on first use; connect to the internet and try again.",
+    "zh": "无法打开——该功能首次使用时需下载一次，请联网后重试。"
   }
 }

@@ -152,7 +152,7 @@
     <view class="inv-form-grid">
       <view class="field">
         <text class="field-label">{{i.t('invChineseName', lang)}}</text>
-        <input class="input" value="{{bulkAdd.nameZh}}" data-k="nameZh" bindinput="onBulkAddInput" />
+        <input maxlength="-1" class="input" value="{{bulkAdd.nameZh}}" data-k="nameZh" bindinput="onBulkAddInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invSampleType', lang)}}</text>
@@ -162,15 +162,15 @@
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invQuantity', lang)}}</text>
-        <input class="input" value="{{bulkAdd.quantity}}" data-k="quantity" bindinput="onBulkAddInput" />
+        <input maxlength="-1" class="input" value="{{bulkAdd.quantity}}" data-k="quantity" bindinput="onBulkAddInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invConcentration', lang)}}</text>
-        <input class="input" value="{{bulkAdd.concentration}}" data-k="concentration" bindinput="onBulkAddInput" />
+        <input maxlength="-1" class="input" value="{{bulkAdd.concentration}}" data-k="concentration" bindinput="onBulkAddInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invOwner', lang)}}</text>
-        <input class="input" value="{{bulkAdd.owner}}" data-k="owner" bindinput="onBulkAddInput" />
+        <input maxlength="-1" class="input" value="{{bulkAdd.owner}}" data-k="owner" bindinput="onBulkAddInput" />
       </view>
       <view class="field">
         <text class="field-label">{{i.t('invExpiryDate', lang)}}</text>
@@ -185,15 +185,15 @@
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invTagsShort', lang)}}</text>
-      <input class="input" value="{{bulkAdd.tags}}" data-k="tags" bindinput="onBulkAddInput" />
+      <input maxlength="-1" class="input" value="{{bulkAdd.tags}}" data-k="tags" bindinput="onBulkAddInput" />
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invDescription', lang)}}</text>
-      <input class="input" value="{{bulkAdd.description}}" data-k="description" bindinput="onBulkAddInput" />
+      <input maxlength="-1" class="input" value="{{bulkAdd.description}}" data-k="description" bindinput="onBulkAddInput" />
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invNotes', lang)}}</text>
-      <input class="input" value="{{bulkAdd.notes}}" data-k="notes" bindinput="onBulkAddInput" />
+      <input maxlength="-1" class="input" value="{{bulkAdd.notes}}" data-k="notes" bindinput="onBulkAddInput" />
     </view>
     <view slot="foot" class="row gap-8">
       <view class="btn" hover-class="is-pressed" bindtap="closeBulkAdd">{{i.t('invCancel', lang)}}</view>
@@ -207,7 +207,7 @@
     <view class="inv-hint mb-12">{{i.t('invBulkEditHint', lang)}}</view>
     <view class="field">
       <text class="field-label">{{i.t('invOwner', lang)}}</text>
-      <input class="input" value="{{bulkEdit.owner}}" data-k="owner" bindinput="onBulkEditInput" />
+      <input maxlength="-1" class="input" value="{{bulkEdit.owner}}" data-k="owner" bindinput="onBulkEditInput" />
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invSampleType', lang)}}</text>
@@ -227,11 +227,20 @@
     </view>
     <view class="field">
       <text class="field-label">{{i.t('invTagsShort', lang)}}</text>
-      <input class="input" value="{{bulkEdit.tags}}" data-k="tags" bindinput="onBulkEditInput" placeholder="{{i.t('invBulkNoChange', lang)}}" placeholder-class="placeholder" />
+      <input maxlength="-1" class="input" value="{{bulkEdit.tags}}" data-k="tags" bindinput="onBulkEditInput" placeholder="{{i.t('invBulkNoChange', lang)}}" placeholder-class="placeholder" />
     </view>
     <view slot="foot" class="row gap-8">
       <view class="btn" hover-class="is-pressed" bindtap="closeBulkEdit">{{i.t('invCancel', lang)}}</view>
       <view class="btn-primary" hover-class="is-pressed" bindtap="saveBulkEdit">{{i.t('invApply', lang)}}</view>
+    </view>
+  </inv-sheet>
+  <!-- Box actions -->
+  <inv-sheet wx:if="{{boxMenuShow}}" show="{{true}}" title="{{i.t('invExport', lang)}} · {{i.t('invImport', lang)}}" foot="{{false}}" bindclose="closeBoxMenu">
+    <view class="col gap-8">
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="exportBox"><view class="icon i-download"></view><text>{{i.t('invExportBoxCsv', lang)}}</text></view>
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="importCsv"><view class="icon i-upload"></view><text>{{i.t('invImportCsv', lang)}}</text></view>
+      <view class="btn btn-block" hover-class="is-pressed" bindtap="downloadTemplate"><view class="icon i-file"></view><text>{{i.t('invDownloadTemplate', lang)}}</text></view>
+      <view class="btn-danger btn-block" hover-class="is-pressed" bindtap="deleteBox"><view class="icon i-trash"></view><text>{{i.t('invDeleteBox', lang)}}</text></view>
     </view>
   </inv-sheet>
 </view>

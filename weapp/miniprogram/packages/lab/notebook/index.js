@@ -102,8 +102,9 @@ Component({
           ui.toast(this.t('nbImportFailed'));
           return;
         }
-        experiments.bulkPut(entries);
-        ui.toast(this.tf('nbImportedN', { n: entries.length }));
+        const written = experiments.bulkPut(entries);
+        if (written < entries.length) ui.toast(this.t('mpStorageFull'));
+        else ui.toast(this.tf('nbImportedN', { n: entries.length }));
       }).catch((err) => { if (!nb.isCancelError(err)) ui.toast(this.t('nbImportFailed')); });
     },
   },

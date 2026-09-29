@@ -2,6 +2,7 @@
 const pageBehavior = require('../../behaviors/page');
 const bus = require('../../lib/bus');
 const timers = require('../../lib/timers');
+const { parseNum } = require('../../lib/format');
 
 const QUICK_TIMES = [
   { min: 1, label: '1 min' },
@@ -44,10 +45,10 @@ Component({
     onLabel(e) { this.setData({ customLabel: e.detail.value }); },
     onMinutes(e) {
       const v = e.detail.value;
-      this.setData({ customMin: v, canStart: parseFloat(v) > 0 });
+      this.setData({ customMin: v, canStart: parseNum(v) > 0 });
     },
     startCustom() {
-      const m = parseFloat(this.data.customMin);
+      const m = parseNum(this.data.customMin);
       if (!(m > 0)) return;
       timers.add(this.data.customLabel || (m + ' min'), Math.round(m * 60));
       this.setData({ customMin: '', customLabel: '', canStart: false });

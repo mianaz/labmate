@@ -6,3 +6,4 @@
 .cf-step-n { font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 22px; padding-top: 9px; text-align: right; }
 .cf-mat { padding: 3px 0; }
 .textarea { min-height: 72px; height: auto; }
+.cf-step-ta { min-height: 38px; height: auto; padding: 8px 10px; font-size: 14px; }

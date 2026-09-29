@@ -59,7 +59,14 @@ Component({
         storageText: info.currentSize ? (info.currentSize >= 1024 ? (info.currentSize / 1024).toFixed(1) + ' MB' : info.currentSize + ' KB') + ' / ' + Math.round((info.limitSize || 10240) / 1024) + ' MB' : '',
       });
     },
-    go(e) { wx.navigateTo({ url: e.currentTarget.dataset.url }); },
+    go(e) {
+      // Lab/tools pages live in subpackages, downloaded on first use: offline
+      // before that download, navigation fails.
+      wx.navigateTo({
+        url: e.currentTarget.dataset.url,
+        fail: () => ui.toast(t('mpNeedsNetwork', this.data.lang)),
+      });
+    },
     openSearch() { wx.navigateTo({ url: '/pages/search/index' }); },
     openTimer() { wx.navigateTo({ url: '/pages/timer/index' }); },
     setLangTo(e) {
@@ -96,10 +103,10 @@ Component({
       try {
         const n = backup.importBackup(parsed);
         ui.toast(tf('importSuccess', lang, { n }));
-        this.refresh();
       } catch (err) {
-        ui.toast(t('mpRestoreFailed', lang));
+        ui.toast(t(err && err.message === 'storage_full' ? 'mpStorageFull' : 'mpRestoreFailed', lang));
       }
+      this.refresh();
     },
     copyWebLink() {
       ui.copy('https://apps.bioinfospace.com/labmate/');

@@ -3,6 +3,7 @@
 // plus the saved-state format.
 const { PLATE_CONFIGS, WELL_COLORS, ROW_LABELS } = require('../../shared/data.js');
 const { t } = require('../../shared/i18n.js');
+const { parseNum } = require('../../lib/format');
 
 // The web keeps the layout in component state only; the mini program keeps it
 // under a labmate_* key so it survives restarts and travels in backups.
@@ -73,7 +74,7 @@ function wellView(key, d, sel) {
 
 function fmtConc(conc) { return conc >= 1 ? conc.toFixed(1) : conc.toExponential(1); }
 
-function reps(p) { return Math.max(1, Math.min(4, +(p.replicates || 1))); }
+function reps(p) { return Math.max(1, Math.min(4, Math.floor(parseNum(p.replicates || 1)) || 1)); }
 
 const TEMPLATE_DEFAULTS = {
   serial: { startConc: '100', factor: '2', direction: 'row', replicates: '1' },
@@ -93,8 +94,9 @@ function applyTemplate(type, p, cfg, lang) {
   if (type === 'serial') {
     if (!p.startConc || !p.factor) return null;
     const n = reps(p);
-    const f = +p.factor;
-    let conc = +p.startConc;
+    const f = parseNum(p.factor);
+    let conc = parseNum(p.startConc);
+    if (!(f > 0) || !(conc > 0)) return null;
     if (p.direction === 'row') {
       for (let c = 0; c < cfg.cols; c++) {
         const label = fmtConc(conc);
@@ -132,9 +134,11 @@ function applyTemplate(type, p, cfg, lang) {
   } else if (type === 'dose') {
     if (!p.drugs || !p.startConc || !p.dilFactor) return null;
     const n = reps(p);
-    const nDrugs = Math.min(+p.drugs, Math.floor(cfg.rows / n));
+    const dil = parseNum(p.dilFactor);
+    if (!(parseNum(p.drugs) > 0) || !(parseNum(p.startConc) > 0) || !(dil > 0)) return null;
+    const nDrugs = Math.min(Math.floor(parseNum(p.drugs)), Math.floor(cfg.rows / n));
     for (let d = 0; d < nDrugs; d++) {
-      let conc = +p.startConc;
+      let conc = parseNum(p.startConc);
       const color = WELL_COLORS[d % WELL_COLORS.length];
       const wells = [];
       for (let c = 0; c < cfg.cols; c++) {
@@ -144,7 +148,7 @@ function applyTemplate(type, p, cfg, lang) {
           if (r >= cfg.rows) break;
           put(wellKey(r, c), color, label, wells);
         }
-        conc /= +p.dilFactor;
+        conc /= dil;
       }
       groups.push({ label: 'Drug ' + (d + 1), color, wells });
     }

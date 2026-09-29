@@ -31,6 +31,7 @@ Component({
     doc: null,
     fav: false,
     targetVol: 0,
+    volInput: '',
     scale: 1,
     scaleText: '',
     presets: SCALE_PRESETS.map((m) => ({ m, label: '×' + (m === 0.5 ? '½' : m) })),
@@ -46,11 +47,14 @@ Component({
     onLoad(query) {
       this._id = decodeURIComponent((query && query.id) || '');
       this.load();
+      this._justLoaded = true;
       if (wx.showShareMenu) wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
     },
     onPageShow() {
-      // A custom entry may have been edited on the form page.
-      if (this._recipe && this._recipe._isCustom) this.load();
+      // A custom entry may have been edited on the form page; keep the user's
+      // volume and step view (show also fires after a screen lock).
+      if (this._justLoaded) this._justLoaded = false;
+      else if (this._recipe && this._recipe._isCustom) this.load(true);
       else this.setData({ fav: favorites.isFav(this._id) });
       if (this.data.keepAwake) keepAwake.acquire('detail');
     },
@@ -170,6 +174,8 @@ Component({
       };
 
       const patch = { doc, missing: false, fav: favorites.isFav(r.id), keepAwake: storage.get(KEEP_AWAKE_KEY, false) === true };
+      // Custom entries only exist on this phone: a shared link would open "not found".
+      if (r._isCustom && wx.hideShareMenu) wx.hideShareMenu({ menus: ['shareAppMessage', 'shareTimeline'] });
       if (!keepState) {
         const saved = storage.get(stepKey(r.id), []);
         const done = {};
@@ -208,6 +214,7 @@ Component({
       const presets = SCALE_PRESETS.map((m) => ({ m, label: '×' + (m === 0.5 ? '½' : m), active: Math.abs(scale - m) < 1e-9 }));
       this.setData(Object.assign({
         targetVol,
+        volInput: String(Math.round(targetVol * 1000) / 1000),
         scale,
         scaleText: scale !== 1 ? t('scaleFactor', lang) + ' ×' + scale.toFixed(2) + ' · ' + t('defaultVolLabel', lang).toLowerCase() + ' ' + base + ' ' + (r.unit || '') : '',
         components,
@@ -217,11 +224,15 @@ Component({
     },
 
     onVolume(e) {
-      const v = parseFloat(e.detail.value);
+      const raw = e.detail.value;
+      const v = fmt.parseNum(raw);
       if (v > 0) this.applyScale(v);
+      // Keep what the user typed (e.g. "2," mid-entry) in the box.
+      this.setData({ volInput: raw });
     },
     onVolumeBlur(e) {
-      const v = parseFloat(e.detail.value);
+      const v = fmt.parseNum(e.detail.value);
+      // Cleared or invalid: put the volume the table is using back in the box.
       this.applyScale(v > 0 ? v : this.data.targetVol);
     },
     setPreset(e) {
@@ -239,8 +250,9 @@ Component({
     toggleStep(e) {
       const i = Number(e.currentTarget.dataset.i);
       const done = Object.assign({}, this.data.done);
-      if (done[i]) delete done[i]; else done[i] = true;
-      const list = Object.keys(done).map(Number);
+      done[i] = !done[i];
+      // Only ticked steps are stored (an unticked one stays in `done` as false).
+      const list = Object.keys(done).filter((k) => done[k]).map(Number);
       if (list.length) storage.set(stepKey(this._id), list); else storage.remove(stepKey(this._id));
       this.setData({ ['done.' + i]: !!done[i] });
       this.countDone();

@@ -338,23 +338,21 @@ Component({
       const res = store.saveBox(e.detail.form, this._box.locationId, this._box.id);
       if (A.check(res, this.data.lang)) this.closeBoxForm();
     },
-    boxMore() {
-      const lang = this.data.lang;
-      ui.actionSheet([t('invExportBoxCsv', lang), t('invImportCsv', lang), t('invDownloadTemplate', lang), t('invDeleteBox', lang)]).then((i) => {
-        if (i === 0) this.exportBox();
-        else if (i === 1) this.importCsv();
-        else if (i === 2) this.downloadTemplate();
-        else if (i === 3) this.deleteBox();
-      });
-    },
+    // Box actions are real buttons in a sheet (not wx.showActionSheet): some
+    // WeChat versions only allow file sharing/picking straight from a tap.
+    boxMore() { this.setData({ boxMenuShow: true }); },
+    closeBoxMenu() { this.setData({ boxMenuShow: false }); },
     exportBox() {
+      if (this.data.boxMenuShow) this.setData({ boxMenuShow: false });
       const box = this._box;
       return A.shareFile('inventory-' + U.safeFileName(box.name) + '.csv', U.invExportBoxCsv(store.load(), box.id), this.data.lang);
     },
     downloadTemplate() {
+      if (this.data.boxMenuShow) this.setData({ boxMenuShow: false });
       return A.shareFile('inventory-template.csv', U.invCsvTemplate(), this.data.lang);
     },
     importCsv() {
+      if (this.data.boxMenuShow) this.setData({ boxMenuShow: false });
       const lang = this.data.lang;
       const boxId = this._box.id;
       return A.pickFile(['csv', 'txt'], lang).then((content) => {
@@ -366,6 +364,7 @@ Component({
       });
     },
     deleteBox() {
+      if (this.data.boxMenuShow) this.setData({ boxMenuShow: false });
       const lang = this.data.lang;
       const box = this._box;
       return ui.confirm(tf('invDelBoxBody', lang, { name: U.nameOf(box, lang), samples: (this._samples || []).length }), {
