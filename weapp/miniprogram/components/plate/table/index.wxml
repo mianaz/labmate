@@ -1,0 +1,21 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="ptv lang-{{lang}}">
+  <view class="ptv-count mono">{{i.n('plateLabelledWells', lang, rows.length)}}</view>
+  <view wx:if="{{!rows.length}}" class="ptv-empty">{{i.t('plateLegendEmpty', lang)}}</view>
+  <view wx:else class="table">
+    <view class="tr is-head">
+      <view wx:for="{{heads}}" wx:key="id" class="th ptv-{{item.id}} {{sort === item.id ? 'ptv-sorted' : ''}}"
+        hover-class="ptv-press" data-id="{{item.id}}" bindtap="toggleSort" aria-role="button">{{item.l}}{{sort === item.id ? (asc ? ' ↑' : ' ↓') : ''}}</view>
+    </view>
+    <view wx:for="{{rows}}" wx:key="well" class="tr">
+      <view class="td ptv-well mono">{{item.well}}</view>
+      <view class="td ptv-row">{{item.row}}</view>
+      <view class="td ptv-col">{{item.col}}</view>
+      <view class="td ptv-label break">{{item.label}}</view>
+      <view class="td ptv-color">
+        <view class="well ptv-dot" style="background: {{item.color}}"></view>
+        <text class="mono">{{item.color}}</text>
+      </view>
+    </view>
+  </view>
+</view>

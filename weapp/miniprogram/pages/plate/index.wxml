@@ -1,1 +1,158 @@
-<view class="page">TODO</view>
+<wxs module="i" src="../../shared/i18n.wxs"/>
+<view class="page is-tab {{timerCount ? 'has-timers' : ''}} lang-{{lang}}">
+  <page-header eyebrow="{{i.t('navTools', lang)}}" title="{{i.t('plateTitle', lang)}}" desc="{{i.t('plateSubtitle', lang)}}">
+    <view class="seg">
+      <view class="seg-item {{mode === 'designer' ? 'is-active' : ''}}" data-mode="designer" bindtap="setMode" aria-role="button">{{i.t('plateModeDesigner', lang)}}</view>
+      <view class="seg-item {{mode === 'reader' ? 'is-active' : ''}}" data-mode="reader" bindtap="setMode" aria-role="button">{{i.t('plateModeReader', lang)}}</view>
+    </view>
+    <picker wx:if="{{mode === 'designer'}}" class="picker-host" mode="selector" range="{{plateOptions}}" range-key="label"
+      value="{{plateIdx}}" bindchange="onPlateType" aria-label="{{i.t('plateType', lang)}}">
+      <view class="picker pl-type">
+        <text class="picker-value">{{plateOptions[plateIdx].label}}</text>
+        <view class="icon i-chevron-down"></view>
+      </view>
+    </picker>
+  </page-header>
+
+  <!-- ═══ Designer ═══ -->
+  <view class="{{mode === 'designer' ? '' : 'hidden'}}">
+    <view class="panel">
+      <view class="panel-head">
+        <view class="row gap-8 flex-1">
+          <text class="panel-title">{{i.n('platePlateName', lang, plateType)}}</text>
+          <text class="mono pl-dims">{{rowCount}} × {{colCount}}</text>
+        </view>
+        <view class="btn-ghost btn-sm pl-clear" hover-class="is-pressed" bindtap="clearAll" aria-role="button">
+          <view class="icon i-reset"></view><text>{{i.t('plateClear', lang)}}</text>
+        </view>
+      </view>
+
+      <view class="pl-bar">
+        <view class="seg">
+          <view class="seg-item {{view === 'grid' ? 'is-active' : ''}}" data-view="grid" bindtap="setView" aria-role="button">{{i.t('plateViewGrid', lang)}}</view>
+          <view class="seg-item {{view === 'table' ? 'is-active' : ''}}" data-view="table" bindtap="setView" aria-role="button">{{i.t('plateViewTable', lang)}}</view>
+        </view>
+        <view wx:if="{{view === 'grid' && (m.canZoom || zoom)}}" class="btn btn-sm pl-zoom {{zoom ? 'pl-on' : ''}}" hover-class="is-pressed" bindtap="toggleZoom" aria-role="button">
+          <view class="icon i-search"></view><text>{{zoom ? i.t('plateFit', lang) : i.t('plateEnlarge', lang)}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{view === 'grid'}}" class="pl-body">
+        <scroll-view scroll-x class="pl-scroll" enhanced show-scrollbar="{{false}}" bindscroll="onPlateScroll">
+          <view class="pl-grid {{m.big ? 'is-big' : ''}}"
+            style="width: {{m.gridW}}px; --ws: {{m.ws}}px; --gap: {{m.gap}}px; --head: {{m.head}}px; --fs: {{m.fs}}px; --axis-fs: {{m.axisFs}}px">
+            <view class="pl-row">
+              <view class="pl-corner {{selCount === rowCount * colCount ? 'is-all' : ''}}" hover-class="is-pressed" bindtap="toggleAll"
+                aria-role="button" aria-label="{{i.t('plateSelectAll', lang)}}"><view class="pl-corner-mark"></view></view>
+              <view wx:for="{{colHeads}}" wx:key="*this" class="pl-axis pl-ch" hover-class="is-pressed"
+                data-c="{{index}}" bindtap="selectCol" aria-role="button">{{item}}</view>
+            </view>
+            <view wx:for="{{rows}}" wx:for-item="row" wx:for-index="r" wx:key="l" class="pl-row">
+              <view class="pl-axis pl-rh" hover-class="is-pressed" data-r="{{r}}" bindtap="selectRow" aria-role="button">{{row.l}}</view>
+              <view wx:for="{{row.w}}" wx:for-item="w" wx:for-index="c" wx:key="k"
+                class="well pl-well {{w.has ? 'has' : ''}} {{w.sel ? 'is-sel' : ''}}" style="{{w.st}}"
+                data-r="{{r}}" data-c="{{c}}" bindtap="tapWell" bindlongpress="pressWell"
+                aria-role="button" aria-label="{{w.k}}{{w.has ? ': ' + w.lbl : ''}}">
+                <block wx:if="{{m.showText}}">
+                  <text wx:if="{{m.showId && w.has}}" class="pl-wid">{{w.k}}</text>
+                  <text class="pl-wl">{{w.has ? w.lbl : w.k}}</text>
+                </block>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        <view wx:if="{{m.scroll && !scrolled}}" class="pl-more"><view class="icon i-chevron-right"></view></view>
+      </view>
+      <plate-table wx:else id="table" layout="{{layout}}" />
+
+      <view class="pl-legend">
+        <text class="eyebrow">{{i.t('plateLegend', lang)}}</text>
+        <text wx:if="{{!groups.length}}" class="pl-legend-empty">{{i.t('plateLegendEmpty', lang)}}</text>
+        <view wx:for="{{groups}}" wx:key="id" class="pl-lg" hover-class="is-pressed" data-i="{{index}}" bindtap="selectGroup" aria-role="button">
+          <view class="well pl-dot" style="background: {{item.color}}"></view>
+          <text class="pl-lg-label">{{item.label}}</text>
+          <text class="mono pl-lg-n">{{item.n}}</text>
+        </view>
+        <text class="mono pl-count">{{lang === 'zh' ? '已标记 ' + labelled + '/' + plateType : labelled + '/' + plateType + ' labelled'}}</text>
+      </view>
+    </view>
+
+    <!-- Inspector -->
+    <view class="panel mt-16">
+      <view class="panel-head">
+        <text class="panel-title">{{i.t('plateMarkTitle', lang)}}</text>
+        <text class="badge tabular {{selCount ? 'badge-green' : ''}}">{{lang === 'zh' ? i.t('plateSelected', lang) + ' ' + selCount : selCount + ' ' + i.t('plateSelected', lang)}}</text>
+      </view>
+      <view class="panel-body">
+        <view wx:if="{{!selCount}}" class="pl-hint">{{i.t('plateHintSelect', lang)}}</view>
+        <view wx:else class="row-top gap-8">
+          <text class="mono flex-1 break pl-sel">{{selPreview}}</text>
+          <view class="btn-ghost btn-sm pl-deselect" hover-class="is-pressed" bindtap="deselect" aria-role="button">{{i.t('plateDeselect', lang)}}</view>
+        </view>
+
+        <view class="field mt-16">
+          <text class="field-label">{{i.t('plateLabelName', lang)}}</text>
+          <input class="input" type="text" value="{{label}}" confirm-type="done"
+            placeholder="{{i.t('plateLabelPlaceholder', lang)}}" placeholder-class="placeholder"
+            bindinput="onLabel" bindconfirm="assign" />
+        </view>
+
+        <view class="row between mb-8">
+          <text class="eyebrow">{{i.t('color', lang)}}</text>
+          <view class="row gap-6 mono pl-hex">
+            <view class="well pl-dot" style="background: {{activeHex}}"></view>
+            <text>{{activeHex}}</text>
+          </view>
+        </view>
+        <view class="pl-swatches">
+          <view wx:for="{{swatches}}" wx:key="*this" class="pl-sw {{!useCustom && colorIdx === index ? 'is-on' : ''}}"
+            style="background: {{item}}" data-i="{{index}}" bindtap="pickColor"
+            aria-role="button" aria-label="{{i.t('color', lang)}} {{item}}"></view>
+        </view>
+        <view class="row gap-8 mt-12">
+          <view class="pl-sw pl-sw-custom {{useCustom ? 'is-on' : ''}}" style="background: {{customColor}}" bindtap="pickCustom"
+            aria-role="button" aria-label="{{i.t('plateCustomColor', lang)}}"></view>
+          <text class="field-label flex-1 pl-custom-label" bindtap="pickCustom">{{i.t('plateCustomColor', lang)}}</text>
+          <view class="row pl-hex-field">
+            <text class="mono pl-hash">#</text>
+            <input class="input is-sm pl-hex-input" type="text" maxlength="6" value="{{customHex}}" bindinput="onCustomHex"
+              aria-label="{{i.t('plateCustomColor', lang)}}" />
+          </view>
+        </view>
+
+        <view class="btn-primary btn-block mt-16 {{selCount && label ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="assign" aria-role="button">
+          {{i.t('plateConfirm', lang)}}
+        </view>
+        <view wx:if="{{selLabelled}}" class="btn-ghost btn-sm btn-block mt-8" hover-class="is-pressed" bindtap="clearSelected" aria-role="button">
+          <view class="icon i-close"></view><text>{{i.t('plateClearSelected', lang)}}</text>
+        </view>
+      </view>
+
+      <view class="panel-body pl-sect">
+        <plate-templates id="templates" plate-type="{{plateType}}" labelled="{{labelled}}" bind:apply="applyTemplate" />
+      </view>
+
+      <view class="panel-body pl-sect">
+        <view class="panel-title pl-sect-title">{{i.t('plateExport', lang)}}</view>
+        <view class="grid-2">
+          <view class="btn btn-sm" hover-class="is-pressed" bindtap="exportCSV" aria-role="button" aria-label="{{i.t('downloadCSV', lang)}}">
+            <view class="icon i-download"></view><text>CSV</text>
+          </view>
+          <view class="btn btn-sm" hover-class="is-pressed" bindtap="exportSVG" aria-role="button" aria-label="{{i.t('downloadSVG', lang)}}">
+            <view class="icon i-download"></view><text>SVG</text>
+          </view>
+          <view class="btn btn-sm pl-span2" hover-class="is-pressed" bindtap="copyLayout" aria-role="button">
+            <view class="icon i-copy"></view><text>{{i.t('copyLayout', lang)}}</text>
+          </view>
+        </view>
+        <view class="pl-note">{{i.t('plateSendHint', lang)}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══ Reader import ═══ -->
+  <view class="{{mode === 'reader' ? '' : 'hidden'}}">
+    <plate-reader id="reader" layout="{{layout}}" designer-size="{{plateType}}" />
+  </view>
+</view>
+<timer-bar tab />

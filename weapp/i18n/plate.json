@@ -1,0 +1,75 @@
+{
+  "platePlateName": { "en": "{n}-well plate", "zh": "{n} 孔板" },
+  "plateTypeOption": { "en": "{n}-well", "zh": "{n} 孔" },
+  "plateHintSelect": {
+    "en": "Tap wells to select them. Long-press a second well to take the whole block in between; tap a row letter or column number for the whole row or column.",
+    "zh": "点击孔位即可选中；长按另一个孔位可选中两者之间的整块区域；点击行字母或列号可选中整行或整列。"
+  },
+  "plateDeselect": { "en": "Deselect", "zh": "取消选择" },
+  "plateSelectAll": { "en": "Select all wells", "zh": "全选孔位" },
+  "plateLabelPlaceholder": { "en": "e.g. 10 µM Drug A", "zh": "如 10 µM 药物 A" },
+  "plateLegendEmpty": {
+    "en": "Nothing labelled yet — name the selected wells, or apply a template.",
+    "zh": "尚未标记——为选中的孔位命名，或应用一个模板。"
+  },
+  "plateLabelledWells": { "en": "{n} labelled wells", "zh": "{n} 个已标记孔" },
+  "plateClearSelected": { "en": "Clear selected wells", "zh": "清除所选孔的标记" },
+  "plateClearConfirm": { "en": "Clear every labelled well on this plate?", "zh": "清空本板所有已标记的孔位？" },
+  "plateTypeConfirm": { "en": "Switching the plate type clears the current layout.", "zh": "切换板型会清空当前布局。" },
+  "plateFit": { "en": "Fit", "zh": "适应屏幕" },
+  "plateTplDescSerial": {
+    "en": "Each step divides the concentration by the dilution factor — one step per column (→ Row) or per row (↓ Column).",
+    "zh": "每一步将浓度除以稀释倍数——沿行方向每列一个梯度，或沿列方向每行一个梯度。"
+  },
+  "plateTplDescDose": {
+    "en": "One block of rows per drug, diluted across the columns. Replicates set how many rows each drug gets.",
+    "zh": "每种药物占一组行，沿列方向梯度稀释；重复数决定每种药物占几行。"
+  },
+  "plateTplDescCheckerboard": {
+    "en": "Alternates two labels across the plate; replicates set the size of each block.",
+    "zh": "两种标签在整板上交替排列；重复数决定每个方块的大小。"
+  },
+  "plateTplDescControl": {
+    "en": "Places positive controls (top half of last column), negative controls (bottom half of last column), and blanks (first column).",
+    "zh": "在最后一列上半部分放置阳性对照，下半部分放置阴性对照，第一列放置空白。"
+  },
+  "plateTplDescAntibody": {
+    "en": "One row per antibody, diluted across the columns from the starting concentration.",
+    "zh": "每个抗体占一行，从起始浓度沿列方向梯度稀释。"
+  },
+  "plateDirection": { "en": "Direction", "zh": "方向" },
+  "plateDirRow": { "en": "→ Row", "zh": "→ 沿行" },
+  "plateDirCol": { "en": "↓ Column", "zh": "↓ 沿列" },
+  "plateLabel1": { "en": "Label 1", "zh": "标签 1" },
+  "plateLabel2": { "en": "Label 2", "zh": "标签 2" },
+  "plateTplReplaces": { "en": "Applying a template replaces the current layout.", "zh": "应用模板会替换当前布局。" },
+  "plateSendHint": {
+    "en": "Files are sent to a chat — pick File Transfer to keep them.",
+    "zh": "文件会发送到聊天——选择「文件传输助手」即可保存。"
+  },
+  "plateCopiedInstead": { "en": "Can't send files here — contents copied", "zh": "当前无法发送文件，已复制内容" },
+  "readerDetectedPlate": { "en": "Detected plate", "zh": "识别结果" },
+  "readerNoData": { "en": "No data yet", "zh": "暂无数据" },
+  "readerNoDataDesc": {
+    "en": "Paste values or load a file — the detected plate appears here as a heatmap, with a tidy long-format table below.",
+    "zh": "粘贴数据或选择文件后，这里会显示识别出的孔板热图，下方生成长格式（tidy）数据表。"
+  },
+  "readerRingHint": { "en": "Ring colour = sample label from the designer", "zh": "外圈颜色 = 设计器中的样品标签" },
+  "readerHintNoLayout": {
+    "en": "Label wells in the Designer first — sample labels are merged here and summarised per sample as n, mean, SD and CV%.",
+    "zh": "先在「布板设计」中标记孔位——样品标签会合并到这里，并按样品汇总 n、均值、标准差和变异系数。"
+  },
+  "readerHintMismatch": { "en": "The plate sizes differ, so there is nothing to summarise by sample.", "zh": "孔板尺寸不一致，无法按样品汇总。" },
+  "readerHintMergeOff": {
+    "en": "Turn on “Merge sample labels from designer” to summarise by sample.",
+    "zh": "勾选「合并设计器中的样品标签」即可按样品汇总。"
+  },
+  "readerHintNoValues": { "en": "None of the labelled wells have values in this data.", "zh": "已标记的孔位在这组数据中没有数值。" },
+  "readerSendCSV": { "en": "Send CSV", "zh": "发送 CSV" },
+  "readerFileFailed": { "en": "Couldn't read that file", "zh": "无法读取该文件" },
+  "readerBigFile": {
+    "en": "Large file — only the beginning is shown here; all of it is parsed.",
+    "zh": "文件较大——此处仅显示开头部分，全部内容均已解析。"
+  },
+  "readerMoreRows": { "en": "more rows in the exported CSV", "zh": "行未显示，已包含在导出的 CSV 中" }
+}

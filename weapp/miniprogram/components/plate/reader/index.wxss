@@ -1,0 +1,99 @@
+.pr { --pr-heat: 22, 179, 100; }
+@media (prefers-color-scheme: dark) {
+  .pr { --pr-heat: 36, 214, 123; }
+}
+
+/* Step marker: "01" in a small ink-framed box, filled green once done. */
+.pr-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 4px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.pr-step.is-done { background: var(--primary); color: var(--on-primary); }
+.pr-desc { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+.pr-file { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.pr-ta {
+  width: 100%;
+  height: 176px;
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.pr-note { margin-top: 8px; font-size: 11px; line-height: 1.5; color: var(--text-muted); }
+.pr-empty { padding: 24px 8px; }
+.pr-ni { font-size: 16px; margin-top: 3px; flex-shrink: 0; }
+.pr-warn { color: var(--warning-text); }
+.pr-meta { font-size: 12px; color: var(--text-muted); }
+.pr-merge { margin-top: 12px; padding: 6px 0; font-size: 13px; font-weight: 500; }
+.pr-merge.is-pressed { opacity: 0.7; }
+.pr-merge .checkbox .icon { font-size: 13px; }
+
+/* Heatmap */
+.pr-scroll { width: 100%; margin-top: 14px; white-space: nowrap; overflow: hidden; }
+.pr-hm { margin: 0 auto; white-space: normal; }
+.pr-row { display: flex; gap: var(--gap); margin-bottom: var(--gap); }
+.pr-row:last-child { margin-bottom: 0; }
+.pr-corner { width: 20px; height: 18px; flex-shrink: 0; }
+.pr-axis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.pr-ch { width: var(--cell); height: 18px; }
+.pr-rh { width: 20px; height: var(--cell); }
+.pr-cell {
+  width: var(--cell);
+  height: var(--cell);
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: var(--hfs);
+  line-height: 1;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.pr-cell.is-empty { background: var(--bg-2); border-style: dashed; color: var(--text-muted); }
+.pr-cell.is-hot { color: var(--on-primary); }
+.pr-legend { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 14px; }
+.pr-scale { font-size: 11px; color: var(--text-muted); }
+.pr-ramp { display: flex; border: 1px solid var(--border); }
+.pr-ramp-step { width: 16px; height: 10px; }
+.pr-ring-hint { font-size: 11px; color: var(--text-muted); }
+
+/* Tidy data */
+.pr-tidy-head { flex-wrap: wrap; }
+.pr-count { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.pr-actions { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.pr-actions .btn, .pr-actions .btn-primary { display: flex; }
+.pr-tidy { width: 100%; overflow: hidden; border-bottom: 1px solid var(--rule); }
+.pr-tr { height: 34px; }
+.pr-tidy .td, .pr-tidy .th { padding-top: 0; padding-bottom: 0; }
+.pr-tidy .tr.is-head { height: 34px; }
+.pr .pr-c-well { width: 64px; flex-shrink: 0; padding-left: 14px; }
+.pr .pr-c-val { width: 84px; flex-shrink: 0; text-align: right; }
+.pr .td.pr-c-well { font-size: 13px; font-weight: 700; }
+.pr .td.pr-c-val { font-size: 13px; }
+.pr-more { padding: 10px 14px; font-size: 11px; text-align: center; color: var(--text-muted); }
+.pr-sum-head { display: flex; align-items: center; min-height: 40px; padding: 0 14px; border-bottom: 1px solid var(--rule); }
+.pr .pr-c-first { padding-left: 14px; }
+.pr .pr-c-n { width: 32px; flex-shrink: 0; text-align: right; }
+.pr .pr-c-num { width: 62px; flex-shrink: 0; text-align: right; }
+.pr .pr-c-cv { width: 60px; flex-shrink: 0; text-align: right; padding-right: 14px; }
+.pr .td.pr-c-n, .pr .td.pr-c-num, .pr .td.pr-c-cv { font-size: 12px; }
+.pr-dot { width: 10px; height: 10px; flex-shrink: 0; border: 0; }
+.pr-sample { font-size: 14px; font-weight: 500; }
+.pr-sum-hint { padding: 12px 14px 14px; }
+.pr-sum-hint .notice { font-size: 13px; }

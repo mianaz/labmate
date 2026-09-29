@@ -1,0 +1,156 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<view class="pr lang-{{lang}}">
+  <!-- 01 — input -->
+  <view class="panel">
+    <view class="panel-head">
+      <view class="row gap-8 flex-1">
+        <text class="pr-step {{state === 'ok' ? 'is-done' : ''}}">01</text>
+        <text class="panel-title">{{i.t('readerInputTitle', lang)}}</text>
+      </view>
+    </view>
+    <view class="panel-body">
+      <view class="pr-desc">{{i.t('readerInputDesc', lang)}}</view>
+      <view class="row-wrap gap-8 mt-12">
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="loadFile" aria-role="button">
+          <view class="icon i-upload"></view><text>{{i.t('readerLoadFile', lang)}}</text>
+        </view>
+        <view class="btn btn-sm" hover-class="is-pressed" bindtap="loadDemo" aria-role="button">{{i.t('readerLoadDemo', lang)}}</view>
+        <view wx:if="{{text}}" class="btn-ghost btn-sm" hover-class="is-pressed" bindtap="clear" aria-role="button">
+          <view class="icon i-close"></view><text>{{i.t('readerClear', lang)}}</text>
+        </view>
+      </view>
+      <view wx:if="{{fileName}}" class="row gap-6 pr-file">
+        <view class="icon i-file"></view><text class="truncate flex-1">{{fileName}}</text>
+      </view>
+      <textarea class="textarea pr-ta" value="{{text}}" maxlength="-1" disabled="{{bigFile}}"
+        placeholder="{{i.t('readerPaste', lang)}}" placeholder-class="placeholder"
+        disable-default-padding always-embed bindinput="onInput" aria-label="{{i.t('readerInputTitle', lang)}}" />
+      <view wx:if="{{bigFile}}" class="pr-note">{{i.t('readerBigFile', lang)}}</view>
+      <view class="pr-note">{{i.t('readerSupportedFormats', lang)}}</view>
+    </view>
+  </view>
+
+  <!-- 02 — detected plate -->
+  <view class="panel mt-16">
+    <view class="panel-head">
+      <view class="row gap-8 flex-1">
+        <text class="pr-step {{state === 'ok' ? 'is-done' : ''}}">02</text>
+        <text class="panel-title">{{i.t('readerDetectedPlate', lang)}}</text>
+      </view>
+    </view>
+    <view class="panel-body">
+      <view wx:if="{{state === 'empty'}}" class="empty pr-empty">
+        <view class="empty-icon"><view class="icon i-plate"></view></view>
+        <view class="empty-title">{{i.t('readerNoData', lang)}}</view>
+        <view class="empty-desc">{{i.t('readerNoDataDesc', lang)}}</view>
+      </view>
+
+      <view wx:if="{{state === 'error'}}" class="notice notice-danger">
+        <view class="icon i-alert pr-ni danger"></view>
+        <view><text class="notice-title">{{i.t('readerErr', lang)}}:</text> {{errText}}</view>
+      </view>
+
+      <block wx:if="{{state === 'ok'}}">
+        <view class="notice notice-info">
+          <view class="icon i-check pr-ni accent"></view>
+          <view>
+            <text class="notice-title">{{i.t('readerDetected', lang)}}: {{detected}}</text>
+            <text class="mono pr-meta"> · {{parsedCount}} {{i.t('readerParsedValues', lang)}}<text wx:if="{{skipped}}"> · {{skipped}} {{i.t('readerSkipped', lang)}}</text></text>
+          </view>
+        </view>
+        <view wx:if="{{mismatch}}" class="notice notice-warn mt-8">
+          <view class="icon i-alert pr-ni pr-warn"></view>
+          <view>{{mismatchText}}</view>
+        </view>
+        <view wx:if="{{layoutAvailable && !mismatch}}" class="row gap-8 pr-merge" hover-class="is-pressed" bindtap="toggleMerge" aria-role="checkbox" aria-checked="{{merge}}">
+          <view class="checkbox {{merge ? 'is-checked' : ''}}"><view wx:if="{{merge}}" class="icon i-check"></view></view>
+          <text>{{i.t('readerMergeLabels', lang)}}</text>
+        </view>
+
+        <scroll-view scroll-x class="pr-scroll" enhanced show-scrollbar="{{false}}">
+          <view class="pr-hm mono" style="width: {{hm.w}}px; --cell: {{hm.cell}}px; --gap: {{hm.gap}}px; --hfs: {{hm.fs}}px">
+            <view class="pr-row">
+              <view class="pr-corner"></view>
+              <view wx:for="{{hm.cols}}" wx:key="*this" class="pr-axis pr-ch">{{item}}</view>
+            </view>
+            <view wx:for="{{hm.rows}}" wx:for-item="row" wx:key="l" class="pr-row">
+              <view class="pr-axis pr-rh">{{row.l}}</view>
+              <view wx:for="{{row.c}}" wx:for-item="cell" wx:key="k" class="well pr-cell {{cell.cls}}" style="{{cell.st}}">{{cell.txt}}</view>
+            </view>
+          </view>
+        </scroll-view>
+
+        <view class="pr-legend">
+          <view class="row gap-8 mono pr-scale">
+            <text>{{scale.min}}</text>
+            <view class="pr-ramp"><view wx:for="{{scale.steps}}" wx:key="id" class="pr-ramp-step" style="{{item.st}}"></view></view>
+            <text>{{scale.max}}</text>
+          </view>
+          <text wx:if="{{mergeActive}}" class="pr-ring-hint">{{i.t('readerRingHint', lang)}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 03 — tidy data -->
+  <view wx:if="{{state === 'ok'}}" class="panel mt-16">
+    <view class="panel-head pr-tidy-head">
+      <view class="row gap-8 flex-1">
+        <text class="pr-step {{longCount ? 'is-done' : ''}}">03</text>
+        <text class="panel-title">{{i.t('readerLongFormat', lang)}}</text>
+        <text class="mono pr-count">· {{longCount}} {{i.t('readerRows', lang)}}</text>
+      </view>
+    </view>
+    <view class="row gap-8 pr-actions">
+      <view class="btn btn-sm flex-1 {{longCount ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="copyCSV" aria-role="button">
+        <view class="icon i-copy"></view><text>{{i.t('copyClipboard', lang)}}</text>
+      </view>
+      <view class="btn-primary btn-sm flex-1 {{longCount ? '' : 'is-disabled'}}" hover-class="is-pressed" bindtap="sendCSV" aria-role="button">
+        <view class="icon i-download"></view><text>{{i.t('readerSendCSV', lang)}}</text>
+      </view>
+    </view>
+
+    <scroll-view scroll-y class="pr-tidy" style="height: {{tidyH}}px">
+      <view class="table">
+        <view class="tr is-head">
+          <view class="th pr-c-well">{{i.t('readerWell', lang)}}</view>
+          <view class="th pr-c-val">{{i.t('readerValue', lang)}}</view>
+          <view wx:if="{{mergeActive}}" class="th flex-1">{{i.t('readerSample', lang)}}</view>
+        </view>
+        <view wx:for="{{tidy}}" wx:key="well" class="tr pr-tr">
+          <view class="td pr-c-well mono">{{item.well}}</view>
+          <view class="td pr-c-val mono tabular">{{item.value}}</view>
+          <view wx:if="{{mergeActive}}" class="td flex-1 truncate {{item.sample ? '' : 'muted'}}">{{item.sample || '—'}}</view>
+        </view>
+      </view>
+      <view wx:if="{{more}}" class="pr-more mono">… {{more}} {{i.t('readerMoreRows', lang)}}</view>
+    </scroll-view>
+
+    <view class="pr-sum-head"><text class="eyebrow">{{i.t('readerSummary', lang)}}</text></view>
+    <view wx:if="{{summary.length}}" class="table">
+      <view class="tr is-head">
+        <view class="th flex-1 pr-c-first">{{i.t('readerSample', lang)}}</view>
+        <view class="th pr-c-n">n</view>
+        <view class="th pr-c-num">{{i.t('readerMean', lang)}}</view>
+        <view class="th pr-c-num">{{i.t('readerSD', lang)}}</view>
+        <view class="th pr-c-cv">{{i.t('readerCV', lang)}}</view>
+      </view>
+      <view wx:for="{{summary}}" wx:key="sample" class="tr">
+        <view class="td flex-1 pr-c-first row gap-6">
+          <view wx:if="{{item.color}}" class="well pr-dot" style="background: {{item.color}}"></view>
+          <text class="truncate pr-sample">{{item.sample}}</text>
+        </view>
+        <view class="td pr-c-n mono tabular muted">{{item.n}}</view>
+        <view class="td pr-c-num mono tabular strong">{{item.mean}}</view>
+        <view class="td pr-c-num mono tabular muted">{{item.sd}}</view>
+        <view class="td pr-c-cv mono tabular muted">{{item.cv}}</view>
+      </view>
+    </view>
+    <view wx:else class="pr-sum-hint">
+      <view class="notice">
+        <view class="icon i-info pr-ni muted"></view>
+        <view class="muted">{{summaryHint}}</view>
+      </view>
+    </view>
+  </view>
+</view>

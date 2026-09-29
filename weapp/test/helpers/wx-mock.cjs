@@ -29,6 +29,7 @@ const mock = {
     mock.__modalConfirm = true;
     mock.__actionSheetIndex = 0;
     mock.__fileContent = '';
+    mock.__pickedFile = null;
     // module-level caches in the mini program's lib/
     try { require('../../miniprogram/lib/lang.js')._reset(); } catch (e) { /* not loaded yet */ }
     try { require('../../miniprogram/lib/timers.js').init(); } catch (e) { /* not loaded yet */ }
@@ -67,7 +68,16 @@ const mock = {
   showShareMenu: record('showShareMenu'),
   shareFileMessage: record('shareFileMessage'),
   setInnerAudioOption: record('setInnerAudioOption'),
-  chooseMessageFile: record('chooseMessageFile'),
+  // Set wx.__pickedFile = { name, content } to simulate picking a file from a chat.
+  chooseMessageFile(opts) {
+    calls.push({ name: 'chooseMessageFile', opts });
+    if (mock.__pickedFile) {
+      mock.__fileContent = mock.__pickedFile.content;
+      opts.success({ tempFiles: [{ path: 'wxfile://tmp/' + mock.__pickedFile.name, name: mock.__pickedFile.name, size: mock.__pickedFile.content.length }] });
+    } else if (opts.fail) {
+      opts.fail({ errMsg: 'chooseMessageFile:fail cancel' });
+    }
+  },
   createInnerAudioContext() { return { src: '', play() { calls.push({ name: 'audio.play' }); }, stop() {}, destroy() {} }; },
   getFileSystemManager() {
     return {

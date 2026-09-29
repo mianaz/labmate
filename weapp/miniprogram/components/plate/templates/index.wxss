@@ -1,0 +1,19 @@
+.pt-title { display: block; margin-bottom: 12px; }
+.pt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pt-grid .btn { display: flex; }
+.pt-wide { grid-column: span 2; }
+.btn.pt-on { background: var(--text); color: var(--bg); }
+.pt-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+}
+.pt-form-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px -6px 6px 0; }
+.pt-desc { font-size: 13px; line-height: 1.55; color: var(--text-muted); margin-bottom: 14px; }
+.pt-plate { color: var(--text); white-space: nowrap; }
+.pt-micro { text-transform: none; }
+.pt-form .seg-item { min-height: 36px; }
+.pt-notice { font-size: 13px; padding: 10px 12px; }
+.pt-warn { color: var(--warning-text); font-size: 15px; margin-top: 2px; flex-shrink: 0; }
+.pt-actions { margin-top: 12px; }

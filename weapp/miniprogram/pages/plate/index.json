@@ -1,1 +1,10 @@
-{ "usingComponents": {} }
+{
+  "usingComponents": {
+    "page-header": "/components/page-header/index",
+    "timer-bar": "/components/timer-bar/index",
+    "plate-table": "/components/plate/table/index",
+    "plate-templates": "/components/plate/templates/index",
+    "plate-reader": "/components/plate/reader/index"
+  },
+  "enablePullDownRefresh": false
+}

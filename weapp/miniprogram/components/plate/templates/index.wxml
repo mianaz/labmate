@@ -1,0 +1,76 @@
+<wxs module="i" src="../../../shared/i18n.wxs"/>
+<!-- Uppercase field labels would turn "µM" into "ΜM" (capital mu): keep µ lowercase. -->
+<wxs module="u">
+function parts(s) { return ('' + s).split('µ'); }
+module.exports = { parts: parts };
+</wxs>
+<view class="pt lang-{{lang}}">
+  <view class="panel-title pt-title">{{i.t('plateTemplates', lang)}}</view>
+  <view class="pt-grid">
+    <view wx:for="{{types}}" wx:key="*this"
+      class="btn btn-sm {{item === 'antibody' ? 'pt-wide' : ''}} {{open === item ? 'pt-on' : ''}}"
+      hover-class="is-pressed" data-type="{{item}}" bindtap="toggle" aria-role="button">{{i.t(names[item], lang)}}</view>
+  </view>
+
+  <view wx:if="{{open}}" class="pt-form">
+    <view class="pt-form-head">
+      <text class="section-title">{{i.t(names[open], lang)}}</text>
+      <view class="btn-ghost btn-icon btn-sm" hover-class="is-pressed" bindtap="close"
+        aria-role="button" aria-label="{{i.t('plateClose', lang)}}"><view class="icon i-close"></view></view>
+    </view>
+    <view class="pt-desc">{{i.t(descs[open], lang)}}<text class="mono pt-plate"> · {{i.n('platePlateName', lang, plateType)}}</text></view>
+
+    <view wx:if="{{open === 'checkerboard'}}" class="grid-2">
+      <view class="field">
+        <text class="field-label">{{i.t('plateLabel1', lang)}}</text>
+        <input class="input" type="text" value="{{p.label1}}" data-key="label1" bindinput="onField" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('plateLabel2', lang)}}</text>
+        <input class="input" type="text" value="{{p.label2}}" data-key="label2" bindinput="onField" />
+      </view>
+    </view>
+    <view wx:if="{{open === 'dose'}}" class="field">
+      <text class="field-label">{{i.t('doseNumDrugs', lang)}}</text>
+      <input class="input" type="number" value="{{p.drugs}}" data-key="drugs" bindinput="onField" />
+    </view>
+    <view wx:if="{{open === 'antibody'}}" class="field">
+      <text class="field-label">{{i.t('plateNumAntibodies', lang)}}</text>
+      <input class="input" type="number" value="{{p.antibodies}}" data-key="antibodies" bindinput="onField" />
+    </view>
+    <block wx:if="{{open === 'serial' || open === 'dose' || open === 'antibody'}}">
+      <view class="field">
+        <text class="field-label"><block wx:for="{{u.parts(i.t('serialStartConc', lang))}}" wx:key="*this"><text wx:if="{{index}}" class="pt-micro">µ</text>{{item}}</block></text>
+        <input class="input" type="digit" value="{{p.startConc}}" data-key="startConc" bindinput="onField" />
+      </view>
+      <view class="field">
+        <text class="field-label">{{i.t('serialFactor', lang)}}</text>
+        <input class="input" type="digit" value="{{open === 'serial' ? p.factor : p.dilFactor}}"
+          data-key="{{open === 'serial' ? 'factor' : 'dilFactor'}}" bindinput="onField" />
+      </view>
+    </block>
+    <view wx:if="{{open === 'serial'}}" class="field">
+      <text class="field-label">{{i.t('plateDirection', lang)}}</text>
+      <view class="seg is-block">
+        <view class="seg-item {{p.direction === 'row' ? 'is-active' : ''}}" data-key="direction" data-val="row" bindtap="setParam">{{i.t('plateDirRow', lang)}}</view>
+        <view class="seg-item {{p.direction === 'col' ? 'is-active' : ''}}" data-key="direction" data-val="col" bindtap="setParam">{{i.t('plateDirCol', lang)}}</view>
+      </view>
+    </view>
+    <view wx:if="{{open !== 'control' && open !== 'antibody'}}" class="field">
+      <text class="field-label">{{i.t('plateReplicates', lang)}}</text>
+      <view class="seg is-block">
+        <view wx:for="{{repOptions}}" wx:key="*this" class="seg-item {{p.replicates === item ? 'is-active' : ''}}"
+          data-key="replicates" data-val="{{item}}" bindtap="setParam">{{item}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{labelled > 0}}" class="notice notice-warn pt-notice">
+      <view class="icon i-alert pt-warn"></view>
+      <text>{{i.t('plateTplReplaces', lang)}}</text>
+    </view>
+    <view class="row gap-8 pt-actions">
+      <view class="btn flex-1" hover-class="is-pressed" bindtap="close" aria-role="button">{{i.t('invCancel', lang)}}</view>
+      <view class="btn-primary flex-1" hover-class="is-pressed" bindtap="apply" aria-role="button">{{i.t('invApply', lang)}}</view>
+    </view>
+  </view>
+</view>
