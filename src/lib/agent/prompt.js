@@ -16,6 +16,7 @@ const RED_LINES = [
   'createExperiment and scheduleCalendarEvent take only a protocolRef plus metadata (title/date/objectives) — the app itself fills steps and reagents from the library entry. You never author, paraphrase, or supply protocol steps; they are not yours to write.',
   'Never invent a protocolRef/recipe id. Retrieve first; use ids returned by the search/get tools.',
   'Before writing anything (createExperiment, scheduleCalendarEvent), ask concise clarifying questions when the request is under-specified (cell type/organism, timepoints, replicates, readout, start date).',
+  'splitIntoEvidenceMap only restates the user\'s own draft: every node quotes the user\'s text verbatim. Never add a claim, finding, citation or experiment the user did not write, and never link nodes — the user connects them, and that is their logic check.',
 ];
 
 /**
@@ -45,6 +46,7 @@ export function buildSystemPrompt(opts = {}) {
     '- Fill reagent locations from queryInventory when relevant.',
     '- Create notebook entries / calendar timepoints only after the user confirms the plan; these are write actions the user may be asked to approve.',
     '- Offer exportProtocol (Markdown) when a plan is complete.',
+    '- When the user pastes a draft (results paragraph, abstract, proposal, hypothesis) and wants its logic checked or the experiments it still needs, offer splitIntoEvidenceMap, then point them to the Evidence map tab to review the nodes, connect them and see which claims lack evidence.',
     '',
     langLine,
     dateLine,

@@ -38,7 +38,11 @@ export async function exportBackup() {
   let experiments = [];
   try { experiments = await db.experiments.toArray(); }
   catch { /* still export the localStorage-mirrored data */ }
-  const json = JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: __APP_VERSION__, schemaVersion: 2, data, experiments }, null, 2);
+  // Evidence maps are Dexie-only too.
+  let evidenceMaps = [];
+  try { evidenceMaps = await db.evidenceMaps.toArray(); }
+  catch { /* older DB / storage off — export the rest */ }
+  const json = JSON.stringify({ exportedAt: new Date().toISOString(), appVersion: __APP_VERSION__, schemaVersion: 3, data, experiments, evidenceMaps }, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -63,6 +67,18 @@ export async function importBackup(fileContent) {
   if (Array.isArray(parsed.experiments) && parsed.experiments.length > 0) {
     await db.experiments.bulkPut(parsed.experiments);
     count += parsed.experiments.length;
+  }
+  // schemaVersion 3 adds evidence maps.
+  if (Array.isArray(parsed.evidenceMaps) && parsed.evidenceMaps.length > 0) {
+    const maps = parsed.evidenceMaps
+      .filter((m) => m && typeof m.id === 'string' && Array.isArray(m.nodes) && Array.isArray(m.edges))
+      .map((m) => ({
+        ...m,
+        nodes: m.nodes.filter((n) => n && typeof n.id === 'string' && typeof n.kind === 'string'),
+        edges: m.edges.filter((e) => e && typeof e.from === 'string' && typeof e.to === 'string' && typeof e.rel === 'string'),
+      }));
+    if (maps.length) await db.evidenceMaps.bulkPut(maps);
+    count += maps.length;
   }
   Object.entries(parsed.data).forEach(([key, value]) => {
     if (SECRET_KEY_RE.test(key)) return; // never restore a secret-shaped key from a backup file

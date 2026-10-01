@@ -1,6 +1,6 @@
 # LabMate
 
-A fast, offline-first lab bench assistant for molecular biology and biochemistry — protocols, buffer & media recipes, calculators, plate design, sample inventory, an experiment notebook, and a calendar, all running client-side in the browser. Part of [Bioinfospace](https://bioinfospace.com).
+A fast, offline-first lab bench assistant for molecular biology and biochemistry — protocols, buffer & media recipes, calculators, plate design, sample inventory, evidence maps, an experiment notebook, and a calendar, all running client-side in the browser. Part of [Bioinfospace](https://bioinfospace.com).
 
 **Live:** https://apps.bioinfospace.com/labmate/
 
@@ -20,10 +20,11 @@ Organized into sections — grouped as **Library**, **Tools**, **My lab** and **
 | **Plate Designer** | Design 6–384-well layouts (templates + free editing) **and Reader Import** — auto-detects Tecan / BioTek / SpectraMax CSV/TSV exports and pivots them to tidy long-format data with a heatmap and per-sample stats. |
 | **Links** | A curated directory of external bench tools and databases (ELISA standard-curve fitting, NEB Tm, and more), filterable by category. |
 | **Inventory** | Sample / box / freezer inventory with position tracking and CSV import/export (per-box or full, with a template). |
+| **Evidence map** *(beta)* | Map the logic behind a paper, grant aim or hypothesis: split a draft into claims, evidence, assumptions and experiments, connect them by hand, and a logic check shows which claims rest on nothing, which premises don't stand, and which experiments you still need. Experiments go to the Notebook and their results come back as evidence. Arrange the graph by hand (drag nodes, drag a handle to link). Export a Markdown outline, or AI-native JSON (self-describing, with statuses and logic-check findings) to hand to an AI tool and import back; nodes changed outside LabMate return marked for review. |
 | **Notebook** | Structured experiment records — import a protocol, log materials, procedure, and results. |
 | **Calendar** | Schedule protocol steps and experiments on a timeline. |
 | **Guide** | How-to intro, local data backup/import, replay the onboarding tour, and privacy/storage info. |
-| **Assistant** | Optional LLM lab assistant (searches protocols, runs calculators, drafts experiment records). Retrieval-only for bio content — never invents protocol steps or amounts. Hidden unless a backend key is configured (see [The Assistant](#the-assistant)). |
+| **Assistant** | Optional LLM lab assistant (searches protocols, runs calculators, drafts experiment records, splits a pasted draft into an evidence map). Retrieval-only for bio content — never invents protocol steps or amounts, and an evidence-map split may only quote the user's own text. Hidden unless a backend key is configured (see [The Assistant](#the-assistant)). |
 
 Also app-wide: **bilingual** English / 中文 (carried in the URL), **global search** (`⌘/Ctrl-K`, keyboard-navigable), a **quick timer** and **quick calculator** that are always one click away, favorites and custom recipes, and an **offline PWA** with installability and a unified local backup/restore of all your data (with a "last backup" status in the sidebar).
 
@@ -86,8 +87,8 @@ src/
   components/          # Shared UI (Sidebar, MobileTopBar, BottomNav, MoreSheet, PageHeader,
                        #   RecipeRow/Detail, modals, Toast, Timer, icons…)
   features/            # One folder per section: library (shared Recipes/Protocols view), buffers,
-                       #   protocols, calc, plate, tools, inventory, notebook, calendar, refs, agent
-  lib/                 # Data + logic layer (nav config, Dexie db, calculators, experiments, backup, agent/)
+                       #   protocols, calc, plate, tools, inventory, evidence, notebook, calendar, refs, agent
+  lib/                 # Data + logic layer (nav config, Dexie db, calculators, experiments, evidence maps, backup, agent/)
   data/                # Code-defined app data (gel formulas, references, plate configs, taxonomy)
   i18n/                # English + 中文 translations
   styles/              # global.css (design tokens + component CSS)
@@ -99,7 +100,12 @@ The root `index.html` is the **retired pre-Vite monolith**, kept intentionally. 
 
 ## Content
 
-Recipe and protocol content comes from a separate repo, [`mianaz/labmate-recipes`](https://github.com/mianaz/labmate-recipes), mirrored here into `recipes.json` (the file the app loads). Recipe `id`s are a stable identifier — user favorites, experiments, and progress are keyed by them in IndexedDB, so ids must not be renamed.
+Recipe and protocol content lives in a separate repo, [`mianaz/labmate-recipes`](https://github.com/mianaz/labmate-recipes): its `recipes/` folder is the single source of the library. On every change there, CI builds and signs `dist/recipes.json`. That one published library feeds both ways the app gets recipes:
+
+- **Bundled copy** — `recipes.json` here (the file the app loads first) is the published library, verbatim. **Don't edit it**; add or change recipes in labmate-recipes, then run `npm run recipes:pull` (downloads `dist/`, verifies the ed25519 signature with the app's pinned key, writes `recipes.json`).
+- **In-app Refresh** — fetches the same `dist/`, verifies it, and only accepts a library that still contains every recipe the app ships with; otherwise it keeps the bundled copy and says why.
+
+`npm run recipes:check` replays that Refresh against the published library and fails if it would be rejected — the **recipes-sync** CI job runs it, so a recipe can no longer be added to the app alone (that drift is what broke Refresh until 2026-10). Recipe `id`s are a stable identifier — user favorites, experiments, and progress are keyed by them in IndexedDB, so ids must not be renamed.
 
 ## The Assistant
 

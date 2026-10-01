@@ -59,6 +59,11 @@ export const IconCalendar = (p) => (
     <path d="M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2" />
   </Icon>
 );
+export const IconGraph = (p) => (
+  <Icon {...p}>
+    <path d="M2.5 3.5h6v5h-6zM2.5 15.5h6v5h-6zM15.5 9.5h6v5h-6z" /><path d="M8.5 6H12v12H8.5M12 12h3.5" />
+  </Icon>
+);
 export const IconBook = (p) => (
   <Icon {...p}>
     <path d="M2.5 4.5h6.5a3 3 0 0 1 3 3V21a2.5 2.5 0 0 0-2.5-2.5h-7z" />

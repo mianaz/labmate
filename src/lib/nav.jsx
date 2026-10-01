@@ -2,7 +2,7 @@
 // grouping shared by the desktop sidebar, the mobile bottom nav and the More sheet.
 import {
   IconFlask, IconClipboard, IconCalculator, IconPlate, IconLink,
-  IconBox, IconNotebook, IconCalendar, IconBook,
+  IconBox, IconNotebook, IconCalendar, IconBook, IconGraph,
 } from '../components/icons.jsx';
 
 // Tab <-> URL path mapping. The /labmate/ basename is applied by BrowserRouter and
@@ -14,13 +14,14 @@ export const TAB_TO_PATH = {
   plate:     '/plate',
   tools:     '/tools',
   inventory: '/inventory',
+  evidence:  '/evidence',
   notebook:  '/notebook',
   calendar:  '/calendar',
   refs:      '/guide',
 };
 export const PATH_TO_TAB = Object.fromEntries(Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k]));
 
-// label: full name (sidebar, page titles) · short: bottom-nav label
+// label: full name (sidebar, page titles) · short: bottom-nav label · beta: show a Beta badge
 export const TABS = {
   buffers:   { label: 'tabBuffers',   short: 'tabBuffers',    Icon: IconFlask,      group: 'library' },
   protocols: { label: 'tabProtocols', short: 'tabProtocols',  Icon: IconClipboard,  group: 'library' },
@@ -28,6 +29,7 @@ export const TABS = {
   plate:     { label: 'tabPlate',     short: 'tabPlateShort', Icon: IconPlate,      group: 'tools' },
   tools:     { label: 'tabTools',     short: 'tabTools',      Icon: IconLink,       group: 'tools' },
   inventory: { label: 'tabInventory', short: 'tabInventory',  Icon: IconBox,        group: 'lab' },
+  evidence:  { label: 'tabEvidence',  short: 'tabEvidenceShort', Icon: IconGraph,   group: 'lab', beta: true },
   notebook:  { label: 'tabNotebook',  short: 'tabNotebook',   Icon: IconNotebook,   group: 'lab' },
   calendar:  { label: 'tabCalendar',  short: 'tabCalendar',   Icon: IconCalendar,   group: 'lab' },
   refs:      { label: 'tabRefs',      short: 'tabRefs',       Icon: IconBook,       group: 'help' },
@@ -36,7 +38,7 @@ export const TABS = {
 export const NAV_GROUPS = [
   { id: 'library', label: 'navLibrary', tabs: ['buffers', 'protocols'] },
   { id: 'tools',   label: 'navTools',   tabs: ['calc', 'plate', 'tools'] },
-  { id: 'lab',     label: 'navMyLab',   tabs: ['inventory', 'notebook', 'calendar'] },
+  { id: 'lab',     label: 'navMyLab',   tabs: ['inventory', 'evidence', 'notebook', 'calendar'] },
   { id: 'help',    label: 'navHelp',    tabs: ['refs'] },
 ];
 

@@ -11,7 +11,7 @@ import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImp
 import { experimentToMarkdown, experimentFilename, downloadText } from '../../lib/agent/exportProtocol.js';
 import {
   IconPlus, IconSearch, IconUpload, IconDownload, IconNotebook, IconEdit, IconTrash, IconCalendar,
-  IconChevronLeft, IconChevronDown, IconClose, IconClipboard, IconCheck,
+  IconChevronLeft, IconChevronDown, IconClose, IconClipboard, IconCheck, IconGraph,
 } from '../../components/icons.jsx';
 
 // Status → label key + tone (shared visual language with the Calendar tab).
@@ -29,6 +29,7 @@ const PRIORITY_KEY = { high: 'nbPriorityHigh', medium: 'nbPriorityMedium', low: 
 // read once on mount, ignored when stale).
 const NOTEBOOK_FOCUS_KEY = 'labmate_notebook_focus';
 const CALENDAR_FOCUS_KEY = 'labmate_calendar_focus';
+const EVIDENCE_FOCUS_KEY = 'labmate_evidence_focus';
 function takeHandoff(key) {
   try {
     const raw = window.sessionStorage.getItem(key);
@@ -72,7 +73,7 @@ function StatusBadge({ status, lang }) {
   return <span className="badge" style={{ '--badge-fg': s.fg, '--badge-bg': s.bg }}>{t(s.key, lang)}</span>;
 }
 
-function NotebookTab({ onNavigateCalendar }) {
+function NotebookTab({ onNavigateCalendar, onNavigateEvidence }) {
   const lang = useLang();
   const zh = lang === 'zh';
   const toast = useToast();
@@ -323,7 +324,8 @@ function NotebookTab({ onNavigateCalendar }) {
       protocolRef: recipe.id,
       title: draft.title || recipeTitle(recipe, lang),
       titleZh: draft.titleZh || (recipe.nameCn || ''),
-      duration: recipe.duration || draft.duration,
+      // A recipe's duration is minutes; ignore anything else.
+      duration: Number.isFinite(recipe.duration) ? recipe.duration : draft.duration,
       procedure: { mode: 'template', protocolSteps: steps, freeText: draft.procedure?.freeText || '' }
     };
     if (recipe.materials) {
@@ -347,6 +349,14 @@ function NotebookTab({ onNavigateCalendar }) {
     giveHandoff(CALENDAR_FOCUS_KEY, { id: draft.id, date: draft.date });
     onNavigateCalendar?.();
   }, [draft, flushAutoSave, onNavigateCalendar]);
+
+  // Entries planned from an evidence map link back to the experiment node.
+  const openEvidenceMap = useCallback(() => {
+    if (!draft?.evidenceLink) return;
+    flushAutoSave();
+    giveHandoff(EVIDENCE_FOCUS_KEY, { mapId: draft.evidenceLink.mapId, nodeId: draft.evidenceLink.nodeId });
+    onNavigateEvidence?.();
+  }, [draft, flushAutoSave, onNavigateEvidence]);
 
   const handleExportJson = useCallback(async () => {
     const json = await exportExperimentsJSON();
@@ -897,6 +907,19 @@ function NotebookTab({ onNavigateCalendar }) {
           <div><dt>{t('nbLinkedProtocol', lang)}</dt><dd style={doc.protocolRef ? undefined : { color: 'var(--text-muted)' }}>{protocolName(doc.protocolRef) || '—'}</dd></div>
           <div><dt>{zh ? '更新于' : 'Updated'}</dt><dd>{formatStamp(doc.updatedAt)}</dd></div>
         </dl>
+        {doc.evidenceLink && (
+          <div className="notice notice-info mt-4" style={{ alignItems: 'center' }}>
+            <IconGraph size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+            <span className="flex-1 min-w-0" style={{ overflowWrap: 'anywhere' }}>
+              <span className="notice-title">{zh ? '来自证据链' : 'From evidence map'}:</span>{' '}
+              {doc.evidenceLink.mapTitle || (zh ? '未命名证据链' : 'Untitled map')}
+              {doc.evidenceLink.label && <span className="mono" style={{ color: 'var(--text-muted)' }}> · {doc.evidenceLink.label}</span>}
+            </span>
+            {onNavigateEvidence && (
+              <button type="button" className="btn btn-sm flex-none" onClick={openEvidenceMap}>{zh ? '打开证据链' : 'Open map'}</button>
+            )}
+          </div>
+        )}
       </>
     );
   };

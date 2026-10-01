@@ -27,6 +27,37 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
 - **Global search** is a command palette with ↑ / ↓ / Enter navigation.
 
 ### Added
+- **Evidence map** *(beta)* (My lab → Evidence map): the logic behind a paper, grant aim or hypothesis as a graph
+  of questions, claims, assumptions, evidence and experiments.
+  - **Split** a pasted draft into one node per sentence (Chinese and English; citations such as
+    author–year, `[n]`, DOI and PMID are picked up), with a suggested type you confirm per sentence.
+  - **Connect** nodes by hand, in the Graph (select → Connect → pick the other node) or from a node's
+    links. Only relations that make sense for the two types are offered: evidence *supports* /
+    *contradicts* a claim, an assumption is a *premise* of a claim, an experiment *tests* a claim and
+    *yields* evidence, a claim *answers* a question.
+  - **Logic check**: claims resting on no evidence, claims leaning on a premise or sub-claim that does
+    not stand, contested and refuted claims, circular reasoning, untested assumptions, evidence
+    without a reference, and experiments without predictions (if it holds / if not) or controls.
+  - **Experiments**: what still needs evidence and the experiments planned for it. An experiment
+    becomes a Notebook entry (its predictions and controls in the objectives, its library protocol's
+    steps and reagents in the procedure); once the entry is completed, record the result and it
+    comes back as evidence for or against the claims it tested. Notebook entries link back to the map.
+  - Outline, Graph and Experiments views; included in the unified backup (backup `schemaVersion` 3).
+  - **Manual layout** in the Graph: drag nodes to arrange them (positions are saved; the first move
+    keeps every other node where it was), drag the selected node's handle onto another node to link
+    them, nudge with the arrow keys (Shift for bigger steps); **Auto layout** resets, with Undo. On
+    touch, a node drags once selected, so a swipe still scrolls the canvas.
+  - **Export**: a Markdown outline for people, or **AI-native JSON** (`labmate.evidence-map` v1):
+    short node ids (C1, E2…), links that read as sentences, each claim's status, the logic check's
+    findings and a built-in guide to the kinds, relations and how to propose edits, so a model can
+    read the map or return a revised one. Copy to clipboard or download.
+  - **Import JSON** (paste, ```json fences accepted, or a file) as a new map, with a preview first.
+    Links not allowed between two kinds are skipped. Each exported node carries a content hash: nodes
+    unchanged since export keep their review state, nodes that are new or were edited elsewhere
+    (by a person or a model) come back marked **To review**.
+  - Assistant: `splitIntoEvidenceMap` splits a pasted draft into unreviewed nodes. Every node must quote
+    the user's own text (checked against what the user typed) and the tool makes no links and no
+    experiments: connecting the propositions stays with the researcher.
 - Inventory: move a sample to another box/position (undoable), delete toasts with Undo, import dialog
   with a box picker, keyboard navigation in box grids.
 - Notebook: read-only document view with an explicit Edit mode; Notebook ↔ Calendar links.
@@ -35,6 +66,23 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
   tablets the screen also stays on while a timer runs.
 
 ### Fixed
+- **Recipe Refresh never applied the online library.** The published library in labmate-recipes had
+  stopped updating in July (227 recipes) while recipes kept being added to the app directly (236), so
+  every Refresh refused the older library and silently kept the built-in one. Fixed at the root
+  (labmate-recipes): its `recipes/` folder is now the single source, CI builds and signs `dist/` on every
+  change, and the two copies were reconciled field by field (most recent edit wins, unless it would lose
+  Chinese text, volume-scaling tokens, notes or step timers; wrong DOIs fixed or removed after checking
+  each against Crossref). The bundled `recipes.json` is now the published library (239 recipes,
+  including 3 new protocols: human-cell Co-IP, MS acetone precipitation, organoid drug screening), taken
+  with `npm run recipes:pull`; the **recipes-sync** CI job fails if the app ships a recipe the published
+  library lacks.
+- Refresh now says why it fell back (online library out of date, failed verification, older than one
+  already applied, or unreachable) instead of one generic message.
+- Recipe rows without an amount (instruction rows such as "Activate: pH 10, boil, repeat 3×") showed
+  "NaN" or a scaled "2.00 step"; they now show no amount. Safe-stops without a note no longer break
+  the protocol page.
+- Importing a protocol into the Notebook, Calendar or an evidence map could set the entry's duration
+  to an object (four protocols stored `{total, hands_on}` there), breaking its end time.
 - **Timers** only counted down while the page had CPU time, so they fell minutes behind or stopped in a
   background tab or on a locked phone, and a reload lost them. They now run against their end time,
   catch up the moment the page is visible again, survive a reload and stay in sync across tabs (they are

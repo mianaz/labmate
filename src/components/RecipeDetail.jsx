@@ -27,6 +27,12 @@ function recipeToText(recipe, targetVol, lang) {
   txt += '试剂'.padEnd(35) + '用量'.padStart(10) + '  单位\n';
   txt += '─'.repeat(50) + '\n';
   (recipe.components || []).forEach(c => {
+    if (!hasAmount(c)) {
+      txt += c.name;
+      if (c.note) txt += '  (' + safeText(c.note, lang) + ')';
+      txt += '\n';
+      return;
+    }
     const scaled = c.amount * scale;
     const val = scaled < 0.01 ? scaled.toExponential(2) : scaled < 1 ? scaled.toFixed(3) : scaled < 100 ? scaled.toFixed(2) : scaled.toFixed(1);
     txt += c.name.padEnd(35) + val.padStart(10) + '  ' + c.unit;
@@ -105,6 +111,17 @@ export function parseTimePatternsFromText(text) {
 // Number formatting shared by the table, legacy timeline and text export.
 function fmtAmount(v) {
   return v < 0.01 ? v.toExponential(2) : v < 1 ? v.toFixed(3) : v < 100 ? v.toFixed(2) : v.toFixed(1);
+}
+
+// Instruction rows ("Activate: pH 10, boil, repeat 3×") carry no amount, or the
+// legacy unit 'step': show them without a quantity instead of "NaN" / "2.00 step".
+function hasAmount(c) {
+  return typeof c.amount === 'number' && Number.isFinite(c.amount) && c.unit !== 'step';
+}
+
+// Safe-stop text in the active language; tolerate a missing or plain note.
+function safeStopText(st, lang) {
+  return safeText(st.note, lang) || [st.condition, st.duration].filter(Boolean).join(' · ');
 }
 
 const SCALE_PRESETS = [0.5, 1, 2, 5];
@@ -440,7 +457,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                             <IconPause size={14} style={{ color: 'var(--warning-text)', flexShrink: 0, marginTop: 3 }} />
                             <span>
                               <span className="notice-title">{t('safeStop', lang)}</span>
-                              <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{safeStop.note[lang] || safeStop.note.en}</span>
+                              <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{safeStopText(safeStop, lang)}</span>
                             </span>
                           </li>
                         )}
@@ -470,7 +487,7 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                 return (
                   <li key={i} className={`protocol-step ${isSubStep ? 'sub-step' : ''}`}>
                     <span style={{ color: 'var(--text)' }}>{c.name.trim()}</span>
-                    {c.unit !== 'step' && <span className="step-amount ml-2">{fmtAmount(c.amount * scale)} {c.unit}</span>}
+                    {hasAmount(c) && <span className="step-amount ml-2">{fmtAmount(c.amount * scale)} {c.unit}</span>}
                     {c.note && <span className="step-note">{safeText(c.note, lang)}</span>}
                   </li>
                 );
@@ -521,8 +538,8 @@ function RecipeDetail({ recipe, onNavigateRecipe, onCrossNavigate, onEditCustom,
                           </button>
                         ) : c.name}
                       </td>
-                      <td className="tabular" style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.875rem' }}>{fmtAmount(c.amount * scale)}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{c.unit}</td>
+                      <td className="tabular" style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.875rem' }}>{hasAmount(c) ? fmtAmount(c.amount * scale) : <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>—</span>}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{hasAmount(c) ? c.unit : ''}</td>
                       {showComponentsNotes && <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{safeText(c.note, lang)}</td>}
                     </tr>
                   ))}
