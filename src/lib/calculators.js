@@ -54,6 +54,17 @@ export function dilution({ c1, v1, c2, v2, c1Unit = 'M', v1Unit = 'mL', c2Unit =
   }
 }
 
+/**
+ * Solvent to add when making up V₁ of stock to a final volume V₂, in V₂'s unit.
+ * V₁ and V₂ may be in different units (50 µL of stock → 10 mL final), so both
+ * are converted before subtracting.
+ * @param {Object} params - { v1, v1Unit, v2, v2Unit }
+ * @returns {number} solvent volume in v2Unit; ≤ 0 means there is nothing to add
+ */
+export function dilutionSolvent({ v1, v1Unit = 'mL', v2, v2Unit = 'mL' }) {
+  return (v2 * VOL_FACTORS[v2Unit] - v1 * VOL_FACTORS[v1Unit]) / VOL_FACTORS[v2Unit];
+}
+
 // ══════════════════════════════════════════════
 // Mass Calculator: m = MW × C × V
 // ══════════════════════════════════════════════

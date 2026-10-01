@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { t, useLang } from '../../i18n/index.js';
+import { dilutionSolvent } from '../../lib/calculators.js';
 
 const SYM = { c1: 'C₁', v1: 'V₁', c2: 'C₂', v2: 'V₂' };
 const CONC_UNITS = ['M', 'mM', 'µM', 'nM', '%'];
@@ -84,8 +85,9 @@ export default function DilutionCalc() {
 
   let prep = null;
   if (result) {
+    // V₁ and V₂ can carry different units: the solvent is worked out in V₂'s.
     if (solve === 'v1') {
-      const solventVol = +v2 - result.val;
+      const solventVol = dilutionSolvent({ v1: result.val, v1Unit, v2: +v2, v2Unit });
       if (solventVol > 0) {
         prep = (<>
           {t('dilPrepPipette', lang)} <strong>{fmtVal(result.val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}
@@ -95,7 +97,7 @@ export default function DilutionCalc() {
       }
     } else if (solve === 'v2') {
       const v1Val = +v1;
-      const solventVol = result.val - v1Val;
+      const solventVol = dilutionSolvent({ v1: v1Val, v1Unit, v2: result.val, v2Unit });
       if (solventVol > 0) {
         prep = (<>
           {t('dilPrepPipette', lang)} <strong>{fmtVal(v1Val)} {v1Unit}</strong> {t('dilPrepStock', lang)}{lang === 'zh' ? '，' : ', '}

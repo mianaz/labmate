@@ -102,19 +102,21 @@ async function buildI18n() {
   for (const k of keys) {
     const e = table[k] || {};
     const en = typeof e.en === 'string' ? e.en : '';
-    const zh = typeof e.zh === 'string' ? e.zh : '';
-    compact[k] = zh && zh !== en ? [en, zh] : [en];
+    // [en] when Chinese is missing or identical; an empty zh is kept — it is a
+    // deliberate translation (see t() in src/i18n/index.js).
+    compact[k] = typeof e.zh === 'string' && e.zh !== en ? [en, e.zh] : [en];
   }
   const dict = JSON.stringify(compact).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 
   emit('shared/i18n.js', `${HEADER}const D = ${dict};
 const NOTES_EN = ${JSON.stringify(mod.NOTES_EN)};
 
-// t('key', lang) — same contract as the web's i18n t(): falls back to English, then the key.
+// t('key', lang) — same contract as the web's i18n t(): a missing translation falls
+// back to English; an empty one is deliberate and stays empty.
 function t(key, lang) {
   const e = D[key];
   if (!e) return key;
-  return (lang === 'zh' && e[1]) || e[0] || key;
+  return lang === 'zh' && e.length > 1 ? e[1] : e[0];
 }
 
 // tf('key', lang, { n: 3 }) — t() plus {placeholder} substitution.
@@ -136,7 +138,7 @@ var D = ${dict};
 function t(key, lang) {
   var e = D[key];
   if (!e) return key;
-  return (lang === 'zh' && e[1]) || e[0] || key;
+  return lang === 'zh' && e.length > 1 ? e[1] : e[0];
 }
 
 // One {n} placeholder, e.g. i.n('resultsCount', lang, 12)

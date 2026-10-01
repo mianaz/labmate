@@ -1,6 +1,6 @@
 // Dilution calculator — C₁V₁ = C₂V₂ solved for any one variable (web: DilutionCalc.jsx).
 const langBehavior = require('../../../behaviors/lang');
-const { dilution, VOL_FACTORS } = require('../../../shared/calculators.js');
+const { dilution, dilutionSolvent } = require('../../../shared/calculators.js');
 const { CONC_UNITS, VOL_UNITS, num, cleanNumber, seg } = require('../shared');
 
 const FIELDS = [
@@ -66,22 +66,22 @@ Component({
       this.setData({ result: ok ? fmtVal(r.val) : '', prep: ok ? this.prepText(r.val) : [] });
     },
 
-    // Practical pipetting instructions. Unlike the web, the solvent volume is
-    // converted into V₂'s unit first, so mixed units (µL of stock into mL) work.
+    // Practical pipetting instructions. The solvent is worked out in V₂'s unit,
+    // so mixed units (µL of stock into mL) work — dilutionSolvent, shared with the web.
     prepText(val) {
       const { vals, units, solve } = this.data;
       const zh = this.zh();
       const t = (k) => this.t(k);
       const comma = zh ? '，' : ', ';
-      const total = zh ? '' : ' ' + t('dilPrepTotal');
-      const toV2 = (v, unit) => (v * VOL_FACTORS[unit]) / VOL_FACTORS[units.v2];
+      // Empty in Chinese on purpose: 至总体积 already says "total".
+      const total = t('dilPrepTotal') ? ' ' + t('dilPrepTotal') : '';
       const out = [seg(0, t('dilPrepSummary'), true), seg(1, zh ? '：' : ': ')];
       const push = (text, bold) => out.push(seg(out.length, text, bold));
 
       if (solve === 'v1' || solve === 'v2') {
         const stock = solve === 'v1' ? val : num(vals.v1);
         const final = solve === 'v1' ? num(vals.v2) : val;
-        const solvent = final - toV2(stock, units.v1);
+        const solvent = dilutionSolvent({ v1: stock, v1Unit: units.v1, v2: final, v2Unit: units.v2 });
         if (!(solvent > 0)) return [];
         push(t('dilPrepPipette') + ' ');
         push(fmtVal(stock) + ' ' + units.v1, true);

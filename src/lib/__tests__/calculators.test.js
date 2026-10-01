@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   dilution,
+  dilutionSolvent,
   massCalc,
   formatMass,
   molarityCalc,
@@ -16,6 +17,26 @@ import {
 // ═══════════════════════════════════════════════
 // Dilution Calculator: C1 × V1 = C2 × V2
 // ═══════════════════════════════════════════════
+
+describe('dilutionSolvent', () => {
+  it('subtracts in matching units', () => {
+    expect(dilutionSolvent({ v1: 10, v1Unit: 'mL', v2: 100, v2Unit: 'mL' })).toBeCloseTo(90, 9);
+  });
+
+  it('converts a µL stock volume before subtracting from mL', () => {
+    // 50 µL of stock made up to 10 mL needs 9.95 mL of solvent (not 10 − 50).
+    expect(dilutionSolvent({ v1: 50, v1Unit: 'µL', v2: 10, v2Unit: 'mL' })).toBeCloseTo(9.95, 9);
+  });
+
+  it('reports the solvent in the final volume\'s unit', () => {
+    expect(dilutionSolvent({ v1: 0.5, v1Unit: 'mL', v2: 1000, v2Unit: 'µL' })).toBeCloseTo(500, 9);
+    expect(dilutionSolvent({ v1: 2, v1Unit: 'mL', v2: 1, v2Unit: 'L' })).toBeCloseTo(0.998, 9);
+  });
+
+  it('is not positive when the stock already fills the final volume', () => {
+    expect(dilutionSolvent({ v1: 2, v1Unit: 'mL', v2: 1000, v2Unit: 'µL' })).toBeLessThanOrEqual(0);
+  });
+});
 
 describe('dilution', () => {
   it('solves for V1 (happy path)', () => {

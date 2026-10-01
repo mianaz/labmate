@@ -28,6 +28,7 @@ __export(calculators_exports, {
   calcGel: () => calcGel,
   deadVolume: () => deadVolume,
   dilution: () => dilution,
+  dilutionSolvent: () => dilutionSolvent,
   evalExpression: () => evalExpression,
   formatConcentration: () => formatConcentration,
   formatMass: () => formatMass,
@@ -72,6 +73,9 @@ function dilution({ c1, v1, c2, v2, c1Unit = "M", v1Unit = "mL", c2Unit = "M", v
     default:
       return null;
   }
+}
+function dilutionSolvent({ v1, v1Unit = "mL", v2, v2Unit = "mL" }) {
+  return (v2 * VOL_FACTORS[v2Unit] - v1 * VOL_FACTORS[v1Unit]) / VOL_FACTORS[v2Unit];
 }
 function massCalc({ mw, conc, vol, concUnit = "M", volUnit = "mL" }) {
   const concFactors = { M: 1, mM: 1e-3, "µM": 1e-6 };
