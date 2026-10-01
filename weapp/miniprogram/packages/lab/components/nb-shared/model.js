@@ -317,35 +317,8 @@ function experimentFilename(entry) {
   return 'experiment_' + (e.date || 'entry') + '_' + String(e.id || 'entry').slice(-6) + '.md';
 }
 
-// ── .ics (CalendarTab.generateICS) ──────────────────────────────────────────
-function icsEntries(entries, from, to) {
-  const end = to || '9999-12-31';
-  return (entries || []).filter((e) => e.date && e.date >= (from || '') && e.date <= end);
-}
-function icsStamp(d) {
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + pad2(d.getMinutes()) + '00';
-}
-// The web replaces , ; \ with spaces after escaping newlines, which also eats
-// the escape's backslash; strip first, then escape.
-function icsText(s) { return String(s || '').replace(/[,;\\]/g, ' ').replace(/\r?\n/g, '\\n'); }
-function buildICS(list) {
-  let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//bioinfospace labmate//EN\r\nCALSCALE:GREGORIAN\r\n';
-  list.forEach((e) => {
-    const d = parseDate(e.date);
-    const p = (isTimeStr(e.startTime) ? e.startTime : '09:00').split(':').map(Number);
-    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), p[0], p[1]);
-    const end = new Date(start.getTime() + (minutes(e.duration) || 60) * 60000);
-    ics += 'BEGIN:VEVENT\r\n';
-    ics += 'DTSTART:' + icsStamp(start) + '\r\n';
-    ics += 'DTEND:' + icsStamp(end) + '\r\n';
-    ics += 'SUMMARY:' + icsText(e.title || e.titleZh || 'Experiment') + '\r\n';
-    ics += 'UID:' + e.id + '@labmate.bioinfospace.com\r\n';
-    if (e.plan && e.plan.objectives) ics += 'DESCRIPTION:' + icsText(e.plan.objectives) + '\r\n';
-    ics += 'STATUS:' + (e.status === 'completed' ? 'CONFIRMED' : e.status === 'cancelled' ? 'CANCELLED' : 'TENTATIVE') + '\r\n';
-    ics += 'END:VEVENT\r\n';
-  });
-  return ics + 'END:VCALENDAR\r\n';
-}
+// ── .ics — shared with the web's CalendarTab (src/lib/ics.js) ──────────────
+const { icsEntries, buildICS } = require('../../../../shared/ics.js');
 
 // A cancelled share / file pick is not an error worth a toast.
 function isCancelError(err) {

@@ -218,7 +218,7 @@ test('exports an .ics file for a date range', async () => {
   expect(write.filePath).toMatch(new RegExp('labmate_calendar_' + day(0) + '\\.ics$'));
   const ics = write.data;
   expect(ics).toContain('BEGIN:VCALENDAR');
-  expect(ics).toContain('SUMMARY:Late run  overnight');
+  expect(ics).toContain('SUMMARY:Late run\\, overnight'); // RFC 5545 escaping
   expect(ics).toContain('UID:exp_1_i@labmate.bioinfospace.com');
   expect(ics).toContain('DESCRIPTION:Line 1\\nLine 2');
   expect(ics).toContain('STATUS:CONFIRMED');

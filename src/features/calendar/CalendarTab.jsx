@@ -8,6 +8,7 @@ import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import ProtocolSelector from '../notebook/ProtocolSelector.jsx';
 import Dialog from '../../components/Dialog.jsx';
 import { toProcedureSteps, toReagents, recipeTitle } from '../../lib/protocolImport.js';
+import { icsEntries, buildICS } from '../../lib/ics.js';
 import {
   IconPlus, IconDownload, IconClipboard, IconChevronLeft, IconChevronRight, IconNotebook, IconTrash, IconCheck, IconCalendar,
 } from '../../components/icons.jsx';
@@ -286,41 +287,13 @@ function CalendarTab({ onNavigateNotebook }) {
   };
 
   // .ics export
-  const icsCount = useMemo(() => {
-    const to = icsRange.to || '9999-12-31';
-    return entries.filter(e => e.date && e.date >= icsRange.from && e.date <= to).length;
-  }, [entries, icsRange]);
+  const icsCount = useMemo(() => icsEntries(entries, icsRange.from, icsRange.to).length, [entries, icsRange]);
 
   const generateICS = useCallback(() => {
     const from = icsRange.from;
-    const to = icsRange.to || '9999-12-31';
-    const filtered = entries.filter(e => e.date && e.date >= from && e.date <= to);
+    const filtered = icsEntries(entries, from, icsRange.to);
     if (filtered.length === 0) { toast.show(lang === 'zh' ? '无匹配实验' : 'No matching experiments'); return; }
-
-    const pad = (n) => String(n).padStart(2, '0');
-    const formatDT = (dateStr, timeStr) => {
-      const [y, m, d] = dateStr.split('-');
-      const [h, min] = (timeStr || '09:00').split(':');
-      return `${y}${m}${d}T${pad(h)}${pad(min)}00`;
-    };
-
-    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//bioinfospace labmate//EN\r\nCALSCALE:GREGORIAN\r\n';
-    filtered.forEach(e => {
-      const dtStart = formatDT(e.date, e.startTime);
-      const dur = e.duration || 60;
-      const endH = Math.floor(((parseInt((e.startTime || '09:00').split(':')[0]) * 60) + parseInt((e.startTime || '09:00').split(':')[1]) + dur) / 60);
-      const endM = ((parseInt((e.startTime || '09:00').split(':')[0]) * 60) + parseInt((e.startTime || '09:00').split(':')[1]) + dur) % 60;
-      const dtEnd = formatDT(e.date, pad(endH) + ':' + pad(endM));
-      ics += 'BEGIN:VEVENT\r\n';
-      ics += `DTSTART:${dtStart}\r\n`;
-      ics += `DTEND:${dtEnd}\r\n`;
-      ics += `SUMMARY:${(e.title || 'Experiment').replace(/[,;\\]/g, ' ')}\r\n`;
-      ics += `UID:${e.id}@labmate.bioinfospace.com\r\n`;
-      if (e.plan?.objectives) ics += `DESCRIPTION:${e.plan.objectives.replace(/\n/g, '\\n').replace(/[,;\\]/g, ' ')}\r\n`;
-      ics += `STATUS:${e.status === 'completed' ? 'CONFIRMED' : e.status === 'cancelled' ? 'CANCELLED' : 'TENTATIVE'}\r\n`;
-      ics += 'END:VEVENT\r\n';
-    });
-    ics += 'END:VCALENDAR\r\n';
+    const ics = buildICS(filtered);
 
     const blob = new Blob([ics], { type: 'text/calendar' });
     const url = URL.createObjectURL(blob);
