@@ -178,8 +178,14 @@ function AppInner() {
           'success'
         );
       } else {
-        // Remote unavailable or unverified — we fell back to the trusted local library.
-        toast.show(lang === 'zh' ? '已使用本地配方（远程不可用或未通过校验）' : 'Using local recipes (remote unavailable or unverified)', 'info');
+        // Fell back to the trusted bundled library — say why.
+        const why = {
+          behind: ['The online library is older than this app version, so the built-in library is in use.', '在线配方库比当前应用版本旧，已使用内置配方库。'],
+          unverified: ['The online library failed its signature check and was not used.', '在线配方库未通过签名校验，未予采用。'],
+          rollback: ['The online library is older than one already applied on this device; kept the built-in library.', '在线配方库比本设备已应用的版本旧，已使用内置配方库。'],
+          offline: ['Couldn’t reach the online library; using the built-in library.', '无法连接在线配方库，已使用内置配方库。'],
+        }[result.reason] || ['Using the built-in library.', '已使用内置配方库。'];
+        toast.show(lang === 'zh' ? why[1] : why[0], 'info');
       }
     } catch (err) {
       toast.show(lang === 'zh' ? '刷新失败' : 'Refresh failed', 'error');

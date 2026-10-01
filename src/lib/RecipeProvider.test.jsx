@@ -4,7 +4,7 @@ import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 // Control the verifier so we can prove the fail-closed wiring without real crypto.
 vi.mock('./recipeVerify.js', () => ({ verifyRecipeManifest: vi.fn() }));
 import { verifyRecipeManifest } from './recipeVerify.js';
-import RecipeProvider, { useRecipes } from './RecipeProvider.jsx';
+import RecipeProvider, { useRecipes, refreshFailureReason } from './RecipeProvider.jsx';
 
 const LOCAL = [{ id: 'L1', category: 'protocol', title: 'Local A' }, { id: 'L2', category: 'buffer', title: 'Local B' }];
 // A verified remote must be a superset of the bundled ids (favorites/progress/notebook
@@ -14,9 +14,10 @@ const REMOTE_DROPS_IDS = [{ id: 'R1', category: 'protocol', title: 'Remote 1' },
 
 function bufOf(obj) { return new TextEncoder().encode(JSON.stringify(obj)).buffer; }
 
+let lastResult = null;
 function Probe() {
   const { recipes, refresh } = useRecipes();
-  return (<div><span data-testid="count">{recipes.length}</span><button onClick={() => refresh()}>refresh</button></div>);
+  return (<div><span data-testid="count">{recipes.length}</span><button onClick={async () => { lastResult = await refresh(); }}>refresh</button></div>);
 }
 
 describe('RecipeProvider — verified remote refresh, fail-closed', () => {
@@ -91,3 +92,35 @@ describe('RecipeProvider — verified remote refresh, fail-closed', () => {
     expect(screen.getByTestId('count').textContent).toBe('2');
   });
 });
+
+describe('refresh fallback reasons', () => {
+  it('names why the online library was not used', () => {
+    expect(refreshFailureReason(new Error('missing_ids:9'))).toBe('behind');
+    expect(refreshFailureReason(new Error('rollback'))).toBe('rollback');
+    expect(refreshFailureReason(new Error('verify_failed:bad_signature'))).toBe('unverified');
+    expect(refreshFailureReason(new Error('bad_payload'))).toBe('unverified');
+    expect(refreshFailureReason(new SyntaxError('Unexpected token'))).toBe('unverified');
+    expect(refreshFailureReason(new Error('remote_unavailable'))).toBe('offline');
+    expect(refreshFailureReason(new TypeError('Failed to fetch'))).toBe('offline');
+  });
+
+  it('reports "behind" when the online library lacks recipes this app ships', async () => {
+    const store = new Map();
+    vi.stubGlobal('localStorage', { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k), clear: () => store.clear() });
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      const u = String(url);
+      if (u.includes('manifest.json')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ alg: 'ed25519', version: 5, generatedAt: 't', sha256: 'h', sig: 's' }) });
+      if (u.includes('raw.githubusercontent.com')) return Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(bufOf(REMOTE_DROPS_IDS)) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(LOCAL) });
+    }));
+    verifyRecipeManifest.mockResolvedValue({ ok: true, version: 5 });
+    lastResult = null;
+    render(<RecipeProvider><Probe /></RecipeProvider>);
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('2'));
+    await act(async () => { fireEvent.click(screen.getByText('refresh')); });
+    await waitFor(() => expect(lastResult).not.toBe(null));
+    expect(lastResult).toMatchObject({ verified: false, reason: 'behind', total: 2 });
+    vi.unstubAllGlobals();
+  });
+});
+

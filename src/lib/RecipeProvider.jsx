@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { REMOTE_BASE } from './recipeSource.js';
 
 const BUFFER_CATEGORIES = ['buffer', 'staining', 'media'];
 
@@ -20,8 +21,22 @@ const BUFFER_CATEGORIES = ['buffer', 'staining', 'media'];
 // and the service worker's network-first handler caches it under the canonical
 // URL (a random `?t=` made every offline lookup miss — see public/sw.js).
 const recipesUrl = () => import.meta.env.BASE_URL + 'recipes.json';
-const REMOTE_BASE = 'https://raw.githubusercontent.com/mianaz/labmate-recipes/main/dist/';
+
 const LAST_VERSION_KEY = 'labmate:recipesVersion'; // monotonic floor; localStorage is fine (not a secret)
+
+// Why a refresh fell back to the bundled library — shown to the user, so a
+// stale or broken online library is visible instead of silently ignored.
+//   offline     the online library could not be fetched
+//   unverified  its signature, hash or format did not check out
+//   rollback    it is older than one this device already applied
+//   behind      it lacks recipes this app version ships (it is out of date)
+export function refreshFailureReason(err) {
+  const msg = String(err?.message || err || '');
+  if (msg.startsWith('missing_ids')) return 'behind';
+  if (msg === 'rollback') return 'rollback';
+  if (msg.startsWith('verify_failed') || msg === 'bad_payload' || err instanceof SyntaxError) return 'unverified';
+  return 'offline';
+}
 
 const RecipeContext = createContext(null);
 
@@ -68,13 +83,13 @@ export default function RecipeProvider({ children }) {
   }, []);
 
   // Fall back to the trusted same-origin library.
-  const loadLocal = useCallback(async (prevLen) => {
+  const loadLocal = useCallback(async (prevLen, reason) => {
     const res = await fetch(recipesUrl());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!bundledIdsRef.current) bundledIdsRef.current = new Set(data.map(r => r.id));
     setRecipes(data);
-    return { total: data.length, newCount: Math.max(0, data.length - (prevLen ?? recipes.length)), verified: false };
+    return { total: data.length, newCount: Math.max(0, data.length - (prevLen ?? recipes.length)), verified: false, reason };
   }, [recipes.length]);
 
   // Manual refresh: fetch the signed remote library + manifest, verify fail-closed
@@ -110,7 +125,7 @@ export default function RecipeProvider({ children }) {
     } catch (err) {
       // Fail closed: keep the app on the trusted same-origin library.
       console.warn('Verified remote sync unavailable, using local library:', err?.message || err);
-      return loadLocal(prevLen);
+      return loadLocal(prevLen, refreshFailureReason(err));
     } finally {
       setSyncing(false);
     }

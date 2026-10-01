@@ -11,6 +11,8 @@
     "preview": "vite preview",
     "lint": "eslint src/",
     "format": "prettier --write src/",
+    "recipes:pull": "node scripts/recipes-sync.mjs pull",
+    "recipes:check": "node scripts/recipes-sync.mjs check",
     "test": "vitest",
     "test:run": "vitest run"
   },

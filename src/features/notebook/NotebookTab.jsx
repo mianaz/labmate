@@ -324,7 +324,8 @@ function NotebookTab({ onNavigateCalendar, onNavigateEvidence }) {
       protocolRef: recipe.id,
       title: draft.title || recipeTitle(recipe, lang),
       titleZh: draft.titleZh || (recipe.nameCn || ''),
-      duration: recipe.duration || draft.duration,
+      // A recipe's duration is minutes; ignore anything else.
+      duration: Number.isFinite(recipe.duration) ? recipe.duration : draft.duration,
       procedure: { mode: 'template', protocolSteps: steps, freeText: draft.procedure?.freeText || '' }
     };
     if (recipe.materials) {

@@ -450,7 +450,7 @@ export function experimentEntrySeed(map, nodeId, { lang = 'en', recipe = null } 
     if (recipe.materials) {
       entry.materials = { reagents: toReagents(recipe), equipment: [], plateLayout: null, checklist: [] };
     }
-    if (recipe.duration) entry.duration = recipe.duration;
+    if (Number.isFinite(recipe.duration)) entry.duration = recipe.duration; // minutes
   }
   return entry;
 }
