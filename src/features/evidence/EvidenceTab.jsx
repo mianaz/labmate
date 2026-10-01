@@ -8,6 +8,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { t, useLang } from '../../i18n/index.js';
 import { useToast } from '../../components/Toast.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import BetaBadge from '../../components/BetaBadge.jsx';
 import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import { useExperiments, saveExperimentRecord } from '../../lib/experiments.js';
@@ -25,13 +26,14 @@ import { SplitDialog, OutcomeDialog, RelationChooser, MapDetailsDialog, ExportDi
 import { tx, STATUS_META, SEVERITY_META, relPhrase } from './evidenceText.js';
 import {
   IconPlus, IconSearch, IconDownload, IconEdit, IconChevronLeft, IconChevronDown, IconNotebook,
-  IconLink, IconFile, IconArrowRight, IconAlert, IconCheck, IconGraph, IconUpload,
+  IconLink, IconFile, IconArrowRight, IconAlert, IconCheck, IconGraph, IconUpload, IconInfo, IconClose,
 } from '../../components/icons.jsx';
 
 // Cross-tab hand-offs (same sessionStorage convention as Notebook ↔ Calendar).
 const NOTEBOOK_FOCUS_KEY = 'labmate_notebook_focus';
 const EVIDENCE_FOCUS_KEY = 'labmate_evidence_focus';
 const VIEW_KEY = 'labmate_evidence_view';
+const BETA_NOTE_KEY = 'labmate_evidence_beta_seen';
 function takeHandoff(key) {
   try {
     const raw = window.sessionStorage.getItem(key);
@@ -132,6 +134,8 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
   const [connectFrom, setConnectFrom] = useState(null);
   const [allIssues, setAllIssues] = useState(false);
   const [freshMapId, setFreshMapId] = useState(null);
+  const [betaNote, setBetaNote] = useState(() => readPref(BETA_NOTE_KEY, '') !== '1');
+  const dismissBeta = () => { setBetaNote(false); writePref(BETA_NOTE_KEY, '1'); };
 
   const setView = useCallback((v) => { setViewState(v); writePref(VIEW_KEY, v); setConnectFrom(null); }, []);
 
@@ -842,14 +846,24 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
   };
 
   const showFirstRun = !loading && maps.length === 0;
+  const pageTitle = <span className="inline-flex items-center gap-2.5">{t('tabEvidence', lang)}<BetaBadge lang={lang} /></span>;
+  const betaNotice = betaNote && !(isMobile && mobileView === 'map') ? (
+    <div className="notice mb-4" role="note" style={{ alignItems: 'center', borderLeftColor: 'var(--cat-protocol)' }}>
+      <IconInfo size={15} style={{ color: 'var(--cat-protocol)', flexShrink: 0 }} />
+      <span className="flex-1 min-w-0">{tx('betaNote', lang)}</span>
+      <button type="button" className="btn-ghost btn-icon btn-sm flex-none" onClick={dismissBeta} aria-label={tx('betaDismiss', lang)}>
+        <IconClose size={14} />
+      </button>
+    </div>
+  ) : null;
   const mobileDetail = isMobile && mobileView === 'map' && map;
 
   return (
     <div>
       {mobileDetail ? (
-        <PageHeader tab="evidence" title={t('tabEvidence', lang)} />
+        <PageHeader tab="evidence" title={pageTitle} />
       ) : (
-        <PageHeader tab="evidence" title={t('tabEvidence', lang)} description={tx('pageDesc', lang)}
+        <PageHeader tab="evidence" title={pageTitle} description={tx('pageDesc', lang)}
           meta={maps.length ? (maps.length === 1 ? tx('mapsCountOne', lang) : tx('mapsCount', lang, { n: maps.length })) : null}
           actions={maps.length ? (
             <>
@@ -860,6 +874,7 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
             </>
           ) : null} />
       )}
+      {betaNotice}
 
       {loading && maps.length === 0 ? (
         <div className="panel"><div className="empty"><span className="mono" style={{ fontSize: '0.75rem' }}>{tx('loading', lang)}</span></div></div>

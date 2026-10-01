@@ -154,6 +154,7 @@ export function mapToJSON(map, { experimentsById = {}, protocolName = () => '' }
   return {
     format: EVIDENCE_FORMAT,
     version: EVIDENCE_FORMAT_VERSION,
+    stability: 'beta', // the format may still change between LabMate releases
     exportedAt: new Date().toISOString(),
     generator: 'LabMate',
     guide: GUIDE,

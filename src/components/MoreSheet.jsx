@@ -6,6 +6,7 @@ import { t } from '../i18n/index.js';
 import { NAV_GROUPS, BOTTOM_NAV_TABS, TABS, tabHref, isPlainClick } from '../lib/nav.jsx';
 import { describeLastBackup } from '../hooks/useBackupStatus.js';
 import { IconClose, IconRefresh, IconSpark, IconDownload, IconChevronRight, IconGithub } from './icons.jsx';
+import BetaBadge from './BetaBadge.jsx';
 
 const ROW = 'flex items-center gap-3 w-full px-4 text-left';
 const ROW_STYLE = { minHeight: '3rem', borderBottom: '1px solid var(--rule)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' };
@@ -53,7 +54,7 @@ export default function MoreSheet({
             <div key={group.id}>
               <div className="nav-group-label" style={{ padding: '0.75rem 1rem 0.35rem', borderTop: '1px solid var(--rule)' }}>{t(group.label, lang)}</div>
               {group.tabs.map(id => {
-                const { Icon, label } = TABS[id];
+                const { Icon, label, beta } = TABS[id];
                 const active = activeTab === id;
                 return (
                   <a key={id} href={tabHref(id, lang)} className={ROW} aria-current={active ? 'page' : undefined}
@@ -66,6 +67,7 @@ export default function MoreSheet({
                     }}>
                     <span style={{ color: active ? 'var(--accent)' : 'var(--text-muted)', display: 'inline-flex' }}><Icon size={18} /></span>
                     <span className="flex-1">{t(label, lang)}</span>
+                    {beta && <BetaBadge lang={lang} />}
                     <IconChevronRight size={14} style={{ color: 'var(--text-muted)' }} />
                   </a>
                 );

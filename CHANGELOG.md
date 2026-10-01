@@ -27,7 +27,7 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
 - **Global search** is a command palette with ↑ / ↓ / Enter navigation.
 
 ### Added
-- **Evidence map** (My lab → Evidence map): the logic behind a paper, grant aim or hypothesis as a graph
+- **Evidence map** *(beta)* (My lab → Evidence map): the logic behind a paper, grant aim or hypothesis as a graph
   of questions, claims, assumptions, evidence and experiments.
   - **Split** a pasted draft into one node per sentence (Chinese and English; citations such as
     author–year, `[n]`, DOI and PMID are picked up), with a suggested type you confirm per sentence.

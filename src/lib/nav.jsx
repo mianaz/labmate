@@ -21,7 +21,7 @@ export const TAB_TO_PATH = {
 };
 export const PATH_TO_TAB = Object.fromEntries(Object.entries(TAB_TO_PATH).map(([k, v]) => [v, k]));
 
-// label: full name (sidebar, page titles) · short: bottom-nav label
+// label: full name (sidebar, page titles) · short: bottom-nav label · beta: show a Beta badge
 export const TABS = {
   buffers:   { label: 'tabBuffers',   short: 'tabBuffers',    Icon: IconFlask,      group: 'library' },
   protocols: { label: 'tabProtocols', short: 'tabProtocols',  Icon: IconClipboard,  group: 'library' },
@@ -29,7 +29,7 @@ export const TABS = {
   plate:     { label: 'tabPlate',     short: 'tabPlateShort', Icon: IconPlate,      group: 'tools' },
   tools:     { label: 'tabTools',     short: 'tabTools',      Icon: IconLink,       group: 'tools' },
   inventory: { label: 'tabInventory', short: 'tabInventory',  Icon: IconBox,        group: 'lab' },
-  evidence:  { label: 'tabEvidence',  short: 'tabEvidenceShort', Icon: IconGraph,   group: 'lab' },
+  evidence:  { label: 'tabEvidence',  short: 'tabEvidenceShort', Icon: IconGraph,   group: 'lab', beta: true },
   notebook:  { label: 'tabNotebook',  short: 'tabNotebook',   Icon: IconNotebook,   group: 'lab' },
   calendar:  { label: 'tabCalendar',  short: 'tabCalendar',   Icon: IconCalendar,   group: 'lab' },
   refs:      { label: 'tabRefs',      short: 'tabRefs',       Icon: IconBook,       group: 'help' },

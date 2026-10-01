@@ -7,6 +7,8 @@ const S = {
     'Split an argument into claims, connect each to its evidence by hand, and see which claims still need an experiment.',
     '把论证拆成命题，亲手连接证据，看清哪些结论还缺实验。',
   ],
+  betaNote: ['Beta: this section is new and may still change. Maps stay in this browser and are included in Back up. Feedback is welcome on GitHub.', 'Beta：这是新功能，细节可能还会调整。证据链保存在本浏览器中，并包含在备份里。欢迎在 GitHub 反馈。'],
+  betaDismiss: ['Dismiss', '关闭'],
   newMap: ['New map', '新建证据链'],
   untitledMap: ['Untitled map', '未命名证据链'],
   mapsCount: ['{n} maps', '{n} 个证据链'],
