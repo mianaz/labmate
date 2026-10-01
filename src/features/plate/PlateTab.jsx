@@ -3,6 +3,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, memo, Fragme
 import { createPortal } from 'react-dom';
 import { t, useLang } from '../../i18n/index.js';
 import { PLATE_CONFIGS, WELL_COLORS, ROW_LABELS } from '../../data/plateConfigs.js';
+import { PLATE_STORE_KEY, loadPlateState, toStoredPlate } from './plateState.js';
 import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { S_MUTED } from '../../lib/styleConstants.js';
 import { downloadFile } from '../../lib/utils.js';
@@ -88,21 +89,28 @@ const Well = memo(function Well({ id, r, c, ws, fs, color, label, hasData, isSel
   );
 });
 
+// The layout survives a reload and rides along in backups (see plateState.js).
+function readSavedPlate() {
+  try { return loadPlateState(JSON.parse(localStorage.getItem(PLATE_STORE_KEY))); }
+  catch { return loadPlateState(null); }
+}
+
 function PlateTab() {
   const lang = useLang();
   const toast = useToast();
+  const [saved] = useState(readSavedPlate);
   const [mode, setMode] = useState('designer'); // 'designer' | 'reader'
-  const [plateType, setPlateType] = useState(96);
-  const [wellData, setWellData] = useState({});
+  const [plateType, setPlateType] = useState(saved.plateType);
+  const [wellData, setWellData] = useState(saved.wellData);
   const [selectedWells, setSelectedWells] = useState(new Set());
-  const [currentColor, setCurrentColor] = useState(0);
-  const [customColor, setCustomColor] = useState('#ff0000');
-  const [useCustomColor, setUseCustomColor] = useState(false);
+  const [currentColor, setCurrentColor] = useState(saved.colorIdx);
+  const [customColor, setCustomColor] = useState(saved.customColor);
+  const [useCustomColor, setUseCustomColor] = useState(saved.useCustom);
   const [currentLabel, setCurrentLabel] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false); // read by the stable pointer handlers below
   const setDragging = useCallback((v) => { isDraggingRef.current = v; setIsDragging(v); }, []);
-  const [groups, setGroups] = useState([]);
+  const [groups, setGroups] = useState(saved.groups);
   const [enlarged, setEnlarged] = useState(false);
   const isMobile = useIsMobile();
   const plateScrollRef = useRef(null);
@@ -115,14 +123,26 @@ function PlateTab() {
   const config = PLATE_CONFIGS[plateType];
 
   // ═══════════════════════════════════════════════
-  // RESET ON PLATE TYPE CHANGE
+  // PLATE TYPE CHANGE + PERSISTENCE
   // ═══════════════════════════════════════════════
 
-  useEffect(() => {
+  // A new plate type starts empty. (This was an effect on plateType, which
+  // also ran on mount and would wipe a restored layout.)
+  function changePlateType(next) {
+    if (next === plateType) return;
+    setPlateType(next);
     setWellData({});
     setSelectedWells(new Set());
     setGroups([]);
-  }, [plateType]);
+  }
+
+  useEffect(() => {
+    const value = toStoredPlate({ plateType, wellData, groups, colorIdx: currentColor, useCustom: useCustomColor, customColor });
+    try {
+      if (value) localStorage.setItem(PLATE_STORE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(PLATE_STORE_KEY);
+    } catch { /* storage full or blocked: the layout still works for this session */ }
+  }, [plateType, wellData, groups, currentColor, useCustomColor, customColor]);
 
   // ═══════════════════════════════════════════════
   // WELL SELECTION HELPERS
@@ -728,7 +748,7 @@ function PlateTab() {
           {mode === 'designer' && (
             <div className="flex items-center gap-2">
               <label htmlFor="plate-type-select" className="max-sm:sr-only" style={{ marginBottom: 0 }}>{t('plateType', lang)}</label>
-              <select id="plate-type-select" value={plateType} onChange={e => setPlateType(+e.target.value)} style={{ minWidth: '7rem' }}>
+              <select id="plate-type-select" value={plateType} onChange={e => changePlateType(+e.target.value)} style={{ minWidth: '7rem' }}>
                 {Object.keys(PLATE_CONFIGS).map(k => (
                   <option key={k} value={k}>{lang === 'zh' ? `${k} 孔` : `${k}-well`}</option>
                 ))}

@@ -7,7 +7,8 @@ const { parseNum } = require('../../lib/format');
 
 // The web keeps the layout in component state only; the mini program keeps it
 // under a labmate_* key so it survives restarts and travels in backups.
-const STORE_KEY = 'labmate_plate';
+// Saved layout: same key and shape as the web app (src/features/plate/plateState.js).
+const { PLATE_STORE_KEY: STORE_KEY, loadPlateState, toStoredPlate } = require('../../shared/plateState.js');
 
 const PLATE_SIZES = Object.keys(PLATE_CONFIGS).map(Number).sort((a, b) => a - b);
 
@@ -193,39 +194,9 @@ function layoutText(plateType, groups) {
 }
 
 // Saved state → a clean in-memory state (tolerates hand-edited / older backups).
-function loadState(raw) {
-  const s = raw && typeof raw === 'object' ? raw : {};
-  const plateType = PLATE_CONFIGS[s.plateType] ? Number(s.plateType) : 96;
-  const cfg = PLATE_CONFIGS[plateType];
-  const wellData = {};
-  if (s.wellData && typeof s.wellData === 'object') {
-    Object.keys(s.wellData).forEach((key) => {
-      const pos = parseKey(key);
-      const d = s.wellData[key];
-      if (!pos || pos.r >= cfg.rows || pos.c >= cfg.cols || !d || typeof d !== 'object') return;
-      wellData[wellKey(pos.r, pos.c)] = { color: safeColor(d.color), label: d.label == null ? '' : String(d.label) };
-    });
-  }
-  const groups = (Array.isArray(s.groups) ? s.groups : [])
-    .filter((g) => g && Array.isArray(g.wells))
-    .map((g) => ({
-      label: g.label == null ? '' : String(g.label),
-      color: safeColor(g.color),
-      wells: g.wells.map(String).filter((w) => wellData[w]),
-    }))
-    .filter((g) => g.wells.length > 0);
-  const hex = /^#[0-9a-f]{6}$/i.test(s.customColor) ? s.customColor : '#ff0000';
-  return {
-    plateType,
-    wellData,
-    groups,
-    colorIdx: Number.isInteger(s.colorIdx) && s.colorIdx >= 0 ? s.colorIdx % WELL_COLORS.length : 0,
-    useCustom: !!s.useCustom,
-    customColor: hex,
-  };
-}
+const loadState = loadPlateState;
 
 module.exports = {
   STORE_KEY, PLATE_SIZES, PLATE_CONFIGS, WELL_COLORS, ROW_LABELS, TEMPLATE_DEFAULTS,
-  wellKey, parseKey, plateMetrics, safeColor, wellView, applyTemplate, layoutText, loadState,
+  wellKey, parseKey, plateMetrics, safeColor, wellView, applyTemplate, layoutText, loadState, toStoredPlate,
 };

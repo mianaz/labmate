@@ -66,6 +66,16 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
   tablets the screen also stays on while a timer runs.
 
 ### Fixed
+- **Dilution calculator:** the "how to prepare" solvent volume subtracted V₁ from V₂ without converting
+  units, so 50 µL of stock made up to 10 mL gave no instructions (and mixed L / mL gave wrong volumes).
+  It is now worked out in V₂'s unit (`dilutionSolvent` in `calculators.js`).
+- **Chinese dilution instructions** no longer end in the English word "total": an empty translation
+  (至总体积 already says it) is now honoured instead of falling back to English.
+- **Calendar .ics export:** multi-line objectives keep their line breaks (they turned into " n"),
+  experiments running past midnight end on the next day, non-numeric durations fall back to 60 min,
+  and the file follows RFC 5545 (proper escaping, 75-octet line folding, DTSTAMP).
+- **Plate designer** keeps its layout across reloads (`labmate_plate`), so it is also in backups — and
+  in the same shape as the WeChat mini program, so a layout moves between the two.
 - **Recipe Refresh never applied the online library.** The published library in labmate-recipes had
   stopped updating in July (227 recipes) while recipes kept being added to the app directly (236), so
   every Refresh refused the older library and silently kept the built-in one. Fixed at the root

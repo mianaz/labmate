@@ -54,6 +54,7 @@ const SHARED_MODULES = {
   'shared/plateExport.js': 'features/plate/plateExport.js',
   'shared/data.js': 'data/index.js',
   'shared/ics.js': 'lib/ics.js',
+  'shared/plateState.js': 'features/plate/plateState.js',
   // Only the Links page (tools subpackage) needs this list.
   'packages/tools/links/tools-data.js': 'data/externalTools.js',
 };

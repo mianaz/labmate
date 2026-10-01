@@ -114,8 +114,9 @@ Component({
         useCustom: this.data.useCustom,
         customColor: this.data.customColor,
       };
-      storage.set(STORE_KEY, state);
-      this._savedRaw = JSON.stringify(state);
+      const value = P.toStoredPlate(state);
+      if (value) storage.set(STORE_KEY, value); else storage.remove(STORE_KEY);
+      this._savedRaw = JSON.stringify(value);
     },
 
     activeColor(d) {
