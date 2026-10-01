@@ -25,6 +25,7 @@ const TOOL_LABELS = {
   createExperiment:     { en: 'Created entry',       zh: '创建实验记录' },
   scheduleCalendarEvent:{ en: 'Scheduled timepoints',zh: '安排时间点' },
   exportProtocol:       { en: 'Exported Markdown',   zh: '导出 Markdown' },
+  splitIntoEvidenceMap: { en: 'Split into evidence map', zh: '拆分为证据链' },
 };
 
 const CALC_LABELS = {
@@ -115,6 +116,11 @@ export function summarizeToolResult(name, args = {}, result = {}, lang = 'en') {
     }
     case 'exportProtocol': {
       return { tone: 'ok', title, lines: [r.filename || ''].filter(Boolean) };
+    }
+    case 'splitIntoEvidenceMap': {
+      const lines = [t2(lang, `“${r.title || args?.title || ''}” — ${r.created || 0} node(s)`, `“${r.title || args?.title || ''}” — ${r.created || 0} 个节点`)];
+      if (r.rejected) lines.push(t2(lang, `${r.rejected} dropped: not found in your text`, `${r.rejected} 个未采用：原文中找不到`));
+      return { tone: 'ok', title, lines };
     }
     default:
       return { tone: 'ok', title, lines: [] };

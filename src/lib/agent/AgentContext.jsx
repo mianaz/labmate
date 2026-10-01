@@ -18,6 +18,7 @@ import { useRecipes } from '../RecipeProvider.jsx';
 import { t, useLang } from '../../i18n/index.js';
 import db from '../db.js';
 import { saveExperimentRecord } from '../experiments.js';
+import { saveEvidenceMapRecord } from '../evidenceStore.js';
 import { loadInventoryAsync } from '../../features/inventory/inventoryUtils.js';
 import { downloadText } from './exportProtocol.js';
 import { runAgentTurn } from './loop.js';
@@ -75,6 +76,7 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
     },
     getExperiment: (id) => db.experiments.get(id),
     download: (text, filename, mime) => downloadText(text, filename, mime),
+    saveEvidenceMap: (map) => saveEvidenceMapRecord(map),
   }), [recipes, lang]);
 
   // The loop calls this for a write set to 'ask'; the UI resolves it.
@@ -130,7 +132,9 @@ export default function AgentProvider({ children, apiBase = AGENT_API_BASE }) {
       const res = await runAgentTurn({
         messages: convo,
         callModel,
-        ctx: buildCtx(),
+        // userText grounds splitIntoEvidenceMap: its nodes must quote what the
+        // user actually typed, not what the model says they typed.
+        ctx: { ...buildCtx(), userText: [...priorHistory, userMsg].filter((m) => m.role === 'user').map((m) => m.content).join('\n\n') },
         permissions,
         requestPermission,
         onPermissionChange: (name, mode) => { setPermission(name, mode); },

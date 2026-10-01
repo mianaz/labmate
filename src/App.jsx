@@ -34,6 +34,7 @@ const PlateTab = lazy(() => import('./features/plate/PlateTab.jsx'));
 const ToolsTab = lazy(() => import('./features/tools/ToolsTab.jsx'));
 const InventoryTab = lazy(() => import('./features/inventory/InventoryTab.jsx'));
 const NotebookTab = lazy(() => import('./features/notebook/NotebookTab.jsx'));
+const EvidenceTab = lazy(() => import('./features/evidence/EvidenceTab.jsx'));
 const CalendarTab = lazy(() => import('./features/calendar/CalendarTab.jsx'));
 const RefsTab = lazy(() => import('./features/refs/RefsTab.jsx'));
 
@@ -272,7 +273,8 @@ function AppInner() {
     <Route key="plate" path="plate" element={panel('plate', <PlateTab />)} />,
     <Route key="tools" path="tools" element={panel('tools', <ToolsTab />)} />,
     <Route key="inventory" path="inventory" element={panel('inventory', <InventoryTab />)} />,
-    <Route key="notebook" path="notebook" element={panel('notebook', <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} />)} />,
+    <Route key="evidence" path="evidence" element={panel('evidence', <EvidenceTab onNavigateNotebook={() => setActiveTab('notebook')} agentAvailable={agentAvailable} />)} />,
+    <Route key="notebook" path="notebook" element={panel('notebook', <NotebookTab onNavigateCalendar={() => setActiveTab('calendar')} onNavigateEvidence={() => setActiveTab('evidence')} />)} />,
     <Route key="calendar" path="calendar" element={panel('calendar', <CalendarTab onNavigateNotebook={() => setActiveTab('notebook')} />)} />,
     <Route key="guide" path="guide" element={panel('refs',
       <RefsTab onReplayTour={() => { localStorage.removeItem('labmate_onboardingDone'); db.settings.delete('labmate_onboardingDone').catch(() => {}); setShowOnboarding(true); }} />)} />,

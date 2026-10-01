@@ -1,0 +1,278 @@
+// Strings and visual meta for the Evidence map section. Kept local to the
+// feature (the shared translations.js holds only the nav label) — every entry
+// is [en, zh]; {name} placeholders are filled by tx().
+
+const S = {
+  pageDesc: [
+    'Split an argument into claims, connect each to its evidence by hand, and see which claims still need an experiment.',
+    '把论证拆成命题，亲手连接证据，看清哪些结论还缺实验。',
+  ],
+  newMap: ['New map', '新建证据链'],
+  untitledMap: ['Untitled map', '未命名证据链'],
+  mapsCount: ['{n} maps', '{n} 个证据链'],
+  mapsCountOne: ['1 map', '1 个证据链'],
+  searchMaps: ['Search maps', '搜索证据链'],
+  noMatch: ['No matching maps', '没有匹配的证据链'],
+  loading: ['Loading…', '加载中…'],
+
+  viewOutline: ['Outline', '大纲'],
+  viewGraph: ['Graph', '关系图'],
+  viewPlan: ['Experiments', '所需实验'],
+  views: ['View', '视图'],
+
+  kind_question: ['Question', '问题'],
+  kind_claim: ['Claim', '命题'],
+  kind_assumption: ['Assumption', '前提假设'],
+  kind_evidence: ['Evidence', '证据'],
+  kind_experiment: ['Experiment', '实验'],
+  hint_question: ['The question this argument answers.', '这条论证要回答的问题。'],
+  hint_claim: ['One statement that can be true or false. Say exactly what you mean.', '一个可真可假的判断，把意思说准确。'],
+  hint_assumption: ['Something the argument takes for granted, e.g. “the antibody is specific”.', '论证默认成立的前提，例如“抗体是特异的”。'],
+  hint_evidence: ['What was observed or reported: the finding, not what it means.', '观察到或报道的结果：只写发现，不写解读。'],
+  hint_experiment: ['What you will do to test it.', '你打算怎么检验它。'],
+
+  status_supported: ['Supported', '有证据'],
+  status_contested: ['Contested', '有争议'],
+  status_refuted: ['Refuted', '被反驳'],
+  status_testing: ['Testing', '待检验'],
+  status_gap: ['No evidence', '缺证据'],
+
+  stage_none: ['Not in notebook', '未加入记录本'],
+  stage_missing: ['Entry deleted', '记录已删除'],
+
+  rel_supports: ['supports', '支持'],
+  rel_contradicts: ['contradicts', '反驳'],
+  rel_premise: ['is a premise of', '是…的前提'],
+  rel_tests: ['tests', '检验'],
+  rel_yields: ['yields', '产生'],
+  rel_answers: ['answers', '回答'],
+
+  issue_cycle: ['Circular reasoning: {path}', '循环论证：{path}'],
+  issue_unreviewed: ['{n} was split automatically. Check it says what you mean.', '{n} 是自动拆分的，请确认它表达了你的本意。'],
+  issue_unreviewed_many: ['{k} nodes were split automatically and still need your review: {list}.', '{k} 个节点为自动拆分，尚待你确认：{list}。'],
+  issue_empty: ['{n} has no text.', '{n} 还没有内容。'],
+  issue_question_unanswered: ['No claim answers {n} yet.', '还没有命题回答 {n}。'],
+  issue_claim_refuted: ['The evidence contradicts {n}.', '{n} 被证据反驳。'],
+  issue_claim_contested: ['Evidence points both ways on {n}.', '关于 {n} 的证据相互矛盾。'],
+  issue_premise_weak: ['{n} leans on {m}, which does not stand yet.', '{n} 依赖的 {m} 本身还站不住。'],
+  issue_claim_gap: ['{n} rests on no evidence and no planned experiment.', '{n} 既无证据，也无检验实验。'],
+  issue_assumption_untested: ['{n} is untested. Would a control check it?', '{n} 未经检验，能否用对照实验确认？'],
+  issue_assumption_unused: ['{n} is not a premise of any claim.', '{n} 不是任何命题的前提。'],
+  issue_evidence_dangling: ['{n} supports or contradicts nothing.', '{n} 没有连接到任何命题。'],
+  issue_evidence_no_source: ['{n} has no reference.', '{n} 缺少文献出处。'],
+  issue_exp_no_target: ['{n} does not test any claim.', '{n} 没有检验任何命题。'],
+  issue_exp_no_prediction: ['{n}: which result would support the claim, and which would refute it?', '{n}：什么结果支持命题，什么结果否定它？'],
+  issue_exp_no_controls: ['{n} lists no controls.', '{n} 没有列出对照。'],
+  issue_exp_done_no_outcome: ['{n} is completed in the notebook. Record what it showed.', '{n} 已在记录本中完成，请记录结果。'],
+
+  logicCheck: ['Logic check', '逻辑检查'],
+  logicOk: ['No issues: every claim is backed or being tested.', '没有问题：每个命题都有证据或正在检验。'],
+  issuesN: ['{n} issues', '{n} 个问题'],
+  issuesOne: ['1 issue', '1 个问题'],
+  showAll: ['Show all {n}', '显示全部 {n} 条'],
+  showLess: ['Show fewer', '收起'],
+  statSupported: ['Claims supported', '有证据的命题'],
+  statGaps: ['Without evidence', '缺证据的命题'],
+  statOpen: ['Experiments to run', '待完成实验'],
+  statIssues: ['Issues', '问题'],
+
+  splitText: ['Split text', '拆分文本'],
+  addNode: ['Add node', '添加节点'],
+  exportMd: ['Export Markdown', '导出 Markdown'],
+  editDetails: ['Edit details', '编辑信息'],
+  deleteMap: ['Delete map', '删除证据链'],
+  connect: ['Connect', '连接'],
+  edit: ['Edit', '编辑'],
+  addEvidence: ['Add evidence', '添加证据'],
+  planExperiment: ['Plan experiment', '设计实验'],
+  createEntry: ['Create notebook entry', '加入实验记录本'],
+  openEntry: ['Open in notebook', '在记录本中打开'],
+  recordResult: ['Record result', '记录结果'],
+  moveUp: ['Move up', '上移'],
+  moveDown: ['Move down', '下移'],
+  back: ['Back', '返回'],
+  more: ['More actions', '更多操作'],
+
+  secQuestions: ['Questions', '研究问题'],
+  secClaims: ['Claims', '命题'],
+  secOtherClaims: ['Claims not tied to a question', '未关联问题的命题'],
+  secAssumptions: ['Assumptions', '前提假设'],
+  secLooseEvidence: ['Evidence not linked to a claim', '未连接命题的证据'],
+  secLooseExperiments: ['Experiments not testing a claim', '未检验任何命题的实验'],
+  grpFor: ['For', '支持'],
+  grpAgainst: ['Against', '反对'],
+  grpRestsOn: ['Rests on', '前提'],
+  grpTestedBy: ['Tested by', '检验实验'],
+  grpAnswers: ['Answers', '回答'],
+  grpTests: ['Tests', '检验'],
+  answeredBy: ['Answered by', '回答它的命题'],
+  nothingYet: ['No evidence or experiment yet.', '尚无证据或实验。'],
+  noClaimsYet: ['No claims yet.', '还没有命题。'],
+
+  planGaps: ['Needs evidence', '缺少证据'],
+  planGapsDesc: ['These rest on nothing yet. Add what you already know, or plan an experiment to find out.', '这些命题目前没有依据。补充已有证据，或设计实验去验证。'],
+  planNoGaps: ['Every claim has evidence or a planned experiment.', '每个命题都有证据或已计划的实验。'],
+  planExperiments: ['Experiments', '实验'],
+  planNoExperiments: ['No experiments planned yet. Plan one from a claim that needs evidence.', '还没有计划实验。从缺证据的命题开始设计。'],
+  ifHolds: ['If it holds', '若成立'],
+  ifNot: ['If not', '若不成立'],
+  controls: ['Controls', '对照'],
+  protocol: ['Protocol', '实验方案'],
+  notebook: ['Notebook', '实验记录'],
+  predictionMissing: ['Predictions missing', '缺少预期结果'],
+  result: ['Result', '结果'],
+  inconclusive: ['Inconclusive', '不确定'],
+
+  emptyMapTitle: ['Start this map', '开始构建证据链'],
+  emptyMapDesc: ['Begin from a draft you already have, or build the argument one node at a time.', '可以从已有的草稿开始，也可以逐个添加节点。'],
+  startSplit: ['Paste a draft and split it', '粘贴草稿并拆分'],
+  startSplitDesc: ['A results paragraph, an abstract or a proposal. Each sentence becomes a node you check.', '结果段落、摘要或课题申请都可以。每句话成为一个待确认的节点。'],
+  startQuestion: ['Start from a question', '从研究问题开始'],
+  startQuestionDesc: ['What are you trying to find out?', '你想弄清楚什么？'],
+  startClaim: ['Add a claim', '添加命题'],
+  startClaimDesc: ['A statement you want to be able to defend.', '一个你希望能站得住的判断。'],
+
+  firstTitle: ['Map the logic behind your experiments', '理清实验背后的证据逻辑'],
+  firstDesc: [
+    'Split an argument into claims, connect each one to its evidence by hand, and LabMate shows which claims rest on nothing yet and which experiments you still need to run. Maps stay in this browser.',
+    '把论证拆成一个个命题，亲手把证据连上，LabMate 会指出哪些结论还没有依据、还需要做哪些实验。数据只保存在本浏览器中。',
+  ],
+  step1: ['Split', '拆分'],
+  step1Desc: ['Paste a draft; each sentence becomes a node', '粘贴草稿，每句话成为一个节点'],
+  step2: ['Refine', '修正'],
+  step2Desc: ['Make each node say one thing, with its conditions', '让每个节点只说一件事，并写清条件'],
+  step3: ['Connect', '连接'],
+  step3Desc: ['Link evidence to claims: a link that won’t connect is a logic check', '把证据连到命题：连不上的线就是一次逻辑检查'],
+  step4: ['Test', '检验'],
+  step4Desc: ['Plan the missing experiments, run them in the Notebook, record the result', '设计缺失的实验，在记录本中完成，再记录结果'],
+
+  newNode: ['New {kind}', '新建{kind}'],
+  editNode: ['Edit {label}', '编辑 {label}'],
+  fieldKind: ['Type', '类型'],
+  fieldText: ['Statement', '内容'],
+  fieldNote: ['Conditions & scope', '条件与范围'],
+  fieldNotePh: ['When does this hold? Cell type, dose, timepoint…', '在什么条件下成立？细胞类型、剂量、时间点……'],
+  fieldSource: ['Source', '来源'],
+  src_literature: ['Literature', '文献'],
+  src_own: ['Own data', '自有数据'],
+  src_observation: ['Observation', '观察'],
+  fieldCitation: ['Reference', '文献出处'],
+  fieldCitationPh: ['DOI, PMID or author–year', 'DOI、PMID 或作者–年份'],
+  fieldEntry: ['Notebook entry', '实验记录'],
+  noEntry: ['None', '无'],
+  fieldIfTrue: ['If the claim holds, expect', '若命题成立，预期结果'],
+  fieldIfFalse: ['If it does not, expect', '若不成立，预期结果'],
+  fieldIfTruePh: ['e.g. wound closure slows by ≥30%', '例如：划痕愈合减慢 ≥30%'],
+  fieldIfFalsePh: ['e.g. no difference from scrambled siRNA', '例如：与乱序 siRNA 无差异'],
+  fieldControls: ['Controls', '对照'],
+  fieldControlsPh: ['Negative, positive, loading…', '阴性、阳性、内参……'],
+  fieldProtocol: ['Protocol', '实验方案'],
+  chooseProtocol: ['Choose from library', '从方案库选择'],
+  clear: ['Clear', '清除'],
+  links: ['Links', '连接'],
+  noLinks: ['Not linked to anything yet.', '尚未与其他节点连接。'],
+  linkTo: ['Link to…', '连接到…'],
+  linkAs: ['Relation', '关系'],
+  addLink: ['Add link', '添加连接'],
+  noLinkTargets: ['Nothing this node can link to yet.', '暂时没有可连接的节点。'],
+  removeLink: ['Remove link', '删除连接'],
+  fromText: ['From your text', '原文'],
+  unreviewedNote: ['Split automatically. Check that it says what you mean, then save.', '自动拆分所得。确认表达准确后保存。'],
+  deleteNode: ['Delete node', '删除节点'],
+  deleteNodeConfirm: ['Delete {label} and its {n} link(s)?', '删除 {label} 及其 {n} 条连接？'],
+  save: ['Save', '保存'],
+  cancel: ['Cancel', '取消'],
+  delete: ['Delete', '删除'],
+
+  splitTitle: ['Split text into nodes', '把文本拆成节点'],
+  splitDraft: ['Draft', '草稿'],
+  splitPh: ['Paste a results paragraph, an abstract, a proposal…', '粘贴结果段落、摘要或课题申请……'],
+  splitGo: ['Split', '拆分'],
+  splitHelp: ['Each sentence becomes a node. Check the type LabMate guessed and untick what you don’t need. Nodes start unreviewed and unconnected.', '每句话成为一个节点。检查自动判断的类型，取消不需要的。节点初始为“待确认、未连接”。'],
+  splitEdit: ['Edit text', '修改文本'],
+  splitNone: ['No sentences found.', '没有识别到句子。'],
+  splitAdd: ['Add {n} nodes', '添加 {n} 个节点'],
+  splitInclude: ['Include', '包含'],
+  splitAssistant: ['Prefer the assistant? Ask it to split your draft. It can only quote your own words, never add to them.', '也可以让智能助手拆分草稿——它只能引用你的原文，不会添加内容。'],
+
+  outcomeTitle: ['Record result of {label}', '记录 {label} 的结果'],
+  outcomeShowed: ['What did it show?', '结果说明了什么？'],
+  out_supports: ['Supports', '支持'],
+  out_contradicts: ['Contradicts', '反驳'],
+  out_inconclusive: ['Inconclusive', '不确定'],
+  outcomeText: ['Observation', '观察结果'],
+  outcomePh: ['What you observed: effect size, n, statistics.', '观察到的结果：效应量、样本数、统计。'],
+  outcomeFor: ['For', '针对'],
+
+  chooseRelTitle: ['How are they related?', '它们是什么关系？'],
+  connectBar: ['Pick the node to connect {label} to', '选择要与 {label} 连接的节点'],
+  cantLink: ['A {a} and a {b} can’t be linked directly.', '{a}和{b}之间不能直接连接。'],
+  linked: ['Linked: {phrase}', '已连接：{phrase}'],
+  graphEmpty: ['Add nodes to see the graph.', '添加节点后显示关系图。'],
+  graphHint: ['Click a node to select it, then Connect to link it to another. Double-click to edit.', '点击节点选中，再用“连接”连到另一个节点；双击编辑。'],
+  legend: ['Legend', '图例'],
+
+  entryCreated: ['Notebook entry created', '已创建实验记录'],
+  resultRecorded: ['Result recorded', '结果已记录'],
+  mapDeleted: ['Map deleted', '证据链已删除'],
+  nodesAdded: ['Added {n} nodes', '已添加 {n} 个节点'],
+  nodeDeleted: ['Node deleted', '节点已删除'],
+  downloaded: ['Downloaded', '已下载'],
+
+  detailsTitle: ['Map details', '证据链信息'],
+  fieldTitle: ['Title', '标题'],
+  fieldDesc: ['Description', '说明'],
+  fieldDescPh: ['What is this argument for? A paper, a grant aim, a lab meeting…', '这条论证用于什么？论文、课题、组会……'],
+  deleteMapConfirm: ['Delete this map? Its nodes and links are removed; notebook entries stay.', '删除此证据链？其节点和连接将被删除，实验记录保留。'],
+  updated: ['Updated', '更新于'],
+  nodes: ['{n} nodes', '{n} 个节点'],
+
+  fromMap: ['From evidence map', '来自证据链'],
+  openMap: ['Open map', '打开证据链'],
+};
+
+export function tx(key, lang, vars) {
+  const e = S[key];
+  let s = e ? (lang === 'zh' ? e[1] : e[0]) : key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+  return s;
+}
+
+// Node kinds: colour pair from the existing semantic/category tokens.
+export const KIND_META = {
+  question:   { fg: 'var(--cat-protocol)', bg: 'var(--cat-protocol-bg)' },
+  claim:      { fg: 'var(--text)', bg: 'var(--bg-2)' },
+  assumption: { fg: 'var(--warning-text)', bg: 'var(--warning-bg)' },
+  evidence:   { fg: 'var(--accent)', bg: 'var(--primary-light)' },
+  experiment: { fg: 'var(--base-c)', bg: 'var(--cat-media-bg)' },
+};
+
+export const STATUS_META = {
+  supported: { fg: 'var(--accent)', bg: 'var(--primary-light)' },
+  contested: { fg: 'var(--warning-text)', bg: 'var(--warning-bg)' },
+  refuted:   { fg: 'var(--danger-text)', bg: 'var(--danger-bg)' },
+  testing:   { fg: 'var(--base-c)', bg: 'var(--cat-media-bg)' },
+  gap:       { fg: 'var(--text-muted)', bg: 'transparent', dashed: true },
+};
+
+// Link colours and dash patterns (graph + legend).
+export const REL_META = {
+  supports:    { stroke: 'var(--accent)' },
+  contradicts: { stroke: 'var(--danger-text)', dash: '6 4' },
+  premise:     { stroke: 'var(--warning-text)', dash: '2 3' },
+  tests:       { stroke: 'var(--base-c)', dash: '4 3' },
+  yields:      { stroke: 'var(--text-muted)' },
+  answers:     { stroke: 'var(--cat-protocol)' },
+};
+
+export const SEVERITY_META = {
+  danger: { fg: 'var(--danger-text)' },
+  warn: { fg: 'var(--warning-text)' },
+  info: { fg: 'var(--text-muted)' },
+};
+
+/** "E1 supports C2" / "A1 是 C2 的前提" */
+export function relPhrase(rel, a, b, lang) {
+  if (rel === 'premise') return lang === 'zh' ? `${a} 是 ${b} 的前提` : `${a} is a premise of ${b}`;
+  return `${a} ${tx(`rel_${rel}`, lang)} ${b}`;
+}

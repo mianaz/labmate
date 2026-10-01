@@ -27,6 +27,26 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
 - **Global search** is a command palette with ↑ / ↓ / Enter navigation.
 
 ### Added
+- **Evidence map** (My lab → Evidence map): the logic behind a paper, grant aim or hypothesis as a graph
+  of questions, claims, assumptions, evidence and experiments.
+  - **Split** a pasted draft into one node per sentence (Chinese and English; citations such as
+    author–year, `[n]`, DOI and PMID are picked up), with a suggested type you confirm per sentence.
+  - **Connect** nodes by hand, in the Graph (select → Connect → pick the other node) or from a node's
+    links. Only relations that make sense for the two types are offered: evidence *supports* /
+    *contradicts* a claim, an assumption is a *premise* of a claim, an experiment *tests* a claim and
+    *yields* evidence, a claim *answers* a question.
+  - **Logic check**: claims resting on no evidence, claims leaning on a premise or sub-claim that does
+    not stand, contested and refuted claims, circular reasoning, untested assumptions, evidence
+    without a reference, and experiments without predictions (if it holds / if not) or controls.
+  - **Experiments**: what still needs evidence and the experiments planned for it. An experiment
+    becomes a Notebook entry (its predictions and controls in the objectives, its library protocol's
+    steps and reagents in the procedure); once the entry is completed, record the result and it
+    comes back as evidence for or against the claims it tested. Notebook entries link back to the map.
+  - Outline, Graph and Experiments views; Markdown export; included in the unified backup
+    (backup `schemaVersion` 3).
+  - Assistant: `splitIntoEvidenceMap` splits a pasted draft into unreviewed nodes. Every node must quote
+    the user's own text (checked against what the user typed) and the tool makes no links and no
+    experiments: connecting the propositions stays with the researcher.
 - Inventory: move a sample to another box/position (undoable), delete toasts with Undo, import dialog
   with a box picker, keyboard navigation in box grids.
 - Notebook: read-only document view with an explicit Edit mode; Notebook ↔ Calendar links.

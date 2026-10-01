@@ -323,6 +323,11 @@ export const translations = {
     en: 'Organize lab samples with a hierarchical storage system. Create locations (freezers, fridges, shelves), add boxes (cryo 9×9, 10×10, tip 8×12, etc.), and track samples in a visual grid. Each sample records type, quantity, concentration, passage, dates, owner, and tags. Color-coded by sample type. Export per-box or full inventory as CSV, backup as JSON. All data stored locally in your browser.',
     zh: '使用层级存储系统管理实验室样品。创建存储位置（冰箱、冰柜、架子），添加盒子（冻存盒 9×9、10×10、枪头盒 8×12 等），在可视化网格中追踪样品。每个样品记录类型、数量、浓度、代数、日期、负责人和标签。按样品类型颜色编码。可导出单盒或全部库存为 CSV，备份为 JSON。所有数据存储在浏览器本地。'
   },
+  guideEvidenceTitle: { en: 'Evidence Map', zh: '证据链' },
+  guideEvidenceBody: {
+    en: 'Lay out the logic behind a paper, a grant aim or a hypothesis. Paste a draft and split it into nodes (one sentence each: question, claim, assumption, evidence or experiment), sharpen each one and connect them by hand in the Graph or from each node: evidence supports or contradicts a claim, an assumption is a premise of a claim, an experiment tests a claim. The logic check flags claims resting on no evidence, claims leaning on a premise that does not stand, circular reasoning, and experiments without predictions or controls. Experiments lists what you still need to run: send one to the Notebook (with its library protocol), and when the entry is done, record the result; it comes back as evidence. Export the map as a Markdown outline.',
+    zh: '理清论文、课题或假说背后的逻辑。粘贴草稿并拆成节点（每句一个：问题、命题、前提假设、证据或实验），逐个修正后亲手连接：在关系图中或在节点里，证据支持或反驳命题，前提假设是命题的前提，实验检验命题。逻辑检查会指出没有证据的命题、依赖站不住前提的命题、循环论证，以及缺少预期结果或对照的实验。“所需实验”列出还要做的实验：一键加入实验记录本（自动带入方案库中的方案），完成后记录结果，它会作为证据回到证据链中。可导出为 Markdown 大纲。',
+  },
   guideNotebookTitle: { en: 'Lab Notebook', zh: '实验记录本' },
   guideNotebookBody: {
     en: 'Digital lab notebook with auto-save. Create dated entries with plan, materials, step-by-step procedure, and results sections. Import steps from any protocol recipe to prefill the procedure. Link reagents from your Inventory to track what you used. Filter by status (planned / in-progress / completed / cancelled). Jump to the Calendar view to see entries laid out by date.',
@@ -643,6 +648,8 @@ export const translations = {
   readerMoreRows: { en: 'more rows in download', zh: '更多行已包含在下载中' },
   // ── Notebook Tab ──
   tabNotebook: { en: 'Notebook', zh: '实验记录' },
+  tabEvidence: { en: 'Evidence map', zh: '证据链' },
+  tabEvidenceShort: { en: 'Evidence', zh: '证据链' },
   nbTitle: { en: 'Experiment Notebook', zh: '实验记录本' },
   nbSubtitle: { en: 'Structured experiment records with protocol integration', zh: '结构化实验记录，支持方案集成' },
   nbNewEntry: { en: 'New Entry', zh: '新建记录' },

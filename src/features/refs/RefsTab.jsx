@@ -23,6 +23,7 @@ const GUIDE_SECTIONS = [
   { titleKey: 'guideGelTitle', bodyKey: 'guideGelBody' },
   { titleKey: 'guidePlateTitle', bodyKey: 'guidePlateBody' },
   { titleKey: 'guideInventoryTitle', bodyKey: 'guideInventoryBody' },
+  { titleKey: 'guideEvidenceTitle', bodyKey: 'guideEvidenceBody' },
   { titleKey: 'guideNotebookTitle', bodyKey: 'guideNotebookBody' },
   { titleKey: 'guideCalendarTitle', bodyKey: 'guideCalendarBody' },
   { titleKey: 'guideToolsTitle', bodyKey: 'guideToolsBody' },
