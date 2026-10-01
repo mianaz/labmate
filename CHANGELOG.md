@@ -66,6 +66,23 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
   tablets the screen also stays on while a timer runs.
 
 ### Fixed
+- **Recipe Refresh never applied the online library.** The published library in labmate-recipes had
+  stopped updating in July (227 recipes) while recipes kept being added to the app directly (236), so
+  every Refresh refused the older library and silently kept the built-in one. Fixed at the root
+  (labmate-recipes): its `recipes/` folder is now the single source, CI builds and signs `dist/` on every
+  change, and the two copies were reconciled field by field (most recent edit wins, unless it would lose
+  Chinese text, volume-scaling tokens, notes or step timers; wrong DOIs fixed or removed after checking
+  each against Crossref). The bundled `recipes.json` is now the published library (239 recipes,
+  including 3 new protocols: human-cell Co-IP, MS acetone precipitation, organoid drug screening), taken
+  with `npm run recipes:pull`; the **recipes-sync** CI job fails if the app ships a recipe the published
+  library lacks.
+- Refresh now says why it fell back (online library out of date, failed verification, older than one
+  already applied, or unreachable) instead of one generic message.
+- Recipe rows without an amount (instruction rows such as "Activate: pH 10, boil, repeat 3×") showed
+  "NaN" or a scaled "2.00 step"; they now show no amount. Safe-stops without a note no longer break
+  the protocol page.
+- Importing a protocol into the Notebook, Calendar or an evidence map could set the entry's duration
+  to an object (four protocols stored `{total, hands_on}` there), breaking its end time.
 - **Timers** only counted down while the page had CPU time, so they fell minutes behind or stopped in a
   background tab or on a locked phone, and a reload lost them. They now run against their end time,
   catch up the moment the page is visible again, survive a reload and stay in sync across tabs (they are

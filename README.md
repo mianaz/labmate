@@ -100,7 +100,12 @@ The root `index.html` is the **retired pre-Vite monolith**, kept intentionally. 
 
 ## Content
 
-Recipe and protocol content comes from a separate repo, [`mianaz/labmate-recipes`](https://github.com/mianaz/labmate-recipes), mirrored here into `recipes.json` (the file the app loads). Recipe `id`s are a stable identifier — user favorites, experiments, and progress are keyed by them in IndexedDB, so ids must not be renamed.
+Recipe and protocol content lives in a separate repo, [`mianaz/labmate-recipes`](https://github.com/mianaz/labmate-recipes): its `recipes/` folder is the single source of the library. On every change there, CI builds and signs `dist/recipes.json`. That one published library feeds both ways the app gets recipes:
+
+- **Bundled copy** — `recipes.json` here (the file the app loads first) is the published library, verbatim. **Don't edit it**; add or change recipes in labmate-recipes, then run `npm run recipes:pull` (downloads `dist/`, verifies the ed25519 signature with the app's pinned key, writes `recipes.json`).
+- **In-app Refresh** — fetches the same `dist/`, verifies it, and only accepts a library that still contains every recipe the app ships with; otherwise it keeps the bundled copy and says why.
+
+`npm run recipes:check` replays that Refresh against the published library and fails if it would be rejected — the **recipes-sync** CI job runs it, so a recipe can no longer be added to the app alone (that drift is what broke Refresh until 2026-10). Recipe `id`s are a stable identifier — user favorites, experiments, and progress are keyed by them in IndexedDB, so ids must not be renamed.
 
 ## The Assistant
 

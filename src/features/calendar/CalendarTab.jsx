@@ -272,7 +272,7 @@ function CalendarTab({ onNavigateNotebook }) {
     entry.protocolRef = recipe.id;
     entry.title = recipeTitle(recipe, lang);
     entry.titleZh = recipe.nameCn || '';
-    entry.duration = recipe.duration || 60;
+    entry.duration = Number.isFinite(recipe.duration) ? recipe.duration : 60; // minutes
     const steps = toProcedureSteps(recipe, lang);
     if (steps.length) {
       entry.procedure = { mode: 'template', protocolSteps: steps, freeText: '' };
