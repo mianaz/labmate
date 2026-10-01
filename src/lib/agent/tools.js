@@ -12,7 +12,8 @@
 //
 // ctx shape (supplied by AgentContext):
 //   { recipes, lang, loadInventory(), saveExperiment(entry), getExperiment(id),
-//     download(text, filename, mime) }
+//     download(text, filename, mime), saveEvidenceMap(map),
+//     userText }  — everything the user has typed this conversation (grounding)
 //
 // Bio-content rule: tools retrieve or transform EXISTING data. `steps` on
 // createExperiment are copied verbatim from a retrieved protocol — the model is
@@ -21,6 +22,7 @@
 
 import { searchRecipes, getProtocol, queryInventory } from './retrieval.js';
 import { experimentToMarkdown, experimentFilename } from './exportProtocol.js';
+import { createEmptyMap, nodesFromSplit } from '../evidence.js';
 import {
   dilution, massCalc, molarityCalc, percentCalc, deadVolume, unitConvert, calcGel,
 } from '../calculators.js';
@@ -313,6 +315,85 @@ const exportProtocol = {
   },
 };
 
+// ── write: splitIntoEvidenceMap ──────────────────────────────────────────────────
+// Step one of an evidence map: break the user's OWN draft into one proposition
+// per node. Each node must quote the user's text, and the handler checks every
+// quote against what the user actually typed this conversation (ctx.userText),
+// dropping any it cannot find — so the model can split and classify, but cannot
+// add a claim, a finding or a reference. It makes no links and no experiments:
+// connecting the propositions is the user's own logic check.
+const SPLIT_KINDS = ['question', 'claim', 'assumption', 'evidence'];
+const MAX_SPLIT_NODES = 60;
+const normForMatch = (s) => String(s || '').normalize('NFKC')
+  .replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'")
+  .replace(/\s+/g, ' ').trim().toLowerCase();
+const clean = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+
+const splitIntoEvidenceMap = {
+  kind: 'write',
+  schema: {
+    name: 'splitIntoEvidenceMap',
+    description:
+      "Split a draft the user pasted in this conversation (a paragraph, abstract, proposal or hypothesis) into a new evidence map: one proposition per node, classified as question, claim, assumption or evidence. Every node MUST include `quote` — a span copied verbatim from the user's message that the node restates. Nodes whose quote is not in the user's text are rejected. Creates unreviewed nodes only: no links (the user connects them) and no experiments. Writes to local storage only.",
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: "Short title for the map, taken from the user's text." },
+        nodes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              kind: { type: 'string', enum: SPLIT_KINDS },
+              text: { type: 'string', description: 'One proposition in one sentence, restating the quote. Add nothing the user did not write.' },
+              quote: { type: 'string', description: "The verbatim span from the user's message this node comes from." },
+              citation: { type: 'string', description: 'Evidence only: the reference exactly as the user wrote it (DOI, PMID, author–year, [n]). Omit if the user gave none.' },
+            },
+            required: ['kind', 'text', 'quote'],
+          },
+        },
+      },
+      required: ['title', 'nodes'],
+    },
+  },
+  preview(args) {
+    const nodes = Array.isArray(args?.nodes) ? args.nodes : [];
+    const by = {};
+    nodes.forEach((n) => { by[n?.kind] = (by[n?.kind] || 0) + 1; });
+    const parts = SPLIT_KINDS.filter((k) => by[k]).map((k) => `${by[k]} ${k}${by[k] === 1 ? '' : 's'}`);
+    return `Create evidence map “${args?.title || 'Untitled'}” with ${nodes.length} node(s) split from your text${parts.length ? ` (${parts.join(', ')})` : ''}. Nodes start unreviewed and unconnected — you check and link them.`;
+  },
+  async handler(args, ctx) {
+    const source = normForMatch(ctx.userText);
+    if (!source) return { error: 'no_source', message: 'There is no user-written text to split. Ask the user to paste their draft first.' };
+    const accepted = [];
+    const rejected = [];
+    for (const raw of (Array.isArray(args?.nodes) ? args.nodes : []).slice(0, MAX_SPLIT_NODES)) {
+      const kind = SPLIT_KINDS.includes(raw?.kind) ? raw.kind : null;
+      const text = clean(raw?.text);
+      const quote = clean(raw?.quote);
+      if (!kind || !text || !quote) { rejected.push({ text, reason: 'incomplete' }); continue; }
+      if (!source.includes(normForMatch(quote))) { rejected.push({ text, reason: 'quote_not_in_user_text' }); continue; }
+      // A reference the user did not give is dropped, never stored.
+      const citation = kind === 'evidence' && raw?.citation && source.includes(normForMatch(raw.citation)) ? clean(raw.citation) : '';
+      accepted.push({ kind, text, quote, citation });
+    }
+    if (!accepted.length) {
+      return { error: 'nothing_grounded', rejected: rejected.slice(0, 5), message: "No node quoted the user's text verbatim — nothing was saved. Copy each quote exactly from the user's message." };
+    }
+    const map = createEmptyMap({ title: clean(args?.title).slice(0, 120), nodes: nodesFromSplit(accepted, 'ai') });
+    const saved = await ctx.saveEvidenceMap(map);
+    return {
+      mapId: saved.id,
+      title: saved.title,
+      created: accepted.length,
+      rejected: rejected.length,
+      rejectedNodes: rejected.slice(0, 5),
+      note: 'Saved as unreviewed, unconnected nodes. The user reviews each node and draws the links in the Evidence map tab, which then lists unsupported claims and the experiments still needed.',
+    };
+  },
+};
+
 // ── registry ─────────────────────────────────────────────────────────────────────
 export const TOOLS = {
   searchProtocols,
@@ -322,6 +403,7 @@ export const TOOLS = {
   createExperiment,
   scheduleCalendarEvent,
   exportProtocol,
+  splitIntoEvidenceMap,
 };
 
 /** JSON function-calling schemas for the LLM (OpenAI `tools` array shape). */

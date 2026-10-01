@@ -18,7 +18,7 @@ vi.mock('../db.js', () => {
   return {
     default: {
       experiments: mk(), settings: mk(), customRecipes: mk(), customProtocols: mk(),
-      inventory: mk(), stepProgress: mk(), favorites: mk(), credentials: mk(),
+      inventory: mk(), stepProgress: mk(), favorites: mk(), credentials: mk(), evidenceMaps: mk(),
     },
   };
 });
@@ -37,6 +37,7 @@ function installLocalStorage() {
 }
 
 const { collectBackupData, importBackup } = await import('../backup.js');
+const { default: db } = await import('../db.js');
 
 beforeEach(() => { installLocalStorage(); });
 
@@ -94,5 +95,25 @@ describe('backup device-local state', () => {
     }));
     expect(localStorage.getItem('labmate_theme')).toBe('light');
     expect(localStorage.getItem('labmate_timers')).toBeNull();
+  });
+});
+
+describe('backup: evidence maps', () => {
+  it('restores evidence maps from a schemaVersion 3 file and skips malformed ones', async () => {
+    const good = { id: 'emap_1', title: 'X', nodes: [{ id: 'n1', kind: 'claim', text: 'c' }], edges: [] };
+    const messy = { id: 'emap_2', title: 'Y', nodes: [null, { id: 'n2', kind: 'claim', text: 'd' }], edges: [{ from: 'n2' }, null] };
+    const backup = JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      schemaVersion: 3,
+      data: {},
+      evidenceMaps: [good, messy, { id: 'emap_bad', title: 'no nodes' }, null],
+    });
+    const count = await importBackup(backup);
+    expect(count).toBe(2);
+    expect(await db.evidenceMaps.get('emap_1')).toEqual(good);
+    const cleaned = await db.evidenceMaps.get('emap_2');
+    expect(cleaned.nodes.map((n) => n.id)).toEqual(['n2']);
+    expect(cleaned.edges).toEqual([]);
+    expect(await db.evidenceMaps.get('emap_bad')).toBeUndefined();
   });
 });

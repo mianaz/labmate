@@ -160,3 +160,48 @@ describe('write tools', () => {
     expect(previewTool('searchProtocols', { query: 'x' })).toBe(''); // reads have no preview
   });
 });
+
+describe('splitIntoEvidenceMap (grounded split)', () => {
+  const draft = 'X is upregulated in breast tumours (Smith et al., 2020). We think X promotes metastasis. Does X act through Y?';
+  const ctxWith = (userText) => {
+    const maps = [];
+    return { ...makeCtx(), userText, async saveEvidenceMap(m) { maps.push(m); return m; }, _maps: maps };
+  };
+
+  it('is a write tool with a preview', () => {
+    expect(isWriteTool('splitIntoEvidenceMap')).toBe(true);
+    const p = previewTool('splitIntoEvidenceMap', { title: 'X', nodes: [{ kind: 'claim' }, { kind: 'claim' }, { kind: 'question' }] });
+    expect(p).toContain('3 node(s)');
+    expect(p).toContain('2 claims');
+  });
+
+  it('keeps nodes that quote the user and drops the rest, including invented references', async () => {
+    const ctx = ctxWith(`Please split this:\n${draft}`);
+    const r = await executeTool('splitIntoEvidenceMap', {
+      title: 'X and metastasis',
+      nodes: [
+        { kind: 'evidence', text: 'X is upregulated in breast tumours.', quote: 'X is upregulated in breast tumours (Smith et al., 2020).', citation: 'Smith et al., 2020' },
+        { kind: 'claim', text: 'X promotes metastasis.', quote: 'We think X  promotes metastasis.' }, // whitespace differs — still a match
+        { kind: 'question', text: 'Does X act through Y?', quote: 'Does X act through Y?' },
+        { kind: 'evidence', text: 'X knockout mice live longer.', quote: 'X knockout mice live longer.' }, // not in the user's text
+        { kind: 'evidence', text: 'X binds Y.', quote: 'Does X act through Y?', citation: 'Jones 2019' }, // reference the user never gave
+        { kind: 'experiment', text: 'Knock down X.', quote: 'We think X promotes metastasis.' }, // experiments are the user's call
+      ],
+    }, ctx);
+    expect(r.created).toBe(4);
+    expect(r.rejected).toBe(2);
+    const map = ctx._maps[0];
+    expect(map.edges).toEqual([]); // no links — the user connects them
+    expect(map.nodes.map((n) => n.kind)).toEqual(['evidence', 'claim', 'question', 'evidence']);
+    expect(map.nodes.every((n) => n.origin === 'ai' && n.reviewed === false)).toBe(true);
+    expect(map.nodes[0]).toMatchObject({ citation: 'Smith et al., 2020', source: 'literature' });
+    expect(map.nodes[3].citation).toBe('');
+  });
+
+  it('refuses when nothing is grounded or there is no user text', async () => {
+    const none = await executeTool('splitIntoEvidenceMap', { title: 'T', nodes: [{ kind: 'claim', text: 'a', quote: 'made up' }] }, ctxWith(draft));
+    expect(none.error).toBe('nothing_grounded');
+    const empty = await executeTool('splitIntoEvidenceMap', { title: 'T', nodes: [{ kind: 'claim', text: 'a', quote: 'a' }] }, ctxWith(''));
+    expect(empty.error).toBe('no_source');
+  });
+});

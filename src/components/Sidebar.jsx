@@ -8,6 +8,7 @@ import { describeLastBackup } from '../hooks/useBackupStatus.js';
 import { QuickTimerButton, TimerDock } from './Timer.jsx';
 import QuickCalculatorButton from '../features/calc/QuickCalculatorButton.jsx';
 import { IconSearch, IconSun, IconMoon, IconRefresh, IconSpark, IconAlert, IconDownload, IconGithub } from './icons.jsx';
+import BetaBadge from './BetaBadge.jsx';
 
 export default function Sidebar({
   activeTab, onNavigate, lang, setLang, theme, onToggleTheme, onOpenSearch,
@@ -41,7 +42,7 @@ export default function Sidebar({
             <div className="nav-group-label" id={`nav-group-${group.id}`}>{t(group.label, lang)}</div>
             <ul aria-labelledby={`nav-group-${group.id}`} className="space-y-px">
               {group.tabs.map(id => {
-                const { Icon, label } = TABS[id];
+                const { Icon, label, beta } = TABS[id];
                 const active = activeTab === id;
                 return (
                   <li key={id}>
@@ -49,6 +50,7 @@ export default function Sidebar({
                       onClick={(e) => { if (!isPlainClick(e)) return; e.preventDefault(); onNavigate(id); }}>
                       <Icon size={16} />
                       <span className="truncate">{t(label, lang)}</span>
+                      {beta && <BetaBadge lang={lang} style={{ marginLeft: 'auto' }} />}
                       {counts[id] != null && <span className="nav-item-count">{counts[id]}</span>}
                     </a>
                   </li>

@@ -43,6 +43,20 @@ db.version(3).stores({
   credentials: 'name',
 });
 
+db.version(4).stores({
+  settings: 'key',
+  customRecipes: 'id, category',
+  customProtocols: 'id',
+  inventory: 'key',
+  favorites: 'key',
+  stepProgress: 'recipeId',
+  experiments: 'id, date, status, protocolRef',
+  credentials: 'name',
+  // Evidence maps: question → claims → evidence / experiments (lib/evidence.js).
+  // Rides the unified backup alongside experiments.
+  evidenceMaps: 'id, updatedAt',
+});
+
 export default db;
 
 // ─── Persistent storage: ask the browser not to evict IndexedDB/localStorage ───

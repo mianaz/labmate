@@ -13,7 +13,7 @@ import db from '../db.js';
 const SETTINGS_KEY = 'agent_permissions';
 
 // Keep in sync with the write tools in tools.js.
-export const WRITE_TOOLS = ['createExperiment', 'scheduleCalendarEvent', 'exportProtocol'];
+export const WRITE_TOOLS = ['createExperiment', 'scheduleCalendarEvent', 'exportProtocol', 'splitIntoEvidenceMap'];
 export const PERMISSION_MODES = ['auto', 'ask', 'off'];
 
 export const DEFAULT_PERMISSIONS = Object.freeze(
