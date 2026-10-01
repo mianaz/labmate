@@ -1,10 +1,12 @@
 // The Evidence map's smaller dialogs: split a draft into nodes, record an
-// experiment's result, pick a relation for a new link, edit map details.
-import { useState, useId } from 'react';
+// experiment's result, pick a relation for a new link, edit map details,
+// export (Markdown / AI-native JSON) and import JSON.
+import { useState, useId, useMemo, useRef } from 'react';
 import Dialog from '../../components/Dialog.jsx';
 import { NODE_KINDS, splitIntoPropositions } from '../../lib/evidence.js';
+import { mapFromJSON } from '../../lib/evidenceFormat.js';
 import { tx, KIND_META, relPhrase } from './evidenceText.js';
-import { IconPlus, IconTrash } from '../../components/icons.jsx';
+import { IconPlus, IconTrash, IconDownload, IconCopy, IconUpload, IconFile, IconAlert, IconInfo } from '../../components/icons.jsx';
 
 // ── Split a draft into propositions ────────────────────────────────────────────
 export function SplitDialog({ lang, agentAvailable, onAdd, onClose }) {
@@ -174,6 +176,106 @@ export function MapDetailsDialog({ lang, map, onSave, onDelete, onClose }) {
         <textarea id={`${uid}-desc`} className="w-full" rows={3} value={description}
           onChange={(e) => setDescription(e.target.value)} placeholder={tx('fieldDescPh', lang)} />
       </div>
+    </Dialog>
+  );
+}
+
+// ── Export: Markdown for people, JSON for AI tools ─────────────────────────────
+export function ExportDialog({ lang, onMarkdown, onJson, onCopyJson, onClose }) {
+  const option = (Icon, title, desc, actions) => (
+    <div className="panel" style={{ padding: '0.875rem 1rem' }}>
+      <div className="flex items-center gap-2">
+        <Icon size={16} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+        <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{title}</span>
+      </div>
+      <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: 1.5 }}>{desc}</p>
+      <div className="flex flex-wrap gap-2" style={{ marginTop: '0.625rem' }}>{actions}</div>
+    </div>
+  );
+  return (
+    <Dialog title={tx('exportTitle', lang)} onClose={onClose} lang={lang}>
+      {option(IconFile, tx('exportMdTitle', lang), tx('exportMdDesc', lang), (
+        <button type="button" className="btn btn-sm" onClick={() => { onMarkdown(); onClose(); }} data-autofocus>
+          <IconDownload size={13} />{tx('download', lang)} .md
+        </button>
+      ))}
+      {option(IconCopy, tx('exportJsonTitle', lang), tx('exportJsonDesc', lang), (
+        <>
+          <button type="button" className="btn-primary btn-sm" onClick={() => { onCopyJson(); onClose(); }}>
+            <IconCopy size={13} />{tx('copy', lang)}
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => { onJson(); onClose(); }}>
+            <IconDownload size={13} />{tx('download', lang)} .json
+          </button>
+        </>
+      ))}
+    </Dialog>
+  );
+}
+
+// ── Import JSON (pasted or from a file) as a new map ───────────────────────────
+export function ImportDialog({ lang, onImport, onClose }) {
+  const uid = useId();
+  const fileRef = useRef(null);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState(null);
+
+  // Parse as you paste, to show what will come in before anything is saved.
+  const preview = useMemo(() => {
+    if (!text.trim()) return null;
+    try { return { ok: mapFromJSON(text) }; } catch (e) { return { error: e.code || 'parse' }; }
+  }, [text]);
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try { setText(await file.text()); setFailure(null); } catch { setFailure('parse'); }
+  };
+  const run = async (e) => {
+    e?.preventDefault?.();
+    if (!preview?.ok || busy) return;
+    setBusy(true);
+    try { await onImport(text); } catch (err) { setFailure(err?.code || 'parse'); setBusy(false); }
+  };
+
+  const err = failure || preview?.error;
+  const r = preview?.ok?.report;
+  return (
+    <Dialog title={tx('importTitle', lang)} onClose={onClose} lang={lang} size="lg" onSubmit={run}
+      footer={(
+        <>
+          <button type="button" className="btn mr-auto" onClick={() => fileRef.current?.click()}><IconUpload size={14} />{tx('importFile', lang)}</button>
+          <button type="button" className="btn" onClick={onClose}>{tx('cancel', lang)}</button>
+          <button type="submit" className="btn-primary" disabled={!preview?.ok || busy}>{tx('importGo', lang)}</button>
+        </>
+      )}>
+      <input ref={fileRef} type="file" accept=".json,application/json" onChange={onFile} className="hidden" tabIndex={-1} aria-hidden="true" />
+      <div>
+        <label htmlFor={`${uid}-json`}>{tx('importPaste', lang)}</label>
+        <textarea id={`${uid}-json`} className="w-full mono" rows={9} value={text} data-autofocus spellCheck={false}
+          onChange={(e) => { setText(e.target.value); setFailure(null); }} placeholder={tx('importPh', lang)}
+          style={{ fontSize: '0.75rem' }} />
+      </div>
+      {err ? (
+        <div className="notice notice-danger" role="alert">
+          <IconAlert size={15} style={{ color: 'var(--danger-text)', flexShrink: 0, marginTop: 2 }} />
+          <span>{tx(`importErr_${err}`, lang)}</span>
+        </div>
+      ) : r ? (
+        <div className="notice notice-info" role="status">
+          <IconInfo size={15} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }} />
+          <span>
+            {tx('importSummary', lang, { title: preview.ok.map.title || tx('untitledMap', lang), nodes: r.nodes, links: r.links })}
+            {r.needsReview > 0 && <> {tx('importReview', lang, { n: r.needsReview })}</>}
+            {r.droppedNodes > 0 && <> {tx('importDroppedNodes', lang, { n: r.droppedNodes })}</>}
+            {r.droppedLinks > 0 && <> {tx('importDroppedLinks', lang, { n: r.droppedLinks })}</>}
+          </span>
+        </div>
+      ) : (
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>{tx('importHelp', lang)}</p>
+      )}
     </Dialog>
   );
 }

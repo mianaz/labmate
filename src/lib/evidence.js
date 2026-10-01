@@ -590,10 +590,12 @@ export function mapFilename(map) {
 
 // ── Graph layout ───────────────────────────────────────────────────────────────
 //
-// Columns read left to right the way an argument is built: experiments → the
-// evidence they yield, and the assumptions claims rest on → claims (sub-claims
-// before the claims they support) → questions. Rows are ordered to cut down
-// crossings (barycentre); a link that skips a column arcs over the nodes in it.
+// Auto layout: columns read left to right the way an argument is built:
+// experiments → the evidence they yield, and the assumptions claims rest on →
+// claims (sub-claims before the claims they support) → questions. Rows are
+// ordered to cut down crossings (barycentre); a link that skips a column arcs
+// over the nodes in it. Once the researcher drags a node, the map switches to
+// a manual layout that keeps every node where it was put.
 
 export const GRAPH = { nodeW: 188, gapX: 52, gapY: 12, pad: 16, lineH: 18, maxLines: 4 };
 const ARC_ROOM = 36; // room above/below the nodes for links that arc around a column
@@ -610,7 +612,7 @@ export function nodeHeight(node) {
   return 34 + lines * GRAPH.lineH;
 }
 
-export function layoutGraph(map) {
+function autoLayout(map) {
   const { nodeW, gapX, gapY, pad } = GRAPH;
   const claims = map.nodes.filter((n) => n.kind === 'claim');
   const claimIds = new Set(claims.map((c) => c.id));
@@ -682,42 +684,124 @@ export function layoutGraph(map) {
       y += h + gapY;
     }
   });
-  const edges = map.edges.filter((e) => boxes.has(e.from) && boxes.has(e.to)).map((e) => {
-    const a = boxes.get(e.from);
-    const b = boxes.get(e.to);
-    const sx = a.x + a.w;
-    const sy = a.y + a.h / 2;
-    const tx = b.x;
-    const ty = b.y + b.h / 2;
-    let path;
-    const span = b.col - a.col;
-    // A link that skips a column would run behind the nodes standing in it:
-    // send it over (or under) the whole column instead, whichever is shorter.
-    const between = span > 1 ? [...boxes.values()].filter((bx) => bx.col > a.col && bx.col < b.col) : [];
-    const blocked = between.some((bx) => bx.y - 6 < Math.max(sy, ty) && bx.y + bx.h + 6 > Math.min(sy, ty));
-    if (blocked) {
-      const dx = (tx - sx) / 2;
-      const y0 = (sy + ty) / 2;
-      const over = Math.min(...between.map((bx) => bx.y)) - 12;
-      const under = Math.max(...between.map((bx) => bx.y + bx.h)) + 12;
-      const peak = y0 - over <= under - y0 ? over : under;
-      const cy = y0 + (peak - y0) / 0.75; // a cubic reaches ¾ of the way to its control points
-      path = `M${sx},${sy} C${sx + dx},${cy} ${tx - dx},${cy} ${tx},${ty}`;
-    } else if (span >= 1) {
-      const dx = (tx - sx) / 2;
-      path = `M${sx},${sy} C${sx + dx},${sy} ${tx - dx},${ty} ${tx},${ty}`;
-    } else {
-      // Same or earlier column (a cycle, or a link the layering could not order):
-      // loop out to the right and come back in from the left.
-      const bend = gapX * 0.8;
-      path = `M${sx},${sy} C${sx + bend},${sy} ${tx - bend},${ty} ${tx},${ty}`;
-    }
-    return { ...e, path, mx: (sx + tx) / 2, my: (sy + ty) / 2 };
-  });
   return {
     boxes,
-    edges,
     width: pad * 2 + Math.max(1, columns.length) * nodeW + Math.max(0, columns.length - 1) * gapX,
     height: top + tallest + pad + ARC_ROOM / 2,
   };
+}
+
+// Auto layout: left to right, column to column.
+function autoEdgePath(a, b, boxes) {
+  const sx = a.x + a.w;
+  const sy = a.y + a.h / 2;
+  const tx = b.x;
+  const ty = b.y + b.h / 2;
+  const span = b.col - a.col;
+  // A link that skips a column would run behind the nodes standing in it:
+  // send it over (or under) the whole column instead, whichever is shorter.
+  const between = span > 1 ? [...boxes.values()].filter((bx) => bx.col > a.col && bx.col < b.col) : [];
+  const blocked = between.some((bx) => bx.y - 6 < Math.max(sy, ty) && bx.y + bx.h + 6 > Math.min(sy, ty));
+  if (blocked) {
+    const dx = (tx - sx) / 2;
+    const y0 = (sy + ty) / 2;
+    const over = Math.min(...between.map((bx) => bx.y)) - 12;
+    const under = Math.max(...between.map((bx) => bx.y + bx.h)) + 12;
+    const peak = y0 - over <= under - y0 ? over : under;
+    const cy = y0 + (peak - y0) / 0.75; // a cubic reaches ¾ of the way to its control points
+    return `M${sx},${sy} C${sx + dx},${cy} ${tx - dx},${cy} ${tx},${ty}`;
+  }
+  if (span >= 1) {
+    const dx = (tx - sx) / 2;
+    return `M${sx},${sy} C${sx + dx},${sy} ${tx - dx},${ty} ${tx},${ty}`;
+  }
+  // Same or earlier column (a cycle, or a link the layering could not order):
+  // loop out to the right and come back in from the left.
+  const bend = GRAPH.gapX * 0.8;
+  return `M${sx},${sy} C${sx + bend},${sy} ${tx - bend},${ty} ${tx},${ty}`;
+}
+
+// Manual layout: nodes can sit anywhere, so leave from the side that faces the
+// other node — left/right when they are further apart sideways, else top/bottom.
+function manualEdgePath(a, b) {
+  const acx = a.x + a.w / 2;
+  const acy = a.y + a.h / 2;
+  const bcx = b.x + b.w / 2;
+  const bcy = b.y + b.h / 2;
+  const gapH = Math.abs(bcx - acx) - (a.w + b.w) / 2;
+  const gapV = Math.abs(bcy - acy) - (a.h + b.h) / 2;
+  if (gapH >= gapV) {
+    const dir = bcx >= acx ? 1 : -1;
+    const sx = dir > 0 ? a.x + a.w : a.x;
+    const tx = dir > 0 ? b.x : b.x + b.w;
+    const bend = Math.max(36, Math.abs(tx - sx) / 2);
+    return `M${sx},${acy} C${sx + dir * bend},${acy} ${tx - dir * bend},${bcy} ${tx},${bcy}`;
+  }
+  const dir = bcy >= acy ? 1 : -1;
+  const sy = dir > 0 ? a.y + a.h : a.y;
+  const ty = dir > 0 ? b.y : b.y + b.h;
+  const bend = Math.max(28, Math.abs(ty - sy) / 2);
+  return `M${acx},${sy} C${acx},${sy + dir * bend} ${bcx},${ty - dir * bend} ${bcx},${ty}`;
+}
+
+const validPos = (p) => !!p && Number.isFinite(p.x) && Number.isFinite(p.y);
+
+/**
+ * Where every node and link goes. Auto layout unless the researcher has
+ * arranged the map by hand (map.manualLayout, node.pos); a node added after
+ * that lands under everything, in its auto column.
+ * @returns {{ boxes: Map<id,{x,y,w,h,col}>, edges: Array, width, height, manual }}
+ */
+export function layoutGraph(map) {
+  const { nodeW, gapY, pad } = GRAPH;
+  const auto = autoLayout(map);
+  const manual = !!map.manualLayout;
+  let { boxes, width, height } = auto;
+  if (manual) {
+    boxes = new Map();
+    const placed = map.nodes.filter((n) => validPos(n.pos));
+    for (const n of placed) {
+      boxes.set(n.id, { id: n.id, x: Math.max(0, n.pos.x), y: Math.max(0, n.pos.y), w: nodeW, h: nodeHeight(n), col: -1 });
+    }
+    const floor = Math.max(pad, ...[...boxes.values()].map((b) => b.y + b.h)) + gapY * 2;
+    const nextY = new Map();
+    for (const n of map.nodes) {
+      if (boxes.has(n.id)) continue;
+      const a = auto.boxes.get(n.id);
+      const y = nextY.get(a.x) ?? floor;
+      boxes.set(n.id, { id: n.id, x: a.x, y, w: nodeW, h: a.h, col: -1 });
+      nextY.set(a.x, y + a.h + gapY);
+    }
+    const all = [...boxes.values()];
+    width = Math.max(pad * 2 + nodeW, ...all.map((b) => b.x + b.w + pad));
+    height = Math.max(pad * 2, ...all.map((b) => b.y + b.h + pad));
+  }
+  const edges = map.edges.filter((e) => boxes.has(e.from) && boxes.has(e.to)).map((e) => {
+    const a = boxes.get(e.from);
+    const b = boxes.get(e.to);
+    return { ...e, path: manual ? manualEdgePath(a, b) : autoEdgePath(a, b, boxes) };
+  });
+  return { boxes, edges, width, height, manual };
+}
+
+/**
+ * Move one node by hand. The first move freezes every node where the auto
+ * layout had it, so arranging one node never shuffles the rest.
+ */
+export function setNodePosition(map, id, x, y) {
+  const { boxes } = layoutGraph(map);
+  const snap = (v) => Math.max(0, Math.round(v / 4) * 4);
+  const nodes = map.nodes.map((n) => {
+    if (n.id === id) return { ...n, pos: { x: snap(x), y: snap(y) } };
+    if (map.manualLayout && validPos(n.pos)) return n;
+    const b = boxes.get(n.id);
+    return b ? { ...n, pos: { x: b.x, y: b.y } } : n;
+  });
+  return touch({ ...map, manualLayout: true, nodes });
+}
+
+/** Drop every hand-placed position and go back to the auto layout. */
+export function resetLayout(map) {
+  // eslint-disable-next-line no-unused-vars
+  return touch({ ...map, manualLayout: false, nodes: map.nodes.map(({ pos, ...n }) => n) });
 }

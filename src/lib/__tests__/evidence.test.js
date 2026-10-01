@@ -3,7 +3,7 @@ import {
   createEmptyMap, createNode, addNode, updateNode, removeNode, connect, disconnect, moveNode,
   allowedRelations, linkOptions, nodeLabels, claimStatuses, analyzeMap,
   splitSentences, findCitation, guessKind, splitIntoPropositions, nodesFromSplit,
-  experimentEntrySeed, recordOutcome, mapToMarkdown, mapFilename, layoutGraph,
+  experimentEntrySeed, recordOutcome, mapToMarkdown, mapFilename, layoutGraph, setNodePosition, resetLayout,
 } from '../evidence.js';
 
 // Build a map from [kind, text, extra?] tuples; returns { map, ids } where ids
@@ -321,6 +321,39 @@ describe('export and layout', () => {
     const cy = Number(skip.path.split('C')[1].split(' ')[0].split(',')[1]);
     // control points sit clear of E1's box, above or below it
     expect(cy < e1.y || cy > e1.y + e1.h).toBe(true);
+  });
+
+  it('a hand move freezes the rest of the layout and resets back to auto', () => {
+    const { map, ids } = build(
+      [['claim', 'c'], ['evidence', 'e'], ['question', 'q']],
+      [['E1', 'supports', 'C1'], ['C1', 'answers', 'Q1']],
+    );
+    const before = layoutGraph(map).boxes;
+    const moved = setNodePosition(map, ids.E1, 401, 523);
+    expect(moved.manualLayout).toBe(true);
+    const after = layoutGraph(moved);
+    expect(after.manual).toBe(true);
+    expect(after.boxes.get(ids.E1)).toMatchObject({ x: 400, y: 524 }); // snapped to 4px
+    expect(after.boxes.get(ids.C1)).toMatchObject({ x: before.get(ids.C1).x, y: before.get(ids.C1).y });
+    expect(after.height).toBeGreaterThan(524);
+    // links leave from the side that faces the other node: E1 is now below C1
+    const link = after.edges.find((e) => e.from === ids.E1);
+    const start = link.path.slice(1).split(' ')[0].split(',').map(Number);
+    expect(start[1]).toBe(524); // top edge of E1
+    expect(setNodePosition(moved, ids.E1, -50, -9).nodes.find((n) => n.id === ids.E1).pos).toEqual({ x: 0, y: 0 });
+    const reset = resetLayout(moved);
+    expect(reset.manualLayout).toBe(false);
+    expect(reset.nodes.some((n) => n.pos)).toBe(false);
+  });
+
+  it('in a hand-arranged map, a new node lands below everything', () => {
+    const { map, ids } = build([['claim', 'c'], ['evidence', 'e']], [['E1', 'supports', 'C1']]);
+    const moved = setNodePosition(map, ids.C1, 600, 40);
+    const withNew = addNode(moved, createNode('claim', { text: 'new' }));
+    const { boxes } = layoutGraph(withNew);
+    const newBox = boxes.get(withNew.nodes[2].id);
+    const lowest = Math.max(...[ids.C1, ids.E1].map((id) => boxes.get(id).y + boxes.get(id).h));
+    expect(newBox.y).toBeGreaterThan(lowest);
   });
 
   it('lays out an empty map without throwing', () => {

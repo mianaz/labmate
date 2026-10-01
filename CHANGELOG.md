@@ -42,8 +42,19 @@ corners, Space Grotesk / IBM Plex Sans / JetBrains Mono) and refined for an all-
     becomes a Notebook entry (its predictions and controls in the objectives, its library protocol's
     steps and reagents in the procedure); once the entry is completed, record the result and it
     comes back as evidence for or against the claims it tested. Notebook entries link back to the map.
-  - Outline, Graph and Experiments views; Markdown export; included in the unified backup
-    (backup `schemaVersion` 3).
+  - Outline, Graph and Experiments views; included in the unified backup (backup `schemaVersion` 3).
+  - **Manual layout** in the Graph: drag nodes to arrange them (positions are saved; the first move
+    keeps every other node where it was), drag the selected node's handle onto another node to link
+    them, nudge with the arrow keys (Shift for bigger steps); **Auto layout** resets, with Undo. On
+    touch, a node drags once selected, so a swipe still scrolls the canvas.
+  - **Export**: a Markdown outline for people, or **AI-native JSON** (`labmate.evidence-map` v1):
+    short node ids (C1, E2…), links that read as sentences, each claim's status, the logic check's
+    findings and a built-in guide to the kinds, relations and how to propose edits, so a model can
+    read the map or return a revised one. Copy to clipboard or download.
+  - **Import JSON** (paste, ```json fences accepted, or a file) as a new map, with a preview first.
+    Links not allowed between two kinds are skipped. Each exported node carries a content hash: nodes
+    unchanged since export keep their review state, nodes that are new or were edited elsewhere
+    (by a person or a model) come back marked **To review**.
   - Assistant: `splitIntoEvidenceMap` splits a pasted draft into unreviewed nodes. Every node must quote
     the user's own text (checked against what the user typed) and the tool makes no links and no
     experiments: connecting the propositions stays with the researcher.

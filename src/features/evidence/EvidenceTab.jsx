@@ -12,18 +12,20 @@ import { useIsMobile } from '../../hooks/useMediaQuery.js';
 import { useRecipes } from '../../lib/RecipeProvider.jsx';
 import { useExperiments, saveExperimentRecord } from '../../lib/experiments.js';
 import { downloadText } from '../../lib/agent/exportProtocol.js';
+import { mapToJSONString, jsonFilename, mapFromJSON } from '../../lib/evidenceFormat.js';
 import {
   createEmptyMap, addNode, updateNode, removeNode, connect, moveNode, linkOptions,
   nodeLabels, analyzeMap, nodesFromSplit, experimentEntrySeed, recordOutcome, mapToMarkdown, mapFilename,
+  setNodePosition, resetLayout,
 } from '../../lib/evidence.js';
 import { useEvidenceMaps } from '../../lib/evidenceStore.js';
 import NodeDialog, { KindTag } from './NodeDialog.jsx';
 import EvidenceGraph from './EvidenceGraph.jsx';
-import { SplitDialog, OutcomeDialog, RelationChooser, MapDetailsDialog } from './EvidenceDialogs.jsx';
+import { SplitDialog, OutcomeDialog, RelationChooser, MapDetailsDialog, ExportDialog, ImportDialog } from './EvidenceDialogs.jsx';
 import { tx, STATUS_META, SEVERITY_META, relPhrase } from './evidenceText.js';
 import {
   IconPlus, IconSearch, IconDownload, IconEdit, IconChevronLeft, IconChevronDown, IconNotebook,
-  IconLink, IconFile, IconArrowRight, IconAlert, IconCheck, IconGraph,
+  IconLink, IconFile, IconArrowRight, IconAlert, IconCheck, IconGraph, IconUpload,
 } from '../../components/icons.jsx';
 
 // Cross-tab hand-offs (same sessionStorage convention as Notebook ↔ Calendar).
@@ -78,6 +80,11 @@ function StatusBadge({ status, lang }) {
       {tx(`status_${status}`, lang)}
     </span>
   );
+}
+
+// A split or imported node the researcher has not checked yet.
+function ReviewMark({ lang }) {
+  return <span className="badge badge-warn" style={{ borderStyle: 'dashed', flexShrink: 0 }}>{tx('toReview', lang)}</span>;
 }
 
 function StageBadge({ stage, lang }) {
@@ -209,6 +216,30 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
     downloadText(mapToMarkdown(map, { lang, experimentsById, protocolName }), mapFilename(map));
     toast.show(tx('downloaded', lang));
   };
+  // AI-native JSON (lib/evidenceFormat.js): every node, link, status and
+  // logic-check finding, plus a guide to the format, for a model or a tool.
+  const exportJson = () => {
+    downloadText(mapToJSONString(map, { experimentsById, protocolName }), jsonFilename(map), 'application/json');
+    toast.show(tx('downloaded', lang));
+  };
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(mapToJSONString(map, { experimentsById, protocolName }));
+      toast.show(tx('copied', lang), '✓');
+    } catch {
+      toast.show(tx('copyFailed', lang));
+    }
+  };
+  const importJson = async (text) => {
+    const { map: imported, report } = mapFromJSON(text);
+    // Notebook entries live in this browser only; drop links to ones that aren't here.
+    const known = (id) => (id && experimentsById[id] ? id : null);
+    const cleaned = { ...imported, nodes: imported.nodes.map((n) => (n.experimentId ? { ...n, experimentId: known(n.experimentId) } : n)) };
+    const saved = await save(cleaned);
+    setDialog(null);
+    openMap(saved.id);
+    toast.show(tx('importedMap', lang, { title: saved.title || tx('untitledMap', lang), n: report.nodes }), '✓');
+  };
 
   // ── Node actions ──
   const openNode = (id) => setDialog({ type: 'node', nodeId: id });
@@ -229,30 +260,40 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
   };
   const move = (id, dir) => commit(moveNode(map, id, dir));
 
-  const applyLink = (opt) => {
+  // `origin` is the node the user started from; the other end ends up selected.
+  const applyLink = (opt, origin) => {
     const r = connect(map, opt.from, opt.to, opt.rel);
     if (!r.error) {
       commit(r.map);
       toast.show(tx('linked', lang, { phrase: relPhrase(opt.rel, labels[opt.from], labels[opt.to], lang) }));
     }
-    const other = opt.from === connectFrom ? opt.to : opt.from;
     setConnectFrom(null);
-    setSelectedNode(other);
+    setSelectedNode(opt.from === origin ? opt.to : opt.from);
     setDialog(null);
   };
-  const graphClick = (id) => {
-    if (!connectFrom) { setSelectedNode((cur) => (cur === id ? null : id)); return; }
-    if (id === connectFrom) { setConnectFrom(null); return; }
-    const a = nodeById.get(connectFrom);
-    const b = nodeById.get(id);
-    if (!a || !b) { setConnectFrom(null); return; }
+  // Link two nodes picked by hand (Connect mode, or a handle dragged onto a node).
+  const tryConnect = (fromId, toId) => {
+    const a = nodeById.get(fromId);
+    const b = nodeById.get(toId);
+    if (!a || !b || a.id === b.id) { setConnectFrom(null); return; }
     const options = linkOptions(a, b);
     if (!options.length) {
       toast.show(tx('cantLink', lang, { a: tx(`kind_${a.kind}`, lang).toLowerCase(), b: tx(`kind_${b.kind}`, lang).toLowerCase() }));
       return;
     }
-    if (options.length === 1) applyLink(options[0]);
-    else setDialog({ type: 'relation', options });
+    if (options.length === 1) applyLink(options[0], fromId);
+    else setDialog({ type: 'relation', options, origin: fromId });
+  };
+  const graphClick = (id) => {
+    if (!connectFrom) { setSelectedNode((cur) => (cur === id ? null : id)); return; }
+    if (id === connectFrom) { setConnectFrom(null); return; }
+    tryConnect(connectFrom, id);
+  };
+  const moveNodeTo = (id, x, y) => commit(setNodePosition(map, id, x, y));
+  const autoLayout = () => {
+    const before = map;
+    commit(resetLayout(map));
+    toast.show(tx('layoutReset', lang), '', { actionLabel: tx('undo', lang), onAction: () => commit(before) });
   };
 
   // ── Notebook round trip ──
@@ -318,6 +359,7 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
             style={{ fontSize: '0.9375rem', fontWeight: 600, lineHeight: 1.4, overflowWrap: 'anywhere', color: n.text ? 'var(--text)' : 'var(--text-muted)' }}>
             {n.text || '—'}
           </button>
+          {n.origin !== 'user' && !n.reviewed && <ReviewMark lang={lang} />}
           <StatusBadge status={analysis.statuses[n.id]} lang={lang} />
           {siblings.length > 1 && (
             <span className="hidden sm:flex flex-none" style={{ marginTop: -4 }}>
@@ -461,6 +503,7 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
                       style={{ fontSize: '0.9375rem', fontWeight: 600, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
                       {n.text || '—'}
                     </button>
+                    {n.origin !== 'user' && !n.reviewed && <ReviewMark lang={lang} />}
                     <StageBadge stage={x.stage} lang={lang} />
                   </div>
                   <div style={{ marginTop: '0.375rem' }}>
@@ -532,7 +575,8 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
           )}
         </div>
         <EvidenceGraph lang={lang} map={map} statuses={analysis.statuses} labels={labels}
-          selectedId={selectedNode} connectFrom={connectFrom} onNodeClick={graphClick} onNodeOpen={openNode} />
+          selectedId={selectedNode} connectFrom={connectFrom} onNodeClick={graphClick} onNodeOpen={openNode}
+          onMoveNode={moveNodeTo} onConnectDrop={tryConnect} onAutoLayout={autoLayout} />
       </div>
     );
   };
@@ -541,10 +585,13 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
   const renderSummary = () => {
     const c = analysis.counts;
     // Nodes still waiting for review after a split read as one row, not one each.
+    // They lead the informational rows: after a split or an import, review comes first.
     const unreviewed = analysis.issues.filter((i) => i.code === 'unreviewed');
-    const issues = unreviewed.length > 1
-      ? [...analysis.issues.filter((i) => i.code !== 'unreviewed'), { code: 'unreviewed_many', severity: 'info', nodeId: unreviewed[0].nodeId, nodeIds: unreviewed.map((i) => i.nodeId) }]
-      : analysis.issues;
+    const review = unreviewed.length > 1
+      ? [{ code: 'unreviewed_many', severity: 'info', nodeId: unreviewed[0].nodeId, nodeIds: unreviewed.map((i) => i.nodeId) }]
+      : unreviewed;
+    const rest = analysis.issues.filter((i) => i.code !== 'unreviewed');
+    const issues = [...rest.filter((i) => i.severity !== 'info'), ...review, ...rest.filter((i) => i.severity === 'info')];
     const shown = allIssues ? issues : issues.slice(0, 5);
     const stat = (value, label, tone) => (
       <div className="stat" style={{ border: 0, background: 'var(--card)' }}>
@@ -642,10 +689,10 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
           <span className="toolbar-spacer" />
           <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={() => setDialog({ type: 'split' })}><IconFile size={14} />{tx('splitText', lang)}</button>
           <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={() => newNode('claim')}><IconPlus size={14} />{tx('addNode', lang)}</button>
-          <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={exportMarkdown} disabled={!map.nodes.length}><IconDownload size={14} />{tx('exportMd', lang)}</button>
+          <button type="button" className="btn btn-sm hidden @lg:inline-flex" onClick={() => setDialog({ type: 'export' })} disabled={!map.nodes.length}><IconDownload size={14} />{tx('export', lang)}</button>
           <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={() => setDialog({ type: 'split' })} aria-label={tx('splitText', lang)} title={tx('splitText', lang)}><IconFile size={16} /></button>
           <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={() => newNode('claim')} aria-label={tx('addNode', lang)} title={tx('addNode', lang)}><IconPlus size={16} /></button>
-          <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={exportMarkdown} disabled={!map.nodes.length} aria-label={tx('exportMd', lang)} title={tx('exportMd', lang)}><IconDownload size={16} /></button>
+          <button type="button" className="btn-ghost btn-icon btn-sm @lg:hidden" onClick={() => setDialog({ type: 'export' })} disabled={!map.nodes.length} aria-label={tx('export', lang)} title={tx('export', lang)}><IconDownload size={16} /></button>
           <button type="button" className="btn-ghost btn-icon btn-sm" onClick={() => setDialog({ type: 'details' })} aria-label={tx('editDetails', lang)} title={tx('editDetails', lang)}><IconEdit size={16} /></button>
         </div>
       </div>
@@ -739,6 +786,7 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
         <div className="flex flex-wrap justify-center gap-2" style={{ marginTop: '0.75rem' }}>
           <button type="button" className="btn-primary" style={{ marginTop: 0 }} onClick={() => newMap('split')}><IconFile size={15} />{tx('startSplit', lang)}</button>
           <button type="button" className="btn" style={{ marginTop: 0 }} onClick={() => newMap()}><IconPlus size={15} />{tx('newMap', lang)}</button>
+          <button type="button" className="btn" style={{ marginTop: 0 }} onClick={() => setDialog({ type: 'import' })}><IconUpload size={15} />{tx('importJson', lang)}</button>
         </div>
       </div>
       <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 1, background: 'var(--rule)', borderTop: '1px solid var(--rule)' }}>
@@ -758,6 +806,9 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
   // ── Dialogs ──
   const renderDialog = () => {
     if (!dialog) return null;
+    if (dialog.type === 'import') {
+      return <ImportDialog lang={lang} onImport={importJson} onClose={() => setDialog(null)} />;
+    }
     if (dialog.type === 'details' && map) {
       return <MapDetailsDialog lang={lang} map={map} onSave={saveDetails} onDelete={deleteMap} onClose={closeDetails} />;
     }
@@ -772,7 +823,10 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
       return <SplitDialog lang={lang} agentAvailable={agentAvailable} onAdd={addSplit} onClose={() => setDialog(null)} />;
     }
     if (dialog.type === 'relation') {
-      return <RelationChooser lang={lang} options={dialog.options} labels={labels} onPick={applyLink} onClose={() => setDialog(null)} />;
+      return <RelationChooser lang={lang} options={dialog.options} labels={labels} onPick={(o) => applyLink(o, dialog.origin)} onClose={() => setDialog(null)} />;
+    }
+    if (dialog.type === 'export') {
+      return <ExportDialog lang={lang} onMarkdown={exportMarkdown} onJson={exportJson} onCopyJson={copyJson} onClose={() => setDialog(null)} />;
     }
     if (dialog.type === 'outcome') {
       const x = analysis.experiments.find((e) => e.node.id === dialog.nodeId);
@@ -798,7 +852,12 @@ export default function EvidenceTab({ onNavigateNotebook, agentAvailable = false
         <PageHeader tab="evidence" title={t('tabEvidence', lang)} description={tx('pageDesc', lang)}
           meta={maps.length ? (maps.length === 1 ? tx('mapsCountOne', lang) : tx('mapsCount', lang, { n: maps.length })) : null}
           actions={maps.length ? (
-            <button type="button" className="btn-primary" onClick={() => newMap()}><IconPlus size={15} />{tx('newMap', lang)}</button>
+            <>
+              <button type="button" className="btn" onClick={() => setDialog({ type: 'import' })} aria-label={tx('importJson', lang)}>
+                <IconUpload size={15} /><span className="hidden sm:inline">{tx('importJson', lang)}</span>
+              </button>
+              <button type="button" className="btn-primary" onClick={() => newMap()}><IconPlus size={15} />{tx('newMap', lang)}</button>
+            </>
           ) : null} />
       )}
 
