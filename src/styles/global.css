@@ -844,3 +844,222 @@ button[class*="rounded-lg"][class*="py-1.5"] {
     transition: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   UI style: "minimal" — clean modern overrides
+   Activated via data-style="minimal" on <html> (localStorage
+   key `bis_app_style`, shared across apps.bioinfospace.com).
+   Default data-style="matching" keeps the brutalism look above
+   completely untouched. Orthogonal to data-theme="dark".
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Tokens: light minimal ─────────────────────────────
+   Same element as :root (html), same specificity — wins by source order. */
+[data-style="minimal"] {
+  --bg:           #FAFAF7;
+  --bg-2:         #F1F0EB;
+  --card:         #FFFFFF;
+  --border:       #E4E2DA;
+  --border-strong:#E4E2DA;
+  --nav-bg:       #FAFAF7;
+  --shadow-ink:   rgba(0, 0, 0, 0.06);
+
+  /* Soft shadows replace hard offsets (covers inline style={{boxShadow:'var(--shadow…)'}} too) */
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow:       0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-lg:    0 6px 20px rgba(0, 0, 0, 0.08);
+  --shadow-2xs:   0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:    0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-xl:    0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-2xl:   0 12px 32px rgba(0, 0, 0, 0.10);
+
+  /* Restore Tailwind's radius scale (zeroed for brutalism in @theme above) */
+  --radius-xs:  4px;
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  10px;
+  --radius-xl:  12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius:     10px;
+
+  /* Sans chrome — drop the display/mono heading treatment */
+  --font-heading: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Tokens: dark minimal (soft dark surfaces, not CRT ink) ── */
+[data-style="minimal"][data-theme="dark"] {
+  --bg:           #16181A;
+  --bg-2:         #26292D;
+  --card:         #1E2124;
+  --border:       #33363A;
+  --border-strong:#33363A;
+  --nav-bg:       #16181A;
+  --text:         #E7E8E6;
+  --text-muted:   #A2A5A1;
+  --shadow-ink:   rgba(0, 0, 0, 0.35);
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow:       0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-lg:    0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-md:    0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-xl:    0 8px 24px rgba(0, 0, 0, 0.45);
+  --samp-other-bg: #26292D;
+}
+
+/* ── Minimal: no grain texture ── */
+[data-style="minimal"] .grain { display: none; }
+
+/* ── Minimal: chrome typography — no uppercase/mono labels ── */
+[data-style="minimal"] h1,
+[data-style="minimal"] h2,
+[data-style="minimal"] h3,
+[data-style="minimal"] h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+[data-style="minimal"] h2.text-xl, [data-style="minimal"] h2.font-bold {
+  letter-spacing: -0.01em !important;
+}
+[data-style="minimal"] h4.font-bold, [data-style="minimal"] h4.text-sm {
+  font-family: var(--font-body) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+[data-style="minimal"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+[data-style="minimal"] th {
+  font-family: var(--font-body) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+[data-style="minimal"] thead tr { border-bottom-width: 1px !important; }
+/* Tailwind `uppercase`/tracking utilities used for chrome labels in components */
+[data-style="minimal"] .uppercase {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+/* ── Minimal: nav / header ── */
+[data-style="minimal"] nav {
+  border-bottom: 1px solid var(--border) !important;
+}
+[data-style="minimal"] nav .font-bold.text-xl, [data-style="minimal"] nav h1 {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.01em !important;
+}
+[data-style="minimal"] nav button {
+  font-family: var(--font-body) !important;
+  letter-spacing: 0 !important;
+}
+[data-style="minimal"] .tab-indicator { border-radius: 2px; }
+
+/* ── Minimal: cards — 1px soft border, radius, no hover-translate ── */
+[data-style="minimal"] .card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+[data-style="minimal"][data-theme="dark"] .card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+[data-style="minimal"] .card:hover,
+[data-style="minimal"] .card:active {
+  transform: none;
+  box-shadow: var(--shadow-md);
+}
+[data-style="minimal"] .card.recipe-selected {
+  border-left: 3px solid var(--primary);
+}
+
+/* ── Minimal: buttons — flat, no shadow-translate physics ── */
+[data-style="minimal"] .btn-physics,
+[data-style="minimal"] .btn-primary,
+[data-style="minimal"] .btn-secondary {
+  box-shadow: none;
+  border-radius: 8px;
+}
+[data-style="minimal"] .btn-primary,
+[data-style="minimal"] .btn-secondary {
+  border-width: 1px;
+  font-weight: 600;
+}
+[data-style="minimal"] .btn-primary { border-color: var(--primary); }
+[data-style="minimal"] .btn-primary:hover,
+[data-style="minimal"] .btn-primary:active,
+[data-style="minimal"] .btn-secondary:hover,
+[data-style="minimal"] .btn-secondary:active,
+[data-style="minimal"] .btn-physics:hover,
+[data-style="minimal"] .btn-physics:active {
+  transform: none;
+  box-shadow: none;
+}
+[data-style="minimal"] .btn-primary:hover { background: var(--primary-hover); color: #fff; }
+[data-style="minimal"] .btn-primary:disabled { box-shadow: none; }
+[data-style="minimal"] button:focus-visible,
+[data-style="minimal"] a:focus-visible,
+[data-style="minimal"] [role="tab"]:focus-visible {
+  border-radius: 8px;
+}
+
+/* ── Minimal: inputs — 1px soft border, radius, soft focus ring ── */
+[data-style="minimal"] input[type="number"],
+[data-style="minimal"] input[type="text"],
+[data-style="minimal"] input[type="search"],
+[data-style="minimal"] input[type="date"],
+[data-style="minimal"] input[type="time"],
+[data-style="minimal"] select,
+[data-style="minimal"] textarea {
+  font-family: var(--font-body) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  background: var(--card) !important;
+}
+[data-style="minimal"] input:focus,
+[data-style="minimal"] select:focus,
+[data-style="minimal"] textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(22, 179, 100, 0.15) !important;
+}
+[data-style="minimal"][data-theme="dark"] input,
+[data-style="minimal"][data-theme="dark"] select,
+[data-style="minimal"][data-theme="dark"] textarea {
+  background: var(--bg-2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Minimal: thin down Tailwind border-2 chrome (modals, sheets, panels) ── */
+[data-style="minimal"] .border-2 { border-width: 1px; }
+[data-style="minimal"] .border-t-2 { border-top-width: 1px; }
+[data-style="minimal"] .border-b-2 { border-bottom-width: 1px; }
+[data-style="minimal"] .border-l-2 { border-left-width: 1px; }
+[data-style="minimal"] .border-r-2 { border-right-width: 1px; }
+
+/* ── Minimal: toast / kbd / footer / misc chrome ── */
+[data-style="minimal"] .toast {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+}
+[data-style="minimal"] kbd { border-radius: 4px; }
+[data-style="minimal"] footer {
+  border-top-width: 1px;
+  font-family: var(--font-body);
+}
+[data-style="minimal"] .step-note { border-radius: 6px; }
+[data-style="minimal"] ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+[data-style="minimal"] ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+[data-style="minimal"] * { scrollbar-color: var(--border) transparent; }
+[data-style="minimal"] .fav-star:hover { transform: none; }

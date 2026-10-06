@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { t } from '../i18n/index.js';
 import { S_BG2, S_TEXT } from '../lib/styleConstants.js';
 
-function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme }) {
+function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyncing, lang, setLang, theme, setTheme, uiStyle, setUiStyle }) {
   const tabKeys = ['buffers','protocols','calc','plate','tools','inventory','notebook','calendar','refs'];
   const tabIcons = {};
   const tabLabels = { buffers:'tabBuffers', protocols:'tabProtocols', calc:'tabCalc', plate:'tabPlate', tools:'tabTools', inventory:'tabInventory', notebook:'tabNotebook', calendar:'tabCalendar', refs:'tabRefs' };
@@ -79,6 +79,15 @@ function Header({ activeTab, setActiveTab, onOpenSearch, onRefreshRecipes, isSyn
               className="hidden lg:inline-flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all border"
               style={{ borderColor:'var(--border)', color:'var(--primary)', background:'var(--card)', height: '2.125rem' }}>
               {t('langToggle', lang)}
+            </button>
+            {/* UI style toggle: brutalism ("matching" the main site) vs clean "minimal" — orthogonal to light/dark */}
+            <button onClick={() => setUiStyle(uiStyle === 'minimal' ? 'matching' : 'minimal')}
+              title={t('styleToggle', lang)} aria-label={t('styleToggle', lang)}
+              className="inline-flex items-center justify-center px-2 rounded-lg text-sm transition-all border"
+              style={{ borderColor:'var(--border)', background:'var(--card)', height: '2.125rem' }}>
+              {uiStyle === 'minimal'
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={S_TEXT}><rect x="4" y="4" width="16" height="16" rx="5"/></svg>
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" style={S_TEXT}><rect x="4" y="4" width="16" height="16"/></svg>}
             </button>
             <button onClick={() => { const next = theme === 'dark' ? 'light' : 'dark'; setTheme(next); document.documentElement.setAttribute('data-theme', next === 'dark' ? 'dark' : ''); }}
               className="inline-flex items-center justify-center px-2 rounded-lg text-sm transition-all border"

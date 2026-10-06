@@ -15,6 +15,16 @@ import { migrateFromLocalStorage, ensurePersistentStorage } from './lib/db.js';
 // Ask the browser to keep local data (guards against Safari/iOS 7-day eviction).
 ensurePersistentStorage();
 
+// Apply the UI style (brutalism "matching" vs clean "minimal") before first
+// paint to avoid a flash of the wrong chrome. `bis_app_style` is shared across
+// sibling apps on apps.bioinfospace.com — read/write exactly this key.
+try {
+  const storedStyle = localStorage.getItem('bis_app_style');
+  document.documentElement.setAttribute('data-style', storedStyle === 'minimal' ? 'minimal' : 'matching');
+} catch {
+  document.documentElement.setAttribute('data-style', 'matching');
+}
+
 // Run localStorage → IndexedDB migration, then render
 migrateFromLocalStorage().then(() => {
   const root = createRoot(document.getElementById('root'));

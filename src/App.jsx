@@ -111,6 +111,13 @@ function AppInner() {
   // close over `lang` to build locale-prefixed paths.
   const [lang, setLang] = useLocalStorage('lang', getDefaultLang());
   const [theme, setTheme] = useLocalStorage('theme', getDefaultTheme());
+  // UI style: 'matching' (brutalism, matches bioinfospace.com) | 'minimal' (clean).
+  // Stored under the exact key `bis_app_style` — shared across sibling apps on
+  // apps.bioinfospace.com, so plain localStorage (not useLocalStorage/IndexedDB).
+  const [uiStyle, setUiStyle] = useState(() => {
+    try { return localStorage.getItem('bis_app_style') === 'minimal' ? 'minimal' : 'matching'; }
+    catch { return 'matching'; }
+  });
   const activeTab = useMemo(() => {
     // location.pathname has the /labmate basename already stripped by BrowserRouter,
     // so parts[1] is the locale segment (en/zh) and parts[2] is the tab segment —
@@ -190,6 +197,12 @@ function AppInner() {
     if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     else document.documentElement.removeAttribute('data-theme');
   }, [theme]);
+
+  // UI style effect — orthogonal to light/dark theme above
+  useEffect(() => {
+    document.documentElement.setAttribute('data-style', uiStyle);
+    try { localStorage.setItem('bis_app_style', uiStyle); } catch { /* storage unavailable */ }
+  }, [uiStyle]);
 
   // Scroll-reveal observer
   useEffect(() => {
@@ -332,7 +345,8 @@ function AppInner() {
     <LangContext.Provider value={lang}>
       <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <Header activeTab={activeTab} setActiveTab={setActiveTab} onOpenSearch={() => setSearchOpen(true)}
-          onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={switchLocale} theme={theme} setTheme={setTheme} />
+          onRefreshRecipes={refreshRecipes} isSyncing={syncing} lang={lang} setLang={switchLocale} theme={theme} setTheme={setTheme}
+          uiStyle={uiStyle} setUiStyle={setUiStyle} />
         <Suspense fallback={null}>
           <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)}
             onSelect={r => setSearchSelected(r)} onSwitchTab={setActiveTab} />

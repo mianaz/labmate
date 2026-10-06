@@ -138,6 +138,7 @@ export const translations = {
   darkMode: { en: 'Dark', zh: '深色' },
   lightMode: { en: 'Light', zh: '浅色' },
   langToggle: { en: '中文', zh: 'EN' },
+  styleToggle: { en: 'Minimal / Classic style', zh: '极简 / 主站风' },
   refreshRecipes: { en: 'Refresh Recipes', zh: '刷新配方' },
   recipesUpdated: { en: 'Recipes updated', zh: '配方已更新' },
   // Dilution calc
